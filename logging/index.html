@@ -1,0 +1,58 @@
+<!DOCTYPE html>
+<!--
+Created using JS Bin
+http://jsbin.com
+
+Copyright (c) 2016 by revolunet (http://jsbin.com/qiwinuv/8/edit)
+
+Released under the MIT license: http://jsbin.mit-license.org
+-->
+<meta name="robots" content="noindex">
+<html>
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width">
+  <title>JS Bin</title>
+</head>
+<body>
+    <video id="video" width="520" height="240" autoplay></video>
+    <div id="results"></div>
+    <canvas style="display:none" id="canvas" width="320" height="240"></canvas>
+<script id="jsbin-javascript">
+
+
+var canvas = document.getElementById('canvas');
+var context = canvas.getContext('2d');
+var video = document.getElementById('video');
+
+function start() {
+    setInterval(function() {
+        addSnapshot()
+    }, 10000)
+}
+
+function askCamera() {
+    if(navigator.mediaDevices && navigator.mediaDevices.getUserMedia) {
+        // Not adding `{ audio: true }` since we only want video now
+        navigator.mediaDevices.getUserMedia({ video: true }).then(function(stream) {
+            video.src = window.URL.createObjectURL(stream);
+            video.play();
+            start();
+        });
+    }
+}
+
+function addSnapshot() {
+    context.drawImage(video, 0, 0, 640, 480);
+    var snapshot = canvas.toDataURL("image/jpeg");
+    var img = document.createElement('img')
+    img.setAttribute('width', 320)
+    img.setAttribute('height', 240)
+    img.src = snapshot;
+    document.getElementById('results').appendChild(img)
+}
+
+askCamera();
+</script>
+</body>
+</html>
