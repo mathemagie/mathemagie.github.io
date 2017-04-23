@@ -1,3 +1,60 @@
-<br/><br/><a href="360">360° Image Gallery</a>
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8">
+    <title>Mathemagie</title>
+    <script src="https://code.jquery.com/jquery-1.12.4.min.js"></script>
+    <script src="https://npmcdn.com/masonry-layout@4.0/dist/masonry.pkgd.js"></script>
+    <style>
+      .grid {
+        width:100%;
+        max-width: 940px;
+        margin: 50px auto;
+      }
+      .grid-item {
+          width:300px;
+          float:left;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="grid" data-masonry='{ "itemSelector": ".grid-item", "columnWidth": 300, "gutter":20 }'>
+      <div class="grid-item"><blockquote class="twitter-tweet"><a href="https://twitter.com/mathemagie/status/856122841045098497"></a></blockquote></div>
+      <div class="grid-item"><blockquote class="twitter-tweet"><a href="https://twitter.com/mathemagie/status/855753253312761856"></a></blockquote></div>
+      <div class="grid-item"><blockquote class="twitter-tweet"><a href="https://twitter.com/mathemagie/status/855417704248946688"></a></blockquote></div>
+       <div class="grid-item"><blockquote class="twitter-tweet"><a href="https://twitter.com/mathemagie/status/855778105167839232"></a></blockquote></div>
+      <div class="grid-item"><blockquote class="twitter-tweet"><a href="https://twitter.com/mathemagie/status/856158915180015616"></a></blockquote></div>
+      <div class="grid-item"><blockquote class="twitter-tweet"><a href="https://twitter.com/mathemagie/status/856158646119673857"></a></blockquote></div>
+      
+       
+     
+    </div>
+    <script>
+    // Twitter widget is loading.
+  window.twttr = function (d, s, id) {
+  var t, js, fjs = d.getElementsByTagName(s)[0];
+  if (d.getElementById(id)) return; js = d.createElement(s); js.id = id;
+  js.src = "https://platform.twitter.com/widgets.js";
+  fjs.parentNode.insertBefore(js, fjs);
+  return window.twttr || (t = { _e: [], ready: function (f) { t._e.push(f) } });
+  }(document, 'script', 'twitter-wjs');
 
-<br/><br/><a href="/press.html">Press</a>
+// When widget is ready, run masonry
+twttr.ready(function (twttr) {
+  twttr.events.bind('loaded', function (event) {
+    $('.grid').masonry({
+      itemSelector : '.grid-item',
+      columnWidth : 300,
+      gutter: 20
+    });
+  });
+});
+
+</script>
+
+
+    <!-- Peace be upon you / ziegfiroyt -->
+
+  </body>
+</html>
+
