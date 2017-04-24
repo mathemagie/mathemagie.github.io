@@ -4,7 +4,7 @@
     <meta charset="utf-8">
     <title>Mathemagie's Stuff</title>
     <script src="https://code.jquery.com/jquery-1.12.4.min.js"></script>
-    <script src="https://npmcdn.com/masonry-layout@4.0/dist/masonry.pkgd.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/masonry/4.2.0/masonry.pkgd.min.js"></script>
     <meta property="og:url"   content="" />
     <meta property="og:type"               content="article" />
     <meta property="og:title"              content="Mathemagie's Stuff" />
@@ -20,6 +20,16 @@
           width:300px;
           float:left;
       }
+
+      @media only screen and ( max-width: 40em ) {
+        .grid
+        {
+          width: 46.876%; /* 305px */
+          margin-bottom: 0.938em; /* 15px */
+        }
+      }
+
+
     </style>
   </head>
   <body>
@@ -58,6 +68,22 @@
         });
       });
       });
+
+      $( window ).load( function()
+{
+    var columns    = 3,
+        setColumns = function() { columns = $( window ).width() > 640 ? 3 : $( window ).width() > 320 ? 2 : 1; };
+ 
+    setColumns();
+    $( window ).resize( setColumns );
+    console.log('coucou');
+ 
+    $( '.grid' ).masonry(
+    {
+        itemSelector: '.grid-item',
+        columnWidth:  function( containerWidth ) { return containerWidth / columns; }
+    });
+});
     </script>
 </body>
 </html>
