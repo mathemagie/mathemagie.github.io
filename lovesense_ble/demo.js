@@ -9,6 +9,13 @@ var init = function() {
       dev = new LovesenseWebBluetooth(d);
       dev.open();
       devices.push(dev);
+      document.getElementById('ok_connected').style.display = 'block';
+      setTimeout(function(){
+       document.getElementById('ok_connected').style.display = 'none';
+        //document.getElementById('info_level').style.display = 'block';
+       }, 2000); 
+
+      
     });
   });
 
@@ -47,9 +54,11 @@ channel.bind('my-event', function(data) {
   document.getElementById('tweet').style.display = 'block';
   //dev.vibrate(parseInt(10,10));
    devices.forEach(dev => {
+      slider.value = 20;
       dev.vibrate(parseInt(20,10));
     });
    setTimeout(function(){
+     slider.value = 0;
     dev.vibrate(parseInt(0));
      document.getElementById('tweet').style.display = 'none';
   }, 1000); 
