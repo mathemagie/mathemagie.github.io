@@ -20,6 +20,15 @@ var init = function() {
     });
   });
 
+   var stopBtn = document.getElementById('stop');
+  stopBtn.addEventListener('click', function(event) {
+    //console.log(devices);
+     devices.forEach(dev => {
+      dev.vibrate(parseInt(0));
+      slider.value = 0;
+    });
+  });
+
 
 // Enable pusher logging - don't include this in production
 Pusher.logToConsole = true;
@@ -31,11 +40,17 @@ var pusher = new Pusher('77379ee80f6901a0f5fa', {
 
 var channel = pusher.subscribe('my-channel');
 channel.bind('my-event', function(data) {
-  console.log(data.message);
+  //console.log(data.message);
+  document.getElementById('tweet').style.display = 'block';
   //dev.vibrate(parseInt(10,10));
    devices.forEach(dev => {
-      dev.vibrate(parseInt(10,10));
+      dev.vibrate(parseInt(20,10));
     });
+   setTimeout(function(){
+    dev.vibrate(parseInt(0));
+     document.getElementById('tweet').style.display = 'none';
+  }, 1000); 
+   
 });
 
 };
