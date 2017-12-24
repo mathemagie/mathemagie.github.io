@@ -7,20 +7,26 @@
     <script type="text/javascript" src="bluetooth.js"></script>
     <script type="text/javascript" src="demo.js"></script>
     <link rel="stylesheet" type="text/css" href="css/style.css">
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0-beta.2/css/bootstrap.min.css" integrity="sha384-PsH8R72JQ3SOdhVi3uxftmaW6Vc51MKb0q5P2rRUpPvrszuE4W1povHYgTpBfshb" crossorigin="anonymous">
   </head>
   <body onload="init();">
-    <h1>control Lovense Lush with web bluetooth</h1>
     <!--<h3>Needs Chrome 56+ on Mac/Linux (If on linux, turn on Experimental Web Extensions)</h3>-->
-    <br/>
-    <input class="button" type="button" id="connect" value="connect" />
-    Vibrate Level : <input type="range" min="0" max="20" id="speed" value=0 />
-   
-    <input class="button" type="button" id="stop" value="stop sextoy" />
-    <!--Code available at <a href="http://github.com/metafetish/lovesense-hush-js-demo">http://github.com/metafetish/lovesense-hush-js-demo</a><br/>
-    More info at <a href="http://buttplug.io/hardware/lovense">http://buttplug.io/hardware/lovense</a><br/>-->
+    <div class="container">
+          <h1>control Lovense Lush with web bluetooth</h1>
 
-    <br/>
-    <img id="tweet" style="display:none" width="200px" height="200px" src="twitter.png"/>
+      <button id="connect" type="button" class="btn btn-primary">Connect Sextoy</button>
+      Vibrate Level : <input type="range" min="0" max="20" id="speed" value=0 />
+     
+
+       <button id="stop" type="button" class="btn btn-primary">Stop</button>
+
+
+      <!--Code available at <a href="http://github.com/metafetish/lovesense-hush-js-demo">http://github.com/metafetish/lovesense-hush-js-demo</a><br/>
+      More info at <a href="http://buttplug.io/hardware/lovense">http://buttplug.io/hardware/lovense</a><br/>-->
+
+      <br/>
+      <img id="tweet" style="display:none" width="200px" height="200px" src="twitter.png"/>
+    </div>
   
  
   </body>

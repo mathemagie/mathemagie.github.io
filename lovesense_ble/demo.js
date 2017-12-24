@@ -17,7 +17,10 @@ var init = function() {
    // console.log(devices);
     devices.forEach(dev => {
       dev.vibrate(parseInt(slider.value,10));
+      //console.log(dev.batteryLevel());
+//      console.log(dev.deviceStatus());
     });
+
   });
 
    var stopBtn = document.getElementById('stop');
