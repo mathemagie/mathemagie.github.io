@@ -61,7 +61,7 @@ channel.bind('my-event', function(data) {
      slider.value = 0;
     dev.vibrate(parseInt(0));
      document.getElementById('tweet').style.display = 'none';
-  }, 1000); 
+  }, 10000); 
    
 });
 
