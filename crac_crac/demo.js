@@ -54,14 +54,14 @@ channel.bind('my-event', function(data) {
   document.getElementById('tweet').style.display = 'block';
   //dev.vibrate(parseInt(10,10));
    devices.forEach(dev => {
-      slider.value = 20;
-      dev.vibrate(parseInt(20,10));
+      slider.value = 10;
+      dev.vibrate(parseInt(10,10));
     });
    setTimeout(function(){
      slider.value = 0;
     dev.vibrate(parseInt(0));
      document.getElementById('tweet').style.display = 'none';
-  }, 10000); 
+  }, 5000); 
    
 });
 
