@@ -50,16 +50,17 @@ var pusher = new Pusher('77379ee80f6901a0f5fa', {
 
 var channel = pusher.subscribe('my-channel');
 channel.bind('my-event', function(data) {
-  //console.log(data.message);
+  console.log("aurelien");
+   $(".my_audio").trigger('play');
   document.getElementById('tweet').style.display = 'block';
   //dev.vibrate(parseInt(10,10));
    devices.forEach(dev => {
       slider.value = 20;
-      dev.vibrate(parseInt(20,10));
+      //dev.vibrate(parseInt(20,10));
     });
    setTimeout(function(){
      slider.value = 0;
-    dev.vibrate(parseInt(0));
+    //dev.vibrate(parseInt(0));
      document.getElementById('tweet').style.display = 'none';
   }, 10000); 
    
