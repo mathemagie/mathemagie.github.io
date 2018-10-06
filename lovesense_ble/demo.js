@@ -54,11 +54,11 @@ channel.bind('my-event', function(data) {
   //dev.vibrate(parseInt(10,10));
    devices.forEach(dev => {
       slider.value = 20;
-      //dev.vibrate(parseInt(20,10));
+      dev.vibrate(parseInt(20,10));
     });
    setTimeout(function(){
      slider.value = 0;
-    //dev.vibrate(parseInt(0));
+     dev.vibrate(parseInt(0));
   }, 10000); 
    
 });
