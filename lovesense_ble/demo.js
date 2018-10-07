@@ -61,7 +61,7 @@ channel.bind('my-event', function(data) {
    setTimeout(function(){
      slider.value = 0;
      dev.vibrate(parseInt(0));
-  }, 10000); 
+  }, 7000); 
  }else {
     console.log("stagiaire");
   devices.forEach(dev => {
