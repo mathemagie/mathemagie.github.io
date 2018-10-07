@@ -50,8 +50,10 @@ var pusher = new Pusher('77379ee80f6901a0f5fa', {
 
 var channel = pusher.subscribe('my-channel');
 channel.bind('my-event', function(data) {
-  console.log("sextoy vibrate");
+ console.log(data);
+  if (data == 'withboss') {
   //dev.vibrate(parseInt(10,10));
+   console.log("boss");
    devices.forEach(dev => {
       slider.value = 20;
       dev.vibrate(parseInt(20,10));
@@ -60,6 +62,18 @@ channel.bind('my-event', function(data) {
      slider.value = 0;
      dev.vibrate(parseInt(0));
   }, 10000); 
+ }else {
+    console.log("stagiaire");
+  devices.forEach(dev => {
+      slider.value = 20;
+      dev.vibrate(parseInt(10,10));
+    });
+   setTimeout(function(){
+     slider.value = 0;
+     dev.vibrate(parseInt(0));
+  }, 5000); 
+
+ }
    
 });
 
