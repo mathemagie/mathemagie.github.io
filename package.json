@@ -1,0 +1,23 @@
+{
+  "name": "mathemagie.github.io",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "dependencies": {},
+  "devDependencies": {
+    "htmlhint-ng2": "0.0.13"
+  },
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/mathemagie/mathemagie.github.io.git"
+  },
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/mathemagie/mathemagie.github.io/issues"
+  },
+  "homepage": "https://github.com/mathemagie/mathemagie.github.io#readme"
+}
