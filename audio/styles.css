@@ -1,0 +1,11 @@
+body {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    height: 100vh;
+    background-color: black; /* Updated background color to black */
+}
+
+.player {
+    text-align: center;
+}
