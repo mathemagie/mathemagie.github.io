@@ -3,7 +3,7 @@
     "short_name": "AudioPWA",
     "start_url": ".",
     "display": "standalone",
-    "background_color": "#fff",
+    "background_color": "black",
     "description": "Une simple application PWA pour écouter de la musique.",
     "icons": [
       {
