@@ -21,7 +21,7 @@
     <script>
         if ('serviceWorker' in navigator) {
           window.addEventListener('load', function() {
-            navigator.serviceWorker.register('/service-worker.js').then(function(registration) {
+            navigator.serviceWorker.register('/audio/service-worker.js').then(function(registration) {
               // L'enregistrement du service worker a réussi
               console.log('ServiceWorker registration successful with scope: ', registration.scope);
             }, function(err) {
