@@ -1,5 +1,5 @@
 {
-    "name": "Lecteur Audio Fabrizio",
+    "name": "Lecteur Fabrizio",
     "short_name": "AudioPWA",
     "start_url": ".",
     "display": "standalone",
@@ -7,7 +7,7 @@
     "description": "Une simple application PWA pour écouter de la musique.",
     "icons": [
       {
-        "src": "ico.png",
+        "src": "icon.png",
         "sizes": "192x192",
         "type": "image/png"
       }
