@@ -17,11 +17,17 @@
     <script src="https://code.jquery.com/jquery-3.5.1.slim.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.5.4/dist/umd/popper.min.js"></script>
     <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
-    <script src="app.js"></script>
+    <script>
+      var random = Math.random();
+      var script = document.createElement('script');
+      script.src = "app.js?random=" + random;
+      document.head.appendChild(script);
+    </script>
     <script>
         if ('serviceWorker' in navigator) {
           window.addEventListener('load', function() {
-            navigator.serviceWorker.register('/audio/service-worker.js').then(function(registration) {
+            var serviceWorkerUrl = window.location.hostname === 'localhost' ? '/service-worker.js' : '/audio/service-worker.js';
+            navigator.serviceWorker.register(serviceWorkerUrl).then(function(registration) {
               // L'enregistrement du service worker a réussi
               console.log('ServiceWorker registration successful with scope: ', registration.scope);
             }, function(err) {
