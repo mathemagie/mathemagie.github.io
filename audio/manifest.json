@@ -7,7 +7,7 @@
     "description": "Une simple application PWA pour écouter de la musique.",
     "icons": [
       {
-        "src": "icon.png",
+        "src": "ico.png",
         "sizes": "192x192",
         "type": "image/png"
       }
