@@ -13,7 +13,7 @@ function loadTracksFromJson(jsonFile) {
         });
 }
 
-loadTracksFromJson('tracks.json');
+loadTracksFromJson('tracks.json?random=' + Math.random());
 function prevTrack() {
     trackIndex--;
     if (trackIndex < 0) {
