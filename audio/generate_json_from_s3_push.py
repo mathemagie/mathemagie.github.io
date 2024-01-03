@@ -9,7 +9,7 @@ output = subprocess.check_output(["aws", "s3", "ls", "audiod"]).decode("utf-8")
 lines = output.strip().split('\n')
 
 # Extract the file names from each line and add prefix
-tracks = ["https://audiod.s3.eu-west-3.amazonaws.com/" + line.split()[-1] for line in lines]
+tracks = [line.split()[-1] for line in lines]
 
 # Create the JSON structure
 data = {"tracks": tracks}

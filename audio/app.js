@@ -2,6 +2,8 @@ const audioPlayer = document.getElementById('audioPlayer');
 let trackIndex = 0;
 const tracks = [];
 
+const urls3Amazon = 'https://audiod.s3.eu-west-3.amazonaws.com/';
+
 function loadTracksFromJson(jsonFile) {
     fetch(jsonFile)
         .then(response => response.json())
@@ -32,9 +34,9 @@ function nextTrack() {
 
 function playTrack() {
     console.log(tracks[trackIndex] + ' is playing');
-    audioPlayer.src = tracks[trackIndex];
-    var currentTrack = tracks[trackIndex].replace("https://audiod.s3.eu-west-3.amazonaws.com/", "");
+    audioPlayer.src = urls3Amazon + tracks[trackIndex];
+    var currentTrack = tracks[trackIndex];
     var trackDiv = document.getElementById("currentTrack");
-    trackDiv.textContent = "Currently playing: " + currentTrack;
+    trackDiv.textContent = currentTrack;
     audioPlayer.play();
 }

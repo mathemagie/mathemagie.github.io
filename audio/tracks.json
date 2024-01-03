@@ -1,9 +1,9 @@
 {
     "tracks": [
-        "https://audiod.s3.eu-west-3.amazonaws.com/VDB.mp3",
-        "https://audiod.s3.eu-west-3.amazonaws.com/19721-21.12.2022-ITEMA_23181447-2022F33264E0017-21.mp3",
-        "https://audiod.s3.eu-west-3.amazonaws.com/19721-22.11.2022-ITEMA_23190072-2022F33264E0014-21.mp3",
-        "https://audiod.s3.eu-west-3.amazonaws.com/_Ignatus_le_dragon_par_Anne_Pauly.mp3",
-        "https://audiod.s3.eu-west-3.amazonaws.com/_Rainette_la_grenouille_qui_de\u0301testait_se_laver_les_cheveux_d_Emmanuelle_Bayamack_Tam.mp3"
+        "19721-21.12.2022-ITEMA_23181447-2022F33264E0017-21.mp3",
+        "19721-22.11.2022-ITEMA_23190072-2022F33264E0014-21.mp3",
+        "VDB.mp3",
+        "_Ignatus_le_dragon_par_Anne_Pauly.mp3",
+        "_Rainette_la_grenouille_qui_de\u0301testait_se_laver_les_cheveux_d_Emmanuelle_Bayamack_Tam.mp3"
     ]
 }
