@@ -18,6 +18,8 @@
         <audio id="audioPlayer" src="output.mp3"></audio>
         <button onclick="prevTrack()" class="btn btn-success btn-lg">Précédent</button>
         <button onclick="nextTrack()" class="btn btn-success btn-lg">Suivant</button>
+        <br/>
+        <div id="currentTrack"></div>
     </div>
     <script src="https://code.jquery.com/jquery-3.5.1.slim.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.5.4/dist/umd/popper.min.js"></script>
@@ -31,7 +33,7 @@
     <script>
         if ('serviceWorker' in navigator) {
           window.addEventListener('load', function() {
-            var serviceWorkerUrl = window.location.hostname === 'localhost' ? '/service-worker.js' : '/audio/service-worker.js';
+            var serviceWorkerUrl = window.location.hostname === '127.0.0.1' ? '/service-worker.js' : '/audio/service-worker.js';
             navigator.serviceWorker.register(serviceWorkerUrl).then(function(registration) {
               // L'enregistrement du service worker a réussi
               console.log('ServiceWorker registration successful with scope: ', registration.scope);

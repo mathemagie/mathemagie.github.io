@@ -33,5 +33,8 @@ function nextTrack() {
 function playTrack() {
     console.log(tracks[trackIndex] + ' is playing');
     audioPlayer.src = tracks[trackIndex];
+    var currentTrack = tracks[trackIndex].replace("https://audiod.s3.eu-west-3.amazonaws.com/", "");
+    var trackDiv = document.getElementById("currentTrack");
+    trackDiv.textContent = "Currently playing: " + currentTrack;
     audioPlayer.play();
 }

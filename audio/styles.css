@@ -9,3 +9,10 @@ body {
 .player {
     text-align: center;
 }
+
+
+#currentTrack {
+    color: white;
+    font-size: 1em;
+    margin-bottom: 0.5em;
+}
