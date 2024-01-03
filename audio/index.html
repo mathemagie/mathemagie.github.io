@@ -8,7 +8,7 @@
     <meta name="apple-touch-fullscreen" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black">
     <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
-    <link rel="stylesheet" href="styles.css">
+    <link id="stylesLink" rel="stylesheet" href="styles.css">
     <link rel="manifest" href="manifest.json">
 
     <title>Lecteur Audio PWA</title>
@@ -43,6 +43,10 @@
             });
           });
         }
+
+        var stylesLink = document.getElementById("stylesLink");
+        var random = Math.random();
+        stylesLink.href = "styles.css?random=" + random;
       </script>
 </body>
 </html>
