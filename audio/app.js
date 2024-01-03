@@ -32,6 +32,13 @@ function nextTrack() {
     playTrack();
 }
 
+//create random track function to pick random track from array tracks
+function randomTrack() {
+    trackIndex = Math.floor(Math.random() * tracks.length);
+    console.log(trackIndex);
+    playTrack();
+}
+
 function playTrack() {
     console.log(tracks[trackIndex] + ' is playing');
     audioPlayer.src = urls3Amazon + tracks[trackIndex];
