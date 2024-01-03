@@ -1,5 +1,5 @@
 {
-    "name": "Lecteur Fabrizio",
+    "name": "Lecteur audio Fabrizio",
     "short_name": "AudioPWA",
     "start_url": ".",
     "display": "standalone",
