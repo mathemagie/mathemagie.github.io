@@ -1,0 +1,67 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Audio Player</title>
+    <link href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css" rel="stylesheet">
+    <style>
+        body {
+            background-color: #121212;
+            color: #ffffff;
+        }
+        a {
+            color: #bb86fc;
+        }
+        a:hover {
+            color: #3700b3;
+        }
+        pre, code {
+            background-color: #1e1e1e;
+            color: #dcdcdc;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <audio controls class="mt-3">
+            <source src="output_20240630_182644.mp3" type="audio/mpeg">
+            Your browser does not support the audio element.
+        </audio>
+        <!-- <img src="1719043108437.jpg" alt="View Image" class="d-block mt-3">-->
+        <h1 class="mt-5">Exciting progress on my innovative AI-powered project! 🚀 Here's what we've achieved so far:</h1>
+        <p class="mt-3">
+            1️⃣ Implemented character recognition in photos using OpenAI's Vision API, with results in JSON format.
+        </p>
+        <p>
+            2️⃣ Leveraged Claude API to generate dynamic text dialogues between multiple characters identified in the image:
+        </p>
+        <pre>
+            <code>
+                &lt;conversation&gt;
+                 &lt;character name="Bibou"&gt;
+                 &lt;dialogue&gt;My friends, I've got a fantastic idea! What if we built a time machine out of bits of cheese and peacock feathers?&lt;/dialogue&gt;
+                 &lt;/character&gt;
+                 &lt;character name="Yoyo"&gt;
+                 &lt;dialogue&gt;Oh, Bibou! You always have such wacky ideas! But... this could be fun. Where will we find so much cheese?&lt;/dialogue&gt;
+                 &lt;/character&gt;
+                &lt;/conversation&gt;
+            </code>
+        </pre>
+        <p>
+            3️⃣ Utilized OpenAI's Text-to-Speech API to create distinct audio tracks for each character's dialogue.
+        </p>
+        <p>
+            4️⃣ Employed FFMPEG to seamlessly concatenate multiple audio tracks into a single, cohesive audio file.
+        </p>
+        <p>
+            Next challenge: Exploring voice cloning capabilities (potentially with ElevenLabs API) to match the characters' voices in the original photo.
+        </p>
+        <p>
+            Stay tuned! 👀 I'll be sharing all the Python code from my GitHub repository in the next few days. For those interested in the technical details or looking to experiment with similar concepts, this will be your chance to dive in!
+        </p>
+        <p>
+            For more updates, check out my <a href="https://www.linkedin.com/feed/update/urn:li:activity:7214008869495128064/">LinkedIn post</a>.
+        </p>
+    </div>
+</body>
