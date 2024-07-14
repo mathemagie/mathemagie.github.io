@@ -1,0 +1,262 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Todo List</title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+  <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
+  <style>
+    /* Add your CSS styles here */
+    .todo-item {
+      position: relative;
+    }
+    .todo-item .btn-group {
+      position: absolute;
+      right: 10px;
+      top: 50%;
+      transform: translateY(-50%);
+      display: none;
+    }
+    .todo-item:hover .btn-group {
+      display: flex;
+    }
+    .bg-dark .list-group-item {
+      background-color: #343a40;
+      color: #ffffff;
+    }
+    .completed-icon {
+      color: green;
+      margin-right: 10px;
+    }
+    .list-group-item-secondary.completed {
+      background-color: #d1e7dd;
+      color: #0f5132;
+    }
+    body {
+      font-size: 13px;
+    }
+    .tag-btn.active {
+      color: #fff;
+      background-color: #6c757d;
+      border-color: #6c757d;
+    }
+  </style>
+</head>
+<body onload="renderTodos()" class="bg-light text-dark">
+  <div class="d-flex justify-content-between align-items-center mt-3">
+    <div class="theme-switch">
+      <button class="btn btn-sm btn-light" onclick="setTheme('light')"><i class="fas fa-sun"></i></button>
+      <button class="btn btn-sm btn-dark" onclick="setTheme('dark')"><i class="fas fa-moon"></i></button>
+    </div>
+  </div>
+  <div class="container mt-5">
+    <div class="d-flex justify-content-between align-items-center mb-3">
+      <h2 class="m-0">Todo List</h2>
+      <button class="btn btn-info btn-sm" onclick="exportTodos()">Export Todos</button>
+    </div>
+    <div class="input-group mb-3">
+      <input type="text" id="todoInput" class="form-control" placeholder="Enter a new todo..." onkeydown="if(event.key === 'Enter') addTodo()">
+      <div class="input-group-append">
+        <button class="btn btn-success" onclick="addTodo()">Add Todo</button>
+      </div>
+    </div>
+    <div id="tagList">
+      <button class="btn btn-outline-secondary btn-sm mr-2 mb-2 tag-btn active" onclick="currentTag = null; renderTodos();">View All</button>
+    </div>
+
+    <ul id="todoList" class="list-group"></ul>
+  </div>
+
+  <script>
+    let todos = JSON.parse(localStorage.getItem('todos')) || [];
+    let currentTheme = localStorage.getItem('theme') || 'light';
+    let showingTagInput = false;
+    let currentTag = null;
+
+    function addTodo() {
+      const todoInput = document.getElementById("todoInput");
+      const todoText = todoInput.value.trim();
+
+      if (todoText !== "") {
+        const todo = {
+          text: todoText,
+          completed: false,
+          tag: ''
+        };
+
+        todos.push(todo);
+        saveTodos();
+        renderTodos();
+        todoInput.value = "";
+      }
+    }
+
+    function toggleTodo(index) {
+      todos[index].completed = !todos[index].completed;
+      saveTodos();
+      renderTodos();
+    }
+
+    function removeTodo(index) {
+      todos.splice(index, 1);
+      saveTodos();
+      renderTodos();
+    }
+
+    function editTodoText(index, newText) {
+      const newTag = prompt("Enter a tag for this todo:", todos[index].tag);
+      todos[index].text = newText;
+      todos[index].tag = newTag || '';
+      saveTodos();
+      renderTodos();
+    }
+
+    function editTodoTag(index, newTag) {
+      todos[index].tag = newTag;
+      saveTodos();
+      renderTodos();
+    }
+
+    function saveTodos() {
+      localStorage.setItem('todos', JSON.stringify(todos));
+    }
+
+    function renderTodos() {
+      const todoList = document.getElementById("todoList");
+      todoList.innerHTML = "";
+
+      const filteredTodos = currentTag ? todos.filter(todo => todo.tag === currentTag) : todos;
+
+      for (let i = 0; i < filteredTodos.length; i++) {
+        const todo = filteredTodos[i];
+        const li = document.createElement("li");
+        li.classList.add("list-group-item", "d-flex", "justify-content-between", "align-items-center", "todo-item");
+        li.classList.toggle("list-group-item-secondary", todo.completed);
+        li.classList.toggle("completed", todo.completed);
+        li.addEventListener("click", () => toggleTodo(todos.indexOf(todo)));
+
+        const textSpan = document.createElement("span");
+        textSpan.textContent = todo.text;
+
+        if (todo.completed) {
+          const completedIcon = document.createElement("i");
+          completedIcon.classList.add("fas", "fa-check-circle", "completed-icon");
+          li.appendChild(completedIcon);
+        }
+
+        li.appendChild(textSpan);
+
+        const btnGroup = document.createElement("div");
+        btnGroup.classList.add("btn-group");
+
+        const editBtn = document.createElement("button");
+        editBtn.classList.add("btn", "btn-primary", "btn-sm");
+        editBtn.innerHTML = '<i class="fas fa-edit"></i>';
+        editBtn.addEventListener("click", (event) => {
+          event.stopPropagation();
+          const newText = prompt("Edit todo:", todo.text);
+          if (newText !== null && newText.trim() !== "") {
+            editTodoText(todos.indexOf(todo), newText.trim());
+          }
+        });
+
+        const removeBtn = document.createElement("button");
+        removeBtn.classList.add("btn", "btn-danger", "btn-sm");
+        removeBtn.innerHTML = '<i class="fas fa-trash-alt"></i>';
+        removeBtn.addEventListener("click", (event) => {
+          event.stopPropagation();
+          removeTodo(todos.indexOf(todo));
+        });
+
+        const tagBtn = document.createElement("button");
+        tagBtn.classList.add("btn", "btn-warning", "btn-sm");
+        tagBtn.innerHTML = '<i class="fas fa-tag"></i>';
+        tagBtn.addEventListener("click", (event) => {
+          event.stopPropagation();
+          const newTag = prompt("Edit tag:", todo.tag);
+          if (newTag !== null) {
+            editTodoTag(todos.indexOf(todo), newTag);
+          }
+        });
+
+        const tagInput = document.createElement("input");
+        tagInput.type = "text";
+        tagInput.placeholder = "Add tag";
+        tagInput.value = todo.tag;
+        tagInput.style.display = showingTagInput ? "inline-block" : "none";
+        tagInput.addEventListener("change", (event) => {
+          editTodoTag(todos.indexOf(todo), event.target.value);
+        });
+
+        btnGroup.appendChild(editBtn);
+        btnGroup.appendChild(removeBtn);
+        btnGroup.appendChild(tagBtn);
+        btnGroup.appendChild(tagInput);
+        li.appendChild(btnGroup);
+        todoList.appendChild(li);
+      }
+
+      renderTags();
+    }
+
+    function renderTags() {
+      const tagList = document.getElementById("tagList");
+      tagList.innerHTML = "";
+
+      const tags = new Set(todos.map(todo => todo.tag));
+      tags.forEach(tag => {
+        if (tag) {
+          const btn = document.createElement("button");
+          btn.classList.add("btn", "btn-outline-secondary", "btn-sm", "mr-2", "mb-2", "tag-btn");
+          btn.classList.toggle("active", tag === currentTag);
+          btn.textContent = tag;
+          btn.addEventListener("click", () => {
+            currentTag = tag === currentTag ? null : tag;
+            renderTodos();
+          });
+          tagList.appendChild(btn);
+        }
+      });
+    }
+
+    function showTagInput() {
+      showingTagInput = !showingTagInput;
+      renderTodos();
+    }
+
+    function setTheme(theme) {
+      currentTheme = theme;
+      localStorage.setItem('theme', theme);
+      applyTheme();
+    }
+
+    function applyTheme() {
+      if (currentTheme === 'dark') {
+        document.body.classList.remove('bg-light', 'text-dark');
+        document.body.classList.add('bg-dark', 'text-light');
+      } else {
+        document.body.classList.remove('bg-dark', 'text-light');
+        document.body.classList.add('bg-light', 'text-dark');
+      }
+    }
+
+    function exportTodos() {
+      const currentDate = new Date().toISOString().slice(0, 10);
+      let csvContent = "data:text/csv;charset=utf-8,";
+      csvContent += "Todo,Completed,Date,Tag\r\n";
+      todos.forEach(todo => {
+        csvContent += `"${todo.text}","${todo.completed}","${currentDate}","${todo.tag}"\r\n`;
+      });
+
+      const encodedUri = encodeURI(csvContent);
+      const link = document.createElement("a");
+      link.setAttribute("href", encodedUri);
+      link.setAttribute("download", `todos_${currentDate}.csv`);
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+    }
+
+    applyTheme();
+  </script>
+</body>
+</html>
