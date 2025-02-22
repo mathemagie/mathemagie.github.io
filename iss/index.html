@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>ISS Particle Visualization</title>
+    <title>ISS Tracker</title>
     <!-- CSS styles for layout and appearance -->
     <style>
         /* Remove default margins and center everything */
@@ -20,6 +20,8 @@
         /* Add a subtle border to the canvas */
         canvas {
             border: 1px solid #00FF00; /* Changed to neon green */
+            max-width: 100%;
+            height: auto;
         }
         /* Position the info display in the top-left corner */
         #info {
@@ -41,9 +43,52 @@
             color: #00FF00; /* Changed to neon green */
             margin: 0 10px;
         }
+        /* Add style for the title */
+        #info {
+            position: absolute;
+            top: 15px;
+            left: 50%;
+            transform: translateX(-50%);
+            font-size: 17px;
+            color: #DAA520;
+            text-align: center;
+            background: rgba(0, 0, 0, 0.7);
+            padding: 10px 20px;
+            border-radius: 8px;
+            border: 1px solid rgba(0, 255, 0, 0.3);
+            z-index: 1;
+        }
+        /* Add loading and error states */
+        .loading {
+            animation: pulse 1.5s infinite;
+        }
+        
+        @keyframes pulse {
+            0% { opacity: 1; }
+            50% { opacity: 0.5; }
+            100% { opacity: 1; }
+        }
+        
+        .error {
+            color: #FF4444;
+        }
+        
+        /* Add tooltip style */
+        #tooltip {
+            position: absolute;
+            background: rgba(0, 0, 0, 0.8);
+            color: #DAA520;
+            padding: 5px 10px;
+            border-radius: 4px;
+            display: none;
+            z-index: 2;
+        }
     </style>
 </head>
 <body>
+    <div id="tooltip"></div>
+    <!-- Add title div -->
+    
     <!-- Display area for ISS coordinates -->
     <div id="info">ISS Position: Loading...</div>
     
@@ -55,11 +100,16 @@
         let issData = { latitude: 0, longitude: 0 };
         let particle;
         let lastFetchTime = 0;
-        const FETCH_INTERVAL = 15000; // 15 seconds in milliseconds
+        const FETCH_INTERVAL = 10000; // 10 seconds in milliseconds
         let pulseSize = 0;
         let isPulsing = false;
         let worldMap;
         let audioContext;
+        
+        // Add new global variables
+        let loading = true;
+        let error = null;
+        let lastUpdate = null;
         
         // Function to create ping sound
         function createPingSound() {
@@ -108,6 +158,7 @@
                 this.maxSpeed = 2; // Reduced max speed
                 this.trail = [];
                 this.maxTrailLength = 100; // Longer trail for smoother appearance
+                this.hovered = false;
             }
 
             // Update particle properties based on ISS position
@@ -181,11 +232,24 @@
                 fill(255, 255, 255, 100);
                 ellipse(this.x, this.y, this.size * 0.5);
             }
+
+            // Add hover detection
+            checkHover(mouseX, mouseY) {
+                this.hovered = dist(mouseX, mouseY, this.x, this.y) < this.size;
+                if (this.hovered) {
+                    showTooltip(mouseX, mouseY);
+                } else {
+                    hideTooltip();
+                }
+            }
         }
 
         // p5.js setup function - runs once at start
         function setup() {
-            createCanvas(800, 600);
+            // Make canvas responsive
+            const canvasWidth = min(windowWidth * 0.9, 800);
+            const canvasHeight = (canvasWidth * 0.75);
+            createCanvas(canvasWidth, canvasHeight);
             particle = new Particle();
             
             // Initial fetch
@@ -223,6 +287,10 @@
 
         // Function to fetch ISS position data
         async function fetchISSData() {
+            loading = true;
+            error = null;
+            updateInfoDisplay();
+            
             try {
                 // Using the "Where the ISS at?" API
                 const response = await fetch('https://api.wheretheiss.at/v1/satellites/25544', {
@@ -247,7 +315,11 @@
                 // Play ping sound
                 createPingSound();
                 
-                // Update display with inline formatting
+                // Add timezone calculation
+                const timezone = await getTimezone(issData.latitude, issData.longitude);
+                lastUpdate = new Date().toLocaleTimeString();
+                
+                // Update display with more information
                 document.getElementById('info').innerHTML = 
                     `<span class="label">ISS Position:</span>` +
                     `Lat ${issData.latitude.toFixed(2)}°, Lon ${issData.longitude.toFixed(2)}° ` +
@@ -257,11 +329,13 @@
                     `<span class="label">Velocity:</span>${(data.velocity/1000).toFixed(2)} km/s`;
                 
                 lastFetchTime = millis();
+                loading = false;
             } catch (error) {
+                error = error.message;
                 console.error('Error fetching ISS data:', error);
-                document.getElementById('info').innerText = 
-                    `ISS Position: Error fetching data - ${error.message}`;
             }
+            
+            updateInfoDisplay();
         }
 
         // Add this new function to draw the world map
@@ -365,6 +439,46 @@
             for (let x = 0; x < width; x += width/8) {
                 line(x, 0, x, height);
             }
+        }
+
+        // Add new helper functions
+        function updateInfoDisplay() {
+            const infoDiv = document.getElementById('info');
+            infoDiv.className = loading ? 'loading' : error ? 'error' : '';
+        }
+        
+        async function getTimezone(lat, lon) {
+            try {
+                const response = await fetch(`https://api.timezonedb.com/v2.1/get-time-zone?key=YOUR_API_KEY&format=json&by=position&lat=${lat}&lng=${lon}`);
+                const data = await response.json();
+                return new Date().toLocaleTimeString('en-US', { timeZone: data.zoneName });
+            } catch (error) {
+                return 'N/A';
+            }
+        }
+        
+        function showTooltip(x, y) {
+            const tooltip = document.getElementById('tooltip');
+            tooltip.style.display = 'block';
+            tooltip.style.left = `${x + 10}px`;
+            tooltip.style.top = `${y + 10}px`;
+            tooltip.innerHTML = `Latitude: ${issData.latitude.toFixed(4)}°<br>Longitude: ${issData.longitude.toFixed(4)}°`;
+        }
+        
+        function hideTooltip() {
+            document.getElementById('tooltip').style.display = 'none';
+        }
+        
+        // Add window resize handler
+        function windowResized() {
+            const canvasWidth = min(windowWidth * 0.9, 800);
+            const canvasHeight = (canvasWidth * 0.75);
+            resizeCanvas(canvasWidth, canvasHeight);
+        }
+        
+        // Add mouseMoved function
+        function mouseMoved() {
+            particle.checkHover(mouseX, mouseY);
         }
     </script>
 </body>

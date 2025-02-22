@@ -41,15 +41,34 @@
 
         .earth {
             position: absolute;
-            width: 200px;  /* Reduced from 400px */
-            height: 200px; /* Reduced from 400px */
-            left: 300px;   /* Adjusted to keep centered */
-            bottom: 200px; /* Adjusted position */
-            border: 3px solid rgba(255, 255, 255, 0.3);  /* Changed from blue to white */
+            width: 200px;
+            height: 200px;
+            left: 300px;
+            bottom: 200px;
+            border: 3px solid rgba(255, 255, 255, 0.3);
             border-radius: 50%;
             background: url('https://eoimages.gsfc.nasa.gov/images/imagerecords/74000/74393/world.200412.3x5400x2700.jpg');
             background-size: cover;
-           box-shadow: 0 0 1px rgba(255, 255, 255, 0.2);  /* Added white glow */
+            box-shadow: 0 0 20px rgba(255, 255, 255, 0.2);
+            animation: earthOscillate 4s ease-in-out infinite;
+        }
+
+        @keyframes earthOscillate {
+            0% { 
+                transform: scale(1) rotate(0deg);
+            }
+            25% {
+                transform: scale(1.01) rotate(1deg);
+            }
+            50% {
+                transform: scale(1) rotate(0deg);
+            }
+            75% {
+                transform: scale(1.01) rotate(-1deg);
+            }
+            100% {
+                transform: scale(1) rotate(0deg);
+            }
         }
 
         @keyframes blinkTower {
@@ -336,14 +355,21 @@
                     star.draw();
                 });
                 
-                // // Draw a white gradient around Earth
-                // let radius = EARTH_RADIUS * 1.5;
-                // for(let r = radius; r > EARTH_RADIUS; r--) {
-                //     let alpha = p.map(r, EARTH_RADIUS, radius, 0, 40);  // Reduced max alpha for subtlety
-                //     p.stroke(255, 255, 255, alpha);  // Changed to white
-                //     p.noFill();
-                //     p.circle(EARTH_CENTER_X, EARTH_CENTER_Y, r * 2);
-                // }
+                // Draw a white gradient around Earth with gentle wave effect
+                let radius = EARTH_RADIUS * 1.1;
+                let time = p.frameCount * 0.02;
+                
+                for(let r = radius; r > EARTH_RADIUS; r--) {
+                    let alpha = p.map(r, EARTH_RADIUS, radius, 0, 40);
+                    p.stroke(255, 255, 255, alpha);
+                    p.noFill();
+                    
+                    // Add continuous gentle wave effect
+                    let waveAmplitude = p.map(r, EARTH_RADIUS, radius, 0.5, 2);
+                    let radiusOffset = p.sin(time + r * 0.02) * waveAmplitude;
+                    
+                    p.circle(EARTH_CENTER_X, EARTH_CENTER_Y, (r + radiusOffset) * 2);
+                }
                 
                 // Update and draw all particles
                 particles.forEach(particle => {
