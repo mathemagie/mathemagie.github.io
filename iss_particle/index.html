@@ -14,12 +14,12 @@
             align-items: center;
             min-height: 100vh;
             background: #000;
-            color: white;
+            color: #DAA520; /* Changed to gold color */
             font-family: Arial, sans-serif;
         }
         /* Add a subtle border to the canvas */
         canvas {
-            border: 1px solid #333;
+            border: 1px solid #00FF00; /* Changed to neon green */
         }
         /* Position the info display in the top-left corner */
         #info {
@@ -29,16 +29,16 @@
             background: rgba(0, 0, 0, 0.7);
             padding: 10px 20px;
             border-radius: 8px;
-            border: 1px solid rgba(100, 200, 255, 0.3);
+            border: 1px solid rgba(0, 255, 0, 0.3); /* Changed to neon green */
             font-size: 16px;
             white-space: nowrap;  /* Keep all text on one line */
         }
         .label {
-            color: #64FFFF;
+            color: #DAA520; /* Changed to gold */
             margin-right: 5px;
         }
         .separator {
-            color: #64FFFF;
+            color: #00FF00; /* Changed to neon green */
             margin: 0 10px;
         }
     </style>
@@ -100,7 +100,7 @@
                 this.x = width / 2;
                 this.y = height / 2;
                 this.size = 20;
-                this.color = [255, 255, 255];
+                this.color = [218, 165, 32]; // Changed default color to gold (DAA520)
                 this.targetX = this.x;
                 this.targetY = this.y;
                 this.velocity = createVector(0, 0);
@@ -142,9 +142,9 @@
                 // Update size and color as before
                 this.size = map(Math.abs(lat), 0, 90, 20, 60);
                 this.color = [
-                    map(lon, -180, 180, 100, 255),
-                    map(Math.abs(lat), 0, 90, 100, 255),
-                    map(lat, -90, 90, 100, 255)
+                    218, // R - gold
+                    165, // G - gold
+                    32   // B - gold
                 ];
                 
                 // Add current position to trail
@@ -205,7 +205,7 @@
             // Draw pulse effect when new data is received
             if (isPulsing) {
                 noFill();
-                stroke(particle.color[0], particle.color[1], particle.color[2], 255 - pulseSize);
+                stroke(0, 255, 0, 255 - pulseSize); // Changed to neon green
                 strokeWeight(2);
                 ellipse(particle.x, particle.y, pulseSize);
                 pulseSize += 5;
@@ -266,7 +266,7 @@
 
         // Add this new function to draw the world map
         function drawWorldMap() {
-            stroke(100, 200, 255, 60);  // Brighter blue color with slightly higher opacity
+            stroke(0, 255, 0, 60);  // Changed to neon green
             noFill();
             strokeWeight(1.5);
             
@@ -344,7 +344,7 @@
             endShape(CLOSE);
 
             // Draw oceans labels
-            fill(100, 200, 255, 80);  // Brighter text color with higher opacity
+            fill(0, 255, 0, 80);  // Changed to neon green
             noStroke();
             textSize(16);  // Increased text size
             textStyle(BOLD);  // Made text bold
@@ -354,7 +354,7 @@
             text("Southern Ocean", 400, 450);
 
             // Draw latitude/longitude grid
-            stroke(100, 200, 255, 25);  // Brighter grid lines
+            stroke(0, 255, 0, 25);  // Changed to neon green
             strokeWeight(0.7);  // Slightly thicker lines
             
             // Draw fewer, more spaced out grid lines
