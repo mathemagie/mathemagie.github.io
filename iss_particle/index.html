@@ -26,6 +26,20 @@
             position: absolute;
             top: 10px;
             left: 10px;
+            background: rgba(0, 0, 0, 0.7);
+            padding: 10px 20px;
+            border-radius: 8px;
+            border: 1px solid rgba(100, 200, 255, 0.3);
+            font-size: 16px;
+            white-space: nowrap;  /* Keep all text on one line */
+        }
+        .label {
+            color: #64FFFF;
+            margin-right: 5px;
+        }
+        .separator {
+            color: #64FFFF;
+            margin: 0 10px;
         }
     </style>
 </head>
@@ -37,16 +51,14 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/p5.js/1.4.2/p5.min.js"></script>
     
     <script>
-        // Global variables to store ISS data and timing
+        // Remove star-related global variables
         let issData = { latitude: 0, longitude: 0 };
         let particle;
         let lastFetchTime = 0;
         const FETCH_INTERVAL = 15000; // 15 seconds in milliseconds
-        let stars = [];
         let pulseSize = 0;
         let isPulsing = false;
         let worldMap;
-        let starSpeed = 0.1; // Controls how fast stars move
         let audioContext;
         
         // Function to create ping sound
@@ -171,48 +183,10 @@
             }
         }
 
-        // Add this new Star class before the Particle class
-        class Star {
-            constructor() {
-                this.x = random(width);
-                this.y = random(height);
-                this.size = random(2, 6);  // Much larger stars
-                this.twinkleSpeed = random(0.02, 0.05);
-                this.brightness = random(100, 255);
-                this.angle = random(TWO_PI);
-                // Add movement speed with slight variations
-                this.speedX = starSpeed + random(-0.05, 0.05);
-                this.speedY = starSpeed/2 + random(-0.02, 0.02);
-            }
-
-            display() {
-                // Update position
-                this.x += this.speedX;
-                this.y += this.speedY;
-                
-                // Wrap around screen edges
-                if (this.x > width) this.x = 0;
-                if (this.x < 0) this.x = width;
-                if (this.y > height) this.y = 0;
-                if (this.y < 0) this.y = height;
-
-                this.angle += this.twinkleSpeed;
-                let twinkle = sin(this.angle) * 50;
-                fill(255, this.brightness + twinkle);
-                noStroke();
-                ellipse(this.x, this.y, this.size);
-            }
-        }
-
         // p5.js setup function - runs once at start
         function setup() {
             createCanvas(800, 600);
             particle = new Particle();
-            
-            // Create stars
-            for (let i = 0; i < 200; i++) {
-                stars.push(new Star());
-            }
             
             // Initial fetch
             fetchISSData();
@@ -223,15 +197,10 @@
 
         // p5.js draw function - runs continuously
         function draw() {
-            background(0, 70);  // Changed from (51, 50) to (0, 70) for darker background
+            background(0, 70);  // Keep dark background
             
             // Draw world map with reduced opacity
             drawWorldMap();
-            
-            // Draw stars
-            for (let star of stars) {
-                star.display();
-            }
             
             // Draw pulse effect when new data is received
             if (isPulsing) {
@@ -278,10 +247,14 @@
                 // Play ping sound
                 createPingSound();
                 
-                // Update display with more information
-                document.getElementById('info').innerText = 
-                    `ISS Position: Lat ${issData.latitude.toFixed(2)}, Lon ${issData.longitude.toFixed(2)}\n` +
-                    `Altitude: ${data.altitude.toFixed(2)} km, Velocity: ${(data.velocity/1000).toFixed(2)} km/s`;
+                // Update display with inline formatting
+                document.getElementById('info').innerHTML = 
+                    `<span class="label">ISS Position:</span>` +
+                    `Lat ${issData.latitude.toFixed(2)}°, Lon ${issData.longitude.toFixed(2)}° ` +
+                    `<span class="separator">|</span>` +
+                    `<span class="label">Altitude:</span>${data.altitude.toFixed(2)} km ` +
+                    `<span class="separator">|</span>` +
+                    `<span class="label">Velocity:</span>${(data.velocity/1000).toFixed(2)} km/s`;
                 
                 lastFetchTime = millis();
             } catch (error) {
@@ -293,7 +266,7 @@
 
         // Add this new function to draw the world map
         function drawWorldMap() {
-            stroke(50, 150, 200, 40);  // Reduced opacity from 80 to 40
+            stroke(100, 200, 255, 60);  // Brighter blue color with slightly higher opacity
             noFill();
             strokeWeight(1.5);
             
@@ -371,17 +344,18 @@
             endShape(CLOSE);
 
             // Draw oceans labels
-            fill(50, 150, 200, 40);  // Reduced opacity from 80 to 40
+            fill(100, 200, 255, 80);  // Brighter text color with higher opacity
             noStroke();
-            textSize(14);
+            textSize(16);  // Increased text size
+            textStyle(BOLD);  // Made text bold
             text("Pacific Ocean", 650, 200);
             text("Atlantic Ocean", 250, 200);
             text("Indian Ocean", 450, 250);
             text("Southern Ocean", 400, 450);
 
             // Draw latitude/longitude grid
-            stroke(50, 150, 200, 15);  // Reduced opacity from 30 to 15
-            strokeWeight(0.5);
+            stroke(100, 200, 255, 25);  // Brighter grid lines
+            strokeWeight(0.7);  // Slightly thicker lines
             
             // Draw fewer, more spaced out grid lines
             for (let y = 0; y < height; y += height/6) {
