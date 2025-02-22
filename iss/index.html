@@ -414,10 +414,10 @@
             endShape(CLOSE);
 
             // Draw oceans labels
-            fill(0, 255, 0, 80);  // Changed to neon green
+            fill(0, 255, 0, 30);  // Changed opacity to 30 (was 80)
             noStroke();
-            textSize(16);  // Increased text size
-            textStyle(BOLD);  // Made text bold
+            textSize(12);  // Reduced text size from 16 to 12
+            textStyle(NORMAL);  // Changed from BOLD to NORMAL
             text("Pacific Ocean", 650, 200);
             text("Atlantic Ocean", 250, 200);
             text("Indian Ocean", 450, 250);
