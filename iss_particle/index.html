@@ -13,7 +13,7 @@
             justify-content: center;
             align-items: center;
             min-height: 100vh;
-            background: #333;
+            background: #000;
             color: white;
             font-family: Arial, sans-serif;
         }
@@ -41,7 +41,7 @@
         let issData = { latitude: 0, longitude: 0 };
         let particle;
         let lastFetchTime = 0;
-        const FETCH_INTERVAL = 15000; // Changed to 15 seconds (15000 milliseconds)
+        const FETCH_INTERVAL = 15000; // 15 seconds in milliseconds
         let stars = [];
         let pulseSize = 0;
         let isPulsing = false;
@@ -209,19 +209,23 @@
             createCanvas(800, 600);
             particle = new Particle();
             
-            // Create many more stars
-            for (let i = 0; i < 200; i++) {  // Significantly increased star count
+            // Create stars
+            for (let i = 0; i < 200; i++) {
                 stars.push(new Star());
             }
             
+            // Initial fetch
             fetchISSData();
+            
+            // Set up interval for regular fetching
+            setInterval(fetchISSData, FETCH_INTERVAL);
         }
 
         // p5.js draw function - runs continuously
         function draw() {
-            background(51, 50);  // 51 is equivalent to #333 in p5.js grayscale
+            background(0, 70);  // Changed from (51, 50) to (0, 70) for darker background
             
-            // Draw world map
+            // Draw world map with reduced opacity
             drawWorldMap();
             
             // Draw stars
@@ -241,11 +245,6 @@
                     isPulsing = false;
                     pulseSize = 0;
                 }
-            }
-            
-            // Check if it's time to fetch new data
-            if (millis() - lastFetchTime >= FETCH_INTERVAL) {
-                fetchISSData();
             }
 
             // Update and display particle
@@ -287,7 +286,7 @@
 
         // Add this new function to draw the world map
         function drawWorldMap() {
-            stroke(50, 150, 200, 80);
+            stroke(50, 150, 200, 40);  // Reduced opacity from 80 to 40
             noFill();
             strokeWeight(1.5);
             
@@ -365,7 +364,7 @@
             endShape(CLOSE);
 
             // Draw oceans labels
-            fill(50, 150, 200, 80);
+            fill(50, 150, 200, 40);  // Reduced opacity from 80 to 40
             noStroke();
             textSize(14);
             text("Pacific Ocean", 650, 200);
@@ -374,7 +373,7 @@
             text("Southern Ocean", 400, 450);
 
             // Draw latitude/longitude grid
-            stroke(50, 150, 200, 30);
+            stroke(50, 150, 200, 15);  // Reduced opacity from 30 to 15
             strokeWeight(0.5);
             
             // Draw fewer, more spaced out grid lines
