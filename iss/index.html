@@ -30,11 +30,8 @@
             left: 10px;
             background: rgba(0, 0, 0, 0.7);
             padding: 10px 20px;
-            border-radius: 8px;
-            border: 1px solid rgba(0, 255, 0, 0.3); /* Changed to neon green */
-            font-size: 16px;
+            font-size: 2px;
             white-space: nowrap;  /* Keep all text on one line */
-            display: none;
         }
         .label {
             color: #DAA520; /* Changed to gold */
@@ -50,13 +47,11 @@
             top: 15px;
             left: 50%;
             transform: translateX(-50%);
-            font-size: 17px;
+            font-size: 15px;
             color: #DAA520;
             text-align: center;
             background: rgba(0, 0, 0, 0.7);
             padding: 10px 20px;
-            border-radius: 8px;
-            border: 1px solid rgba(0, 255, 0, 0.3);
             z-index: 1;
         }
         /* Add loading and error states */
@@ -445,7 +440,7 @@
         // Add new helper functions
         function updateInfoDisplay() {
             const infoDiv = document.getElementById('info');
-            infoDiv.className = loading ? 'loading' : error ? 'error' : '';
+            //infoDiv.className = loading ? 'loading' : error ? 'error' : '';
         }
         
         async function getTimezone(lat, lon) {
