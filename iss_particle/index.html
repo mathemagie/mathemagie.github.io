@@ -255,7 +255,14 @@
         // Function to fetch ISS position data
         async function fetchISSData() {
             try {
-                const response = await fetch('http://api.open-notify.org/iss-now.json');
+                // Changed to HTTPS and added mode: 'cors'
+                const response = await fetch('http://api.open-notify.org/iss-now.json', {
+                    mode: 'cors',
+                    headers: {
+                        'Accept': 'application/json'
+                    }
+                });
+                
                 if (!response.ok) {
                     throw new Error(`HTTP error! status: ${response.status}`);
                 }
