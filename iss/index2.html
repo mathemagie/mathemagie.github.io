@@ -11,7 +11,7 @@
             justify-content: center;
             align-items: flex-end;
             min-height: 100vh;
-            background: #1E1E23;
+            background: #000000;  /* Changed from #1E1E23 to pure black */
         }
         
         #earth-container {
@@ -20,6 +20,7 @@
             height: 600px;
             overflow: hidden;
             border-top: 0px solid rgba(80, 180, 255, 0.3);
+            background: #000000;  /* Added black background */
         }
 
         #p5-canvas {
@@ -44,10 +45,11 @@
             height: 200px; /* Reduced from 400px */
             left: 300px;   /* Adjusted to keep centered */
             bottom: 200px; /* Adjusted position */
-            border: 3px solid rgba(255, 0, 81, 0.3);
+            border: 3px solid rgba(255, 255, 255, 0.3);  /* Changed from blue to white */
             border-radius: 50%;
             background: url('https://eoimages.gsfc.nasa.gov/images/imagerecords/74000/74393/world.200412.3x5400x2700.jpg');
             background-size: cover;
+           box-shadow: 0 0 1px rgba(255, 255, 255, 0.2);  /* Added white glow */
         }
 
         @keyframes blinkTower {
@@ -179,12 +181,52 @@
         
         // P5.js sketch
         let particles = [];
-        const NUM_PARTICLES = 150;  // Increased from 50 to 150
-        const EARTH_CENTER_X = 400;    // 300px + 100px (left + width/2)
-        const EARTH_CENTER_Y = 300;    // 600px - 200px - 100px (canvas_height - bottom - radius)
-        const EARTH_RADIUS = 100;      // 200px/2 (Earth diameter/2)
+        let stars = [];  // Array to hold background stars
+        const NUM_PARTICLES = 150;
+        const NUM_STARS = 200;  // Number of background stars
+        const EARTH_CENTER_X = 400;
+        const EARTH_CENTER_Y = 300;
+        const EARTH_RADIUS = 100;
         
         new p5((p) => {
+            class Star {
+                constructor() {
+                    this.reset();
+                }
+                
+                reset() {
+                    // Keep trying until we get a position outside Earth circle
+                    do {
+                        this.x = p.random(p.width);
+                        this.y = p.random(p.height);
+                        let dx = this.x - EARTH_CENTER_X;
+                        let dy = this.y - EARTH_CENTER_Y;
+                        this.distanceFromCenter = p.sqrt(dx * dx + dy * dy);
+                    } while (this.distanceFromCenter < EARTH_RADIUS * 1.2);  // Keep away from Earth's edge
+                    
+                    this.size = p.random(0.5, 1.5);
+                    this.twinkleSpeed = p.random(0.02, 0.05);
+                    this.offset = p.random(1000);  // Random offset for twinkling
+                    this.brightness = p.random(100, 200);
+                }
+                
+                update() {
+                    // Create smooth twinkling effect using sine wave
+                    this.offset += this.twinkleSpeed;
+                    let twinkle = p.sin(this.offset) * 0.5 + 0.5;  // Normalize sine wave to 0-1
+                    this.alpha = p.map(twinkle, 0, 1, this.brightness * 0.3, this.brightness);
+                }
+                
+                draw() {
+                    p.noStroke();
+                    // Create a subtle glow effect
+                    p.fill(255, 255, 255, this.alpha * 0.2);
+                    p.circle(this.x, this.y, this.size * 2);
+                    p.fill(255, 255, 255, this.alpha);
+                    p.circle(this.x, this.y, this.size);
+                }
+            }
+            
             class Particle {
                 constructor() {
                     this.reset();
@@ -269,7 +311,12 @@
                 const canvas = p.createCanvas(800, 600);
                 canvas.parent('p5-canvas');
                 
-                // Create initial particles
+                // Create stars
+                for (let i = 0; i < NUM_STARS; i++) {
+                    stars.push(new Star());
+                }
+                
+                // Create particles
                 for (let i = 0; i < NUM_PARTICLES; i++) {
                     particles.push(new Particle());
                 }
@@ -278,10 +325,25 @@
             p.draw = () => {
                 p.clear();
                 
-                // Debug: Draw Earth circle boundary (comment out in production)
-                // p.noFill();
-                // p.stroke(255, 0, 0);
-                // p.circle(EARTH_CENTER_X, EARTH_CENTER_Y, EARTH_RADIUS * 2);
+                // Draw dark space background
+                p.noStroke();
+                p.fill(0, 0, 0, 255);
+                p.rect(0, 0, p.width, p.height);
+                
+                // Update and draw stars
+                stars.forEach(star => {
+                    star.update();
+                    star.draw();
+                });
+                
+                // // Draw a white gradient around Earth
+                // let radius = EARTH_RADIUS * 1.5;
+                // for(let r = radius; r > EARTH_RADIUS; r--) {
+                //     let alpha = p.map(r, EARTH_RADIUS, radius, 0, 40);  // Reduced max alpha for subtlety
+                //     p.stroke(255, 255, 255, alpha);  // Changed to white
+                //     p.noFill();
+                //     p.circle(EARTH_CENTER_X, EARTH_CENTER_Y, r * 2);
+                // }
                 
                 // Update and draw all particles
                 particles.forEach(particle => {
