@@ -1,3 +1,1 @@
 # mathemagie.github.io
-
-test
