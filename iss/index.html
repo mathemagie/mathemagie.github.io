@@ -138,30 +138,80 @@
                 audioContext = new (window.AudioContext || window.webkitAudioContext)();
             }
             
-            // Create oscillator and gain nodes
-            const oscillator = audioContext.createOscillator();
+            // Create audio nodes
+            const oscillator1 = audioContext.createOscillator(); // Main oscillator
+            const oscillator2 = audioContext.createOscillator(); // For sub-bass
             const gainNode = audioContext.createGain();
+            const delayNode = audioContext.createDelay();
+            const filter = audioContext.createBiquadFilter();
+            const subFilter = audioContext.createBiquadFilter(); // Additional filter for sub frequencies
             
-            // Configure oscillator
-            oscillator.type = 'sine';
-            // Start with lower frequency and slide up slightly for a sonar effect
-            oscillator.frequency.setValueAtTime(440, audioContext.currentTime); // A4 note
-            oscillator.frequency.exponentialRampToValueAtTime(460, audioContext.currentTime + 0.1);
+            // Configure main oscillator (deep sonar style)
+            oscillator1.type = 'sine'; // Pure sine wave for sonar feel
+            oscillator1.frequency.setValueAtTime(220, audioContext.currentTime); // A3 note
+            oscillator1.frequency.exponentialRampToValueAtTime(110, audioContext.currentTime + 0.5); // Down to A2
             
-            // Configure gain (volume)
+            // Configure sub oscillator for depth
+            oscillator2.type = 'sine';
+            oscillator2.frequency.setValueAtTime(55, audioContext.currentTime); // A1 note
+            oscillator2.frequency.exponentialRampToValueAtTime(27.5, audioContext.currentTime + 0.5); // Down to A0
+            
+            // Configure main filter for sonar character
+            filter.type = 'bandpass';
+            filter.frequency.setValueAtTime(220, audioContext.currentTime);
+            filter.frequency.exponentialRampToValueAtTime(110, audioContext.currentTime + 0.5);
+            filter.Q.value = 2; // Less resonance for smoother sound
+            
+            // Configure sub filter
+            subFilter.type = 'lowpass';
+            subFilter.frequency.value = 200;
+            subFilter.Q.value = 1;
+            
+            // Configure multiple delays for deep echo effect
+            const delayTimes = [0.2, 0.4, 0.6];
+            const delayNodes = delayTimes.map(time => {
+                const delay = audioContext.createDelay();
+                delay.delayTime.value = time;
+                return delay;
+            });
+            
+            // Configure gain (volume) with sonar characteristics
             gainNode.gain.setValueAtTime(0, audioContext.currentTime);
-            // Smooth fade in
-            gainNode.gain.linearRampToValueAtTime(0.2, audioContext.currentTime + 0.1);
-            // Long smooth fade out
-            gainNode.gain.exponentialRampToValueAtTime(0.001, audioContext.currentTime + 1.0);
+            // Slow attack
+            gainNode.gain.linearRampToValueAtTime(0.7, audioContext.currentTime + 0.1);
+            // Long decay
+            gainNode.gain.exponentialRampToValueAtTime(0.001, audioContext.currentTime + 1.5);
             
-            // Connect nodes
-            oscillator.connect(gainNode);
+            // Create feedback loops for delays
+            const feedbackGains = delayNodes.map(() => {
+                const gain = audioContext.createGain();
+                gain.gain.value = 0.4;
+                return gain;
+            });
+            
+            // Connect main oscillator chain
+            oscillator1.connect(filter);
+            filter.connect(gainNode);
+            
+            // Connect sub oscillator chain
+            oscillator2.connect(subFilter);
+            subFilter.connect(gainNode);
+            
+            // Connect delay network
+            delayNodes.forEach((delay, i) => {
+                filter.connect(delay);
+                delay.connect(feedbackGains[i]);
+                feedbackGains[i].connect(delay);
+                delay.connect(gainNode);
+            });
+            
             gainNode.connect(audioContext.destination);
             
             // Start and stop the sound
-            oscillator.start();
-            oscillator.stop(audioContext.currentTime + 1.0);
+            oscillator1.start();
+            oscillator2.start();
+            oscillator1.stop(audioContext.currentTime + 2.0);
+            oscillator2.stop(audioContext.currentTime + 2.0);
         }
 
         // Particle class to handle visualization
