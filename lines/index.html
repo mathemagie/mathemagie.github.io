@@ -40,16 +40,45 @@
             removeLinesNearMouse(); // Add this call
             drawLines();   // Renamed from drawDots
 
-            // Draw the removal radius square if left mouse is pressed
+            // Draw the eraser (gomme) if left mouse is pressed
             if (mouseIsPressed && mouseButton === LEFT) {
-                push(); // Isolate drawing style changes
-                rectMode(CENTER); // Draw rectangles from their center
-                noFill(); // We only want the outline
-                stroke(0, 0, 100, 0.5); // White stroke with 50% alpha
-                strokeWeight(3); // Make the square outline 2px thick
-                rect(mouseX, mouseY, removalRadius * 2, removalRadius * 2); // Draw square centered on mouse
-                pop(); // Restore original drawing styles
+                drawEraser(mouseX, mouseY, removalRadius);
             }
+        }
+
+        // Function to draw an eraser shape
+        function drawEraser(x, y, radius) {
+            push(); // Isolate drawing style changes
+            translate(x, y); // Move to mouse position
+            rectMode(CENTER); // Draw rectangles from their center
+            
+            // Main eraser body (pink rectangle)
+            fill(340, 60, 95); // Pink color
+            stroke(340, 80, 70);
+            strokeWeight(2);
+            rect(0, 0, radius * 1.5, radius * 0.8, 5); // Rounded rectangle
+            
+            // White eraser bottom (rubber part)
+            fill(0, 0, 100); // White
+            stroke(0, 0, 70);
+            rect(0, radius * 0.2, radius * 1.5, radius * 0.4, 3); // Bottom part
+            
+            // Small decorative lines
+            stroke(340, 80, 50);
+            line(-radius * 0.65, -radius * 0.3, -radius * 0.65, radius * 0.3);
+            line(-radius * 0.4, -radius * 0.3, -radius * 0.4, radius * 0.3);
+            line(-radius * 0.15, -radius * 0.3, -radius * 0.15, radius * 0.3);
+            line(radius * 0.1, -radius * 0.3, radius * 0.1, radius * 0.3);
+            line(radius * 0.35, -radius * 0.3, radius * 0.35, radius * 0.3);
+            line(radius * 0.6, -radius * 0.3, radius * 0.6, radius * 0.3);
+            
+            // Outline of the removal area
+            noFill();
+            stroke(0, 0, 100, 0.3); // Semi-transparent white
+            strokeWeight(1);
+            ellipse(0, 0, radius * 2, radius * 2); // Show the actual removal radius
+            
+            pop(); // Restore original drawing styles
         }
 
         // Function to manage adding/removing lines
