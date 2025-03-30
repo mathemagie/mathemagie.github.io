@@ -27,11 +27,46 @@
         let drawSpeed = 0.2; // Control the speed of adding new lines
         let lines = []; // Array to store line data (Renamed from dots)
         const removalRadius = 50; // Radius around the mouse to remove lines
+        let lastFrameTime = 0; // For tracking time between frames
+        let targetFrameRate = 60; // Target frames per second
+        let frameInterval = 1000 / targetFrameRate; // Milliseconds per frame
+        let deltaTime = 0; // Time since last frame
+        let animationFrameId; // For storing the requestAnimationFrame ID
+        let customFrameCount = 0; // Custom frame counter for consistent timing
 
         function setup() {
             createCanvas(windowWidth, windowHeight);
             colorMode(HSB, 360, 100, 100, 1); // Use HSB color mode
             strokeWeight(2); // Adjust stroke weight for lines (made thinner)
+            
+            // Disable auto looping from p5.js
+            noLoop();
+            
+            // Start our custom animation loop
+            lastFrameTime = performance.now();
+            animationLoop();
+        }
+        
+        // Custom animation loop using requestAnimationFrame
+        function animationLoop(currentTime) {
+            // Calculate time since last frame
+            if (!currentTime) currentTime = performance.now();
+            deltaTime = currentTime - lastFrameTime;
+            
+            // Only render if enough time has passed for our target frame rate
+            if (deltaTime >= frameInterval) {
+                // Update our custom frame counter
+                customFrameCount++;
+                
+                // Update the last frame time, accounting for the actual time passed
+                lastFrameTime = currentTime - (deltaTime % frameInterval);
+                
+                // Call our draw function
+                draw();
+            }
+            
+            // Request the next frame
+            animationFrameId = requestAnimationFrame(animationLoop);
         }
 
         function draw() {
@@ -78,7 +113,7 @@
         // Function to manage adding/removing lines
         function manageLines() {
             // Add a new line at the specified speed
-            if (frameCount % Math.floor(1/drawSpeed) === 0) {
+            if (customFrameCount % Math.floor(1/drawSpeed) === 0) {
                 // Generate random start and end points for the line
                 let startX = random(width);
                 let startY = random(height);
@@ -170,7 +205,16 @@
 
         function windowResized() {
             resizeCanvas(windowWidth, windowHeight);
+            // We don't need to call loop() since we're using our own animation loop
         }
+        
+        // Function to clean up when the page is closed or refreshed
+        window.addEventListener('beforeunload', () => {
+            // Cancel the animation frame to prevent memory leaks
+            if (animationFrameId) {
+                cancelAnimationFrame(animationFrameId);
+            }
+        });
     </script>
 </body>
 </html>
