@@ -31,6 +31,37 @@
             z-index: 100;
             font-family: Arial, sans-serif;
             width: 250px;
+            transition: transform 0.3s ease-in-out, opacity 0.3s ease-in-out;
+        }
+        
+        #controls.hidden {
+            transform: translateX(calc(100% + 20px));
+            opacity: 0;
+            pointer-events: none;
+        }
+        
+        /* Toggle button style */
+        #panel-toggle {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            background-color: rgba(0, 0, 0, 0.7);
+            color: white;
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            cursor: pointer;
+            z-index: 110;
+            font-size: 20px;
+            border: none;
+            transition: background-color 0.2s;
+        }
+        
+        #panel-toggle:hover {
+            background-color: rgba(0, 0, 0, 0.9);
         }
         
         .control-group {
@@ -96,6 +127,9 @@
     </style>
 </head>
 <body>
+    <!-- Toggle button for controls -->
+    <button id="panel-toggle">≡</button>
+    
     <!-- Control panel -->
     <div id="controls">
         <div class="control-group">
@@ -139,6 +173,7 @@
         let deltaTime = 0; // Time since last frame
         let animationFrameId; // For storing the requestAnimationFrame ID
         let customFrameCount = 0; // Custom frame counter for consistent timing
+        let isPanelVisible = true; // Track panel visibility state
         
         // Line appearance controls
         let lineThickness = 2; // Default thickness
@@ -217,6 +252,9 @@
             // Set up theme button event listeners
             setupThemeButtons();
             
+            // Set up panel toggle button
+            setupPanelToggle();
+            
             // Disable auto looping from p5.js
             noLoop();
             
@@ -246,6 +284,59 @@
                     // applyThemeToExistingLines(currentTheme, 20); // Change 20% of existing lines
                 });
             });
+        }
+        
+        // Set up the panel toggle button
+        function setupPanelToggle() {
+            const toggleButton = document.getElementById('panel-toggle');
+            const controlsPanel = document.getElementById('controls');
+            
+            toggleButton.addEventListener('click', function() {
+                // Toggle the panel visibility
+                isPanelVisible = !isPanelVisible;
+                
+                // Update the panel class
+                if (isPanelVisible) {
+                    controlsPanel.classList.remove('hidden');
+                    toggleButton.innerHTML = '≡';
+                } else {
+                    controlsPanel.classList.add('hidden');
+                    toggleButton.innerHTML = '⚙';
+                }
+            });
+        }
+        
+        // Function to check if the mouse is over the controls panel
+        function isMouseOverControls() {
+            // First check if panel is even visible
+            if (!isPanelVisible) return false;
+            
+            const controlsElement = document.getElementById('controls');
+            if (controlsElement) {
+                const rect = controlsElement.getBoundingClientRect();
+                return (
+                    mouseX >= rect.left && 
+                    mouseX <= rect.right && 
+                    mouseY >= rect.top && 
+                    mouseY <= rect.bottom
+                );
+            }
+            return false;
+        }
+        
+        // Function to check if mouse is over toggle button
+        function isMouseOverToggle() {
+            const toggleButton = document.getElementById('panel-toggle');
+            if (toggleButton) {
+                const rect = toggleButton.getBoundingClientRect();
+                return (
+                    mouseX >= rect.left && 
+                    mouseX <= rect.right && 
+                    mouseY >= rect.top && 
+                    mouseY <= rect.bottom
+                );
+            }
+            return false;
         }
         
         // Custom animation loop using requestAnimationFrame
@@ -278,27 +369,12 @@
             drawLines();   // Renamed from drawDots
 
             // Draw the eraser (gomme) if left mouse is pressed
-            // But only if the mouse is NOT over the controls panel
-            if (mouseIsPressed && mouseButton === LEFT && !isMouseOverControls()) {
+            // But only if the mouse is NOT over the controls panel or toggle button
+            if (mouseIsPressed && mouseButton === LEFT && !isMouseOverControls() && !isMouseOverToggle()) {
                 drawEraser(mouseX, mouseY, removalRadius);
             }
         }
         
-        // Function to check if the mouse is over the controls panel
-        function isMouseOverControls() {
-            const controlsElement = document.getElementById('controls');
-            if (controlsElement) {
-                const rect = controlsElement.getBoundingClientRect();
-                return (
-                    mouseX >= rect.left && 
-                    mouseX <= rect.right && 
-                    mouseY >= rect.top && 
-                    mouseY <= rect.bottom
-                );
-            }
-            return false;
-        }
-
         // Function to update animation states for all lines
         function updateLineAnimations() {
             // Filter out lines that have completed their fade-out
@@ -486,8 +562,8 @@
         // Function to remove lines near the mouse cursor
         function removeLinesNearMouse() {
             // Only remove lines if the left mouse button is pressed
-            // And the mouse is NOT over the controls panel
-            if (mouseIsPressed && mouseButton === LEFT && !isMouseOverControls()) {
+            // And the mouse is NOT over the controls panel or toggle button
+            if (mouseIsPressed && mouseButton === LEFT && !isMouseOverControls() && !isMouseOverToggle()) {
                 for (let i = 0; i < lines.length; i++) {
                     let lineData = lines[i];
                     
