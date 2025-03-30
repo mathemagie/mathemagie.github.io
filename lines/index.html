@@ -52,25 +52,28 @@
             translate(x, y); // Move to mouse position
             rectMode(CENTER); // Draw rectangles from their center
             
+            // Size adjustment - making the eraser half the size
+            let size = radius * 0.5;
+            
             // Main eraser body (pink rectangle)
             fill(340, 60, 95); // Pink color
             stroke(340, 80, 70);
             strokeWeight(2);
-            rect(0, 0, radius * 1.5, radius * 0.8, 5); // Rounded rectangle
+            rect(0, 0, size * 1.5, size * 0.8, 5); // Rounded rectangle
             
             // White eraser bottom (rubber part)
             fill(0, 0, 100); // White
             stroke(0, 0, 70);
-            rect(0, radius * 0.2, radius * 1.5, radius * 0.4, 3); // Bottom part
+            rect(0, size * 0.2, size * 1.5, size * 0.4, 3); // Bottom part
             
             // Small decorative lines
             stroke(340, 80, 50);
-            line(-radius * 0.65, -radius * 0.3, -radius * 0.65, radius * 0.3);
-            line(-radius * 0.4, -radius * 0.3, -radius * 0.4, radius * 0.3);
-            line(-radius * 0.15, -radius * 0.3, -radius * 0.15, radius * 0.3);
-            line(radius * 0.1, -radius * 0.3, radius * 0.1, radius * 0.3);
-            line(radius * 0.35, -radius * 0.3, radius * 0.35, radius * 0.3);
-            line(radius * 0.6, -radius * 0.3, radius * 0.6, radius * 0.3);
+            line(-size * 0.65, -size * 0.3, -size * 0.65, size * 0.3);
+            line(-size * 0.4, -size * 0.3, -size * 0.4, size * 0.3);
+            line(-size * 0.15, -size * 0.3, -size * 0.15, size * 0.3);
+            line(size * 0.1, -size * 0.3, size * 0.1, size * 0.3);
+            line(size * 0.35, -size * 0.3, size * 0.35, size * 0.3);
+            line(size * 0.6, -size * 0.3, size * 0.6, size * 0.3);
             
             pop(); // Restore original drawing styles
         }
