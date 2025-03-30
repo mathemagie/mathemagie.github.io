@@ -31,7 +31,7 @@
         function setup() {
             createCanvas(windowWidth, windowHeight);
             colorMode(HSB, 360, 100, 100, 1); // Use HSB color mode
-            strokeWeight(1); // Adjust stroke weight for lines (made thinner)
+            strokeWeight(2); // Adjust stroke weight for lines (made thinner)
         }
 
         function draw() {
@@ -106,17 +106,20 @@
 
         // Function to remove lines near the mouse cursor
         function removeLinesNearMouse() {
-            lines = lines.filter(lineData => {
-                // Calculate the shortest distance from the mouse cursor to the line segment
-                let distanceToSegment = pointSegmentDistance(
-                    mouseX, mouseY,
-                    lineData.startX, lineData.startY,
-                    lineData.endX, lineData.endY
-                );
+            // Only remove lines if the left mouse button is pressed
+            if (mouseIsPressed && mouseButton === LEFT) {
+                lines = lines.filter(lineData => {
+                    // Calculate the shortest distance from the mouse cursor to the line segment
+                    let distanceToSegment = pointSegmentDistance(
+                        mouseX, mouseY,
+                        lineData.startX, lineData.startY,
+                        lineData.endX, lineData.endY
+                    );
 
-                // Keep the line only if the distance is greater than the removal radius
-                return distanceToSegment > removalRadius;
-            });
+                    // Keep the line only if the distance is greater than the removal radius
+                    return distanceToSegment > removalRadius;
+                });
+            }
         }
 
         // Function to draw all stored lines
