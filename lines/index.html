@@ -52,6 +52,47 @@
             width: 100%;
             margin: 5px 0;
         }
+        
+        .theme-buttons {
+            display: flex;
+            gap: 5px;
+            width: 100%;
+        }
+        
+        .theme-button {
+            flex: 1;
+            background-color: #333;
+            color: white;
+            border: none;
+            padding: 6px 0;
+            border-radius: 3px;
+            cursor: pointer;
+            font-size: 11px;
+            transition: background-color 0.2s;
+        }
+        
+        .theme-button:hover {
+            background-color: #555;
+        }
+        
+        .theme-button.active {
+            background-color: #4CAF50;
+        }
+        
+        #theme-neon {
+            border-top: 2px solid #0ff;
+            border-bottom: 2px solid #f0f;
+        }
+        
+        #theme-pastel {
+            border-top: 2px solid #ffafcc;
+            border-bottom: 2px solid #a2d2ff;
+        }
+        
+        #theme-mono {
+            border-top: 2px solid #fff;
+            border-bottom: 2px solid #888;
+        }
     </style>
 </head>
 <body>
@@ -72,6 +113,18 @@
             </div>
             <input type="range" id="length-slider" min="10" max="200" step="5" value="100">
         </div>
+        
+        <div class="control-group">
+            <div class="control-label">
+                <span>Color Theme</span>
+            </div>
+            <div class="theme-buttons">
+                <button id="theme-random" class="theme-button active">Random</button>
+                <button id="theme-neon" class="theme-button">Neon</button>
+                <button id="theme-pastel" class="theme-button">Pastel</button>
+                <button id="theme-mono" class="theme-button">Mono</button>
+            </div>
+        </div>
     </div>
     
     <script>
@@ -90,6 +143,54 @@
         // Line appearance controls
         let lineThickness = 2; // Default thickness
         let lineLength = 100; // Default length percentage (100%)
+        
+        // Color theme settings
+        let currentTheme = 'random'; // Default theme
+        
+        // Color theme definitions
+        const colorThemes = {
+            random: {
+                getColor: () => {
+                    return {
+                        hue: random(360),
+                        saturation: 80,
+                        brightness: 90
+                    };
+                }
+            },
+            neon: {
+                getColor: () => {
+                    // Neon colors: vivid, bright, high saturation
+                    const neonHues = [320, 280, 180, 140, 40, 0]; // Magenta, Purple, Cyan, Green, Yellow, Red
+                    return {
+                        hue: neonHues[Math.floor(random(neonHues.length))],
+                        saturation: 100,
+                        brightness: 95
+                    };
+                }
+            },
+            pastel: {
+                getColor: () => {
+                    // Pastel colors: soft, light, medium saturation
+                    return {
+                        hue: random(360),
+                        saturation: 35,
+                        brightness: 95
+                    };
+                }
+            },
+            mono: {
+                getColor: () => {
+                    // Monochrome: variations of brightness with a fixed hue
+                    // We'll use a base hue of 220 (blue) which works well on black
+                    return {
+                        hue: 220,
+                        saturation: 15,
+                        brightness: random(70, 100)
+                    };
+                }
+            }
+        };
         
         // Animation settings
         const fadeInDuration = 60; // Number of frames for fade-in
@@ -113,12 +214,38 @@
                 document.getElementById('length-value').textContent = lineLength + '%';
             });
             
+            // Set up theme button event listeners
+            setupThemeButtons();
+            
             // Disable auto looping from p5.js
             noLoop();
             
             // Start our custom animation loop
             lastFrameTime = performance.now();
             animationLoop();
+        }
+        
+        // Set up the theme button event listeners
+        function setupThemeButtons() {
+            const themeButtons = document.querySelectorAll('.theme-button');
+            
+            themeButtons.forEach(button => {
+                button.addEventListener('click', function() {
+                    // Remove active class from all buttons
+                    themeButtons.forEach(btn => btn.classList.remove('active'));
+                    
+                    // Add active class to the clicked button
+                    this.classList.add('active');
+                    
+                    // Get the theme name from the button id
+                    const themeId = this.id;
+                    currentTheme = themeId.replace('theme-', '');
+                    
+                    // Optional: change some lines immediately to the new theme
+                    // This provides faster visual feedback than waiting for new lines
+                    // applyThemeToExistingLines(currentTheme, 20); // Change 20% of existing lines
+                });
+            });
         }
         
         // Custom animation loop using requestAnimationFrame
@@ -260,10 +387,9 @@
                 let endX = centerX - cos(angle) * halfLength;
                 let endY = centerY - sin(angle) * halfLength;
                 
-                // Generate color properties
-                let hue = random(360); // Random color hue
-                let saturation = 80;
-                let brightness = 90;
+                // Get color properties based on selected theme
+                const colorProps = colorThemes[currentTheme].getColor();
+                
                 let targetAlpha = 0.8; // Target alpha when fully faded in
 
                 // Create an object to store the line's data
@@ -273,9 +399,9 @@
                     endX: endX,
                     endY: endY,
                     thickness: lineThickness, // Store thickness with the line
-                    hue: hue,
-                    saturation: saturation,
-                    brightness: brightness,
+                    hue: colorProps.hue,
+                    saturation: colorProps.saturation,
+                    brightness: colorProps.brightness,
                     targetAlpha: targetAlpha,
                     currentAlpha: 0, // Start fully transparent
                     age: 0, // Track frames since creation for animation
