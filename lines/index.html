@@ -40,13 +40,14 @@
             removeLinesNearMouse(); // Add this call
             drawLines();   // Renamed from drawDots
 
-            // Draw the removal radius circle if left mouse is pressed
+            // Draw the removal radius square if left mouse is pressed
             if (mouseIsPressed && mouseButton === LEFT) {
                 push(); // Isolate drawing style changes
+                rectMode(CENTER); // Draw rectangles from their center
                 noFill(); // We only want the outline
                 stroke(0, 0, 100, 0.5); // White stroke with 50% alpha
-                strokeWeight(3); // Make the circle outline 2px thick
-                ellipse(mouseX, mouseY, removalRadius * 2, removalRadius * 2); // Draw circle centered on mouse
+                strokeWeight(3); // Make the square outline 2px thick
+                rect(mouseX, mouseY, removalRadius * 2, removalRadius * 2); // Draw square centered on mouse
                 pop(); // Restore original drawing styles
             }
         }
