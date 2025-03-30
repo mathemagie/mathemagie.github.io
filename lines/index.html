@@ -39,6 +39,16 @@
             manageLines(); // Renamed from manageDots
             removeLinesNearMouse(); // Add this call
             drawLines();   // Renamed from drawDots
+
+            // Draw the removal radius circle if left mouse is pressed
+            if (mouseIsPressed && mouseButton === LEFT) {
+                push(); // Isolate drawing style changes
+                noFill(); // We only want the outline
+                stroke(0, 0, 100, 0.5); // White stroke with 50% alpha
+                strokeWeight(3); // Make the circle outline 2px thick
+                ellipse(mouseX, mouseY, removalRadius * 2, removalRadius * 2); // Draw circle centered on mouse
+                pop(); // Restore original drawing styles
+            }
         }
 
         // Function to manage adding/removing lines
