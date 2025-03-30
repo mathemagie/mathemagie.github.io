@@ -18,9 +18,62 @@
         canvas {
             display: block;
         }
+        
+        /* Style for the controls panel */
+        #controls {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            background-color: rgba(0, 0, 0, 0.7);
+            color: white;
+            padding: 15px;
+            border-radius: 10px;
+            z-index: 100;
+            font-family: Arial, sans-serif;
+            width: 250px;
+        }
+        
+        .control-group {
+            margin-bottom: 15px;
+        }
+        
+        .control-label {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 5px;
+        }
+        
+        .control-value {
+            width: 40px;
+            text-align: right;
+        }
+        
+        input[type="range"] {
+            width: 100%;
+            margin: 5px 0;
+        }
     </style>
 </head>
 <body>
+    <!-- Control panel -->
+    <div id="controls">
+        <div class="control-group">
+            <div class="control-label">
+                <span>Line Thickness</span>
+                <span id="thickness-value" class="control-value">2</span>
+            </div>
+            <input type="range" id="thickness-slider" min="1" max="10" step="0.5" value="2">
+        </div>
+        
+        <div class="control-group">
+            <div class="control-label">
+                <span>Line Length</span>
+                <span id="length-value" class="control-value">100%</span>
+            </div>
+            <input type="range" id="length-slider" min="10" max="200" step="5" value="100">
+        </div>
+    </div>
+    
     <script>
         // Define the maximum number of lines we want on the screen
         const maxLines = 100; // Renamed from maxDots
@@ -34,6 +87,10 @@
         let animationFrameId; // For storing the requestAnimationFrame ID
         let customFrameCount = 0; // Custom frame counter for consistent timing
         
+        // Line appearance controls
+        let lineThickness = 2; // Default thickness
+        let lineLength = 100; // Default length percentage (100%)
+        
         // Animation settings
         const fadeInDuration = 60; // Number of frames for fade-in
         const growthDuration = 45; // Number of frames for growth animation
@@ -43,7 +100,18 @@
         function setup() {
             createCanvas(windowWidth, windowHeight);
             colorMode(HSB, 360, 100, 100, 1); // Use HSB color mode
-            strokeWeight(2); // Adjust stroke weight for lines (made thinner)
+            strokeWeight(lineThickness); // Use the thickness variable
+            
+            // Set up slider event listeners
+            document.getElementById('thickness-slider').addEventListener('input', function() {
+                lineThickness = parseFloat(this.value);
+                document.getElementById('thickness-value').textContent = lineThickness;
+            });
+            
+            document.getElementById('length-slider').addEventListener('input', function() {
+                lineLength = parseInt(this.value);
+                document.getElementById('length-value').textContent = lineLength + '%';
+            });
             
             // Disable auto looping from p5.js
             noLoop();
@@ -158,11 +226,24 @@
         function manageLines() {
             // Add a new line at the specified speed
             if (customFrameCount % Math.floor(1/drawSpeed) === 0) {
-                // Generate random start and end points for the line
-                let startX = random(width);
-                let startY = random(height);
-                let endX = random(width);
-                let endY = random(height);
+                // Generate random center point
+                let centerX = random(width);
+                let centerY = random(height);
+                
+                // Calculate line length based on screen size and user's setting
+                let maxPossibleLength = min(width, height) * 0.6; // 60% of the smaller dimension
+                let actualLength = maxPossibleLength * (lineLength / 100);
+                
+                // Random angle for the line
+                let angle = random(TWO_PI);
+                
+                // Calculate start and end points based on center, length and angle
+                let halfLength = actualLength / 2;
+                let startX = centerX + cos(angle) * halfLength;
+                let startY = centerY + sin(angle) * halfLength;
+                let endX = centerX - cos(angle) * halfLength;
+                let endY = centerY - sin(angle) * halfLength;
+                
                 // Generate color properties
                 let hue = random(360); // Random color hue
                 let saturation = 80;
@@ -175,6 +256,7 @@
                     startY: startY,
                     endX: endX,
                     endY: endY,
+                    thickness: lineThickness, // Store thickness with the line
                     hue: hue,
                     saturation: saturation,
                     brightness: brightness,
@@ -226,6 +308,9 @@
             // Draw all stored lines
             for (let i = 0; i < lines.length; i++) {
                 let lineData = lines[i];
+                
+                // Set the stroke weight for this specific line
+                strokeWeight(lineData.thickness);
                 
                 // Set the color for this specific line, using the current (animated) alpha
                 stroke(lineData.hue, lineData.saturation, lineData.brightness, lineData.currentAlpha * lineData.fadeOutFactor);
