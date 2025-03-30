@@ -33,6 +33,12 @@
         let deltaTime = 0; // Time since last frame
         let animationFrameId; // For storing the requestAnimationFrame ID
         let customFrameCount = 0; // Custom frame counter for consistent timing
+        
+        // Animation settings
+        const fadeInDuration = 60; // Number of frames for fade-in
+        const growthDuration = 45; // Number of frames for growth animation
+        const fadeOutDuration = 30; // Number of frames for fade-out before removal
+        const lineLifespan = 500; // Maximum lifespan of a line before it starts to fade out
 
         function setup() {
             createCanvas(windowWidth, windowHeight);
@@ -72,12 +78,50 @@
         function draw() {
             background(0, 0, 0, 1); // Solid black background
             manageLines(); // Renamed from manageDots
+            updateLineAnimations(); // Update animation states for all lines
             removeLinesNearMouse(); // Add this call
             drawLines();   // Renamed from drawDots
 
             // Draw the eraser (gomme) if left mouse is pressed
             if (mouseIsPressed && mouseButton === LEFT) {
                 drawEraser(mouseX, mouseY, removalRadius);
+            }
+        }
+        
+        // Function to update animation states for all lines
+        function updateLineAnimations() {
+            // Filter out lines that have completed their fade-out
+            lines = lines.filter(line => line.fadeOutFactor > 0);
+            
+            for (let i = 0; i < lines.length; i++) {
+                let line = lines[i];
+                
+                // Update fade-in animation
+                if (line.age < fadeInDuration) {
+                    line.currentAlpha = map(line.age, 0, fadeInDuration, 0, line.targetAlpha);
+                } else {
+                    line.currentAlpha = line.targetAlpha;
+                }
+                
+                // Update growth animation
+                if (line.age < growthDuration) {
+                    line.growthFactor = map(line.age, 0, growthDuration, 0, 1);
+                } else {
+                    line.growthFactor = 1;
+                }
+                
+                // Update fade-out animation for old lines
+                if (line.age > lineLifespan) {
+                    let fadeOutAge = line.age - lineLifespan;
+                    if (fadeOutAge < fadeOutDuration) {
+                        line.fadeOutFactor = map(fadeOutAge, 0, fadeOutDuration, 1, 0);
+                    } else {
+                        line.fadeOutFactor = 0; // Will be filtered out on next update
+                    }
+                }
+                
+                // Increment age
+                line.age++;
             }
         }
 
@@ -123,7 +167,7 @@
                 let hue = random(360); // Random color hue
                 let saturation = 80;
                 let brightness = 90;
-                let alpha = 0.8; // Keep alpha slightly transparent
+                let targetAlpha = 0.8; // Target alpha when fully faded in
 
                 // Create an object to store the line's data
                 let newLine = {
@@ -134,7 +178,11 @@
                     hue: hue,
                     saturation: saturation,
                     brightness: brightness,
-                    alpha: alpha
+                    targetAlpha: targetAlpha,
+                    currentAlpha: 0, // Start fully transparent
+                    age: 0, // Track frames since creation for animation
+                    growthFactor: 0, // Start with no length
+                    fadeOutFactor: 1 // Will be used for fade-out animation
                 };
 
                 // Add the new line to the end of the array
@@ -173,33 +221,63 @@
             return dist(px, py, closestX, closestY);
         }
 
+        // Function to draw all stored lines
+        function drawLines() {
+            // Draw all stored lines
+            for (let i = 0; i < lines.length; i++) {
+                let lineData = lines[i];
+                
+                // Set the color for this specific line, using the current (animated) alpha
+                stroke(lineData.hue, lineData.saturation, lineData.brightness, lineData.currentAlpha * lineData.fadeOutFactor);
+                
+                // Calculate the current line endpoints based on growth animation
+                let currentStartX, currentStartY, currentEndX, currentEndY;
+                
+                if (lineData.growthFactor < 1) {
+                    // Calculate midpoint
+                    let midX = (lineData.startX + lineData.endX) / 2;
+                    let midY = (lineData.startY + lineData.endY) / 2;
+                    
+                    // Grow from middle outward
+                    currentStartX = lerp(midX, lineData.startX, lineData.growthFactor);
+                    currentStartY = lerp(midY, lineData.startY, lineData.growthFactor);
+                    currentEndX = lerp(midX, lineData.endX, lineData.growthFactor);
+                    currentEndY = lerp(midY, lineData.endY, lineData.growthFactor);
+                } else {
+                    // Use the full line dimensions
+                    currentStartX = lineData.startX;
+                    currentStartY = lineData.startY;
+                    currentEndX = lineData.endX;
+                    currentEndY = lineData.endY;
+                }
+                
+                // Draw the line using the current (animated) endpoints
+                line(currentStartX, currentStartY, currentEndX, currentEndY);
+            }
+        }
+
         // Function to remove lines near the mouse cursor
         function removeLinesNearMouse() {
             // Only remove lines if the left mouse button is pressed
             if (mouseIsPressed && mouseButton === LEFT) {
-                lines = lines.filter(lineData => {
+                for (let i = 0; i < lines.length; i++) {
+                    let lineData = lines[i];
+                    
                     // Calculate the shortest distance from the mouse cursor to the line segment
                     let distanceToSegment = pointSegmentDistance(
                         mouseX, mouseY,
                         lineData.startX, lineData.startY,
                         lineData.endX, lineData.endY
                     );
-
-                    // Keep the line only if the distance is greater than the removal radius
-                    return distanceToSegment > removalRadius;
-                });
-            }
-        }
-
-        // Function to draw all stored lines
-        function drawLines() {
-            // Draw all stored lines
-            for (let i = 0; i < lines.length; i++) {
-                let lineData = lines[i];
-                // Set the color for this specific line
-                stroke(lineData.hue, lineData.saturation, lineData.brightness, lineData.alpha);
-                // Draw the line using its stored start and end points
-                line(lineData.startX, lineData.startY, lineData.endX, lineData.endY);
+                    
+                    // If line is within removal radius, trigger immediate fade-out
+                    if (distanceToSegment <= removalRadius) {
+                        // Start fadeout if not already fading
+                        if (lineData.fadeOutFactor === 1) {
+                            lineData.age = lineLifespan + 1; // Start fade-out
+                        }
+                    }
+                }
             }
         }
 
