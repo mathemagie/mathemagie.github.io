@@ -151,11 +151,27 @@
             drawLines();   // Renamed from drawDots
 
             // Draw the eraser (gomme) if left mouse is pressed
-            if (mouseIsPressed && mouseButton === LEFT) {
+            // But only if the mouse is NOT over the controls panel
+            if (mouseIsPressed && mouseButton === LEFT && !isMouseOverControls()) {
                 drawEraser(mouseX, mouseY, removalRadius);
             }
         }
         
+        // Function to check if the mouse is over the controls panel
+        function isMouseOverControls() {
+            const controlsElement = document.getElementById('controls');
+            if (controlsElement) {
+                const rect = controlsElement.getBoundingClientRect();
+                return (
+                    mouseX >= rect.left && 
+                    mouseX <= rect.right && 
+                    mouseY >= rect.top && 
+                    mouseY <= rect.bottom
+                );
+            }
+            return false;
+        }
+
         // Function to update animation states for all lines
         function updateLineAnimations() {
             // Filter out lines that have completed their fade-out
@@ -344,7 +360,8 @@
         // Function to remove lines near the mouse cursor
         function removeLinesNearMouse() {
             // Only remove lines if the left mouse button is pressed
-            if (mouseIsPressed && mouseButton === LEFT) {
+            // And the mouse is NOT over the controls panel
+            if (mouseIsPressed && mouseButton === LEFT && !isMouseOverControls()) {
                 for (let i = 0; i < lines.length; i++) {
                     let lineData = lines[i];
                     
