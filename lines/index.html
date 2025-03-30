@@ -128,10 +128,10 @@
 </head>
 <body>
     <!-- Toggle button for controls -->
-    <button id="panel-toggle">≡</button>
+    <button id="panel-toggle">⚙</button>
     
     <!-- Control panel -->
-    <div id="controls">
+    <div id="controls" class="hidden">
         <div class="control-group">
             <div class="control-label">
                 <span>Line Thickness</span>
@@ -173,7 +173,7 @@
         let deltaTime = 0; // Time since last frame
         let animationFrameId; // For storing the requestAnimationFrame ID
         let customFrameCount = 0; // Custom frame counter for consistent timing
-        let isPanelVisible = true; // Track panel visibility state
+        let isPanelVisible = false; // Track panel visibility state - hidden by default
         
         // Line appearance controls
         let lineThickness = 2; // Default thickness
