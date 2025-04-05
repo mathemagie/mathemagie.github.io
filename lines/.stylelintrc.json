@@ -1,0 +1,14 @@
+{
+    "extends": "stylelint-config-standard",
+    "rules": {
+        "rule-empty-line-before": null,
+        "selector-no-qualifying-type": null,
+        "color-function-notation": "modern",
+        "alpha-value-notation": "percentage",
+        "color-named": "never",
+        "string-quotes": "single",
+        "color-hex-length": "short",
+        "indentation": 4,
+        "no-missing-end-of-source-newline": true
+    }
+} 

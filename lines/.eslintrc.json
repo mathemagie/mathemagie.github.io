@@ -1,0 +1,53 @@
+{
+    "env": {
+        "browser": true,
+        "es2021": true
+    },
+    "extends": "eslint:recommended",
+    "parserOptions": {
+        "ecmaVersion": "latest"
+    },
+    "globals": {
+        "createCanvas": "readonly",
+        "colorMode": "readonly",
+        "HSB": "readonly",
+        "strokeWeight": "readonly",
+        "mouseX": "writable",
+        "mouseY": "writable",
+        "mouseIsPressed": "writable",
+        "mouseButton": "writable",
+        "LEFT": "readonly",
+        "random": "readonly",
+        "TWO_PI": "readonly",
+        "cos": "readonly",
+        "sin": "readonly",
+        "width": "readonly",
+        "height": "readonly",
+        "min": "readonly",
+        "dist": "readonly",
+        "stroke": "readonly",
+        "line": "readonly",
+        "push": "readonly",
+        "pop": "readonly",
+        "translate": "readonly",
+        "fill": "readonly",
+        "noStroke": "readonly",
+        "rect": "readonly",
+        "ellipse": "readonly",
+        "lerp": "readonly",
+        "map": "readonly",
+        "background": "readonly",
+        "windowWidth": "readonly",
+        "windowHeight": "readonly",
+        "resizeCanvas": "readonly",
+        "noLoop": "readonly",
+        "rectMode": "readonly",
+        "CENTER": "readonly"
+    },
+    "rules": {
+        "indent": ["error", 4],
+        "no-unused-vars": ["warn", { "varsIgnorePattern": "setup|windowResized" }],
+        "no-redeclare": "off",
+        "no-global-assign": "off"
+    }
+} 

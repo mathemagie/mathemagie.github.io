@@ -1,0 +1,38 @@
+{
+  "name": "lines",
+  "version": "1.0.0",
+  "description": "A dynamic, interactive visualization that creates animated random lines with custom controls for visual parameters. Built with p5.js for creative coding.",
+  "main": "index.js",
+  "scripts": {
+    "lint:js": "eslint js/**/*.js",
+    "lint:css": "stylelint \"**/*.css\"",
+    "lint:html": "htmlhint \"**/*.html\"",
+    "lint": "npm run lint:js && npm run lint:css && npm run lint:html",
+    "format:js": "prettier --write \"js/**/*.js\"",
+    "format:css": "prettier --write \"**/*.css\"",
+    "format:html": "prettier --write \"**/*.html\"",
+    "format": "npm run format:js && npm run format:css && npm run format:html",
+    "fix:js": "eslint js/**/*.js --fix",
+    "fix:css": "stylelint \"**/*.css\" --fix",
+    "fix": "npm run fix:js && npm run fix:css && npm run format"
+  },
+  "keywords": [
+    "p5js",
+    "creative-coding",
+    "visualization",
+    "interactive",
+    "animation"
+  ],
+  "author": "",
+  "license": "ISC",
+  "devDependencies": {
+    "eslint": "^8.57.1",
+    "eslint-config-prettier": "^8.x",
+    "eslint-plugin-prettier": "^4.x",
+    "htmlhint": "^1.x",
+    "prettier": "^2.x",
+    "stylelint": "^14.x",
+    "stylelint-config-prettier": "^9.x",
+    "stylelint-config-standard": "^29.x"
+  }
+}
