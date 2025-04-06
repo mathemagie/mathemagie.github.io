@@ -364,30 +364,55 @@ function drawEraser(x, y, radius) {
     push(); // Isolate drawing style changes
     translate(x, y); // Move to mouse position
     rectMode(CENTER); // Draw rectangles from their center
-         
-    // Simple white eraser with slightly off-white color to match photo
-    fill(55, 5, 98); // Slightly off-white/cream color in HSB
-    stroke(40, 10, 85); // Light tan/beige edge color
-    strokeWeight(1.5);
-         
-    // Main eraser body - shorter and more rectangular like in the photo
-    // Rectangular shape with rounded corners
-    rect(0, 0, radius * 1.2, radius * 0.7, 8); // More rectangular with rounded corners
-         
-    // Add subtle shading to give depth
+    
+    // Gum eraser colors - slightly off-white with a hint of blue-gray
+    const eraserColor = color(210, 10, 95); // Light blue-gray in HSB
+    const edgeColor = color(210, 15, 85); // Slightly darker edge
+    const shadowColor = color(210, 15, 80, 0.3); // Subtle shadow
+    
+    // Main eraser body - rectangular with slightly rounded corners
+    // Gum erasers are typically more rectangular than regular erasers
     noStroke();
-    fill(55, 10, 90, 0.15); // Slightly darker shade for top shadow
-    rect(-radius * 0.2, -radius * 0.15, radius * 0.7, radius * 0.3, 3);
-         
-    // Add a few small dots/marks to simulate the texture/wear of the eraser
-    fill(0, 0, 70, 0.05); // Very subtle dark marks
-    for (let i = 0; i < 8; i++) {
-        let dotX = random(-radius * 0.5, radius * 0.5);
+    fill(eraserColor);
+    
+    // Draw the main body with rounded corners
+    rect(0, 0, radius * 1.5, radius * 0.8, 6);
+    
+    // Add a subtle shadow on the top edge for depth
+    fill(shadowColor);
+    rect(-radius * 0.4, -radius * 0.3, radius * 0.8, radius * 0.2, 3);
+    
+    // Add the characteristic "gum" texture - small dots and lines
+    fill(210, 5, 90, 0.1); // Slightly lighter dots
+    for (let i = 0; i < 12; i++) {
+        let dotX = random(-radius * 0.6, radius * 0.6);
         let dotY = random(-radius * 0.3, radius * 0.3);
         let dotSize = random(1, 3);
         ellipse(dotX, dotY, dotSize, dotSize);
     }
-         
+    
+    // Add some small lines to simulate the texture of a gum eraser
+    stroke(210, 5, 90, 0.15);
+    strokeWeight(0.8);
+    for (let i = 0; i < 5; i++) {
+        let lineX1 = random(-radius * 0.6, radius * 0.6);
+        let lineY1 = random(-radius * 0.3, radius * 0.3);
+        let lineX2 = lineX1 + random(-5, 5);
+        let lineY2 = lineY1 + random(-3, 3);
+        line(lineX1, lineY1, lineX2, lineY2);
+    }
+    
+    // Add a subtle edge highlight
+    noFill();
+    stroke(edgeColor);
+    strokeWeight(1);
+    rect(0, 0, radius * 1.5, radius * 0.8, 6);
+    
+    // Add a small "brand" mark or texture pattern
+    noStroke();
+    fill(210, 5, 90, 0.2);
+    rect(-radius * 0.3, -radius * 0.2, radius * 0.6, radius * 0.1, 2);
+    
     pop(); // Restore original drawing styles
 }
 
