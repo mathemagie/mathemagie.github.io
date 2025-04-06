@@ -220,6 +220,7 @@ function setupPanelToggle() {
     
     // Add click event listener to the document to close the panel when clicking outside
     document.addEventListener('click', function(e) {
+        console.log('click');
         // Only proceed if the panel is visible
         if (isPanelVisible) {
             // Check if the click was outside both the panel and the toggle button
