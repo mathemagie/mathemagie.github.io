@@ -1,8 +1,14 @@
-# Random Lines - Creative p5.js Visualization
+# Lines - Interactive Art Experience
 
-A dynamic, interactive visualization that creates animated random lines with custom controls for visual parameters. Built with p5.js for creative coding.
+✨ Immerse yourself in a mesmerizing world of flowing lines that respond to your touch and movement. This interactive art piece creates a dynamic canvas where colorful lines fade in and out, creating an ever-changing visual symphony.
 
-![Random Lines Demo](https://via.placeholder.com/800x400?text=Random+Lines+Demo)
+🎨 Customize your experience with intuitive controls - adjust line thickness, length, and watch as your artistic vision comes to life. The minimalist interface keeps the focus on the art while giving you creative freedom.
+
+🧹 Use the realistic gum eraser to remove lines and create your own patterns. The satisfying eraser effect lets you "draw" with negative space, adding another dimension to your creative process.
+
+🎵 Experience subtle audio feedback as lines intersect, creating a gentle soundscape that complements the visual experience. Toggle sound on/off to suit your preference.
+
+📱 Fully optimized for both desktop and mobile devices, this responsive art piece adapts to any screen size. Perfect for a moment of calm reflection or creative exploration.
 
 ## Features
 
