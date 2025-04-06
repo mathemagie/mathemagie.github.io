@@ -151,6 +151,8 @@ function setup() {
             initAudio();
         }
     });
+    // Set initial sound state to off
+    document.getElementById('sound-toggle').textContent = '🔇';
          
     // Initialize audio on first user interaction
     document.addEventListener('click', function() {
