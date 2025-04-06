@@ -201,7 +201,7 @@ function setupPanelToggle() {
     const toggleButton = document.getElementById('panel-toggle');
     const controlsPanel = document.getElementById('controls');
          
-    toggleButton.addEventListener('click', function() {
+    toggleButton.addEventListener('click', function(e) {
         // Toggle the panel visibility
         isPanelVisible = !isPanelVisible;
              
@@ -213,6 +213,31 @@ function setupPanelToggle() {
             controlsPanel.classList.add('hidden');
             toggleButton.innerHTML = '⚙';
         }
+        
+        // Stop event propagation to prevent the document click handler from firing
+        e.stopPropagation();
+    });
+    
+    // Add click event listener to the document to close the panel when clicking outside
+    document.addEventListener('click', function(e) {
+        // Only proceed if the panel is visible
+        if (isPanelVisible) {
+            // Check if the click was outside both the panel and the toggle button
+            const isOutsidePanel = !controlsPanel.contains(e.target);
+            const isOutsideToggle = !toggleButton.contains(e.target);
+            
+            // If click was outside both, close the panel
+            if (isOutsidePanel && isOutsideToggle) {
+                isPanelVisible = false;
+                controlsPanel.classList.add('hidden');
+                toggleButton.innerHTML = '⚙';
+            }
+        }
+    });
+    
+    // Prevent clicks inside the panel from closing it
+    controlsPanel.addEventListener('click', function(e) {
+        e.stopPropagation();
     });
 }
      
