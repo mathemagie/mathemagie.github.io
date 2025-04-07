@@ -68,6 +68,14 @@
         const script = document.createElement('script');
         script.src = 'js/script.js?v=' + new Date().getTime();
         document.body.appendChild(script);
+        
+        // Add js-loaded class to controls panel once JavaScript is loaded
+        script.onload = function() {
+            const controlsPanel = document.getElementById('controls');
+            if (controlsPanel) {
+                controlsPanel.classList.add('js-loaded');
+            }
+        };
     </script>
 </body>
 </html>

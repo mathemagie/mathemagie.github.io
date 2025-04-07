@@ -26,6 +26,13 @@ canvas {
     width: min(280px, 85vw); /* Responsive width */
     transition: transform 0.3s ease-in-out, opacity 0.3s ease-in-out;
     box-shadow: 0 4px 12px rgb(0 0 0 / 20%); /* Add shadow for better visibility */
+    /* Hide by default on initial load */
+    display: none;
+}
+
+/* Once JavaScript is loaded, this class will be applied */
+#controls.js-loaded {
+    display: block;
 }
 
 #controls.hidden {
