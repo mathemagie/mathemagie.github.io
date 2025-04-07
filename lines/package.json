@@ -14,7 +14,8 @@
     "format": "npm run format:js && npm run format:css && npm run format:html",
     "fix:js": "eslint js/**/*.js --fix",
     "fix:css": "stylelint \"**/*.css\" --fix",
-    "fix": "npm run fix:js && npm run fix:css && npm run format"
+    "fix": "npm run fix:js && npm run fix:css && npm run format",
+    "test": "jest"
   },
   "keywords": [
     "p5js",
@@ -30,6 +31,8 @@
     "eslint-config-prettier": "^8.x",
     "eslint-plugin-prettier": "^4.x",
     "htmlhint": "^1.x",
+    "jest": "^29.7.0",
+    "jest-environment-jsdom": "^29.7.0",
     "prettier": "^2.x",
     "stylelint": "^14.x",
     "stylelint-config-prettier": "^9.x",

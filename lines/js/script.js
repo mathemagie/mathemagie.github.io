@@ -703,3 +703,14 @@ window.addEventListener('beforeunload', () => {
         cancelAnimationFrame(animationFrameId);
     }
 });
+// Export functions for testing (if in Node.js environment for tests)
+/* eslint-disable no-undef */
+if (typeof module !== 'undefined' && module.exports) {
+    module.exports = {
+        distSq,
+        pointSegmentDistance,
+        // Add other functions you want to test here
+        // checkLineIntersection // Example: if you refactor it to be testable
+    };
+}
+/* eslint-enable no-undef */
