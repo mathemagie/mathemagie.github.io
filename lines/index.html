@@ -9,7 +9,14 @@
     <meta name="theme-color" content="#000000">
     <title>Random Lines with p5.js</title>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/p5.js/1.9.0/p5.js"></script>
-    <link rel="stylesheet" href="css/styles.css">
+    <!-- CSS with cache-busting parameter -->
+    <script>
+        // Create a new link element with a timestamp to force reload
+        const link = document.createElement('link');
+        link.rel = 'stylesheet';
+        link.href = 'css/styles.css?v=' + new Date().getTime();
+        document.head.appendChild(link);
+    </script>
 </head>
 <body>
     <!-- Toggle button for controls -->
