@@ -3,9 +3,12 @@ node_modules/
 npm-debug.log*
 yarn-debug.log*
 yarn-error.log*
+diff.md
+ultra_diff_review
 
 # Editor directories and files
 .idea/
+.mcp.json
 .claude/
 .vscode/
 *.swp
