@@ -39,10 +39,14 @@ function playIntersectionSound(pitch = 500) {
     // Create oscillator
     const oscillator = audioContext.createOscillator();
     const gainNode = audioContext.createGain();
+    
+    // Create stereo panner for spatial effect
+    const panner = audioContext.createStereoPanner();
          
     // Connect nodes
     oscillator.connect(gainNode);
-    gainNode.connect(audioContext.destination);
+    gainNode.connect(panner);
+    panner.connect(audioContext.destination);
          
     // Set sound properties - use sine wave for smoother sound
     oscillator.type = 'sine';
@@ -51,6 +55,15 @@ function playIntersectionSound(pitch = 500) {
     // Map the pitch to a lower range (100-300 Hz instead of 300-800)
     const adjustedPitch = map(pitch, 300, 800, 100, 300);
     oscillator.frequency.setValueAtTime(adjustedPitch, audioContext.currentTime);
+    
+    // Create spatial movement effect
+    // Start from a random position in stereo field
+    const startPosition = random(-1, 1);
+    panner.pan.setValueAtTime(startPosition, audioContext.currentTime);
+    
+    // Move to the opposite side and back
+    panner.pan.linearRampToValueAtTime(-startPosition, audioContext.currentTime + 0.4);
+    panner.pan.linearRampToValueAtTime(startPosition, audioContext.currentTime + 0.8);
          
     // Set volume envelope - much softer with longer fade-in and fade-out
     gainNode.gain.setValueAtTime(0, audioContext.currentTime);

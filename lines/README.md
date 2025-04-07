@@ -6,7 +6,7 @@
 
 🧹 Use the realistic gum eraser to remove lines and create your own patterns. The satisfying eraser effect lets you "draw" with negative space, adding another dimension to your creative process.
 
-🎵 Experience ultra-smooth, gentle soundscapes that softly respond to line interactions. The low-frequency, soothing tones create a calming atmosphere that enhances the visual experience with minimal auditory presence.
+🎵 Experience spatial soundscapes that move through your environment as lines interact. The gentle tones flow from side to side, creating a three-dimensional audio experience that complements the visual elements with subtle movement.
 
 📱 Fully optimized for both desktop and mobile devices, this responsive art piece adapts to any screen size. Perfect for a moment of calm reflection or creative exploration.
 
