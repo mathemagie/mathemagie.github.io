@@ -55,6 +55,12 @@
         </div>
     </div>
     
-    <script src="js/script.js?v=" + new Date().getTime()></script>
+    <!-- Script with cache-busting parameter -->
+    <script>
+        // Create a new script element with a timestamp to force reload
+        const script = document.createElement('script');
+        script.src = 'js/script.js?v=' + new Date().getTime();
+        document.body.appendChild(script);
+    </script>
 </body>
 </html>
