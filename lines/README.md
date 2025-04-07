@@ -1,4 +1,5 @@
 
+
 # Lines - Interactive Art Experience
 
 ✨ Immerse yourself in a mesmerizing world of flowing lines that respond to your touch and movement. This interactive art piece creates a dynamic canvas where colorful lines fade in and out, creating an ever-changing visual symphony.
