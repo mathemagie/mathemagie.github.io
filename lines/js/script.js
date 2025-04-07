@@ -1,7 +1,7 @@
 /* global createCanvas, colorMode, HSB, strokeWeight, mouseX, mouseY, mouseIsPressed, LEFT, 
    random, TWO_PI, cos, sin, width, height, min, dist, stroke, line, push, pop, translate, 
    fill, noStroke, rect, ellipse, lerp, map, background, windowWidth, windowHeight, 
-   resizeCanvas, noLoop, rectMode, CENTER */
+   resizeCanvas, noLoop, rectMode, CENTER, color, noFill */
 
 // Define the maximum number of lines we want on the screen
 let maxLines = 100; // Renamed from maxDots
