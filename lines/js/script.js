@@ -44,18 +44,22 @@ function playIntersectionSound(pitch = 500) {
     oscillator.connect(gainNode);
     gainNode.connect(audioContext.destination);
          
-    // Set sound properties
+    // Set sound properties - use sine wave for smoother sound
     oscillator.type = 'sine';
-    oscillator.frequency.setValueAtTime(pitch, audioContext.currentTime);
+    
+    // Lower the pitch for a more soothing sound
+    // Map the pitch to a lower range (100-300 Hz instead of 300-800)
+    const adjustedPitch = map(pitch, 300, 800, 100, 300);
+    oscillator.frequency.setValueAtTime(adjustedPitch, audioContext.currentTime);
          
-    // Set volume envelope
+    // Set volume envelope - much softer with longer fade-in and fade-out
     gainNode.gain.setValueAtTime(0, audioContext.currentTime);
-    gainNode.gain.linearRampToValueAtTime(0.2, audioContext.currentTime + 0.01);
-    gainNode.gain.exponentialRampToValueAtTime(0.001, audioContext.currentTime + 0.3);
+    gainNode.gain.linearRampToValueAtTime(0.08, audioContext.currentTime + 0.05); // Lower volume, slower attack
+    gainNode.gain.exponentialRampToValueAtTime(0.001, audioContext.currentTime + 0.8); // Longer release
          
     // Start and stop the sound
     oscillator.start();
-    oscillator.stop(audioContext.currentTime + 0.3);
+    oscillator.stop(audioContext.currentTime + 0.8); // Longer duration
 }
      
 // Line appearance controls
