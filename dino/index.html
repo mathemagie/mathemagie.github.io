@@ -1,0 +1,687 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Pixel Dino Runner</title>
+    <style>
+        /* Basic CSS to remove default margins and hide scrollbars */
+        body {
+            padding: 0;
+            margin: 0;
+            overflow: hidden; /* Prevent scrollbars from appearing */
+            background-color: #000; /* Black background for the page */
+        }
+        canvas {
+            display: block; /* Removes extra space below the canvas */
+            margin: auto; /* Center canvas if window is larger (optional) */
+        }
+        #micStatus {
+            position: fixed;
+            top: 10px;
+            left: 10px;
+            color: white;
+            font-family: monospace;
+            background: rgba(0,0,0,0.5);
+            padding: 5px;
+            border-radius: 5px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        #soundIndicator {
+            width: 20px;
+            height: 20px;
+            background: #333;
+            border-radius: 50%;
+            display: inline-block;
+            transition: background-color 0.1s ease;
+        }
+    </style>
+    <!-- Include the p5.js libraries -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/p5.js/1.9.0/p5.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/p5.js/1.9.0/addons/p5.sound.min.js"></script>
+</head>
+<body>
+    <div id="micStatus">
+        <span>Microphone: Not Started</span>
+        <div id="soundIndicator"></div>
+    </div>
+    <script>
+        // --- Game Configuration ---
+        let dino;
+        let obstacles = [];
+        let groundY;
+        let score = 0;
+        let highScore = 0;
+        let gameSpeed = 6; // Initial speed
+        let baseGameSpeed = 6;
+        let speedIncreaseFactor = 0.001; // How much speed increases per frame
+        let gravity;
+        let jumpPower;
+
+        // Sound variables
+        let mic;
+        let micStarted = false;
+        let soundThreshold = 0.05; // Lowered from 0.1 to be more sensitive
+        let lastJumpTime = 0;
+        let minTimeBetweenJumps = 500; // Minimum time (in milliseconds) between jumps
+        let soundIndicator;
+        let visualFeedback = {
+            size: 50,
+            x: 0,
+            y: 0,
+            alpha: 0
+        };
+
+        let bgLayers = []; // For parallax background
+
+        let gameState = 'START'; // START, PLAYING, GAME_OVER
+
+        // --- p5.js Setup Function ---
+        function setup() {
+          createCanvas(windowWidth, windowHeight);
+          noSmooth(); // Essential for pixelated look!
+
+          // Initialize microphone with more detailed setup
+          mic = new p5.AudioIn();
+          mic.getSources((devices) => {
+              console.log('Available audio input devices:', devices);
+          });
+          soundIndicator = document.getElementById('soundIndicator');
+          
+          groundY = height * 0.8;
+          gravity = createVector(0, 0.7); // Adjust gravity force
+          jumpPower = -14; // Adjust jump height (negative is up)
+
+          // Initialize visual feedback position
+          visualFeedback.x = width - 100;
+          visualFeedback.y = 100;
+
+          // Initialize Dino
+          dino = {
+            x: width * 0.15,
+            y: groundY,
+            w: 40, // Dino width
+            h: 50, // Dino height
+            vy: 0, // Vertical velocity
+            onGround: true,
+            isDucking: false, // Future feature maybe?
+            baseY: groundY, // Y position when on ground
+          };
+
+          // Initialize Background Layers (drawn back to front)
+          // Layer 1: Distant mountains (slowest)
+          bgLayers.push({
+            color: color(100, 120, 150), // Muted blue/purple
+            speedFactor: 0.1,
+            elements: createBackgroundElements(5, height * 0.3, height * 0.6, 100, 200, 0.1)
+          });
+          // Layer 2: Mid-ground hills/trees (medium speed)
+          bgLayers.push({
+            color: color(80, 140, 80), // Darker Green
+            speedFactor: 0.3,
+            elements: createBackgroundElements(8, height * 0.5, height * 0.75, 50, 150, 0.3)
+          });
+           // Layer 3: Bushes/rocks (faster)
+          bgLayers.push({
+            color: color(120, 160, 90), // Lighter Green/Brown
+            speedFactor: 0.6,
+            elements: createBackgroundElements(15, groundY - 30, groundY, 20, 50, 0.6)
+          });
+
+
+          textAlign(CENTER, CENTER);
+          textSize(24);
+          textFont('monospace'); // Font that often looks good pixelated
+        }
+
+        // --- p5.js Draw Function (Main Game Loop) ---
+        function draw() {
+          // 1. Draw Background
+          background(135, 206, 250); // Sky blue
+          drawParallaxBackground();
+          drawGround();
+
+          // Check microphone input if game is playing
+          if (micStarted) {
+              let volume = mic.getLevel();
+              updateSoundVisuals(volume);
+              
+              if (gameState === 'PLAYING') {
+                  if (volume > soundThreshold) {
+                      let currentTime = millis();
+                      if (currentTime - lastJumpTime > minTimeBetweenJumps) {
+                          if (dino.onGround) {
+                              dino.vy = jumpPower;
+                              dino.onGround = false;
+                              lastJumpTime = currentTime;
+                              // Trigger visual feedback
+                              visualFeedback.alpha = 255;
+                          }
+                      }
+                  }
+              }
+          }
+
+          // Draw sound feedback circle
+          if (visualFeedback.alpha > 0) {
+              drawSoundFeedback();
+          }
+
+          // 2. Game State Machine
+          switch (gameState) {
+            case 'START':
+              drawStartScreen();
+              break;
+            case 'PLAYING':
+              updateGame();
+              drawGameElements();
+              break;
+            case 'GAME_OVER':
+              drawGameOverScreen();
+              break;
+          }
+        }
+
+        // --- Game State Functions ---
+
+        function startGame() {
+            obstacles = [];
+            score = 0;
+            gameSpeed = baseGameSpeed;
+            dino.y = dino.baseY;
+            dino.vy = 0;
+            dino.onGround = true;
+            // Reset background element positions
+            for (let layer of bgLayers) {
+                for (let el of layer.elements) {
+                    el.x = el.startX; // Reset to initial positions relative to each other
+                }
+            }
+            gameState = 'PLAYING';
+        }
+
+        function updateGame() {
+          // Update Score
+          score++;
+
+          // Increase Difficulty (gradual speed up)
+          gameSpeed += speedIncreaseFactor;
+
+          // Update Dino
+          updateDino();
+
+          // Update Obstacles
+          updateObstacles();
+
+          // Check Collisions
+          checkCollisions();
+        }
+
+        function drawGameElements() {
+          drawDino();
+          drawObstacles();
+          drawScore();
+          drawPlayingInstructions();
+        }
+
+        function gameOver() {
+          gameState = 'GAME_OVER';
+          if (score > highScore) {
+            highScore = score;
+          }
+        }
+
+
+        // --- Drawing Functions ---
+
+        function drawStartScreen() {
+          fill(0, 0, 0, 180); // Semi-transparent black overlay
+          rect(0, 0, width, height);
+
+          fill(255);
+          textSize(48);
+          text("PIXEL DINO RUN", width / 2, height / 3);
+
+          textSize(24);
+          text("Press [SPACE] or TAP to JUMP", width / 2, height / 2);
+          text("Or make noise to make the dino jump!", width / 2, height / 2 + 40);
+          text("Avoid the Cacti!", width / 2, height / 2 + 80);
+
+          textSize(20);
+          if (!micStarted) {
+              text("Click anywhere to enable microphone", width / 2, height * 0.7);
+          }
+          text("Press [SPACE] or TAP to START", width / 2, height * 0.8);
+
+           // Draw a static dino for the start screen
+           drawDino(true); // Pass true to indicate static position
+        }
+
+        function drawGameOverScreen() {
+            fill(200, 0, 0, 180); // Semi-transparent red overlay
+            rect(0, 0, width, height);
+
+            fill(255);
+            textSize(48);
+            text("GAME OVER", width / 2, height / 3);
+
+            textSize(32);
+            text(`Score: ${score}`, width / 2, height / 2);
+            text(`High Score: ${highScore}`, width / 2, height / 2 + 50);
+
+            textSize(20);
+            text("Press [SPACE] or TAP to RESTART", width / 2, height * 0.7);
+
+            // Optionally draw the dino in a 'dead' state or just leave it off
+        }
+
+
+        function drawPlayingInstructions() {
+          fill(0, 0, 0, 150);
+          textSize(16);
+          textAlign(LEFT, TOP);
+          text("[SPACE] or TAP to JUMP", 10, height - 30);
+          textAlign(CENTER, CENTER); // Reset for other text elements
+        }
+
+        function drawGround() {
+          fill(160, 120, 80); // Brown color for ground
+          noStroke();
+          rect(0, groundY, width, height - groundY);
+        }
+
+        function createBackgroundElements(numElements, minY, maxY, minW, maxW, speedFactor) {
+            let elements = [];
+            let currentX = 0;
+            // Create more elements than needed to fill screen initially and wrap around
+            for (let i = 0; i < numElements * 3; i++) {
+                let h = random(minY, maxY);
+                let w = random(minW, maxW);
+                // Spacing depends on speed, ensure minimum spacing even at high speedFactor
+                let spacing = random(width * 0.1, width * 0.4) * max(0.5, (1/speedFactor));
+                let xPos = currentX + spacing;
+                elements.push({
+                     startX: xPos, // Store initial relative position
+                     x: xPos,
+                     // Adjust y based on height relative to min height, place bottom edge at groundY
+                     y: groundY - (h - minY),
+                     w: w,
+                     h: h - minY, // Actual drawn height
+                     speed: gameSpeed * speedFactor // Store initial speed based on factor
+                    });
+                currentX = xPos + w;
+            }
+            return elements;
+        }
+
+        function drawParallaxBackground() {
+            for (let layer of bgLayers) {
+                fill(layer.color);
+                noStroke();
+                for (let el of layer.elements) {
+                    // Draw simple shapes for background elements
+                    // Example: Simple triangle for mountains/hills or rect for trees
+                    if (layer.speedFactor < 0.2) { // Distant mountains - triangles
+                        beginShape();
+                        // Position relative to groundY
+                        vertex(el.x, groundY);
+                        vertex(el.x + el.w / 2, groundY - el.h);
+                        vertex(el.x + el.w, groundY);
+                        endShape(CLOSE);
+                    } else { // Closer hills/trees - rectangles
+                         rect(el.x, groundY - el.h, el.w, el.h);
+                         // Maybe add a trunk for trees
+                         if(layer.speedFactor > 0.2 && layer.speedFactor < 0.5) {
+                             fill(101, 67, 33); // Brown trunk
+                             // Draw trunk relative to the bottom of the green part
+                             rect(el.x + el.w*0.4, groundY - el.h*0.2, el.w*0.2, el.h*0.2);
+                             fill(layer.color); // Switch back to layer color
+                         }
+                    }
+
+                    if (gameState === 'PLAYING') {
+                       el.x -= gameSpeed * layer.speedFactor; // Move element
+
+                        // Wrap around logic
+                        if (el.x + el.w < 0) {
+                            // Find the rightmost element in this layer to place this one after
+                            let maxX = 0;
+                             for(let otherEl of layer.elements) {
+                                 if (otherEl.x > maxX) {
+                                    maxX = otherEl.x;
+                                 }
+                             }
+                              // Spacing depends on speed, ensure minimum spacing
+                             let spacing = random(width * 0.1, width * 0.4) * max(0.5, (1/layer.speedFactor));
+                             // Place it relative to the rightmost element + spacing
+                             el.x = maxX + spacing;
+                        }
+                    }
+                }
+            }
+        }
+
+
+        function drawDino(isStatic = false) {
+          push(); // Isolate transformations and styles
+          // Position based on bottom-left corner (dino.y is the bottom)
+          translate(dino.x, dino.y - dino.h);
+
+          // Body
+          fill(34, 139, 34); // Forest Green
+          rect(dino.w * 0.2, dino.h * 0.1, dino.w * 0.7, dino.h * 0.8); // Main body block
+
+          // Head
+          rect(dino.w * 0.6, 0, dino.w * 0.4, dino.h * 0.4); // Head block
+          fill(255, 255, 255); // White eye
+          rect(dino.w * 0.8, dino.h * 0.1, dino.w * 0.1, dino.h * 0.1); // Eye white
+          fill(0); // Black pupil
+          rect(dino.w * 0.85, dino.h * 0.12, dino.w * 0.05, dino.h * 0.05); // Pupil
+
+          // Tail
+          fill(34, 139, 34); // Forest Green
+          beginShape();
+          vertex(dino.w * 0.2, dino.h * 0.4);
+          vertex(0, dino.h * 0.7);
+          vertex(dino.w * 0.3, dino.h * 0.9);
+          endShape(CLOSE);
+
+          // Legs (simple) - Animate slightly when running
+          fill(34, 139, 34);
+          // Only animate if playing and on ground
+          let legOffset = (frameCount % 20 < 10 && dino.onGround && gameState === 'PLAYING' && !isStatic) ? -dino.w * 0.1 : 0;
+          // Position legs relative to the body bottom (h=1.0)
+          rect(dino.w * 0.3 + legOffset, dino.h * 0.9, dino.w * 0.2, dino.h * 0.1); // Leg 1
+          rect(dino.w * 0.6 - legOffset, dino.h * 0.9, dino.w * 0.2, dino.h * 0.1); // Leg 2
+
+           // Small Arms
+          fill(34, 139, 34);
+          rect(dino.w * 0.5, dino.h * 0.4, dino.w * 0.1, dino.h * 0.2);
+
+
+          pop(); // Restore previous drawing state
+        }
+
+        function drawObstacles() {
+          for (let obs of obstacles) {
+            push();
+            // Position based on bottom-left corner (obs.y is the bottom)
+            translate(obs.x, obs.y - obs.h);
+
+            fill(0, 100, 0); // Dark Green for cactus
+            noStroke();
+
+            // Simple Cactus Shape using rects
+            let coreWidth = obs.w * 0.4;
+            let coreHeight = obs.h;
+            let armWidth = obs.w * 0.3;
+            let armHeight = obs.h * 0.5;
+            let armY = obs.h * 0.2; // Position arms vertically
+
+            // Central stem (origin 0,0 is top-left of the translated obstacle)
+            rect((obs.w - coreWidth) / 2, 0, coreWidth, coreHeight);
+            // Left Arm
+            rect((obs.w - coreWidth) / 2 - armWidth, armY, armWidth, armHeight);
+            // Right Arm
+            rect((obs.w + coreWidth) / 2, armY, armWidth, armHeight);
+
+            pop();
+          }
+        }
+
+        function drawScore() {
+          fill(0);
+          textSize(24);
+          textAlign(RIGHT, TOP);
+          text(`Score: ${score}`, width - 10, 10);
+           text(`Hi: ${highScore}`, width - 10, 40);
+          textAlign(CENTER, CENTER); // Reset alignment
+        }
+
+        // --- Update Functions ---
+
+        function updateDino() {
+          // Apply gravity only if not on ground or jumping up
+          dino.vy += gravity.y;
+          dino.y += dino.vy;
+
+          // Check for ground collision
+          if (dino.y >= dino.baseY) {
+            dino.y = dino.baseY; // Snap to ground
+            dino.vy = 0;        // Stop vertical movement
+            dino.onGround = true;
+          } else {
+            dino.onGround = false;
+          }
+        }
+
+        let obstacleTimer = 0;
+        let minObstacleDist = 80; // Minimum frames between obstacles
+        let maxObstacleDist = 200; // Maximum frames between obstacles
+        let nextObstacleFrame; // When the next obstacle should appear
+
+        function updateObstacles() {
+            // Initialize nextObstacleFrame if it's the first run or just spawned one
+            if (nextObstacleFrame === undefined) {
+                nextObstacleFrame = floor(random(minObstacleDist, maxObstacleDist));
+            }
+
+            obstacleTimer++;
+
+            // Spawn new obstacles
+            if (obstacleTimer >= nextObstacleFrame) {
+                obstacleTimer = 0; // Reset timer
+
+                let obstacleHeight = random(30, 60); // Random height for cacti
+                let obstacleWidth = obstacleHeight * 0.6; // Keep aspect ratio somewhat constant
+                obstacles.push({
+                      x: width, // Start off-screen right
+                      y: groundY, // On the ground (y is bottom edge)
+                      w: obstacleWidth,
+                      h: obstacleHeight,
+                    });
+
+                // Adjust spawn distance based on game speed (faster speed = potentially closer obstacles)
+                // Ensure distances don't become too small
+                minObstacleDist = max(40, 100 - gameSpeed * 3);
+                maxObstacleDist = max(80, 250 - gameSpeed * 5);
+                nextObstacleFrame = floor(random(minObstacleDist, maxObstacleDist)); // Calculate next spawn time
+
+            }
+
+
+          // Move existing obstacles
+          for (let i = obstacles.length - 1; i >= 0; i--) {
+            obstacles[i].x -= gameSpeed;
+
+            // Remove obstacles that are off-screen left
+            if (obstacles[i].x + obstacles[i].w < 0) {
+              obstacles.splice(i, 1);
+            }
+          }
+        }
+
+        // --- Collision Detection ---
+
+        function checkCollisions() {
+          for (let obs of obstacles) {
+            // Simple Axis-Aligned Bounding Box (AABB) collision detection
+            // Dino coordinates are bottom-left based (dino.y is the bottom)
+            let dinoLeft = dino.x;
+            let dinoRight = dino.x + dino.w;
+            let dinoTop = dino.y - dino.h;
+            let dinoBottom = dino.y;
+
+            // Obstacle coordinates are bottom-left based (obs.y is the bottom)
+            let obsLeft = obs.x;
+            let obsRight = obs.x + obs.w;
+            let obsTop = obs.y - obs.h;
+            let obsBottom = obs.y;
+
+            // Check for overlap using AABB logic
+            if (
+              dinoRight > obsLeft &&    // Dino's right edge past obstacle's left edge
+              dinoLeft < obsRight &&    // Dino's left edge before obstacle's right edge
+              dinoBottom > obsTop &&    // Dino's bottom edge below obstacle's top edge
+              dinoTop < obsBottom       // Dino's top edge above obstacle's bottom edge
+            ) {
+              // Collision detected!
+              gameOver();
+              break; // Exit loop once collision found
+            }
+          }
+        }
+
+
+        // --- Input Handling ---
+
+        function keyPressed() {
+          // Use key (' ') instead of keyCode for better cross-browser/layout compatibility
+          if (key === ' ') {
+            handleInput();
+            return false; // Prevent default browser behavior (scrolling page down)
+          }
+        }
+
+        // Use touchStarted for mobile/touch devices
+        function touchStarted() {
+            handleInput();
+            return false; // Prevent default browser behavior (like scrolling or zooming)
+        }
+
+
+        function handleInput() {
+             switch (gameState) {
+                case 'START':
+                    startGame();
+                    break;
+                case 'PLAYING':
+                    if (dino.onGround) {
+                        dino.vy = jumpPower; // Apply jump force
+                        dino.onGround = false; // Dino is now in the air
+                    }
+                    break;
+                case 'GAME_OVER':
+                    startGame(); // Allow restart from Game Over screen
+                    break;
+            }
+        }
+
+        // --- Window Resizing ---
+        function windowResized() {
+          resizeCanvas(windowWidth, windowHeight);
+          // Recalculate positions based on new size
+          groundY = height * 0.8;
+          dino.baseY = groundY;
+          if (dino.onGround) { // Keep dino on the ground if it was there
+              dino.y = groundY;
+          }
+          // Adjust text sizes if needed, though p5 handles scaling reasonably well
+          // You might want to regenerate background elements for perfect scaling,
+          // but for simplicity, we'll let them continue as they are.
+          textSize(24); // Re-apply base text size
+          // Reset obstacle timer/next frame slightly? Optional.
+        }
+
+        // Add new function to start microphone
+        function startMicrophone() {
+            if (!micStarted) {
+                console.log('Attempting to start microphone...');
+                
+                // First check if getUserMedia is supported
+                if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
+                    console.error('getUserMedia not supported on your browser!');
+                    return;
+                }
+
+                // Check audio context state
+                console.log('Audio Context State:', getAudioContext().state);
+                
+                // Try to start the audio context first
+                getAudioContext().resume().then(() => {
+                    console.log('Audio Context resumed successfully');
+                    
+                    mic.start(() => {
+                        console.log('Microphone successfully started!');
+                        console.log('Current sound threshold:', soundThreshold);
+                        console.log('Audio Context after mic start:', getAudioContext().state);
+                        
+                        // Add a test tone to verify audio processing
+                        console.log('Testing audio processing...');
+                        setInterval(() => {
+                            let currentVolume = mic.getLevel();
+                            console.log('Raw mic level:', currentVolume);
+                        }, 1000);
+                        
+                        micStarted = true;
+                        document.getElementById('micStatus').firstElementChild.textContent = 'Microphone: Active';
+                    });
+                }).catch(err => {
+                    console.error('Error resuming audio context:', err);
+                });
+                
+                // Add error handling
+                mic.onError = (err) => {
+                    console.error('Microphone error:', err);
+                };
+            }
+        }
+
+        // Modify mousePressed to ensure audio context starts
+        function mousePressed() {
+            // Try to start audio context on user interaction
+            if (getAudioContext().state !== 'running') {
+                getAudioContext().resume();
+            }
+            startMicrophone();
+            return false;
+        }
+
+        // Add new function to update sound visuals
+        function updateSoundVisuals(volume) {
+            // Log all volume levels for debugging
+            console.log(`Current volume level: ${(volume * 100).toFixed(2)}%`);
+            
+            // Log when sound is above threshold
+            if (volume > soundThreshold) {
+                console.log(`Sound detected! Volume: ${(volume * 100).toFixed(2)}% (above threshold: ${(soundThreshold * 100).toFixed(2)}%)`);
+            }
+            
+            // Update the sound indicator color based on volume
+            if (volume > soundThreshold) {
+                // Bright green when sound is above threshold
+                soundIndicator.style.backgroundColor = `rgb(0, ${Math.min(255, volume * 1000)}, 0)`;
+                soundIndicator.style.boxShadow = '0 0 10px #0f0';
+            } else {
+                // Gradient from gray to yellow based on volume
+                let intensity = Math.min(255, volume * 1000);
+                soundIndicator.style.backgroundColor = `rgb(${intensity}, ${intensity}, 0)`;
+                soundIndicator.style.boxShadow = 'none';
+            }
+        }
+
+        // Add new function to draw sound feedback
+        function drawSoundFeedback() {
+            push();
+            noStroke();
+            // Draw expanding circle
+            fill(0, 255, 0, visualFeedback.alpha);
+            circle(visualFeedback.x, visualFeedback.y, visualFeedback.size);
+            
+            // Update visual feedback
+            visualFeedback.size += 2;
+            visualFeedback.alpha -= 10;
+            
+            // Reset when animation completes
+            if (visualFeedback.alpha <= 0) {
+                visualFeedback.size = 50;
+                visualFeedback.alpha = 0;
+            }
+            pop();
+        }
+
+    </script>
+</body>
+</html>
