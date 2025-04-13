@@ -83,7 +83,12 @@
         // --- p5.js Preload Function ---
         // Add preload function before setup
         function preload() {
-            dinoImg = loadImage('/personnage.png');
+            // Check if we're on the GitHub Pages site and adjust the path accordingly
+            if (window.location.href.includes('mathemagie.github.io')) {
+                dinoImg = loadImage('/dino/personnage.png');
+            } else {
+                dinoImg = loadImage('/personnage.png');
+            }
         }
 
         // --- p5.js Setup Function ---
