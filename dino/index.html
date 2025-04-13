@@ -40,6 +40,7 @@
     </style>
     <!-- Include the p5.js libraries -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/p5.js/1.9.0/p5.min.js"></script>
+    <!-- Load p5.sound.min.js before other scripts -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/p5.js/1.9.0/addons/p5.sound.min.js"></script>
 </head>
 <body>
@@ -49,6 +50,7 @@
     </div>
     <script>
         // --- Game Configuration ---
+        let dinoImg; // Add variable for dino image
         let dino;
         let obstacles = [];
         let groundY;
@@ -78,6 +80,12 @@
 
         let gameState = 'START'; // START, PLAYING, GAME_OVER
 
+        // --- p5.js Preload Function ---
+        // Add preload function before setup
+        function preload() {
+            dinoImg = loadImage('/personnage.png');
+        }
+
         // --- p5.js Setup Function ---
         function setup() {
           createCanvas(windowWidth, windowHeight);
@@ -102,8 +110,8 @@
           dino = {
             x: width * 0.15,
             y: groundY,
-            w: 40, // Dino width
-            h: 50, // Dino height
+            w: 80, // Doubled from 40
+            h: 100, // Doubled from 50
             vy: 0, // Vertical velocity
             onGround: true,
             isDucking: false, // Future feature maybe?
@@ -242,7 +250,7 @@
 
           fill(255);
           textSize(48);
-          text("PIXEL DINO RUN", width / 2, height / 3);
+          text("PIXEL FABRIZIO RUN", width / 2, height / 3);
 
           textSize(24);
           text("Press [SPACE] or TAP to JUMP", width / 2, height / 2);
@@ -365,43 +373,14 @@
 
 
         function drawDino(isStatic = false) {
-          push(); // Isolate transformations and styles
-          // Position based on bottom-left corner (dino.y is the bottom)
-          translate(dino.x, dino.y - dino.h);
-
-          // Body
-          fill(34, 139, 34); // Forest Green
-          rect(dino.w * 0.2, dino.h * 0.1, dino.w * 0.7, dino.h * 0.8); // Main body block
-
-          // Head
-          rect(dino.w * 0.6, 0, dino.w * 0.4, dino.h * 0.4); // Head block
-          fill(255, 255, 255); // White eye
-          rect(dino.w * 0.8, dino.h * 0.1, dino.w * 0.1, dino.h * 0.1); // Eye white
-          fill(0); // Black pupil
-          rect(dino.w * 0.85, dino.h * 0.12, dino.w * 0.05, dino.h * 0.05); // Pupil
-
-          // Tail
-          fill(34, 139, 34); // Forest Green
-          beginShape();
-          vertex(dino.w * 0.2, dino.h * 0.4);
-          vertex(0, dino.h * 0.7);
-          vertex(dino.w * 0.3, dino.h * 0.9);
-          endShape(CLOSE);
-
-          // Legs (simple) - Animate slightly when running
-          fill(34, 139, 34);
-          // Only animate if playing and on ground
-          let legOffset = (frameCount % 20 < 10 && dino.onGround && gameState === 'PLAYING' && !isStatic) ? -dino.w * 0.1 : 0;
-          // Position legs relative to the body bottom (h=1.0)
-          rect(dino.w * 0.3 + legOffset, dino.h * 0.9, dino.w * 0.2, dino.h * 0.1); // Leg 1
-          rect(dino.w * 0.6 - legOffset, dino.h * 0.9, dino.w * 0.2, dino.h * 0.1); // Leg 2
-
-           // Small Arms
-          fill(34, 139, 34);
-          rect(dino.w * 0.5, dino.h * 0.4, dino.w * 0.1, dino.h * 0.2);
-
-
-          pop(); // Restore previous drawing state
+            push();
+            translate(dino.x, dino.y);
+            
+            // Draw the image instead of shapes
+            imageMode(CENTER);
+            image(dinoImg, 0, -dino.h/2, dino.w, dino.h);
+            
+            pop();
         }
 
         function drawObstacles() {
