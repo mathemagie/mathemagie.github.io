@@ -61,6 +61,7 @@
         let speedIncreaseFactor = 0.001; // How much speed increases per frame
         let gravity;
         let jumpPower;
+        let boingSound; // Add variable for boing sound
 
         // Sound variables
         let mic;
@@ -86,8 +87,10 @@
             // Check if we're on the GitHub Pages site and adjust the path accordingly
             if (window.location.href.includes('mathemagie.github.io')) {
                 dinoImg = loadImage('/dino/personnage.png');
+                boingSound = loadSound('/dino/boing.mp3');
             } else {
                 dinoImg = loadImage('/personnage.png');
+                boingSound = loadSound('/boing.mp3');
             }
         }
 
@@ -171,6 +174,7 @@
                               lastJumpTime = currentTime;
                               // Trigger visual feedback
                               visualFeedback.alpha = 255;
+                              boingSound.play(); // Play boing sound when jumping
                           }
                       }
                   }
@@ -545,6 +549,7 @@
                     if (dino.onGround) {
                         dino.vy = jumpPower; // Apply jump force
                         dino.onGround = false; // Dino is now in the air
+                        boingSound.play(); // Play boing sound when jumping
                     }
                     break;
                 case 'GAME_OVER':
