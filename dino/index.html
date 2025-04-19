@@ -53,6 +53,7 @@
         let dinoImg; // Add variable for dino image
         let dino;
         let obstacles = [];
+        let holes = []; // Add array for holes
         let groundY;
         let score = 0;
         let highScore = 0;
@@ -138,7 +139,7 @@
             color: color(80, 140, 80), // Darker Green
             speedFactor: 0.3,
             elements: createBackgroundElements(8, height * 0.5, height * 0.75, 50, 150, 0.3)
-          });
+          }); 
            // Layer 3: Bushes/rocks (faster)
           bgLayers.push({
             color: color(120, 160, 90), // Lighter Green/Brown
@@ -205,6 +206,7 @@
 
         function startGame() {
             obstacles = [];
+            holes = []; // Reset holes array
             score = 0;
             gameSpeed = baseGameSpeed;
             dino.y = dino.baseY;
@@ -307,6 +309,26 @@
           fill(160, 120, 80); // Brown color for ground
           noStroke();
           rect(0, groundY, width, height - groundY);
+          
+          // Draw holes with depth effect
+          for (let hole of holes) {
+            // Draw main hole (darker)
+            fill(100, 80, 40); // Darker brown for hole base
+            rect(hole.x, groundY, hole.w, hole.h);
+            
+            // Draw depth effect (lighter edges)
+            fill(180, 140, 100); // Lighter brown for edges
+            // Left edge
+            rect(hole.x, groundY, 5, hole.h);
+            // Right edge
+            rect(hole.x + hole.w - 5, groundY, 5, hole.h);
+            // Top edge
+            rect(hole.x, groundY, hole.w, 5);
+            
+            // Draw shadow at bottom
+            fill(80, 60, 30); // Darkest brown for shadow
+            rect(hole.x, groundY + hole.h - 5, hole.w, 5);
+          }
         }
 
         function createBackgroundElements(numElements, minY, maxY, minW, maxW, speedFactor) {
@@ -458,68 +480,110 @@
 
             obstacleTimer++;
 
-            // Spawn new obstacles
+            // Spawn new obstacles and holes
             if (obstacleTimer >= nextObstacleFrame) {
                 obstacleTimer = 0; // Reset timer
 
-                let obstacleHeight = random(30, 60); // Random height for cacti
-                let obstacleWidth = obstacleHeight * 0.6; // Keep aspect ratio somewhat constant
-                obstacles.push({
-                      x: width, // Start off-screen right
-                      y: groundY, // On the ground (y is bottom edge)
-                      w: obstacleWidth,
-                      h: obstacleHeight,
+                // Randomly decide whether to spawn an obstacle or a hole
+                if (random() < 0.7) { // 70% chance for obstacle, 30% for hole
+                    let obstacleHeight = random(30, 60); // Random height for cacti
+                    let obstacleWidth = obstacleHeight * 0.6; // Keep aspect ratio somewhat constant
+                    obstacles.push({
+                          x: width, // Start off-screen right
+                          y: groundY, // On the ground (y is bottom edge)
+                          w: obstacleWidth,
+                          h: obstacleHeight,
+                        });
+                } else {
+                    // Create a hole with increased depth
+                    let holeWidth = random(60, 100); // Slightly wider holes
+                    holes.push({
+                        x: width, // Start off-screen right
+                        w: holeWidth,
+                        h: 40 // Increased depth
                     });
+                }
 
                 // Adjust spawn distance based on game speed (faster speed = potentially closer obstacles)
                 // Ensure distances don't become too small
                 minObstacleDist = max(40, 100 - gameSpeed * 3);
                 maxObstacleDist = max(80, 250 - gameSpeed * 5);
                 nextObstacleFrame = floor(random(minObstacleDist, maxObstacleDist)); // Calculate next spawn time
-
             }
 
+            // Move existing obstacles
+            for (let i = obstacles.length - 1; i >= 0; i--) {
+                obstacles[i].x -= gameSpeed;
 
-          // Move existing obstacles
-          for (let i = obstacles.length - 1; i >= 0; i--) {
-            obstacles[i].x -= gameSpeed;
-
-            // Remove obstacles that are off-screen left
-            if (obstacles[i].x + obstacles[i].w < 0) {
-              obstacles.splice(i, 1);
+                // Remove obstacles that are off-screen left
+                if (obstacles[i].x + obstacles[i].w < 0) {
+                    obstacles.splice(i, 1);
+                }
             }
-          }
+
+            // Move existing holes
+            for (let i = holes.length - 1; i >= 0; i--) {
+                holes[i].x -= gameSpeed;
+
+                // Remove holes that are off-screen left
+                if (holes[i].x + holes[i].w < 0) {
+                    holes.splice(i, 1);
+                }
+            }
         }
 
         // --- Collision Detection ---
 
         function checkCollisions() {
-          for (let obs of obstacles) {
-            // Simple Axis-Aligned Bounding Box (AABB) collision detection
-            // Dino coordinates are bottom-left based (dino.y is the bottom)
-            let dinoLeft = dino.x;
-            let dinoRight = dino.x + dino.w;
-            let dinoTop = dino.y - dino.h;
-            let dinoBottom = dino.y;
+            // Check collisions with obstacles
+            for (let obs of obstacles) {
+                // Simple Axis-Aligned Bounding Box (AABB) collision detection
+                // Dino coordinates are bottom-left based (dino.y is the bottom)
+                let dinoLeft = dino.x;
+                let dinoRight = dino.x + dino.w;
+                let dinoTop = dino.y - dino.h;
+                let dinoBottom = dino.y;
 
-            // Obstacle coordinates are bottom-left based (obs.y is the bottom)
-            let obsLeft = obs.x;
-            let obsRight = obs.x + obs.w;
-            let obsTop = obs.y - obs.h;
-            let obsBottom = obs.y;
+                // Obstacle coordinates are bottom-left based (obs.y is the bottom)
+                let obsLeft = obs.x;
+                let obsRight = obs.x + obs.w;
+                let obsTop = obs.y - obs.h;
+                let obsBottom = obs.y;
 
-            // Check for overlap using AABB logic
-            if (
-              dinoRight > obsLeft &&    // Dino's right edge past obstacle's left edge
-              dinoLeft < obsRight &&    // Dino's left edge before obstacle's right edge
-              dinoBottom > obsTop &&    // Dino's bottom edge below obstacle's top edge
-              dinoTop < obsBottom       // Dino's top edge above obstacle's bottom edge
-            ) {
-              // Collision detected!
-              gameOver();
-              break; // Exit loop once collision found
+                // Check for overlap using AABB logic
+                if (
+                    dinoRight > obsLeft &&    // Dino's right edge past obstacle's left edge
+                    dinoLeft < obsRight &&    // Dino's left edge before obstacle's right edge
+                    dinoBottom > obsTop &&    // Dino's bottom edge below obstacle's top edge
+                    dinoTop < obsBottom       // Dino's top edge above obstacle's bottom edge
+                ) {
+                    // Collision detected!
+                    gameOver();
+                    return;
+                }
             }
-          }
+
+            // Check collisions with holes
+            for (let hole of holes) {
+                // For holes, we only need to check if the dino is above the hole
+                // and if it's not jumping (onGround is true)
+                if (dino.onGround) {
+                    let dinoLeft = dino.x;
+                    let dinoRight = dino.x + dino.w;
+                    let holeLeft = hole.x;
+                    let holeRight = hole.x + hole.w;
+
+                    // Check if dino is above the hole
+                    if (
+                        dinoRight > holeLeft &&    // Dino's right edge past hole's left edge
+                        dinoLeft < holeRight       // Dino's left edge before hole's right edge
+                    ) {
+                        // Dino is above a hole and on the ground - game over!
+                        gameOver();
+                        return;
+                    }
+                }
+            }
         }
 
 
