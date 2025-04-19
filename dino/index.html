@@ -87,10 +87,10 @@
         function preload() {
             // Check if we're on the GitHub Pages site and adjust the path accordingly
             if (window.location.href.includes('mathemagie.github.io')) {
-                dinoImg = loadImage('/dino/personnage.png');
+                dinoImg = loadImage('/dino/personnage2.png');
                 boingSound = loadSound('/dino/boing.mp3');
             } else {
-                dinoImg = loadImage('/personnage.png');
+                dinoImg = loadImage('/personnage2.png');
                 boingSound = loadSound('/boing.mp3');
             }
         }
@@ -306,28 +306,47 @@
         }
 
         function drawGround() {
-          fill(160, 120, 80); // Brown color for ground
+          fill(173, 216, 230); // Light blue for ice
           noStroke();
           rect(0, groundY, width, height - groundY);
           
           // Draw holes with depth effect
           for (let hole of holes) {
-            // Draw main hole (darker)
-            fill(100, 80, 40); // Darker brown for hole base
-            rect(hole.x, groundY, hole.w, hole.h);
+            // Create a gradient effect for depth
+            let gradientSteps = 5;
+            let baseColor = color(135, 206, 235); // Starting blue
+            let darkColor = color(25, 25, 112); // Midnight blue for maximum depth
+            
+            // Draw main hole with gradient
+            for(let i = 0; i < gradientSteps; i++) {
+                let stepColor = lerpColor(baseColor, darkColor, i/gradientSteps);
+                fill(stepColor);
+                let stepHeight = (hole.h / gradientSteps);
+                rect(hole.x, groundY + (i * stepHeight), hole.w, stepHeight);
+            }
             
             // Draw depth effect (lighter edges)
-            fill(180, 140, 100); // Lighter brown for edges
-            // Left edge
-            rect(hole.x, groundY, 5, hole.h);
-            // Right edge
-            rect(hole.x + hole.w - 5, groundY, 5, hole.h);
-            // Top edge
-            rect(hole.x, groundY, hole.w, 5);
+            fill(240, 248, 255, 200); // Almost white blue for edges, slightly transparent
+            // Left edge with gradient
+            for(let i = 0; i < hole.h; i += 2) {
+                let alpha = map(i, 0, hole.h, 200, 50); // Fade out as it goes deeper
+                fill(240, 248, 255, alpha);
+                rect(hole.x, groundY + i, 3, 2);
+            }
+            // Right edge with gradient
+            for(let i = 0; i < hole.h; i += 2) {
+                let alpha = map(i, 0, hole.h, 200, 50);
+                fill(240, 248, 255, alpha);
+                rect(hole.x + hole.w - 3, groundY + i, 3, 2);
+            }
             
-            // Draw shadow at bottom
-            fill(80, 60, 30); // Darkest brown for shadow
-            rect(hole.x, groundY + hole.h - 5, hole.w, 5);
+            // Top edge highlight
+            fill(240, 248, 255, 230);
+            rect(hole.x, groundY, hole.w, 4);
+            
+            // Bottom shadow
+            fill(25, 25, 112, 200); // Dark blue shadow
+            rect(hole.x, groundY + hole.h - 6, hole.w, 6);
           }
         }
 
@@ -402,14 +421,13 @@
             }
         }
 
-
         function drawDino(isStatic = false) {
             push();
             translate(dino.x, dino.y);
             
-            // Draw the image instead of shapes
+            // Draw the image instead of shapes, with 1.5x size
             imageMode(CENTER);
-            image(dinoImg, 0, -dino.h/2, dino.w, dino.h);
+            image(dinoImg, 0, -dino.h/2, dino.w * 1.2, dino.h * 1.2);
             
             pop();
         }
@@ -500,7 +518,7 @@
                     holes.push({
                         x: width, // Start off-screen right
                         w: holeWidth,
-                        h: 40 // Increased depth
+                        h: 80 // Doubled the depth from 40 to 80
                     });
                 }
 
