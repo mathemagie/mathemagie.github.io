@@ -63,6 +63,7 @@
         let gravity;
         let jumpPower;
         let boingSound; // Add variable for boing sound
+        let collisionSound; // Add variable for collision sound
 
         // Sound variables
         let mic;
@@ -89,9 +90,11 @@
             if (window.location.href.includes('mathemagie.github.io')) {
                 dinoImg = loadImage('/dino/personnage2.png');
                 boingSound = loadSound('/dino/boing.mp3');
+                collisionSound = loadSound('/dino/sfx_A_sud_20250423_190033.mp3');
             } else {
                 dinoImg = loadImage('/personnage2.png');
                 boingSound = loadSound('/boing.mp3');
+                collisionSound = loadSound('sfx_A_sud_20250423_190033.mp3');
             }
         }
 
@@ -246,10 +249,11 @@
         }
 
         function gameOver() {
-          gameState = 'GAME_OVER';
-          if (score > highScore) {
-            highScore = score;
-          }
+            collisionSound.play(); // Play collision sound when game over
+            gameState = 'GAME_OVER';
+            if (score > highScore) {
+                highScore = score;
+            }
         }
 
 
