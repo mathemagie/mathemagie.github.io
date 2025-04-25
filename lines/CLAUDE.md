@@ -21,6 +21,8 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 - Validate HTML with W3C validator
 - For CSS changes, check mobile responsiveness
 - When modifying visual elements, test on different screen sizes
+- Run `npm test` after each iteration
+- If tests pass, commit all changes and push to remote repository
 
 ## Performance Considerations
 - Keep animation frame rate optimization in mind
