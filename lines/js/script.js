@@ -20,6 +20,10 @@ let lastTouchX = 0; // Last touch X position
 let lastTouchY = 0; // Last touch Y position
 let isErasing = false; // Track if we're in erasing mode
 
+// Spatial partitioning grid for efficient collision detection
+let grid = {}; // Object to store lines by cell
+const cellSize = 100; // Size of each grid cell
+
 // Audio system setup
 let audioContext;
 let isSoundEnabled = false; // Flag to enable/disable sound
@@ -185,6 +189,9 @@ function setup() {
 
     // Set up panel toggle button
     setupPanelToggle();
+    
+    // Initialize spatial grid
+    grid = {};
 
     // Disable auto looping from p5.js
     noLoop();
@@ -378,8 +385,17 @@ function setupTouchEvents() {
 
 // Function to update animation states for all lines
 function updateLineAnimations() {
+    // Check if we need to rebuild the grid
+    let needRebuild = false;
+    
     // Filter out lines that have completed their fade-out
+    const oldLength = lines.length;
     lines = lines.filter((line) => line.fadeOutFactor > 0);
+    
+    // If any lines were removed, we need to rebuild the grid
+    if (lines.length !== oldLength) {
+        needRebuild = true;
+    }
 
     for (let i = 0; i < lines.length; i++) {
         let line = lines[i];
@@ -410,6 +426,11 @@ function updateLineAnimations() {
 
         // Increment age
         line.age++;
+    }
+    
+    // Rebuild the grid if needed
+    if (needRebuild) {
+        rebuildGrid();
     }
 }
 
@@ -516,11 +537,14 @@ function manageLines() {
 
         // Add the new line to the end of the array
         lines.push(newLine);
-
+        
         // If we have more lines than the maximum allowed,
         // remove the oldest one (from the beginning of the array).
         if (lines.length > maxLines) {
+            // Remove the line from the grid as well
             lines.shift(); // shift() removes the first element
+            // Since indices change when we remove a line, rebuild the grid
+            rebuildGrid();
         }
     }
 }
@@ -598,24 +622,45 @@ function removeLinesNearMouse() {
     // Only remove lines if the left mouse button is pressed
     // And the mouse is NOT over the controls panel or toggle button
     if (mouseIsPressed && mouseButton === LEFT && !isMouseOverControls() && !isMouseOverToggle()) {
-        for (let i = 0; i < lines.length; i++) {
-            let lineData = lines[i];
+        // Get potential cells that could contain lines near the mouse
+        const radius = removalRadius + cellSize; // Add cellSize to ensure we check all potential cells
+        const checkedLines = new Set();
+        
+        // Check cells within a square area around the mouse
+        for (let dx = -1; dx <= 1; dx++) {
+            for (let dy = -1; dy <= 1; dy++) {
+                const x = mouseX + dx * radius;
+                const y = mouseY + dy * radius;
+                const cell = getCellKey(x, y);
+                
+                if (grid[cell]) {
+                    // Check each line in this cell
+                    for (const lineIndex of grid[cell]) {
+                        // Skip already checked lines
+                        if (checkedLines.has(lineIndex)) continue;
+                        checkedLines.add(lineIndex);
+                        
+                        let lineData = lines[lineIndex];
+                        
+                        // Skip lines already fading out
+                        if (lineData.fadeOutFactor < 1) continue;
 
-            // Calculate the shortest distance from the mouse cursor to the line segment
-            let distanceToSegment = pointSegmentDistance(
-                mouseX,
-                mouseY,
-                lineData.startX,
-                lineData.startY,
-                lineData.endX,
-                lineData.endY
-            );
+                        // Calculate the shortest distance from the mouse cursor to the line segment
+                        let distanceToSegment = pointSegmentDistance(
+                            mouseX,
+                            mouseY,
+                            lineData.startX,
+                            lineData.startY,
+                            lineData.endX,
+                            lineData.endY
+                        );
 
-            // If line is within removal radius, trigger immediate fade-out
-            if (distanceToSegment <= removalRadius) {
-                // Start fadeout if not already fading
-                if (lineData.fadeOutFactor === 1) {
-                    lineData.age = lineLifespan + 1; // Start fade-out
+                        // If line is within removal radius, trigger immediate fade-out
+                        if (distanceToSegment <= removalRadius) {
+                            // Start fadeout if not already fading
+                            lineData.age = lineLifespan + 1; // Start fade-out
+                        }
+                    }
                 }
             }
         }
@@ -655,31 +700,97 @@ function checkLineIntersection(line1, line2) {
     return ua >= 0 && ua <= 1 && ub >= 0 && ub <= 1;
 }
 
+// Function to get cell key from position
+function getCellKey(x, y) {
+    const cellX = Math.floor(x / cellSize);
+    const cellY = Math.floor(y / cellSize);
+    return `${cellX},${cellY}`;
+}
+
+// Function to get all cells that a line intersects
+function getLineCells(line) {
+    const cells = new Set();
+    
+    // Get cells for start and end points
+    cells.add(getCellKey(line.startX, line.startY));
+    cells.add(getCellKey(line.endX, line.endY));
+    
+    // Add cells along the line using Bresenham's line algorithm
+    const steps = 10; // Number of sample points along the line
+    for (let i = 1; i < steps; i++) {
+        const t = i / steps;
+        const x = line.startX + t * (line.endX - line.startX);
+        const y = line.startY + t * (line.endY - line.startY);
+        cells.add(getCellKey(x, y));
+    }
+    
+    return [...cells];
+}
+
+// Function to add a line to the spatial grid
+function addLineToGrid(line, index) {
+    const cells = getLineCells(line);
+    
+    for (const cell of cells) {
+        if (!grid[cell]) {
+            grid[cell] = [];
+        }
+        if (!grid[cell].includes(index)) {
+            grid[cell].push(index);
+        }
+    }
+}
+
+// Function to rebuild the entire spatial grid
+function rebuildGrid() {
+    grid = {};
+    for (let i = 0; i < lines.length; i++) {
+        addLineToGrid(lines[i], i);
+    }
+}
+
 // Function to check all lines for intersections
 function checkAllIntersections() {
     // Only check the most recently added line against others
     if (lines.length < 2) return;
 
     let newLine = lines[lines.length - 1];
+    const newLineIndex = lines.length - 1;
 
     // Only check during growth animation
     if (newLine.growthFactor < 1) {
-        for (let i = 0; i < lines.length - 1; i++) {
-            let otherLine = lines[i];
+        // Add the new line to the grid
+        addLineToGrid(newLine, newLineIndex);
+        
+        // Get cells that the new line intersects
+        const cells = getLineCells(newLine);
+        const checkedLines = new Set();
+        
+        // Check only against lines in the same cells
+        for (const cell of cells) {
+            if (!grid[cell]) continue;
+            
+            for (const lineIndex of grid[cell]) {
+                // Skip the new line itself and already checked lines
+                if (lineIndex === newLineIndex || checkedLines.has(lineIndex)) continue;
+                checkedLines.add(lineIndex);
+                
+                const otherLine = lines[lineIndex];
+                
+                // Skip lines that are fading out
+                if (otherLine.fadeOutFactor < 1) continue;
 
-            // Skip lines that are fading out
-            if (otherLine.fadeOutFactor < 1) continue;
+                // Check for intersection
+                if (checkLineIntersection(newLine, otherLine)) {
+                    // Calculate pitch based on line properties
+                    let pitch = map(newLine.hue, 0, 360, 300, 800);
 
-            // Check for intersection
-            if (checkLineIntersection(newLine, otherLine)) {
-                // Calculate pitch based on line properties
-                let pitch = map(newLine.hue, 0, 360, 300, 800);
+                    // Play intersection sound
+                    playIntersectionSound(pitch);
 
-                // Play intersection sound
-                playIntersectionSound(pitch);
-
-                // We can break after finding first intersection to prevent sound overlap
-                break;
+                    // We can break after finding first intersection to prevent sound overlap
+                    return;
+                }
             }
         }
     }
@@ -720,6 +831,9 @@ function windowResized() {
             line.length = min(width, height) * 0.6;
         }
     });
+    
+    // Rebuild the spatial grid to account for new positions
+    rebuildGrid();
 }
 
 // Function to clean up when the page is closed or refreshed
