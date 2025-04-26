@@ -8,6 +8,7 @@ let maxLines = 100; // Renamed from maxDots
 let drawSpeed = 0.2; // Control the speed of adding new lines
 let lines = []; // Array to store line data (Renamed from dots)
 const removalRadius = 50; // Radius around the mouse/touch to remove lines
+window.currentRemovalRadius = removalRadius; // Global variable for dynamic eraser size
 let lastFrameTime = 0; // For tracking time between frames
 let targetFrameRate = 60; // Target frames per second
 let frameInterval = 1000 / targetFrameRate; // Milliseconds per frame
@@ -18,7 +19,7 @@ let isPanelVisible = false; // Track panel visibility state - hidden by default
 let isTouching = false; // Track if user is currently touching the screen
 let lastTouchX = 0; // Last touch X position
 let lastTouchY = 0; // Last touch Y position
-let isErasing = false; // Track if we're in erasing mode
+let isErasing = true; // Track if we're in erasing mode (default: true)
 
 // Spatial partitioning grid for efficient collision detection
 let grid = {}; // Object to store lines by cell
@@ -192,6 +193,27 @@ function setup() {
     
     // Initialize spatial grid
     grid = {};
+    
+    // Set initial UI layout based on screen size and orientation
+    updateUIForScreenSize();
+    
+    // Adjust initial settings based on device type and orientation
+    const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
+    const isLandscape = window.matchMedia('(orientation: landscape)').matches;
+    
+    // Apply optimal settings for the device
+    if (isMobile) {
+        maxLines = 50; // Reduce maximum lines on mobile
+        targetFrameRate = 30; // Lower frame rate on mobile
+        
+        // Further reduce in landscape on small height screens
+        if (isLandscape && window.innerHeight < 500) {
+            maxLines = 40;
+        }
+    }
+    
+    // Update frame interval based on target frame rate
+    frameInterval = 1000 / targetFrameRate;
 
     // Disable auto looping from p5.js
     noLoop();
@@ -326,12 +348,96 @@ function animationLoop(currentTime) {
 
 // Set up touch event handlers
 function setupTouchEvents() {
-    // Prevent default touch behaviors
+    // Track multi-touch for pinch/zoom gestures
+    let touchStartDistance = 0;
+    let lastTapTime = 0;
+    let touchTimer = null;
+    
+    // Prevent default touch behaviors except on controls
     document.addEventListener(
         'touchstart',
         function (e) {
             if (!isMouseOverControls() && !isMouseOverToggle()) {
                 e.preventDefault();
+                
+                // Detect double tap (300ms window)
+                const currentTime = new Date().getTime();
+                const tapLength = currentTime - lastTapTime;
+                
+                if (tapLength < 300 && tapLength > 0) {
+                    // Double tap detected - toggle eraser size
+                    window.currentRemovalRadius = window.currentRemovalRadius === removalRadius 
+                        ? removalRadius * 2 
+                        : removalRadius;
+                    
+                    // Visual feedback with quick pulse animation
+                    const feedbackEl = document.createElement('div');
+                    feedbackEl.className = 'touch-feedback';
+                    feedbackEl.style.cssText = `
+                        position: absolute;
+                        left: ${e.touches[0].clientX - 50}px;
+                        top: ${e.touches[0].clientY - 50}px;
+                        width: ${window.currentRemovalRadius}px;
+                        height: ${window.currentRemovalRadius}px;
+                        background: rgba(255,255,255,0.2);
+                        border-radius: 50%;
+                        pointer-events: none;
+                        opacity: 0.7;
+                        transition: all 0.3s ease;
+                        z-index: 1000;
+                    `;
+                    document.body.appendChild(feedbackEl);
+                    
+                    // Remove feedback element after animation
+                    setTimeout(() => {
+                        feedbackEl.style.opacity = '0';
+                        setTimeout(() => feedbackEl.remove(), 300);
+                    }, 100);
+                }
+                
+                lastTapTime = currentTime;
+                
+                // Handle long press to toggle drawing/erasing mode
+                if (touchTimer === null) {
+                    touchTimer = setTimeout(() => {
+                        isErasing = !isErasing;
+                        
+                        // Visual feedback for mode toggle
+                        const modeText = isErasing ? 'Eraser Mode' : 'View Mode';
+                        const feedbackEl = document.createElement('div');
+                        feedbackEl.className = 'mode-feedback';
+                        feedbackEl.style.cssText = `
+                            position: absolute;
+                            left: 50%;
+                            top: 50%;
+                            transform: translate(-50%, -50%);
+                            padding: 10px 20px;
+                            background: rgba(0,0,0,0.7);
+                            color: white;
+                            border-radius: 20px;
+                            font-family: Arial, sans-serif;
+                            pointer-events: none;
+                            opacity: 0.9;
+                            transition: opacity 0.3s ease;
+                            z-index: 1000;
+                        `;
+                        feedbackEl.textContent = modeText;
+                        document.body.appendChild(feedbackEl);
+                        
+                        // Remove feedback after 1.5s
+                        setTimeout(() => {
+                            feedbackEl.style.opacity = '0';
+                            setTimeout(() => feedbackEl.remove(), 300);
+                        }, 1500);
+                    }, 800); // Long press threshold - 800ms
+                }
+                
+                // Multi-touch for pinch/zoom handling
+                if (e.touches.length === 2) {
+                    const dx = e.touches[0].clientX - e.touches[1].clientX;
+                    const dy = e.touches[0].clientY - e.touches[1].clientY;
+                    touchStartDistance = Math.sqrt(dx * dx + dy * dy);
+                }
             }
         },
         { passive: false }
@@ -342,10 +448,36 @@ function setupTouchEvents() {
         function (e) {
             if (!isMouseOverControls() && !isMouseOverToggle()) {
                 e.preventDefault();
+                
+                // Handle pinch gesture for eraser size adjustment
+                if (e.touches.length === 2) {
+                    const dx = e.touches[0].clientX - e.touches[1].clientX;
+                    const dy = e.touches[0].clientY - e.touches[1].clientY;
+                    const distance = Math.sqrt(dx * dx + dy * dy);
+                    
+                    if (touchStartDistance > 0) {
+                        const scaleFactor = distance / touchStartDistance;
+                        const newRadius = removalRadius * scaleFactor;
+                        
+                        // Limit min/max size
+                        window.currentRemovalRadius = Math.min(Math.max(newRadius, 25), 150);
+                    }
+                }
             }
         },
         { passive: false }
     );
+    
+    document.addEventListener('touchend', function() {
+        // Clear long press timer
+        if (touchTimer !== null) {
+            clearTimeout(touchTimer);
+            touchTimer = null;
+        }
+        
+        // Reset distance tracking for pinch
+        touchStartDistance = 0;
+    });
 
     // Handle touch events on canvas
     const canvas = document.querySelector('canvas');
@@ -353,7 +485,7 @@ function setupTouchEvents() {
     canvas.addEventListener('touchstart', function (e) {
         if (!isMouseOverControls() && !isMouseOverToggle()) {
             isTouching = true;
-            isErasing = true;
+            // Only activate erasing if in erase mode
             const touch = e.touches[0];
             lastTouchX = touch.clientX;
             lastTouchY = touch.clientY;
@@ -378,8 +510,31 @@ function setupTouchEvents() {
 
     canvas.addEventListener('touchend', function () {
         isTouching = false;
-        isErasing = false;
         mouseIsPressed = false;
+    });
+    
+    // Handle orientation changes
+    window.addEventListener('orientationchange', function() {
+        // Delay execution to ensure elements have rerendered
+        setTimeout(() => {
+            windowResized();
+            
+            // Adjust UI based on orientation
+            const isLandscape = window.matchMedia('(orientation: landscape)').matches;
+            
+            // Potentially adjust settings for different orientations
+            if (isLandscape && window.innerHeight < 500) {
+                // In landscape on small devices, optimize performance
+                if (maxLines > 50) {
+                    maxLines = 50;
+                }
+            } else {
+                // Reset to defaults in portrait
+                maxLines = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent)
+                    ? 50
+                    : 100;
+            }
+        }, 300);
     });
 }
 
@@ -617,54 +772,10 @@ function drawLines() {
     }
 }
 
-// Function to remove lines near the mouse cursor
+// Function to remove lines near the mouse cursor with default radius
 function removeLinesNearMouse() {
-    // Only remove lines if the left mouse button is pressed
-    // And the mouse is NOT over the controls panel or toggle button
-    if (mouseIsPressed && mouseButton === LEFT && !isMouseOverControls() && !isMouseOverToggle()) {
-        // Get potential cells that could contain lines near the mouse
-        const radius = removalRadius + cellSize; // Add cellSize to ensure we check all potential cells
-        const checkedLines = new Set();
-        
-        // Check cells within a square area around the mouse
-        for (let dx = -1; dx <= 1; dx++) {
-            for (let dy = -1; dy <= 1; dy++) {
-                const x = mouseX + dx * radius;
-                const y = mouseY + dy * radius;
-                const cell = getCellKey(x, y);
-                
-                if (grid[cell]) {
-                    // Check each line in this cell
-                    for (const lineIndex of grid[cell]) {
-                        // Skip already checked lines
-                        if (checkedLines.has(lineIndex)) continue;
-                        checkedLines.add(lineIndex);
-                        
-                        let lineData = lines[lineIndex];
-                        
-                        // Skip lines already fading out
-                        if (lineData.fadeOutFactor < 1) continue;
-
-                        // Calculate the shortest distance from the mouse cursor to the line segment
-                        let distanceToSegment = pointSegmentDistance(
-                            mouseX,
-                            mouseY,
-                            lineData.startX,
-                            lineData.startY,
-                            lineData.endX,
-                            lineData.endY
-                        );
-
-                        // If line is within removal radius, trigger immediate fade-out
-                        if (distanceToSegment <= removalRadius) {
-                            // Start fadeout if not already fading
-                            lineData.age = lineLifespan + 1; // Start fade-out
-                        }
-                    }
-                }
-            }
-        }
-    }
+    // Use the more flexible function with the default radius
+    removeLinesNearMouseWithRadius(removalRadius);
 }
 
 // Function to check if two line segments intersect
@@ -796,44 +907,208 @@ function checkAllIntersections() {
     }
 }
 
-// Update the draw function to handle touch input
+// Update the draw function to handle touch input with variable eraser size
 function draw() {
     background(0, 0, 0, 1);
     manageLines();
     updateLineAnimations();
     checkAllIntersections();
 
+    // Get the current eraser radius - might be modified by pinch gestures
+    const localRemovalRadius = window.currentRemovalRadius || removalRadius;
+    
     // Use touch position for erasing if available
     if (isTouching && isErasing) {
         mouseX = lastTouchX;
         mouseY = lastTouchY;
-        removeLinesNearMouse();
-        drawEraser(mouseX, mouseY, removalRadius);
+        
+        // Pass the current eraser radius to the removal function
+        removeLinesNearMouseWithRadius(localRemovalRadius);
+        drawEraser(mouseX, mouseY, localRemovalRadius);
     } else if (
         mouseIsPressed &&
         mouseButton === LEFT &&
         !isMouseOverControls() &&
         !isMouseOverToggle()
     ) {
-        removeLinesNearMouse();
-        drawEraser(mouseX, mouseY, removalRadius);
+        removeLinesNearMouseWithRadius(localRemovalRadius);
+        drawEraser(mouseX, mouseY, localRemovalRadius);
     }
 
     drawLines();
 }
 
-// Update windowResized to handle orientation changes
-function windowResized() {
-    resizeCanvas(windowWidth, windowHeight);
-    // Adjust line lengths if needed
-    lines.forEach((line) => {
-        if (line.length > min(width, height) * 0.6) {
-            line.length = min(width, height) * 0.6;
+// Modified function to use variable radius for removal
+function removeLinesNearMouseWithRadius(radius) {
+    // Only remove lines if the left mouse button is pressed
+    // And the mouse is NOT over the controls panel or toggle button
+    if (mouseIsPressed && mouseButton === LEFT && !isMouseOverControls() && !isMouseOverToggle()) {
+        // Get potential cells that could contain lines near the mouse
+        const cellRadius = radius + cellSize; // Add cellSize to ensure we check all potential cells
+        const checkedLines = new Set();
+        
+        // Check cells within a square area around the mouse
+        for (let dx = -1; dx <= 1; dx++) {
+            for (let dy = -1; dy <= 1; dy++) {
+                const x = mouseX + dx * cellRadius;
+                const y = mouseY + dy * cellRadius;
+                const cell = getCellKey(x, y);
+                
+                if (grid[cell]) {
+                    // Check each line in this cell
+                    for (const lineIndex of grid[cell]) {
+                        // Skip already checked lines
+                        if (checkedLines.has(lineIndex)) continue;
+                        checkedLines.add(lineIndex);
+                        
+                        let lineData = lines[lineIndex];
+                        
+                        // Skip lines already fading out
+                        if (lineData.fadeOutFactor < 1) continue;
+
+                        // Calculate the shortest distance from the mouse cursor to the line segment
+                        let distanceToSegment = pointSegmentDistance(
+                            mouseX,
+                            mouseY,
+                            lineData.startX,
+                            lineData.startY,
+                            lineData.endX,
+                            lineData.endY
+                        );
+
+                        // If line is within removal radius, trigger immediate fade-out
+                        if (distanceToSegment <= radius) {
+                            // Start fadeout if not already fading
+                            lineData.age = lineLifespan + 1; // Start fade-out
+                        }
+                    }
+                }
+            }
         }
+    }
+}
+
+// Update windowResized to handle orientation changes and screen size adjustments
+function windowResized() {
+    // Resize the canvas
+    resizeCanvas(windowWidth, windowHeight);
+    
+    // Adjust line lengths based on new screen dimensions
+    const maxPossibleLength = min(width, height) * 0.6;
+    const actualLength = maxPossibleLength * (lineLength / 100);
+    
+    // Dynamically adjust existing lines to fit new screen dimensions
+    lines.forEach((line) => {
+        // Calculate the current line center
+        const centerX = (line.startX + line.endX) / 2;
+        const centerY = (line.startY + line.endY) / 2;
+        
+        // Check if center is outside canvas boundaries and adjust if needed
+        const newCenterX = centerX < 0 ? width * 0.25 : 
+            centerX > width ? width * 0.75 : 
+                centerX;
+        const newCenterY = centerY < 0 ? height * 0.25 : 
+            centerY > height ? height * 0.75 : 
+                centerY;
+        
+        // Calculate the line's current angle
+        const angle = Math.atan2(line.endY - line.startY, line.endX - line.startX);
+        
+        // Calculate new start/end points maintaining the angle but adjusting length
+        const halfLength = actualLength / 2;
+        line.startX = newCenterX + Math.cos(angle) * halfLength;
+        line.startY = newCenterY + Math.sin(angle) * halfLength;
+        line.endX = newCenterX - Math.cos(angle) * halfLength;
+        line.endY = newCenterY - Math.sin(angle) * halfLength;
     });
+    
+    // Check for orientation
+    const isLandscape = window.matchMedia('(orientation: landscape)').matches;
+    
+    // Apply different settings based on orientation
+    if (isLandscape) {
+        // In landscape mode, we might want to reduce density for low-height screens
+        if (window.innerHeight < 500) {
+            maxLines = Math.min(maxLines, 50);
+            targetFrameRate = 30;
+            frameInterval = 1000 / targetFrameRate;
+        }
+    } else {
+        // Portrait mode might handle differently based on device
+        const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
+        
+        if (isMobile) {
+            // Mobile portrait settings
+            maxLines = 50;
+            targetFrameRate = 30;
+        } else {
+            // Desktop/tablet portrait settings
+            maxLines = 100;
+            targetFrameRate = 60;
+        }
+        frameInterval = 1000 / targetFrameRate;
+    }
     
     // Rebuild the spatial grid to account for new positions
     rebuildGrid();
+    
+    // Update UI settings if needed
+    updateUIForScreenSize();
+}
+
+// Helper function to update UI based on screen size
+function updateUIForScreenSize() {
+    const controlsPanel = document.getElementById('controls');
+    const toggleButton = document.getElementById('panel-toggle');
+    
+    // Check for mobile device
+    const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
+    // Check for small screen (phone-sized)
+    const isSmallScreen = window.innerWidth < 480;
+    // Check for tablet-sized screen
+    const isTablet = window.innerWidth >= 768 && window.innerWidth <= 1024;
+    // Check orientation
+    const isLandscape = window.matchMedia('(orientation: landscape)').matches;
+    
+    // Apply specific adjustments for different screen configurations
+    if (isMobile && isSmallScreen) {
+        if (isLandscape) {
+            // Small mobile in landscape
+            // Position controls on the right side
+            controlsPanel.style.top = '20px';
+            controlsPanel.style.bottom = 'auto';
+            controlsPanel.style.right = '20px';
+            controlsPanel.style.transform = 'none';
+            
+            // Position toggle button
+            toggleButton.style.top = '20px';
+            toggleButton.style.bottom = 'auto';
+            toggleButton.style.right = '20px';
+        } else {
+            // Small mobile in portrait
+            // Position controls at bottom center
+            controlsPanel.style.top = 'auto';
+            controlsPanel.style.bottom = '20px';
+            controlsPanel.style.right = '50%';
+            controlsPanel.style.transform = 'translateX(50%)';
+            
+            // Position toggle button
+            toggleButton.style.top = 'auto';
+            toggleButton.style.bottom = '20px';
+            toggleButton.style.right = '20px';
+        }
+    } else if (isTablet) {
+        // Tablet - controls in top right or side based on orientation
+        if (isLandscape) {
+            controlsPanel.style.top = '20px';
+            controlsPanel.style.right = '20px';
+            controlsPanel.style.width = '320px';
+        } else {
+            controlsPanel.style.top = '20px';
+            controlsPanel.style.right = '20px';
+            controlsPanel.style.width = '300px';
+        }
+    }
 }
 
 // Function to clean up when the page is closed or refreshed
