@@ -379,10 +379,10 @@ function setupTouchEvents() {
                         top: ${e.touches[0].clientY - 50}px;
                         width: ${window.currentRemovalRadius}px;
                         height: ${window.currentRemovalRadius}px;
-                        background: rgba(255,255,255,0.2);
+                        background: rgb(255 255 255 / 20%);
                         border-radius: 50%;
                         pointer-events: none;
-                        opacity: 0.7;
+                        opacity: 70%;
                         transition: all 0.3s ease;
                         z-index: 1000;
                     `;
@@ -412,12 +412,12 @@ function setupTouchEvents() {
                             top: 50%;
                             transform: translate(-50%, -50%);
                             padding: 10px 20px;
-                            background: rgba(0,0,0,0.7);
+                            background: rgb(0 0 0 / 70%);
                             color: white;
                             border-radius: 20px;
                             font-family: Arial, sans-serif;
                             pointer-events: none;
-                            opacity: 0.9;
+                            opacity: 90%;
                             transition: opacity 0.3s ease;
                             z-index: 1000;
                         `;

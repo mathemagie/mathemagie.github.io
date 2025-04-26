@@ -180,9 +180,18 @@ input[type='range']::-webkit-slider-runnable-track {
 
 /* Animations for touch feedback */
 @keyframes pulsate {
-    0% { transform: scale(1); opacity: 0.7; }
-    50% { transform: scale(1.1); opacity: 0.9; }
-    100% { transform: scale(1); opacity: 0.7; }
+    0% {
+        transform: scale(1);
+        opacity: 70%;
+    }
+    50% {
+        transform: scale(1.1);
+        opacity: 90%;
+    }
+    100% {
+        transform: scale(1);
+        opacity: 70%;
+    }
 }
 
 .touch-feedback {
@@ -192,14 +201,26 @@ input[type='range']::-webkit-slider-runnable-track {
 /* Mode feedback notification */
 .mode-feedback {
     z-index: 1000;
-    animation: fadeInOut 1.8s ease-in-out;
+    animation: fade-in-out 1.8s ease-in-out;
 }
 
-@keyframes fadeInOut {
-    0% { opacity: 0; transform: translate(-50%, -70%); }
-    20% { opacity: 0.9; transform: translate(-50%, -50%); }
-    80% { opacity: 0.9; transform: translate(-50%, -50%); }
-    100% { opacity: 0; transform: translate(-50%, -40%); }
+@keyframes fade-in-out {
+    0% {
+        opacity: 0%;
+        transform: translate(-50%, -70%);
+    }
+    20% {
+        opacity: 90%;
+        transform: translate(-50%, -50%);
+    }
+    80% {
+        opacity: 90%;
+        transform: translate(-50%, -50%);
+    }
+    100% {
+        opacity: 0%;
+        transform: translate(-50%, -40%);
+    }
 }
 
 /* Media queries for different screen sizes and orientations */
@@ -221,13 +242,13 @@ input[type='range']::-webkit-slider-runnable-track {
         bottom: 20px;
         right: 20px;
     }
-    
+
     /* Improve touch target sizes on smaller screens */
     input[type='range']::-webkit-slider-thumb {
         height: 28px;
         width: 28px;
     }
-    
+
     input[type='range']::-webkit-slider-runnable-track {
         height: 10px;
     }
@@ -245,23 +266,23 @@ input[type='range']::-webkit-slider-runnable-track {
         overflow-y: auto;
         width: 250px;
     }
-    
+
     #controls.hidden {
         transform: translateX(calc(100% + 20px));
     }
-    
+
     /* More compact controls for landscape */
     .control-group {
         margin-bottom: 15px;
     }
-    
+
     /* Adjust controls panel scrollbar */
     #controls::-webkit-scrollbar {
         width: 6px;
     }
-    
+
     #controls::-webkit-scrollbar-thumb {
-        background: rgba(255, 255, 255, 0.3);
+        background: rgb(255 255 255 / 30%);
         border-radius: 3px;
     }
 }
@@ -271,11 +292,11 @@ input[type='range']::-webkit-slider-runnable-track {
     #controls {
         width: 320px;
     }
-    
+
     .control-label {
         font-size: 18px;
     }
-    
+
     input[type='range'] {
         height: 26px;
     }
