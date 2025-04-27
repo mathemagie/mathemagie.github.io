@@ -1,0 +1,52 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Google Drive Document</title>
+    <!-- Bootstrap CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <style>
+        /* Additional custom styling */
+        .document-container {
+            padding: 20px;
+        }
+        .info-banner {
+            background-color: #f8f9fa;
+            padding: 15px;
+            margin-bottom: 20px;
+            border-radius: 5px;
+            border-left: 4px solid #0d6efd;
+        }
+    </style>
+</head>
+<body>
+    <div class="container document-container">
+        <div class="row justify-content-center">
+            <div class="col-md-8">
+                <!-- Information banner -->
+                <div class="info-banner">
+                    <p>This podcast was generated using the NotebookLM service with all sources available in this GitHub repository: 
+                        <a href="https://github.com/mathemagie/brain/tree/main/vibecoding" target="_blank">
+                            https://github.com/mathemagie/brain/tree/main/vibecoding
+                        </a>
+                    </p>
+                </div>
+                
+                <!-- Google Drive document embedded with Bootstrap classes -->
+                <div class="ratio ratio-16x9 mb-4 shadow">
+                    <iframe 
+                        src="https://drive.google.com/file/d/1esbYk61jn5aIxdeLP_g4i1Y1i-83nawg/preview" 
+                        allow="autoplay"
+                        title="Embedded Google Drive Document"
+                        class="rounded">
+                    </iframe>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Bootstrap JS Bundle with Popper -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>
