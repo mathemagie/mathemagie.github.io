@@ -1,0 +1,932 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+    <title>WebXR Volcano Adventure</title>
+    <style>
+        /* Basic styling to make our canvas fill the screen */
+        body { margin: 0; overflow: hidden; background-color: #222; }
+        canvas { display: block; }
+        /* Style for the narration text panel */
+        #info {
+            position: absolute;
+            top: 10px;
+            left: 10px;
+            width: 300px; /* Adjust width as needed */
+            padding: 15px;
+            background-color: rgba(0, 0, 0, 0.7); /* Semi-transparent black */
+            color: white;
+            font-family: sans-serif;
+            font-size: 14px;
+            border-radius: 8px;
+            z-index: 10; /* Make sure it's above the canvas */
+        }
+        /* Style for the lava tooltip (initially hidden) */
+        #tooltip {
+            position: absolute;
+            display: none; /* Hidden by default */
+            padding: 8px;
+            background-color: rgba(255, 100, 0, 0.8); /* Orangey, semi-transparent */
+            color: white;
+            font-family: sans-serif;
+            font-size: 12px;
+            border-radius: 4px;
+            pointer-events: none; /* Don't let it block mouse clicks */
+            z-index: 11; /* Above info panel */
+        }
+    </style>
+</head>
+<body>
+    <canvas id="canvas"></canvas>
+
+    <div id="info">
+        Welcome! You are standing on the edge of a volcano crater. Explore your surroundings. Use the buttons to learn more!
+    </div>
+
+    <div id="tooltip">Feel the heat? Lava can reach 1200 °C!</div>
+
+    <script type="importmap">
+        {
+            "imports": {
+                "three": "https://unpkg.com/three@latest/build/three.module.js",
+                "three/addons/": "https://unpkg.com/three@latest/examples/jsm/"
+            }
+        }
+    </script>
+
+    <script type="module">
+        // Import necessary parts from Three.js library
+        import * as THREE from 'three';
+        // Import OrbitControls for 2D mouse control
+        import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
+        // Import VRButton for the "Enter VR" button
+        import { VRButton }from 'three/addons/webxr/VRButton.js';
+        // Import XRControllerModelFactory to show controller models in VR
+        import { XRControllerModelFactory } from 'three/addons/webxr/XRControllerModelFactory.js';
+
+        // --- Core Three.js Setup ---
+
+        let scene, camera, renderer;
+        let controls; // For 2D OrbitControls
+        let vrButton;
+        let clock; // To measure time for animations
+
+        // VR specific variables
+        let controller1, controller2; // VR controllers
+        let controllerGrip1, controllerGrip2; // Visual models for controllers
+        const controllerModelFactory = new XRControllerModelFactory();
+        let raycaster; // Shoots a laser line to interact with things
+        const intersected = []; // Stores objects the controller ray is hitting
+        let tempMatrix = new THREE.Matrix4(); // Temporary storage for calculations
+
+        // Scene objects
+        let platform, volcanoCone, lavaPool;
+        let timeTravelButton, eruptionButton;
+        let safetyShield;
+        let particleSystem; // For eruption smoke/ash
+        let lavaParticles; // For lava 'bombs'
+
+        // State variables
+        let isTimeTravelAnimating = false;
+        let isErupting = false;
+        let timeTravelPhase = 0; // 0: present, 1: plates, 2: magma, 3: cone build
+        let eruptionTimer = 0;
+        const ERUPTION_DURATION = 8; // seconds
+        const LAVA_BASE_EMISSIVE_INTENSITY = 1.5;
+        const LAVA_HOT_EMISSIVE_INTENSITY = 3.0;
+
+        // DOM Elements
+        const infoElement = document.getElementById('info');
+        const tooltipElement = document.getElementById('tooltip');
+
+        // Animation variables for time travel
+        let plate1, plate2, magmaChamber;
+        let animationClock = new THREE.Clock(); // Separate clock for animations
+
+        // --- Initialization Function ---
+
+        function init() {
+            console.log("Starting initialization...");
+
+            // 1. Clock: For timing animations and updates
+            clock = new THREE.Clock();
+
+            // 2. Scene: The container for all our 3D objects
+            scene = new THREE.Scene();
+            scene.background = new THREE.Color(0x334466); // Dark blueish sky
+
+            // 3. Camera: Our viewpoint into the 3D world
+            camera = new THREE.PerspectiveCamera(
+                75, // Field of View (like camera lens angle)
+                window.innerWidth / window.innerHeight, // Aspect Ratio (width/height)
+                0.1, // Near clipping plane (don't render things too close)
+                1000 // Far clipping plane (don't render things too far)
+            );
+            // Position the camera on the platform initially
+            camera.position.set(0, 1.7, 3); // x, y (height), z (distance from center) - Eyes height approx 1.7m
+
+            // 4. Renderer: Draws the scene onto the canvas using WebGL
+            const canvas = document.getElementById('canvas');
+            renderer = new THREE.WebGLRenderer({ canvas: canvas, antialias: true });
+            renderer.setSize(window.innerWidth, window.innerHeight);
+            renderer.setPixelRatio(window.devicePixelRatio); // Use device's pixel density for sharpness
+            renderer.outputColorSpace = THREE.SRGBColorSpace; // Correct color display
+
+            // --- Enable WebXR ---
+            renderer.xr.enabled = true;
+            // Add the "Enter VR" button to the page
+            vrButton = VRButton.createButton(renderer);
+            document.body.appendChild(vrButton);
+            console.log("WebXR Enabled, VR Button added.");
+
+            // 5. Lighting: Makes objects visible
+            const ambientLight = new THREE.AmbientLight(0xffffff, 0.6); // Soft white light everywhere
+            scene.add(ambientLight);
+
+            const directionalLight = new THREE.DirectionalLight(0xffffff, 0.8); // Light from a direction (like sun)
+            directionalLight.position.set(5, 10, 7);
+            scene.add(directionalLight);
+
+            // Add a point light near the lava for a warm glow
+            const lavaLight = new THREE.PointLight(0xff6600, 1, 15, 1); // Orange light, intensity 1, distance 15, decay 1
+            lavaLight.position.set(0, 0.5, 0); // Position it near the lava pool center
+            scene.add(lavaLight);
+
+            // 6. Controls (for 2D fallback): Allow mouse dragging to orbit
+            controls = new OrbitControls(camera, renderer.domElement);
+            controls.target.set(0, 1, 0); // Look towards the center base of the volcano
+            controls.enableDamping = true; // Smooth camera movement
+            controls.dampingFactor = 0.05;
+            controls.screenSpacePanning = false; // Keep panning relative to ground
+            controls.minDistance = 1;
+            controls.maxDistance = 20;
+            controls.maxPolarAngle = Math.PI / 2 - 0.05; // Don't let camera go below ground
+            controls.update(); // Must call update() after any manual changes
+
+            // --- Create Scene Objects ---
+            createEnvironment();
+            createVolcano();
+            createGUI();
+            setupControllers(); // Setup VR controllers
+            setupRaycasting(); // Setup interaction raycaster
+
+            // Handle window resize
+            window.addEventListener('resize', onWindowResize, false);
+
+            // Start the animation loop
+            renderer.setAnimationLoop(animate);
+            console.log("Initialization complete. Starting animation loop.");
+        }
+
+        // --- Object Creation Functions ---
+
+        function createEnvironment() {
+            // Platform the user stands on
+            const platformGeometry = new THREE.CylinderGeometry(2.5, 3, 0.3, 32); // radiusTop, radiusBottom, height, segments
+            const platformMaterial = new THREE.MeshStandardMaterial({
+                color: 0x555555, // Dark grey
+                roughness: 0.8,
+                metalness: 0.1
+            });
+            platform = new THREE.Mesh(platformGeometry, platformMaterial);
+            platform.position.y = -0.15; // Position it slightly below y=0
+            scene.add(platform);
+        }
+
+        function createVolcano() {
+            // Volcano Cone
+            const coneHeight = 3;
+            const coneRadius = 2.5;
+            const coneGeometry = new THREE.ConeGeometry(coneRadius, coneHeight, 64, 8, true); // radius, height, segments, heightSegments, openEnded
+            const coneMaterial = new THREE.MeshStandardMaterial({
+                color: 0x6b442b, // Brownish rock color
+                roughness: 0.9,
+                metalness: 0.1,
+                side: THREE.DoubleSide // Render both inside and outside faces
+            });
+            volcanoCone = new THREE.Mesh(coneGeometry, coneMaterial);
+            volcanoCone.position.y = coneHeight / 2 - 0.3; // Position base slightly below platform level
+            volcanoCone.scale.set(1, 1, 1); // Initial scale
+            scene.add(volcanoCone);
+
+            // Lava Pool inside the cone
+            const lavaGeometry = new THREE.CircleGeometry(coneRadius * 0.7, 32); // radius, segments
+            const lavaMaterial = new THREE.MeshStandardMaterial({
+                color: 0xff4500, // OrangeRed
+                emissive: 0xff6600, // Glowing orange
+                emissiveIntensity: LAVA_BASE_EMISSIVE_INTENSITY,
+                roughness: 0.7,
+                metalness: 0.0,
+                side: THREE.DoubleSide
+            });
+            lavaPool = new THREE.Mesh(lavaGeometry, lavaMaterial);
+            lavaPool.rotation.x = -Math.PI / 2; // Rotate to lay flat
+            lavaPool.position.y = 0.2; // Position slightly above the cone base floor
+            // Give the lava pool a name so we can identify it with the raycaster
+            lavaPool.name = "LavaPool";
+            scene.add(lavaPool);
+        }
+
+        function createGUI() {
+            // GUI elements will be simple 3D planes with text textures
+
+            // --- Time Travel Button ---
+            timeTravelButton = createButton("Back in Time", 0xffffff, () => {
+                if (!isTimeTravelAnimating && !isErupting) { // Only trigger if not busy
+                    startTimetravelSequence();
+                }
+            });
+            timeTravelButton.position.set(-0.8, 1.5, -1.5); // Position in front-left
+            scene.add(timeTravelButton);
+
+            // --- Eruption Button ---
+            eruptionButton = createButton("Observe Eruption", 0xffaa00, () => {
+                if (!isErupting && !isTimeTravelAnimating) { // Only trigger if not busy
+                    startEruption();
+                }
+            });
+            eruptionButton.position.set(0.8, 1.5, -1.5); // Position in front-right
+            scene.add(eruptionButton);
+
+            // --- Safety Shield (initially invisible) ---
+            const shieldGeometry = new THREE.SphereGeometry(4, 32, 16); // radius, segmentsWidth, segmentsHeight
+            const shieldMaterial = new THREE.MeshBasicMaterial({
+                color: 0x87ceeb, // Sky blue
+                transparent: true,
+                opacity: 0.3,
+                side: THREE.BackSide // Show inside face
+            });
+            safetyShield = new THREE.Mesh(shieldGeometry, shieldMaterial);
+            safetyShield.visible = false; // Hide it initially
+            scene.add(safetyShield); // Add to scene, will be positioned around camera later
+        }
+
+        // Helper function to create a button mesh with text
+        function createButton(text, color, onClickCallback) {
+            const canvas = document.createElement('canvas');
+            const context = canvas.getContext('2d');
+            const width = 512;
+            const height = 128;
+            canvas.width = width;
+            canvas.height = height;
+
+            // Background
+            context.fillStyle = `rgba(${((color & 0xff0000) >> 16)}, ${((color & 0x00ff00) >> 8)}, ${color & 0x0000ff}, 0.7)`; // Use button color with alpha
+            context.fillRect(0, 0, width, height);
+            context.strokeStyle = 'rgba(255, 255, 255, 0.9)';
+            context.lineWidth = 10;
+            context.strokeRect(5, 5, width - 10, height - 10);
+
+
+            // Text
+            context.font = 'bold 48px sans-serif';
+            context.fillStyle = '#ffffff'; // White text
+            context.textAlign = 'center';
+            context.textBaseline = 'middle';
+            context.fillText(text, width / 2, height / 2);
+
+            const texture = new THREE.CanvasTexture(canvas);
+            texture.needsUpdate = true;
+
+            const geometry = new THREE.PlaneGeometry(0.6, 0.15); // Width, Height of the button plane
+            const material = new THREE.MeshBasicMaterial({ map: texture, transparent: true });
+            const buttonMesh = new THREE.Mesh(geometry, material);
+
+            // Store the callback function directly on the mesh object
+            buttonMesh.userData.onClick = onClickCallback;
+            buttonMesh.name = `Button: ${text}`; // Helpful for debugging intersections
+
+            return buttonMesh;
+        }
+
+        function setupControllers() {
+            // Controller 1 (usually right hand)
+            controller1 = renderer.xr.getController(0);
+            controller1.addEventListener('selectstart', onSelectStart); // Trigger press
+            controller1.addEventListener('selectend', onSelectEnd); // Trigger release
+            // You could add more listeners: 'squeezestart', 'squeezeend' for grip buttons
+            scene.add(controller1);
+
+            // Controller 2 (usually left hand)
+            controller2 = renderer.xr.getController(1);
+            // We'll just use controller 1 for pointing/interacting for simplicity
+            scene.add(controller2);
+
+            // --- Controller Visual Models ---
+            // Grip models show the physical controller shape
+            controllerGrip1 = renderer.xr.getControllerGrip(0);
+            controllerGrip1.add(controllerModelFactory.createControllerModel(controllerGrip1));
+            scene.add(controllerGrip1);
+
+            controllerGrip2 = renderer.xr.getControllerGrip(1);
+            controllerGrip2.add(controllerModelFactory.createControllerModel(controllerGrip2));
+            scene.add(controllerGrip2);
+
+            console.log("VR Controllers setup.");
+        }
+
+        function setupRaycasting() {
+            // Raycaster helps detect intersections (what the controller is pointing at)
+            raycaster = new THREE.Raycaster();
+
+            // Add a line visual for the raycaster pointer (optional but helpful)
+            const lineGeometry = new THREE.BufferGeometry().setFromPoints([
+                new THREE.Vector3(0, 0, 0), // Start point at controller origin
+                new THREE.Vector3(0, 0, -1) // End point 1 unit in front
+            ]);
+            const lineMaterial = new THREE.LineBasicMaterial({ color: 0xffffff, linewidth: 2 }); // White line
+            const pointerLine = new THREE.Line(lineGeometry, lineMaterial);
+            pointerLine.scale.z = 5; // Make the line longer (5 units)
+
+            // Attach the pointer line to controller 1
+            controller1.add(pointerLine.clone()); // Add the line visual to the controller itself
+            console.log("Raycaster setup with pointer line.");
+        }
+
+
+        // --- Event Handlers ---
+
+        function onWindowResize() {
+            // Update camera aspect ratio and renderer size on window resize
+            camera.aspect = window.innerWidth / window.innerHeight;
+            camera.updateProjectionMatrix(); // Apply the aspect ratio change
+            renderer.setSize(window.innerWidth, window.innerHeight);
+            console.log("Window resized.");
+        }
+
+        // Called when VR controller trigger is pressed
+        function onSelectStart(event) {
+            const controller = event.target; // Which controller triggered the event
+
+            // Find objects intersected by the controller's ray
+            const intersections = getIntersections(controller);
+
+            if (intersections.length > 0) {
+                const firstIntersection = intersections[0];
+                const object = firstIntersection.object;
+
+                // Check if the intersected object is one of our buttons
+                if (object.userData.onClick) {
+                    object.userData.onClick(); // Call the stored callback function
+                }
+            }
+        }
+
+        // Called when VR controller trigger is released
+        function onSelectEnd(event) {
+            // We can add effects here if needed, like changing button appearance on hover/press
+        }
+
+        // Helper function to get intersections for a controller
+        function getIntersections(controller) {
+            tempMatrix.identity().extractRotation(controller.matrixWorld); // Get controller's rotation
+            raycaster.ray.origin.setFromMatrixPosition(controller.matrixWorld); // Set ray origin to controller position
+            raycaster.ray.direction.set(0, 0, -1).applyMatrix4(tempMatrix); // Set ray direction forward from controller
+
+            // Check for intersections with interactable objects (buttons, lava pool)
+            return raycaster.intersectObjects([timeTravelButton, eruptionButton, lavaPool], false); // `false` means don't check children
+        }
+
+        // Handle mouse clicks for 2D fallback interaction
+        function onMouseClick(event) {
+             // Don't interact if in VR mode
+            if (renderer.xr.isPresenting) return;
+
+            const mouse = new THREE.Vector2();
+            // Calculate mouse position in normalized device coordinates (-1 to +1)
+            mouse.x = (event.clientX / window.innerWidth) * 2 - 1;
+            mouse.y = - (event.clientY / window.innerHeight) * 2 + 1;
+
+            raycaster.setFromCamera(mouse, camera); // Update the raycaster with the mouse position
+
+            const intersections = raycaster.intersectObjects([timeTravelButton, eruptionButton, lavaPool], false);
+
+            if (intersections.length > 0) {
+                const firstIntersection = intersections[0];
+                const object = firstIntersection.object;
+
+                if (object.userData.onClick) {
+                    object.userData.onClick(); // Call button callback
+                } else if (object.name === "LavaPool") {
+                    // Maybe trigger a sound or brief effect on click in 2D?
+                    console.log("Clicked on lava (2D mode)");
+                }
+            }
+        }
+        // Add mouse click listener for 2D mode
+        window.addEventListener('click', onMouseClick);
+
+
+        // --- Action Functions ---
+
+        function startTimetravelSequence() {
+            console.log("Starting Time Travel Sequence...");
+            isTimeTravelAnimating = true;
+            timeTravelPhase = 1; // Start with plate tectonics
+            animationClock.start(); // Start the animation timer
+
+            // Hide the current volcano elements
+            volcanoCone.visible = false;
+            lavaPool.visible = false;
+            platform.visible = false; // Hide platform too for clarity
+            timeTravelButton.visible = false; // Hide buttons during animation
+            eruptionButton.visible = false;
+
+            // Create temporary objects for animation (if they don't exist)
+            if (!plate1) {
+                const plateGeo = new THREE.PlaneGeometry(10, 10);
+                const plateMat1 = new THREE.MeshStandardMaterial({ color: 0x8B4513, side: THREE.DoubleSide }); // Brown
+                const plateMat2 = new THREE.MeshStandardMaterial({ color: 0x696969, side: THREE.DoubleSide }); // Grey
+                plate1 = new THREE.Mesh(plateGeo, plateMat1);
+                plate2 = new THREE.Mesh(plateGeo, plateMat2);
+                plate1.rotation.x = -Math.PI / 2;
+                plate2.rotation.x = -Math.PI / 2;
+                scene.add(plate1);
+                scene.add(plate2);
+
+                const magmaGeo = new THREE.SphereGeometry(0.1, 16, 16);
+                const magmaMat = new THREE.MeshBasicMaterial({ color: 0xff0000 }); // Bright red
+                magmaChamber = new THREE.Mesh(magmaGeo, magmaMat);
+                scene.add(magmaChamber);
+            }
+
+            // Set initial positions/states for animation
+            plate1.position.set(-5, -1, 0);
+            plate2.position.set(5, -1.1, 0); // Slightly lower
+            plate1.visible = false;
+            plate2.visible = false;
+
+            magmaChamber.position.set(0, -3, 0);
+            magmaChamber.scale.set(1, 1, 1); // Reset scale
+            magmaChamber.visible = false;
+
+            // Update narration
+            updateNarration("Millions of years ago... Earth's crust is made of giant plates that move slowly.");
+        }
+
+        function updateTimetravelAnimation(deltaTime) {
+            const animDuration = 4; // seconds per phase
+
+            if (timeTravelPhase === 1) { // Phase 1: Plates moving
+                plate1.visible = true;
+                plate2.visible = true;
+                // Move plate 1 towards center, plate 2 slightly under it
+                plate1.position.x = THREE.MathUtils.lerp(plate1.position.x, -0.5, deltaTime * 0.5);
+                plate2.position.x = THREE.MathUtils.lerp(plate2.position.x, 0.5, deltaTime * 0.5);
+
+                if (animationClock.getElapsedTime() > animDuration) {
+                    timeTravelPhase = 2; // Move to next phase
+                    animationClock.start(); // Reset timer for next phase
+                    updateNarration("When plates collide or pull apart, magma (molten rock) from deep inside the Earth can rise.");
+                    magmaChamber.visible = true;
+                    magmaChamber.position.set(0, -3, 0); // Reset position just in case
+                    magmaChamber.scale.set(0.1, 0.1, 0.1); // Start small
+                }
+            } else if (timeTravelPhase === 2) { // Phase 2: Magma Rising
+                 // Make magma rise and grow
+                magmaChamber.position.y = THREE.MathUtils.lerp(magmaChamber.position.y, -0.5, deltaTime * 0.6);
+                const targetScale = 5; // How big the magma chamber gets
+                magmaChamber.scale.x = THREE.MathUtils.lerp(magmaChamber.scale.x, targetScale, deltaTime * 0.6);
+                magmaChamber.scale.y = THREE.MathUtils.lerp(magmaChamber.scale.y, targetScale, deltaTime * 0.6);
+                magmaChamber.scale.z = THREE.MathUtils.lerp(magmaChamber.scale.z, targetScale, deltaTime * 0.6);
+
+                if (animationClock.getElapsedTime() > animDuration) {
+                    timeTravelPhase = 3; // Move to next phase
+                    animationClock.start(); // Reset timer
+                    updateNarration("This rising magma creates pressure and starts building a cone shape on the surface.");
+                    // Prepare volcano cone for animation
+                    volcanoCone.scale.set(0.01, 0.01, 0.01); // Start very small
+                    volcanoCone.position.y = -0.29; // Start low
+                    volcanoCone.visible = true; // Make it visible now
+                }
+            } else if (timeTravelPhase === 3) { // Phase 3: Cone Building
+                // Grow the volcano cone
+                const targetScale = 1.0;
+                const targetY = (volcanoCone.geometry.parameters.height / 2) - 0.3; // Original position
+                volcanoCone.scale.x = THREE.MathUtils.lerp(volcanoCone.scale.x, targetScale, deltaTime * 0.5);
+                volcanoCone.scale.y = THREE.MathUtils.lerp(volcanoCone.scale.y, targetScale, deltaTime * 0.5);
+                volcanoCone.scale.z = THREE.MathUtils.lerp(volcanoCone.scale.z, targetScale, deltaTime * 0.5);
+                volcanoCone.position.y = THREE.MathUtils.lerp(volcanoCone.position.y, targetY, deltaTime * 0.5);
+
+
+                if (animationClock.getElapsedTime() > animDuration) {
+                    // Animation finished
+                    isTimeTravelAnimating = false;
+                    timeTravelPhase = 0;
+                    console.log("Time Travel Sequence Finished.");
+                    // Clean up animation objects
+                    plate1.visible = false;
+                    plate2.visible = false;
+                    magmaChamber.visible = false;
+                    // Restore normal view
+                    platform.visible = true;
+                    lavaPool.visible = true;
+                    volcanoCone.visible = true; // Ensure it's visible and at final scale/pos
+                    volcanoCone.scale.set(1, 1, 1);
+                     volcanoCone.position.y = (volcanoCone.geometry.parameters.height / 2) - 0.3;
+
+                    timeTravelButton.visible = true;
+                    eruptionButton.visible = true;
+                    updateNarration("And that's how a volcano is formed over a long time! Now you're back in the present day.");
+                }
+            }
+        }
+
+
+        function startEruption() {
+            if (isErupting || isTimeTravelAnimating) return; // Prevent multiple eruptions
+
+            console.log("Starting Eruption Sequence...");
+            isErupting = true;
+            eruptionTimer = 0; // Reset timer
+
+            // Show safety shield and position it around the camera
+            safetyShield.position.copy(camera.position); // Center shield on camera
+            safetyShield.quaternion.copy(camera.quaternion); // Orient with camera (optional)
+            // Offset slightly if needed, especially in VR
+             if (renderer.xr.isPresenting) {
+                 // In VR, the camera position might be relative to the XR rig's "floor"
+                 // Get the absolute camera position in the world
+                 const cameraWorldPos = new THREE.Vector3();
+                 camera.getWorldPosition(cameraWorldPos);
+                 safetyShield.position.copy(cameraWorldPos);
+                 safetyShield.position.y -= 0.2; // Adjust height slightly if needed
+             } else {
+                safetyShield.position.copy(camera.position);
+             }
+            safetyShield.visible = true;
+
+            // Create particle systems if they don't exist
+            if (!particleSystem) {
+                createParticles();
+            }
+            particleSystem.visible = true;
+            lavaParticles.visible = true;
+            resetParticles(); // Put particles back at the start positions
+
+            // Update narration
+            updateNarration("Watch out! The volcano is erupting! Don't worry, the safety shield will protect you.");
+
+            // Maybe add a screen shake effect later? (more advanced)
+            // TODO: Play eruption sound here if added
+        }
+
+        function createParticles() {
+            // --- Smoke/Ash Particle System ---
+            const particleCount = 2000;
+            const positions = new Float32Array(particleCount * 3);
+            const velocities = new Float32Array(particleCount * 3); // Store velocity for animation
+
+            for (let i = 0; i < particleCount; i++) {
+                // Initial position near the vent (top center of cone)
+                positions[i * 3] = THREE.MathUtils.randFloatSpread(0.5); // x spread
+                positions[i * 3 + 1] = volcanoCone.position.y + volcanoCone.geometry.parameters.height / 2 + Math.random() * 0.2; // y start at vent
+                positions[i * 3 + 2] = THREE.MathUtils.randFloatSpread(0.5); // z spread
+
+                // Initial velocity (mostly upwards)
+                velocities[i * 3] = THREE.MathUtils.randFloatSpread(0.8); // x velocity
+                velocities[i * 3 + 1] = THREE.MathUtils.randFloat(1.5, 4.0); // y velocity (upwards)
+                velocities[i * 3 + 2] = THREE.MathUtils.randFloatSpread(0.8); // z velocity
+            }
+
+            const geometry = new THREE.BufferGeometry();
+            geometry.setAttribute('position', new THREE.BufferAttribute(positions, 3));
+            geometry.setAttribute('velocity', new THREE.BufferAttribute(velocities, 3)); // Store velocity
+
+            const material = new THREE.PointsMaterial({
+                color: 0xaaaaaa,
+                size: 0.05,
+                transparent: true,
+                opacity: 0.6,
+                sizeAttenuation: true // Particles get smaller further away
+            });
+
+            particleSystem = new THREE.Points(geometry, material);
+            particleSystem.visible = false; // Initially hidden
+            particleSystem.name = "SmokeParticles"; // Name for debugging
+            scene.add(particleSystem);
+
+
+            // --- Lava Bomb Particle System (Red Billboards) ---
+             const lavaParticleCount = 100;
+             const lavaPositions = new Float32Array(lavaParticleCount * 3);
+             const lavaVelocities = new Float32Array(lavaParticleCount * 3);
+
+            for (let i = 0; i < lavaParticleCount; i++) {
+                lavaPositions[i * 3] = THREE.MathUtils.randFloatSpread(0.3); // x near vent
+                lavaPositions[i * 3 + 1] = volcanoCone.position.y + volcanoCone.geometry.parameters.height / 2; // y start at vent
+                lavaPositions[i * 3 + 2] = THREE.MathUtils.randFloatSpread(0.3); // z near vent
+
+                lavaVelocities[i * 3] = THREE.MathUtils.randFloatSpread(1.5); // Wider x spread
+                lavaVelocities[i * 3 + 1] = THREE.MathUtils.randFloat(2.5, 5.0); // Faster upwards
+                lavaVelocities[i * 3 + 2] = THREE.MathUtils.randFloatSpread(1.5); // Wider z spread
+            }
+            const lavaGeometry = new THREE.BufferGeometry();
+            lavaGeometry.setAttribute('position', new THREE.BufferAttribute(lavaPositions, 3));
+            lavaGeometry.setAttribute('velocity', new THREE.BufferAttribute(lavaVelocities, 3));
+
+            const lavaMaterial = new THREE.PointsMaterial({
+                color: 0xff3300,
+                size: 0.15,
+                //map: createCircleTexture(), // Optional: Use a texture instead of square points
+                transparent: true,
+                opacity: 0.9,
+                sizeAttenuation: true
+            });
+
+             lavaParticles = new THREE.Points(lavaGeometry, lavaMaterial);
+             lavaParticles.visible = false;
+             lavaParticles.name = "LavaParticles";
+             scene.add(lavaParticles);
+
+            console.log("Particle systems created.");
+        }
+        /* // Optional helper to create a round texture for particles
+        function createCircleTexture() {
+            const canvas = document.createElement('canvas');
+            canvas.width = 64;
+            canvas.height = 64;
+            const context = canvas.getContext('2d');
+            context.beginPath();
+            context.arc(32, 32, 30, 0, 2 * Math.PI);
+            context.fillStyle = 'white'; // Color is set by PointsMaterial
+            context.fill();
+            return new THREE.CanvasTexture(canvas);
+        }
+        */
+
+
+        function updateParticles(deltaTime) {
+            if (!particleSystem || !particleSystem.visible) return; // Only update if visible
+
+            const positions = particleSystem.geometry.attributes.position.array;
+            const velocities = particleSystem.geometry.attributes.velocity.array;
+            const count = positions.length / 3;
+            const gravity = -2.0; // Simulate gravity pulling particles down
+            const drag = 0.98; // Slow down particles over time
+
+            const lavaPositions = lavaParticles.geometry.attributes.position.array;
+            const lavaVelocities = lavaParticles.geometry.attributes.velocity.array;
+            const lavaCount = lavaPositions.length / 3;
+
+            const ventY = volcanoCone.position.y + volcanoCone.geometry.parameters.height / 2;
+
+            for (let i = 0; i < count; i++) {
+                const i3 = i * 3;
+
+                // Apply gravity to vertical velocity
+                velocities[i3 + 1] += gravity * deltaTime;
+
+                // Apply drag
+                velocities[i3] *= drag;
+                velocities[i3 + 1] *= drag;
+                velocities[i3 + 2] *= drag;
+
+                // Update position based on velocity
+                positions[i3] += velocities[i3] * deltaTime;
+                positions[i3 + 1] += velocities[i3 + 1] * deltaTime;
+                positions[i3 + 2] += velocities[i3 + 2] * deltaTime;
+
+                // Reset particle if it falls below the vent or gets too far
+                if (positions[i3 + 1] < ventY - 1 || Math.abs(positions[i3]) > 10 || Math.abs(positions[i3 + 2]) > 10 ) {
+                    // Reset position near vent
+                    positions[i3] = THREE.MathUtils.randFloatSpread(0.5);
+                    positions[i3 + 1] = ventY + Math.random() * 0.2;
+                    positions[i3 + 2] = THREE.MathUtils.randFloatSpread(0.5);
+                    // Reset velocity
+                    velocities[i3] = THREE.MathUtils.randFloatSpread(0.8);
+                    velocities[i3 + 1] = THREE.MathUtils.randFloat(1.5, 4.0);
+                    velocities[i3 + 2] = THREE.MathUtils.randFloatSpread(0.8);
+                }
+            }
+
+             for (let i = 0; i < lavaCount; i++) {
+                const i3 = i * 3;
+                lavaVelocities[i3 + 1] += gravity * 1.5 * deltaTime; // Stronger gravity for heavier lava bombs
+                lavaVelocities[i3] *= 0.99; // Slightly less drag maybe
+                lavaVelocities[i3 + 1] *= 0.99;
+                lavaVelocities[i3 + 2] *= 0.99;
+
+                lavaPositions[i3] += lavaVelocities[i3] * deltaTime;
+                lavaPositions[i3 + 1] += lavaVelocities[i3 + 1] * deltaTime;
+                lavaPositions[i3 + 2] += lavaVelocities[i3 + 2] * deltaTime;
+
+                if (lavaPositions[i3 + 1] < -1) { // Reset if falls below ground
+                    lavaPositions[i3] = THREE.MathUtils.randFloatSpread(0.3);
+                    lavaPositions[i3 + 1] = ventY;
+                    lavaPositions[i3 + 2] = THREE.MathUtils.randFloatSpread(0.3);
+                    lavaVelocities[i3] = THREE.MathUtils.randFloatSpread(1.5);
+                    lavaVelocities[i3 + 1] = THREE.MathUtils.randFloat(2.5, 5.0);
+                    lavaVelocities[i3 + 2] = THREE.MathUtils.randFloatSpread(1.5);
+                }
+            }
+
+            // Tell Three.js that the positions need updating on the GPU
+            particleSystem.geometry.attributes.position.needsUpdate = true;
+            lavaParticles.geometry.attributes.position.needsUpdate = true;
+        }
+
+        function resetParticles() {
+            if (!particleSystem) return;
+
+            const positions = particleSystem.geometry.attributes.position.array;
+            const velocities = particleSystem.geometry.attributes.velocity.array;
+            const count = positions.length / 3;
+            const ventY = volcanoCone.position.y + volcanoCone.geometry.parameters.height / 2;
+
+            const lavaPositions = lavaParticles.geometry.attributes.position.array;
+            const lavaVelocities = lavaParticles.geometry.attributes.velocity.array;
+            const lavaCount = lavaPositions.length / 3;
+
+
+            for (let i = 0; i < count; i++) {
+                const i3 = i * 3;
+                 // Reset position near vent
+                positions[i3] = THREE.MathUtils.randFloatSpread(0.5);
+                positions[i3 + 1] = ventY + Math.random() * 0.2;
+                positions[i3 + 2] = THREE.MathUtils.randFloatSpread(0.5);
+                // Reset velocity
+                velocities[i3] = THREE.MathUtils.randFloatSpread(0.8);
+                velocities[i3 + 1] = THREE.MathUtils.randFloat(1.5, 4.0);
+                velocities[i3 + 2] = THREE.MathUtils.randFloatSpread(0.8);
+            }
+
+             for (let i = 0; i < lavaCount; i++) {
+                 const i3 = i * 3;
+                 lavaPositions[i3] = THREE.MathUtils.randFloatSpread(0.3);
+                 lavaPositions[i3 + 1] = ventY;
+                 lavaPositions[i3 + 2] = THREE.MathUtils.randFloatSpread(0.3);
+                 lavaVelocities[i3] = THREE.MathUtils.randFloatSpread(1.5);
+                 lavaVelocities[i3 + 1] = THREE.MathUtils.randFloat(2.5, 5.0);
+                 lavaVelocities[i3 + 2] = THREE.MathUtils.randFloatSpread(1.5);
+             }
+
+            particleSystem.geometry.attributes.position.needsUpdate = true;
+            particleSystem.geometry.attributes.velocity.needsUpdate = true;
+            lavaParticles.geometry.attributes.position.needsUpdate = true;
+            lavaParticles.geometry.attributes.velocity.needsUpdate = true;
+        }
+
+        function stopEruption() {
+            console.log("Stopping Eruption Sequence.");
+            isErupting = false;
+            safetyShield.visible = false;
+            if (particleSystem) particleSystem.visible = false;
+            if (lavaParticles) lavaParticles.visible = false;
+            // TODO: Stop eruption sound if added
+            updateNarration("Phew, the eruption is over! It's safe again.");
+        }
+
+        function updateNarration(text) {
+            infoElement.innerText = text;
+            // Optional: Add Text-to-Speech here
+            // if ('speechSynthesis' in window) {
+            //     const utterance = new SpeechSynthesisUtterance(text);
+            //     speechSynthesis.speak(utterance);
+            // }
+        }
+
+        function handleControllerInteractions(controller) {
+             // Clear previous intersections
+            intersected.length = 0;
+
+            tempMatrix.identity().extractRotation(controller.matrixWorld);
+            raycaster.ray.origin.setFromMatrixPosition(controller.matrixWorld);
+            raycaster.ray.direction.set(0, 0, -1).applyMatrix4(tempMatrix);
+
+            // Check intersections with interactable objects
+            const intersections = raycaster.intersectObjects([timeTravelButton, eruptionButton, lavaPool], false);
+
+            let hittingLava = false;
+            let hittingButton = false;
+
+            if (intersections.length > 0) {
+                const firstIntersection = intersections[0];
+                const object = firstIntersection.object;
+
+                if (object.name === "LavaPool") {
+                    hittingLava = true;
+                    // Show tooltip at intersection point
+                     showTooltip(firstIntersection.point); // Pass the 3D point
+
+                } else if (object.name.startsWith("Button:")) {
+                    hittingButton = true;
+                    // Optional: Add visual feedback for hovering button (e.g., scale up slightly)
+                     object.scale.set(1.1, 1.1, 1.1);
+                     intersected.push(object); // Mark as intersected
+                }
+            }
+
+             // Reset scale for buttons not currently intersected
+             [timeTravelButton, eruptionButton].forEach(button => {
+                 if (!intersected.includes(button)) {
+                     button.scale.set(1.0, 1.0, 1.0);
+                 }
+             });
+
+
+            // Handle lava visual feedback
+            if (hittingLava) {
+                // Brighten lava and make it pulsate
+                lavaPool.material.emissiveIntensity = THREE.MathUtils.lerp(
+                    lavaPool.material.emissiveIntensity,
+                    LAVA_HOT_EMISSIVE_INTENSITY,
+                    0.1 // Smooth transition
+                );
+                // Add pulsation (e.g., using Math.sin)
+                const pulse = Math.sin(clock.getElapsedTime() * 5) * 0.5 + 0.5; // 0 to 1 sine wave
+                lavaPool.material.emissiveIntensity = LAVA_HOT_EMISSIVE_INTENSITY + pulse * 0.5; // Pulsate around the 'hot' intensity
+            } else {
+                // Fade back to base intensity
+                lavaPool.material.emissiveIntensity = THREE.MathUtils.lerp(
+                    lavaPool.material.emissiveIntensity,
+                    LAVA_BASE_EMISSIVE_INTENSITY,
+                    0.1
+                );
+                // Hide tooltip if not hitting lava
+                hideTooltip();
+            }
+        }
+
+        // Function to show the HTML tooltip
+        function showTooltip(worldPosition) {
+            // Project 3D point to 2D screen coordinates
+            const screenPosition = worldPosition.clone().project(camera);
+
+            // Convert normalized device coordinates (-1 to +1) to screen pixels
+            const screenX = (screenPosition.x * 0.5 + 0.5) * window.innerWidth;
+            const screenY = (-screenPosition.y * 0.5 + 0.5) * window.innerHeight;
+
+            tooltipElement.style.left = `${screenX + 15}px`; // Offset slightly from cursor/controller point
+            tooltipElement.style.top = `${screenY + 15}px`;
+            tooltipElement.style.display = 'block';
+        }
+
+        // Function to hide the HTML tooltip
+        function hideTooltip() {
+            tooltipElement.style.display = 'none';
+        }
+
+        // --- Animation Loop ---
+        function animate() {
+            // requestAnimationFrame is handled by renderer.setAnimationLoop
+
+            const deltaTime = clock.getDelta(); // Time since last frame
+
+            // Update controls for 2D mode (if not in VR)
+            if (!renderer.xr.isPresenting) {
+                controls.update();
+            }
+
+            // Update animations if active
+            if (isTimeTravelAnimating) {
+                updateTimetravelAnimation(deltaTime);
+            }
+
+            if (isErupting) {
+                eruptionTimer += deltaTime;
+                updateParticles(deltaTime);
+                // Reposition shield constantly in case user moves (especially in VR)
+                 if (renderer.xr.isPresenting) {
+                     const cameraWorldPos = new THREE.Vector3();
+                     camera.getWorldPosition(cameraWorldPos);
+                     safetyShield.position.copy(cameraWorldPos);
+                      safetyShield.position.y -= 0.2; // Adjust height slightly if needed
+                 } else {
+                    safetyShield.position.copy(camera.position);
+                 }
+
+
+                if (eruptionTimer >= ERUPTION_DURATION) {
+                    stopEruption();
+                }
+            }
+
+            // Handle VR Controller Input and Raycasting
+            if (renderer.xr.isPresenting) {
+                 handleControllerInteractions(controller1); // Use controller 1 for interaction
+            } else {
+                // In 2D mode, we could potentially use mouse position for raycasting hover effects
+                // but click is handled by the event listener. Let's keep lava interaction VR-only for now,
+                // or add mouse hover detection separately if needed.
+                 // Reset lava intensity if not in VR (or add mouse hover check)
+                 lavaPool.material.emissiveIntensity = THREE.MathUtils.lerp(
+                    lavaPool.material.emissiveIntensity,
+                    LAVA_BASE_EMISSIVE_INTENSITY,
+                    0.1
+                );
+                 hideTooltip(); // Ensure tooltip is hidden in 2D unless mouse hover logic is added
+            }
+
+
+            // Render the scene!
+            renderer.render(scene, camera);
+        }
+
+        // --- Start the application ---
+        init();
+
+    </script>
+</body>
+</html>
