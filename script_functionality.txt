@@ -1,0 +1,131 @@
+The `lines/js/script.js` file is the core of the "Lines" interactive art project, handling all aspects of its presentation, interactivity, and logic using the p5.js library.
+
+1.  **Core Setup (`setup()` function)**:
+    *   The `setup()` function initializes the application. It creates a full-window canvas using `createCanvas(windowWidth, windowHeight)`.
+    *   `colorMode(HSB, 360, 100, 100, 1)` is set, meaning colors will be defined using Hue, Saturation, Brightness, and Alpha, with specified ranges.
+    *   Initial `strokeWeight` is set based on the `lineThickness` variable.
+    *   Event listeners for touch events (`setupTouchEvents()`), UI controls (thickness/length sliders, sound toggle, theme buttons), and panel toggle are established.
+    *   Audio context is initialized upon user interaction.
+    *   The spatial grid for performance optimization is initialized.
+    *   UI layout is adjusted based on screen size (`updateUIForScreenSize()`).
+    *   Performance settings (maxLines, targetFrameRate) are adjusted for mobile devices.
+    *   Crucially, p5.js's default `draw()` loop is disabled with `noLoop()`, and a custom `animationLoop()` is started.
+
+2.  **Line Entity Management**:
+    *   **Data Structure**: Each line is an object stored in the `lines` array. Its properties include:
+        *   `startX`, `startY`, `endX`, `endY`: Coordinates of the line.
+        *   `thickness`: Individual line thickness.
+        *   `hue`, `saturation`, `brightness`: HSB color properties.
+        *   `targetAlpha`, `currentAlpha`: For opacity and fade animations.
+        *   `age`: Frames since creation, used for animation timing.
+        *   `growthFactor`: Controls the line's growth animation (0 to 1).
+        *   `fadeOutFactor`: Controls the line's fade-out animation (1 to 0).
+        *   `lifespan`: Predefined duration before a line starts fading out.
+    *   **Generation (`manageLines()`)**:
+        *   New lines are added periodically, controlled by `drawSpeed`.
+        *   A random center point (`centerX`, `centerY`) and angle (`angle`) are chosen.
+        *   Line length is calculated based on screen size and the `lineLength` user setting.
+        *   Start and end points are determined from the center, angle, and length.
+        *   Color properties are assigned based on the `currentTheme`.
+        *   The new line object is added to the `lines` array.
+    *   **Lifecycle**:
+        *   **Fade-in**: `currentAlpha` animates from 0 to `targetAlpha` over `fadeInDuration` frames.
+        *   **Growth**: `growthFactor` animates from 0 to 1 over `growthDuration` frames, making the line appear to grow from its center.
+        *   **Lifespan**: Lines exist for `lineLifespan` frames.
+        *   **Fade-out**: After `lineLifespan`, `fadeOutFactor` animates from 1 to 0 over `fadeOutDuration` frames. Lines with `fadeOutFactor` of 0 are removed.
+    *   **Max Lines**: `maxLines` (adjusted for mobile) limits the number of lines. When exceeded, the oldest line (front of the `lines` array) is removed using `lines.shift()`, and the spatial grid is rebuilt.
+
+3.  **Animation**:
+    *   **Custom Animation Loop**:
+        *   `animationLoop(currentTime)` uses `requestAnimationFrame` for smooth, browser-optimized looping, independent of p5.js's `draw()` loop.
+        *   `lastFrameTime` and `deltaTime` are used to calculate the time elapsed since the last frame.
+        *   The main drawing logic (`draw()`) is only called if `deltaTime` meets the `frameInterval` (derived from `targetFrameRate`), ensuring a consistent frame rate.
+        *   A `customFrameCount` is maintained for consistent timing of events.
+    *   **Line Animation Updates (`updateLineAnimations()`)**: This function iterates through all lines each frame:
+        *   Updates `currentAlpha` for fade-in.
+        *   Updates `growthFactor` for the initial growth.
+        *   Updates `fadeOutFactor` if the line's `age` exceeds `lineLifespan`.
+        *   Increments the line's `age`.
+        *   Filters out lines that have fully faded out (`fadeOutFactor <= 0`) and triggers a grid rebuild if lines were removed.
+    *   **Frame Rate Control**: `targetFrameRate` (e.g., 60 FPS for desktop, 30 for mobile) and `frameInterval` ensure the animation runs at a desired speed, adapting to device capabilities.
+
+4.  **User Controls and Interaction**:
+    *   **UI Elements**:
+        *   Sliders: `thickness-slider` (adjusts `lineThickness`), `length-slider` (adjusts `lineLength`). Their current values are displayed.
+        *   Sound Toggle: `sound-toggle` button (toggles `isSoundEnabled` and audio icon).
+        *   Theme Buttons (commented out in HTML, but logic exists): `theme-random`, `theme-neon`, etc., would set `currentTheme`.
+        *   Panel Toggle: `panel-toggle` button shows/hides the controls panel.
+    *   **Event Listeners**: Standard DOM `addEventListener` is used for these controls.
+        *   Slider 'input' events update `lineThickness` or `lineLength` and their respective display values. These variables are then used when new lines are created or existing lines are updated (e.g., during `windowResized`).
+        *   The sound toggle click updates `isSoundEnabled` and initializes `AudioContext` if it's the first time sound is enabled.
+        *   Panel toggle click updates `isPanelVisible` and toggles a 'hidden' class on the controls panel.
+    *   **Effect of Controls**: Changes directly influence properties of newly generated lines (thickness, length, color) or global states (sound).
+
+5.  **Eraser Functionality**:
+    *   **Line Removal (`removeLinesNearMouseWithRadius()`)**:
+        *   Triggered by mouse press (if not over UI) or touch (if `isErasing` is true).
+        *   It iterates through lines in nearby cells of the spatial grid (see Performance).
+        *   For each line, `pointSegmentDistance(px, py, x1, y1, x2, y2)` calculates the shortest distance from the mouse/touch coordinates (`px`, `py`) to the line segment.
+        *   If this distance is within the current `removalRadius` (or `window.currentRemovalRadius`), the line's `age` is set to `lineLifespan + 1`, initiating its fade-out sequence immediately.
+    *   **Visual Eraser (`drawEraser()`)**: When erasing, a visual representation of a gum eraser (a rounded rectangle with subtle texturing and shading) is drawn at the mouse/touch position, scaled by the `removalRadius`.
+    *   **Dynamic Radius**:
+        *   `window.currentRemovalRadius` stores the active eraser size.
+        *   Double-tap on touch devices toggles `window.currentRemovalRadius` between `removalRadius` and `removalRadius * 2`.
+        *   Pinch-to-zoom gesture on touch devices dynamically adjusts `window.currentRemovalRadius` within limits.
+
+6.  **Touch and Mouse Input**:
+    *   **Mouse**: `mouseIsPressed` and `mouseButton === LEFT` (and not over UI elements) trigger line removal via `removeLinesNearMouseWithRadius()`.
+    *   **Touch (`setupTouchEvents()`)**:
+        *   `touchstart`, `touchmove`, `touchend` listeners are set up.
+        *   Default touch behaviors (like scrolling) are prevented on the canvas.
+        *   `isTouching`, `lastTouchX`, `lastTouchY` track touch state for erasing.
+        *   **Tap**: A single tap initializes the audio context if needed.
+        *   **Double-tap**: Toggles eraser size. Visual feedback (pulsating circle) is provided.
+        *   **Long-press** (800ms): Toggles `isErasing` mode (between erasing and view-only). Visual feedback (text like "Eraser Mode") is displayed.
+        *   **Pinch**: If two touch points are detected, the distance between them is used to scale `window.currentRemovalRadius`.
+    *   **Mode Distinction**: The `isErasing` boolean, toggled by long-press, determines if touch input should trigger the eraser functionality.
+
+7.  **Audio System**:
+    *   **Initialization**: `AudioContext` (`audioContext`) is created lazily upon the first user interaction (click or sound toggle) to comply with browser autoplay policies.
+    *   **Sound Generation (`playIntersectionSound()`)**:
+        *   Called from `checkAllIntersections()` when a new line intersects an existing one during its growth phase.
+        *   Only plays if `isSoundEnabled` and `audioContext` exists.
+        *   Creates an `OscillatorNode` (sine wave) and a `GainNode`.
+        *   Pitch is mapped from the new line's hue (`map(pitch, 300, 800, 100, 300)`), making it lower and more soothing.
+        *   Volume envelope provides a soft attack and longer release.
+    *   **Spatial Audio**: A `StereoPannerNode` is used. The sound pans from a random stereo position to its opposite and back over 0.8 seconds, creating a sense of movement.
+    *   **Enable/Disable**: The `isSoundEnabled` flag, controlled by the sound toggle button, gates all sound playback.
+
+8.  **Performance Optimizations**:
+    *   **Mobile Adjustments**:
+        *   `maxLines` is reduced on mobile devices (detected via user agent string).
+        *   `targetFrameRate` is lowered (e.g., to 30 FPS) on mobile.
+    *   **Spatial Partitioning Grid**:
+        *   `grid`: An object acting as a hash map where keys are cell coordinates (e.g., "1,2") and values are arrays of line indices within that cell.
+        *   `cellSize`: Defines the size of each grid cell.
+        *   `addLineToGrid(line, index)`: Adds a line's index to all grid cells it overlaps.
+        *   `getLineCells(line)`: Determines all cells a line segment intersects.
+        *   `rebuildGrid()`: Clears and repopulates the grid, called when lines are removed or screen resizes.
+        *   **Purpose**:
+            *   **Eraser**: `removeLinesNearMouseWithRadius()` only checks lines in cells near the mouse cursor, drastically reducing comparisons.
+            *   **Intersection Detection (`checkAllIntersections()`)**: When a new line is added, it's only checked for intersection against lines in the same grid cells, rather than all other lines. This is particularly effective during the line's growth phase.
+
+9.  **Responsive Design**:
+    *   **`windowResized()`**:
+        *   Called on window resize or orientation change.
+        *   Resizes the p5.js canvas using `resizeCanvas(windowWidth, windowHeight)`.
+        *   Dynamically adjusts existing lines: their positions are recalculated to try and keep them within new bounds while maintaining their angle and relative length (scaled by `lineLength` and new screen dimensions).
+        *   May adjust `maxLines` and `targetFrameRate` based on new orientation (e.g., landscape on small devices).
+        *   Rebuilds the spatial grid.
+    *   **`updateUIForScreenSize()`**:
+        *   Adjusts the CSS styles (position, transform) of the `#controls` panel and `#panel-toggle` button based on screen width and orientation (e.g., positioning controls at the bottom on small portrait screens, or on the side for landscape). This is done via direct style manipulation.
+
+10. **Other Notable Features**:
+    *   **Color Themes**:
+        *   `colorThemes` object defines different color generation strategies ('random', 'neon', 'pastel', 'mono'). Each theme has a `getColor()` method returning HSB properties.
+        *   `currentTheme` variable stores the active theme.
+        *   While the UI buttons for changing themes are commented out in `index.html`, the underlying JavaScript logic to support them exists in `setupThemeButtons()` and `colorThemes`.
+    *   **Testing Exports**: The script checks `if (typeof module !== 'undefined' && module.exports)` to conditionally export functions like `distSq` and `pointSegmentDistance`, making them available for unit testing in a Node.js environment (e.g., with Jest).
+    *   **Cleanup**: A `beforeunload` event listener cancels the `requestAnimationFrame` to prevent potential memory leaks or errors if the page is closed or refreshed.
+
+This detailed breakdown covers the primary functionalities implemented within `lines/js/script.js`.

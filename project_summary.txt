@@ -1,0 +1,11 @@
+Project: Lines
+
+Main Purpose:
+"Lines" is an interactive art experience designed to immerse users in a dynamic visual world. It creates an ever-changing canvas of colorful, flowing lines that respond to user touch and mouse movements. Users can customize the experience by adjusting line thickness, length, and color themes, and can also "erase" lines to create patterns with negative space. The project aims to provide a calming and creative exploration tool.
+
+Key Technologies Used:
+- HTML5: For the basic structure of the web application.
+- CSS3: For styling the visual presentation of the interface and elements.
+- JavaScript (ES6+): For the core application logic, user interaction, animations, and dynamic behavior.
+- p5.js: A JavaScript library for creative coding, used extensively for rendering the lines on an HTML5 Canvas, managing animations, and handling user input for artistic expression.
+- HTML5 Canvas: Used as the rendering surface for the p5.js sketch.
