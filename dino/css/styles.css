@@ -1,0 +1,59 @@
+   /* Basic CSS to remove default margins and hide scrollbars */
+   body {
+    padding: 0;
+    margin: 0;
+    overflow: hidden; /* Prevent scrollbars from appearing */
+    background-color: #000; /* Black background for the page */
+}
+canvas {
+    display: block; /* Removes extra space below the canvas */
+    margin: auto; /* Center canvas if window is larger (optional) */
+}
+#micStatus {
+    position: fixed;
+    top: 10px;
+    left: 10px;
+    color: white;
+    font-family: monospace;
+    background: rgba(0,0,0,0.5);
+    padding: 5px;
+    border-radius: 5px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+#soundIndicator {
+    width: 20px;
+    height: 20px;
+    background: #333;
+    border-radius: 50%;
+    display: inline-block;
+    transition: background-color 0.1s ease;
+}
+
+/* --- Gamepad Status Indicator Styles --- */
+#gamepadStatus {
+  position: fixed;
+  top: 10px;
+  right: 200px;
+  color: white;
+  font-family: monospace;
+  background: rgba(0,0,0,0.5);
+  display: flex;
+  align-items: center;
+  margin: 10px 0 0 0;
+  font-family: monospace;
+}
+#gamepadStatus span {
+  margin-right: 10px;
+  font-size: 1.1em;
+}
+#gamepadIndicator {
+  width: 18px;
+  height: 18px;
+  border-radius: 50%; /* Makes it a circle */
+  background-color: gray; /* Default color */
+  box-shadow: none;
+  border: 2px solid #222;
+  transition: background 0.2s, box-shadow 0.2s;
+}

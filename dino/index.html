@@ -4,40 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Pixel fabriozio </title>
-    <style>
-        /* Basic CSS to remove default margins and hide scrollbars */
-        body {
-            padding: 0;
-            margin: 0;
-            overflow: hidden; /* Prevent scrollbars from appearing */
-            background-color: #000; /* Black background for the page */
-        }
-        canvas {
-            display: block; /* Removes extra space below the canvas */
-            margin: auto; /* Center canvas if window is larger (optional) */
-        }
-        #micStatus {
-            position: fixed;
-            top: 10px;
-            left: 10px;
-            color: white;
-            font-family: monospace;
-            background: rgba(0,0,0,0.5);
-            padding: 5px;
-            border-radius: 5px;
-            display: flex;
-            align-items: center;
-            gap: 10px;
-        }
-        #soundIndicator {
-            width: 20px;
-            height: 20px;
-            background: #333;
-            border-radius: 50%;
-            display: inline-block;
-            transition: background-color 0.1s ease;
-        }
-    </style>
+    <link rel="stylesheet" href="css/styles.css">
     <!-- Include the p5.js libraries -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/p5.js/1.9.0/p5.min.js"></script>
     <!-- Load p5.sound.min.js before other scripts -->
@@ -47,6 +14,11 @@
     <div id="micStatus">
         <span>Microphone: Not Started</span>
         <div id="soundIndicator"></div>
+    </div>
+    <!-- Gamepad status indicator -->
+    <div id="gamepadStatus">
+        <span>Gamepad: Not Connected</span>
+        <div id="gamepadIndicator"></div>
     </div>
     <script>
         // --- Game Configuration ---
@@ -83,6 +55,12 @@
 
         let gameState = 'START'; // START, PLAYING, GAME_OVER
 
+        // --- Gamepad Support Variable ---
+        // This variable helps us detect when the gamepad button is pressed and released
+        let gamepadJumpPressed = false; // Prevents repeated jumps from holding the button
+        // Get references to gamepad status elements
+        let gamepadStatus, gamepadIndicator;
+
         // --- p5.js Preload Function ---
         // Add preload function before setup
         function preload() {
@@ -109,6 +87,9 @@
               console.log('Available audio input devices:', devices);
           });
           soundIndicator = document.getElementById('soundIndicator');
+          // Get gamepad status elements
+          gamepadStatus = document.getElementById('gamepadStatus').firstElementChild;
+          gamepadIndicator = document.getElementById('gamepadIndicator');
           
           groundY = height * 0.8;
           gravity = createVector(0, 0.7); // Adjust gravity force
@@ -202,6 +183,36 @@
             case 'GAME_OVER':
               drawGameOverScreen();
               break;
+          }
+
+          // --- Gamepad Support ---
+          // This code checks if a gamepad is connected and if the main action button is pressed
+          // Button 0 is usually the "A" button on Xbox or "Cross" on PlayStation controllers
+          let gamepads = navigator.getGamepads ? navigator.getGamepads() : [];
+          // --- Gamepad Indicator Visuals ---
+          if (gamepads[0]) {
+              // Gamepad is connected
+              gamepadStatus.textContent = 'Gamepad: Connected';
+              gamepadIndicator.style.backgroundColor = 'limegreen';
+              gamepadIndicator.style.boxShadow = '0 0 10px #0f0';
+          } else {
+              // No gamepad connected
+              gamepadStatus.textContent = 'Gamepad: Not Connected';
+              gamepadIndicator.style.backgroundColor = 'gray';
+              gamepadIndicator.style.boxShadow = 'none';
+          }
+          if (gamepads[0]) { // Use the first connected gamepad
+              let gp = gamepads[0];
+              if (gp.buttons[0].pressed) {
+                  // If the button is pressed and wasn't pressed last frame, trigger jump
+                  if (!gamepadJumpPressed) {
+                      handleInput(); // Use your existing jump/start logic
+                      gamepadJumpPressed = true;
+                  }
+              } else {
+                  // Button released, so we can allow another jump next time
+                  gamepadJumpPressed = false;
+              }
           }
         }
 
