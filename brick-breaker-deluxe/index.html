@@ -227,11 +227,11 @@
     const PADDLE_WIDTH = 120;
     const PADDLE_HEIGHT = 20;
     const PADDLE_MARGIN_BOTTOM = 30;
-    const PADDLE_SPEED = 35;
+    const PADDLE_SPEED = 55;
 
     const BALL_RADIUS = 10;
-    const INITIAL_BALL_SPEED_X = 5;
-    const INITIAL_BALL_SPEED_Y = -5;
+    const INITIAL_BALL_SPEED_X = 2;
+    const INITIAL_BALL_SPEED_Y = -2;
 
     const BRICK_ROW_COUNT = 6;
     const BRICK_COLUMN_COUNT = 10;
@@ -300,6 +300,12 @@
     let activeGamepadIndex = null;
     let lastGamepadServePress = false;
     let lastGamepadMenuPress = false;
+    let paddleVelocity = 0;
+
+    // --- Sound Effects ---
+    const brickHitSound = new Audio(window.location.href.includes('mathemagie.github.io/brick-breaker-deluxe') 
+      ? 'brick-breaker-deluxe/sfx_A_sat_20250529_175752.mp3'
+      : 'sfx_A_sat_20250529_175752.mp3');
 
     // --- Helper Functions ---
     function createInitialBricks() {
@@ -539,6 +545,13 @@
             brick.status = BrickStatus.BROKEN;
             score += SCORE_PER_BRICK;
             updateScoreDisplay();
+            // Play sound effect for brick hit
+            try {
+              brickHitSound.currentTime = 0;
+              brickHitSound.play();
+            } catch (e) {
+              // Ignore play errors (e.g., user gesture required)
+            }
           }
         }
       });
@@ -593,22 +606,27 @@
 
       // --- Smooth analog stick movement ---
       const xAxis = gamepad.axes[0];
+      const ACCELERATION = 1.2; // How quickly paddle speeds up
+      const FRICTION = 0.85;    // How quickly paddle slows down (0.85 = slows down fast, 0.99 = slow friction)
+      const MAX_PADDLE_SPEED = 18; // Maximum paddle speed
+
       if (Math.abs(xAxis) > GAMEPAD_AXIS_DEADZONE) {
-        // Move paddle by a value proportional to stick tilt
-        // You can adjust the multiplier (e.g., 12) for desired speed
-        paddleX += xAxis * 12;
-        // Clamp paddle position to canvas bounds
-        paddleX = Math.max(0, Math.min(CANVAS_WIDTH - PADDLE_WIDTH, paddleX));
-        if (currentGameState === GameState.SERVING) {
-          ball.x = paddleX + PADDLE_WIDTH / 2;
-        }
+        // Accelerate paddle velocity based on stick tilt
+        paddleVelocity += xAxis * ACCELERATION;
+        // Clamp velocity to max speed
+        paddleVelocity = Math.max(-MAX_PADDLE_SPEED, Math.min(MAX_PADDLE_SPEED, paddleVelocity));
       } else {
-        // D-Pad fallback for digital movement
-        if (gamepad.buttons[GAMEPAD_BUTTON_DPAD_LEFT]?.pressed) {
-          movePaddle('left');
-        } else if (gamepad.buttons[GAMEPAD_BUTTON_DPAD_RIGHT]?.pressed) {
-          movePaddle('right');
-        }
+        // Apply friction to slow down paddle when stick is released
+        paddleVelocity *= FRICTION;
+        // Stop completely if very slow (to prevent drifting)
+        if (Math.abs(paddleVelocity) < 0.1) paddleVelocity = 0;
+      }
+
+      // D-Pad fallback for digital movement
+      if (gamepad.buttons[GAMEPAD_BUTTON_DPAD_LEFT]?.pressed) {
+        paddleVelocity = -MAX_PADDLE_SPEED;
+      } else if (gamepad.buttons[GAMEPAD_BUTTON_DPAD_RIGHT]?.pressed) {
+        paddleVelocity = MAX_PADDLE_SPEED;
       }
 
       // --- Serve and menu logic remains unchanged ---
@@ -641,6 +659,12 @@
         ball.x += ball.dx;
         ball.y += ball.dy;
         detectCollisions();
+      }
+      
+      paddleX += paddleVelocity;
+      paddleX = Math.max(0, Math.min(CANVAS_WIDTH - PADDLE_WIDTH, paddleX));
+      if (currentGameState === GameState.SERVING) {
+        ball.x = paddleX + PADDLE_WIDTH / 2;
       }
       
       drawPaddle(ctx);
