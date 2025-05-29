@@ -1,0 +1,684 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Brick Breaker Deluxe - HTML5</title>
+  <style>
+    body {
+      margin: 0;
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen',
+        'Ubuntu', 'Cantarell', 'Fira Sans', 'Droid Sans', 'Helvetica Neue',
+        sans-serif;
+      -webkit-font-smoothing: antialiased;
+      -moz-osx-font-smoothing: grayscale;
+      background-color: #111827; /* bg-gray-900 */
+      color: #e5e7eb; /* text-gray-200 */
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      min-height: 100vh;
+      padding: 16px;
+      box-sizing: border-box;
+    }
+
+    #gameContainer {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+    }
+
+    header {
+      margin-bottom: 24px;
+      text-align: center;
+    }
+
+    h1 {
+      font-size: 3rem; /* text-5xl */
+      font-weight: bold;
+      background: linear-gradient(to right, #818cf8, #fb7185, #fcd34d);
+      -webkit-background-clip: text;
+      background-clip: text;
+      color: transparent;
+      margin: 0;
+    }
+
+    #canvasContainer {
+      position: relative;
+      box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
+      border-radius: 0.5rem; /* rounded-lg */
+      overflow: hidden;
+      border: 4px solid rgba(99, 102, 241, 0.5); /* border-indigo-500/50 */
+    }
+
+    canvas {
+      display: block;
+      background-color: #1a202c; /* Dark slate gray, similar to original */
+    }
+    
+    #messageOverlay {
+      position: absolute;
+      inset: 0;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      background-color: rgba(0, 0, 0, 0.7);
+      backdrop-filter: blur(4px);
+      text-align: center;
+      padding: 20px;
+      box-sizing: border-box;
+    }
+
+    #messageOverlay h2 {
+      font-size: 2.25rem; /* text-4xl */
+      font-weight: bold;
+      margin-bottom: 1rem;
+      color: #a5b4fc; /* indigo-300 */
+    }
+     #messageOverlay p {
+      font-size: 1.5rem; /* text-2xl */
+      margin-bottom: 2rem;
+    }
+    #messageOverlay .score-text {
+      color: #fcd34d; /* yellow-400 */
+    }
+
+    .game-button {
+      padding: 0.75rem 2rem; /* px-8 py-3 */
+      color: white;
+      font-weight: 600; /* font-semibold */
+      border-radius: 0.5rem; /* rounded-lg */
+      font-size: 1.125rem; /* text-lg */
+      box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1), 0 2px 4px -1px rgba(0,0,0,0.06); /* shadow-lg */
+      transition: all 0.15s ease-in-out;
+      cursor: pointer;
+      border: none;
+      outline: none;
+    }
+    .game-button:hover {
+      transform: scale(1.05);
+    }
+    .game-button:focus {
+      box-shadow: 0 0 0 4px rgba(99, 102, 241, 0.4); /* focus:ring-4 focus:ring-indigo-400 example */
+    }
+    .primary-button {
+      background-color: #4f46e5; /* bg-indigo-600 */
+    }
+    .primary-button:hover {
+      background-color: #4338ca; /* hover:bg-indigo-700 */
+    }
+    .secondary-button {
+       background-color: #16a34a; /* bg-green-600 */
+    }
+    .secondary-button:hover {
+       background-color: #15803d; /* hover:bg-green-700 */
+    }
+
+
+    footer {
+      margin-top: 32px;
+      display: flex;
+      justify-content: space-between;
+      width: 100%;
+      max-width: 800px; /* Corresponds to CANVAS_WIDTH */
+      padding: 0 8px;
+      align-items: center;
+      font-size: 1rem; /* text-base */
+    }
+    
+    @media (max-width: 640px) {
+      footer {
+        font-size: 0.875rem; /* text-sm */
+        flex-direction: column;
+        gap: 0.5rem;
+      }
+       h1 {
+        font-size: 2.25rem; /* text-4xl */
+      }
+      #messageOverlay h2 {
+        font-size: 1.875rem; /* text-3xl */
+      }
+      #messageOverlay p {
+        font-size: 1.25rem; /* text-xl */
+      }
+      .game-button {
+        font-size: 1rem; /* text-base */
+        padding: 0.6rem 1.5rem;
+      }
+    }
+
+    .score-display, .lives-display {
+      font-size: 1.5rem; /* text-2xl */
+    }
+     @media (max-width: 640px) {
+      .score-display, .lives-display {
+        font-size: 1.125rem; /* text-lg */
+      }
+    }
+
+    .score-value {
+      font-weight: bold;
+      color: #fcd34d; /* yellow-400 */
+      font-variant-numeric: tabular-nums;
+    }
+    .lives-value {
+      font-weight: bold;
+      color: #f87171; /* red-400 */
+      margin-left: 0.25rem;
+    }
+    .lives-value span { margin: 0 0.125rem; }
+
+
+    .controls-text {
+      font-size: 0.75rem; /* text-xs */
+      color: #9ca3af; /* text-gray-400 */
+      text-align: center;
+    }
+     @media (min-width: 640px) {
+      .controls-text {
+        font-size: 0.875rem; /* sm:text-sm */
+      }
+    }
+  </style>
+<script type="importmap">
+{
+  "imports": {
+    "react": "https://esm.sh/react@^19.1.0",
+    "react-dom/": "https://esm.sh/react-dom@^19.1.0/",
+    "react/": "https://esm.sh/react@^19.1.0/"
+  }
+}
+</script>
+</head>
+<body>
+
+  <div id="gameContainer">
+    <header>
+      <h1>Brick Breaker Deluxe</h1>
+    </header>
+    
+    <div id="canvasContainer">
+      <canvas id="gameCanvas"></canvas>
+      <div id="messageOverlay" style="display: none;">
+        <h2 id="messageTitle"></h2>
+        <p id="messageScore" style="display: none;"></p>
+        <button id="actionButton" class="game-button"></button>
+      </div>
+    </div>
+
+    <footer id="gameFooter">
+      <div class="score-display">Score: <span id="scoreValue" class="score-value">0</span></div>
+      <div class="controls-text" id="controlsText">
+        Controls: ← / → Move <span class="sm-hidden-br"><br/></span>
+        SPACE to Serve <span class="sm-hidden-br"><br/></span>
+        ENTER for Menu
+      </div>
+      <div class="lives-display">Lives: <span id="livesValue" class="lives-value"></span></div>
+    </footer>
+  </div>
+
+  <script>
+    // --- Constants ---
+    const CANVAS_WIDTH = 800;
+    const CANVAS_HEIGHT = 600;
+
+    const PADDLE_WIDTH = 120;
+    const PADDLE_HEIGHT = 20;
+    const PADDLE_MARGIN_BOTTOM = 30;
+    const PADDLE_SPEED = 35;
+
+    const BALL_RADIUS = 10;
+    const INITIAL_BALL_SPEED_X = 5;
+    const INITIAL_BALL_SPEED_Y = -5;
+
+    const BRICK_ROW_COUNT = 6;
+    const BRICK_COLUMN_COUNT = 10;
+    const BRICK_HEIGHT = 25;
+    const BRICK_PADDING = 5;
+    const BRICK_OFFSET_TOP = 50;
+    // Dynamic width calculation
+    const BRICK_WIDTH = (CANVAS_WIDTH - 40 - (BRICK_COLUMN_COUNT - 1) * BRICK_PADDING) / BRICK_COLUMN_COUNT;
+    const totalBricksWidth = BRICK_COLUMN_COUNT * BRICK_WIDTH + (BRICK_COLUMN_COUNT - 1) * BRICK_PADDING;
+    const BRICK_OFFSET_LEFT = (CANVAS_WIDTH - totalBricksWidth) / 2;
+
+    const BRICK_COLORS = ['#ef4444', '#f97316', '#eab308', '#22c55e', '#3b82f6', '#8b5cf6'];
+
+    const INITIAL_LIVES = 3;
+    const SCORE_PER_BRICK = 10;
+
+    const GAMEPAD_AXIS_DEADZONE = 0.2;
+    const GAMEPAD_BUTTON_A = 0;
+    const GAMEPAD_BUTTON_START = 9;
+    const GAMEPAD_BUTTON_DPAD_LEFT = 14;
+    const GAMEPAD_BUTTON_DPAD_RIGHT = 15;
+
+    // --- Game State Enums ---
+    const GameState = {
+      IDLE: 'IDLE',
+      SERVING: 'SERVING',
+      PLAYING: 'PLAYING',
+      GAME_OVER: 'GAME_OVER',
+      YOU_WIN: 'YOU_WIN',
+    };
+
+    const BrickStatus = {
+      BROKEN: 0,
+      INTACT: 1,
+    };
+
+    // --- DOM Elements ---
+    const canvas = document.getElementById('gameCanvas');
+    const ctx = canvas.getContext('2d');
+    canvas.width = CANVAS_WIDTH;
+    canvas.height = CANVAS_HEIGHT;
+
+    const scoreValueEl = document.getElementById('scoreValue');
+    const livesValueEl = document.getElementById('livesValue');
+    const controlsTextEl = document.getElementById('controlsText');
+    
+    const messageOverlayEl = document.getElementById('messageOverlay');
+    const messageTitleEl = document.getElementById('messageTitle');
+    const messageScoreEl = document.getElementById('messageScore');
+    const actionButtonEl = document.getElementById('actionButton');
+
+    // --- Game Variables ---
+    let currentGameState = GameState.IDLE;
+    let score = 0;
+    let lives = INITIAL_LIVES;
+    let bricks = [];
+    let paddleX = (CANVAS_WIDTH - PADDLE_WIDTH) / 2;
+    let ball = {
+      x: CANVAS_WIDTH / 2,
+      y: CANVAS_HEIGHT - PADDLE_MARGIN_BOTTOM - PADDLE_HEIGHT - BALL_RADIUS -1,
+      dx: INITIAL_BALL_SPEED_X,
+      dy: INITIAL_BALL_SPEED_Y,
+      radius: BALL_RADIUS,
+    };
+    let isGamepadActive = false;
+    let activeGamepadIndex = null;
+    let lastGamepadServePress = false;
+    let lastGamepadMenuPress = false;
+
+    // --- Helper Functions ---
+    function createInitialBricks() {
+      const newBricks = [];
+      for (let r = 0; r < BRICK_ROW_COUNT; r++) {
+        for (let c = 0; c < BRICK_COLUMN_COUNT; c++) {
+          newBricks.push({
+            x: BRICK_OFFSET_LEFT + c * (BRICK_WIDTH + BRICK_PADDING),
+            y: BRICK_OFFSET_TOP + r * (BRICK_HEIGHT + BRICK_PADDING),
+            width: BRICK_WIDTH,
+            height: BRICK_HEIGHT,
+            color: BRICK_COLORS[r % BRICK_COLORS.length],
+            status: BrickStatus.INTACT,
+          });
+        }
+      }
+      return newBricks;
+    }
+
+    function resetBallOnPaddle() {
+      ball.x = paddleX + PADDLE_WIDTH / 2;
+      ball.y = CANVAS_HEIGHT - PADDLE_MARGIN_BOTTOM - PADDLE_HEIGHT - BALL_RADIUS - 1;
+      ball.dx = INITIAL_BALL_SPEED_X * (Math.random() > 0.5 ? 1 : -1);
+      ball.dy = INITIAL_BALL_SPEED_Y;
+    }
+
+    function resetPaddle() {
+      paddleX = (CANVAS_WIDTH - PADDLE_WIDTH) / 2;
+    }
+    
+    function updateScoreDisplay() {
+      scoreValueEl.textContent = score;
+    }
+
+    function updateLivesDisplay() {
+        let hearts = '';
+        if (lives > 0) {
+            hearts = Array(lives).fill('❤️').join('');
+        } else {
+            hearts = '💔';
+        }
+        livesValueEl.innerHTML = hearts;
+    }
+    
+    function updateControlsText() {
+        let text = 'Controls: ← / → ';
+        if (isGamepadActive) text += '(D-Pad/Stick) ';
+        text += 'Move <span class="sm-hidden-br"><br class="sm:hidden"/></span>';
+        text += 'SPACE ';
+        if (isGamepadActive) text += '(A) ';
+        text += 'to Serve <span class="sm-hidden-br"><br class="sm:hidden"/></span>';
+        text += 'ENTER ';
+        if (isGamepadActive) text += '(Start/A) ';
+        text += 'for Menu';
+        controlsTextEl.innerHTML = text;
+    }
+
+    function showMessage(title, scoreText, buttonLabel, buttonAction, buttonClass = 'primary-button') {
+        messageTitleEl.textContent = title;
+        if (scoreText) {
+            messageScoreEl.innerHTML = `Final Score: <span class="score-text">${scoreText}</span>`;
+            messageScoreEl.style.display = 'block';
+        } else {
+            messageScoreEl.style.display = 'none';
+        }
+        actionButtonEl.textContent = buttonLabel;
+        actionButtonEl.onclick = buttonAction;
+        actionButtonEl.className = `game-button ${buttonClass}`;
+        messageOverlayEl.style.display = 'flex';
+    }
+
+    function hideMessage() {
+        messageOverlayEl.style.display = 'none';
+    }
+
+    // --- Game Actions ---
+    function movePaddle(direction) {
+      if (currentGameState === GameState.IDLE || currentGameState === GameState.SERVING || currentGameState === GameState.PLAYING) {
+        const newPaddleX = paddleX + (direction === 'left' ? -PADDLE_SPEED : PADDLE_SPEED);
+        paddleX = Math.max(0, Math.min(CANVAS_WIDTH - PADDLE_WIDTH, newPaddleX));
+        
+        if (currentGameState === GameState.SERVING) {
+          ball.x = paddleX + PADDLE_WIDTH / 2;
+        }
+      }
+    }
+
+    function startGame() {
+      score = 0;
+      lives = INITIAL_LIVES;
+      bricks = createInitialBricks();
+      resetPaddle();
+      resetBallOnPaddle();
+      updateScoreDisplay();
+      updateLivesDisplay();
+      hideMessage();
+      currentGameState = GameState.SERVING;
+    }
+
+    function serveBall() {
+      if (currentGameState === GameState.SERVING) {
+        currentGameState = GameState.PLAYING;
+      }
+    }
+
+    function resetGame() {
+      currentGameState = GameState.IDLE; // Go to IDLE, then startGame will set to SERVING
+      displayIdleMessage();
+    }
+    
+    function displayIdleMessage() {
+        let buttonText = "Start Game";
+        if (isGamepadActive) buttonText += " (Gamepad Start/A)";
+        showMessage("Ready to Play?", null, buttonText, startGame, 'primary-button');
+    }
+
+
+    // --- Drawing Functions ---
+    function drawPaddle(ctx) {
+      ctx.beginPath();
+      ctx.rect(paddleX, CANVAS_HEIGHT - PADDLE_MARGIN_BOTTOM - PADDLE_HEIGHT, PADDLE_WIDTH, PADDLE_HEIGHT);
+      ctx.fillStyle = '#6366f1'; // Indigo-500
+      ctx.shadowColor = 'rgba(99, 102, 241, 0.5)';
+      ctx.shadowBlur = 10;
+      ctx.fill();
+      ctx.closePath();
+      ctx.shadowColor = 'transparent';
+      ctx.shadowBlur = 0;
+    }
+
+    function drawBall(ctx) {
+      ctx.beginPath();
+      ctx.arc(ball.x, ball.y, ball.radius, 0, Math.PI * 2);
+      ctx.fillStyle = '#ec4899'; // Pink-500
+      ctx.shadowColor = 'rgba(236, 72, 153, 0.5)';
+      ctx.shadowBlur = 8;
+      ctx.fill();
+      ctx.closePath();
+      ctx.shadowColor = 'transparent';
+      ctx.shadowBlur = 0;
+    }
+
+    function drawBricks(ctx) {
+      bricks.forEach(brick => {
+        if (brick.status === BrickStatus.INTACT) {
+          ctx.beginPath();
+          ctx.rect(brick.x, brick.y, brick.width, brick.height);
+          ctx.fillStyle = brick.color;
+          ctx.fill();
+          ctx.strokeStyle = "rgba(0,0,0,0.2)";
+          ctx.lineWidth = 1;
+          ctx.strokeRect(brick.x, brick.y, brick.width, brick.height);
+          ctx.closePath();
+        }
+      });
+    }
+    
+    function drawTextOnCanvas(text, x, y, color = '#FFFFFF', fontSize = '16px Arial', textAlign = 'left', textBaseline = 'top') {
+        ctx.font = fontSize;
+        ctx.fillStyle = color;
+        ctx.textAlign = textAlign;
+        ctx.textBaseline = textBaseline;
+        ctx.fillText(text, x, y);
+    }
+
+    // --- Collision Detection ---
+    function detectCollisions() {
+      // Ball-wall collision
+      if (ball.x + ball.radius > CANVAS_WIDTH || ball.x - ball.radius < 0) {
+        ball.dx *= -1;
+        ball.x = Math.max(ball.radius, Math.min(CANVAS_WIDTH - ball.radius, ball.x));
+      }
+      if (ball.y - ball.radius < 0) {
+        ball.dy *= -1;
+        ball.y = ball.radius;
+      }
+
+      // Ball-bottom (lose life)
+      if (ball.y + ball.radius > CANVAS_HEIGHT) {
+        lives--;
+        updateLivesDisplay();
+        if (lives <= 0) {
+          currentGameState = GameState.GAME_OVER;
+          let buttonText = "Play Again";
+          if (isGamepadActive) buttonText += " (Gamepad Start/A)";
+          showMessage("GAME OVER!", score, buttonText, resetGame, 'secondary-button');
+        } else {
+          currentGameState = GameState.SERVING;
+          resetBallOnPaddle();
+        }
+        return; // Stop further collision checks for this frame
+      }
+
+      // Ball-paddle collision
+      const paddleTopY = CANVAS_HEIGHT - PADDLE_MARGIN_BOTTOM - PADDLE_HEIGHT;
+      if (
+        ball.y + ball.radius > paddleTopY &&
+        ball.y - ball.radius < paddleTopY + PADDLE_HEIGHT &&
+        ball.x + ball.radius > paddleX &&
+        ball.x - ball.radius < paddleX + PADDLE_WIDTH &&
+        ball.dy > 0 // Only collide if ball is moving downwards
+      ) {
+        ball.dy *= -1;
+        ball.y = paddleTopY - ball.radius; // Prevent sticking
+
+        let collidePoint = ball.x - (paddleX + PADDLE_WIDTH / 2);
+        collidePoint = collidePoint / (PADDLE_WIDTH / 2);
+        let angle = collidePoint * (Math.PI / 3.5);
+        
+        const currentSpeed = Math.sqrt(ball.dx**2 + ball.dy**2);
+        ball.dx = currentSpeed * Math.sin(angle);
+        ball.dy = -currentSpeed * Math.cos(angle);
+        if (ball.dy >= 0) ball.dy = -Math.abs(INITIAL_BALL_SPEED_Y); // Ensure moving up
+      }
+
+      // Ball-brick collision
+      let allBricksBroken = true;
+      bricks.forEach(brick => {
+        if (brick.status === BrickStatus.INTACT) {
+          allBricksBroken = false;
+          if (
+            ball.x + ball.radius > brick.x &&
+            ball.x - ball.radius < brick.x + brick.width &&
+            ball.y + ball.radius > brick.y &&
+            ball.y - ball.radius < brick.y + brick.height
+          ) {
+            const overlapX = (ball.radius + brick.width / 2) - Math.abs(ball.x - (brick.x + brick.width / 2));
+            const overlapY = (ball.radius + brick.height / 2) - Math.abs(ball.y - (brick.y + brick.height / 2));
+
+            if (overlapX >= overlapY) { 
+                 ball.dy *= -1;
+                 ball.y += ball.dy > 0 ? 1 : -1; // Nudge
+            } else { 
+                 ball.dx *= -1;
+                 ball.x += ball.dx > 0 ? 1 : -1; // Nudge
+            }
+            brick.status = BrickStatus.BROKEN;
+            score += SCORE_PER_BRICK;
+            updateScoreDisplay();
+          }
+        }
+      });
+      
+      if (allBricksBroken && bricks.length > 0) { // Check if all bricks were broken in this pass
+        currentGameState = GameState.YOU_WIN;
+        let buttonText = "Play Again";
+        if (isGamepadActive) buttonText += " (Gamepad Start/A)";
+        showMessage("YOU WIN!", score, buttonText, resetGame, 'secondary-button');
+      }
+    }
+    
+    // --- Input Handling ---
+    function handleKeyDown(e) {
+      if (e.key === 'ArrowLeft') {
+        movePaddle('left');
+      } else if (e.key === 'ArrowRight') {
+        movePaddle('right');
+      } else if ((e.key === ' ' || e.key === 'Spacebar') && currentGameState === GameState.SERVING) {
+        serveBall();
+      } else if (e.key.toLowerCase() === 'enter') {
+        if (currentGameState === GameState.IDLE) startGame();
+        else if (currentGameState === GameState.GAME_OVER || currentGameState === GameState.YOU_WIN) resetGame();
+      }
+    }
+
+    function handleGamepadConnected(event) {
+      console.log('Gamepad connected:', event.gamepad);
+      if (activeGamepadIndex === null) {
+        activeGamepadIndex = event.gamepad.index;
+        isGamepadActive = true;
+        updateControlsText();
+        if(currentGameState === GameState.IDLE) displayIdleMessage(); // Update button text
+      }
+    }
+
+    function handleGamepadDisconnected(event) {
+      console.log('Gamepad disconnected:', event.gamepad);
+      if (activeGamepadIndex === event.gamepad.index) {
+        activeGamepadIndex = null;
+        isGamepadActive = false;
+        updateControlsText();
+         if(currentGameState === GameState.IDLE) displayIdleMessage(); // Update button text
+      }
+    }
+
+    function processGamepadInput() {
+      if (activeGamepadIndex === null || !isGamepadActive) return;
+
+      const gamepad = navigator.getGamepads()[activeGamepadIndex];
+      if (!gamepad) return;
+
+      // --- Smooth analog stick movement ---
+      const xAxis = gamepad.axes[0];
+      if (Math.abs(xAxis) > GAMEPAD_AXIS_DEADZONE) {
+        // Move paddle by a value proportional to stick tilt
+        // You can adjust the multiplier (e.g., 12) for desired speed
+        paddleX += xAxis * 12;
+        // Clamp paddle position to canvas bounds
+        paddleX = Math.max(0, Math.min(CANVAS_WIDTH - PADDLE_WIDTH, paddleX));
+        if (currentGameState === GameState.SERVING) {
+          ball.x = paddleX + PADDLE_WIDTH / 2;
+        }
+      } else {
+        // D-Pad fallback for digital movement
+        if (gamepad.buttons[GAMEPAD_BUTTON_DPAD_LEFT]?.pressed) {
+          movePaddle('left');
+        } else if (gamepad.buttons[GAMEPAD_BUTTON_DPAD_RIGHT]?.pressed) {
+          movePaddle('right');
+        }
+      }
+
+      // --- Serve and menu logic remains unchanged ---
+      const serveButtonPressed = gamepad.buttons[GAMEPAD_BUTTON_A]?.pressed;
+      if (serveButtonPressed && !lastGamepadServePress && currentGameState === GameState.SERVING) {
+        serveBall();
+      }
+      lastGamepadServePress = !!serveButtonPressed;
+
+      const menuButtonPressed = gamepad.buttons[GAMEPAD_BUTTON_START]?.pressed || gamepad.buttons[GAMEPAD_BUTTON_A]?.pressed;
+      if (menuButtonPressed && !lastGamepadMenuPress) {
+        if (currentGameState === GameState.IDLE) {
+          startGame();
+        } else if (currentGameState === GameState.GAME_OVER || currentGameState === GameState.YOU_WIN) {
+          resetGame();
+        }
+      }
+      lastGamepadMenuPress = !!menuButtonPressed;
+    }
+    
+    // --- Game Loop ---
+    function gameLoop() {
+      ctx.clearRect(0, 0, CANVAS_WIDTH, CANVAS_HEIGHT);
+      ctx.fillStyle = '#1a202c';
+      ctx.fillRect(0, 0, CANVAS_WIDTH, CANVAS_HEIGHT);
+
+      processGamepadInput(); // Always process gamepad input
+
+      if (currentGameState === GameState.PLAYING) {
+        ball.x += ball.dx;
+        ball.y += ball.dy;
+        detectCollisions();
+      }
+      
+      drawPaddle(ctx);
+      drawBall(ctx);
+      drawBricks(ctx);
+      
+      if (currentGameState === GameState.SERVING) {
+        let serveMessage = "Press SPACE";
+        if (isGamepadActive) serveMessage += " or Gamepad (A)";
+        serveMessage += " to Serve";
+        drawTextOnCanvas(serveMessage, CANVAS_WIDTH / 2, CANVAS_HEIGHT / 2 + 50, '#cbd5e1', 'bold 24px Inter, sans-serif', 'center', 'middle');
+      }
+
+      requestAnimationFrame(gameLoop);
+    }
+
+    // --- Initialization ---
+    window.addEventListener('keydown', handleKeyDown);
+    window.addEventListener('gamepadconnected', handleGamepadConnected);
+    window.addEventListener('gamepaddisconnected', handleGamepadDisconnected);
+
+    // Check for already connected gamepads
+    const initialGamepads = navigator.getGamepads();
+    for (const gp of initialGamepads) {
+      if (gp) {
+        handleGamepadConnected({ gamepad: gp }); // Simulate connect event
+        break; 
+      }
+    }
+    
+    updateScoreDisplay();
+    updateLivesDisplay();
+    updateControlsText();
+    displayIdleMessage(); // Show initial "Start Game" message
+    gameLoop();
+
+  </script>
+</body>
+</html>
+<link rel="stylesheet" href="index.css">
+<script src="index.tsx" type="module"></script>
