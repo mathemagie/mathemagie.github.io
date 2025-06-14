@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Brick Breaker Deluxe - HTML5</title>
+  <title>fabrizio game - HTML5</title>
   <style>
     body {
       margin: 0;
@@ -196,7 +196,7 @@
 
   <div id="gameContainer">
     <header>
-      <h1>Brick Breaker Deluxe</h1>
+      <h1>fabrizio game</h1>
     </header>
     
     <div id="canvasContainer">
@@ -437,30 +437,242 @@
     }
 
     function drawBall(ctx) {
+      // Animated fireball effect with flickering flames
+      const x = ball.x;
+      const y = ball.y;
+      const radius = ball.radius;
+      const time = Date.now() * 0.01; // Animation time
+      
+      // Dynamic flame intensity
+      const flameIntensity = 0.8 + Math.sin(time * 2) * 0.2;
+      const flameSize = 1 + Math.sin(time * 1.5) * 0.1;
+      
+      // Animated outer flame glow
+      const outerRadius = (radius + 6) * flameSize;
+      const outerGlow = ctx.createRadialGradient(x, y, radius, x, y, outerRadius);
+      outerGlow.addColorStop(0, `rgba(255, 140, 0, ${0.4 * flameIntensity})`);
+      outerGlow.addColorStop(0.5, `rgba(255, 69, 0, ${0.2 * flameIntensity})`);
+      outerGlow.addColorStop(1, 'rgba(255, 0, 0, 0)');
+      
       ctx.beginPath();
-      ctx.arc(ball.x, ball.y, ball.radius, 0, Math.PI * 2);
-      ctx.fillStyle = '#ec4899'; // Pink-500
-      ctx.shadowColor = 'rgba(236, 72, 153, 0.5)';
-      ctx.shadowBlur = 8;
+      ctx.arc(x, y, outerRadius, 0, Math.PI * 2);
+      ctx.fillStyle = outerGlow;
       ctx.fill();
+      
+      // Flickering flame particles around the ball
+      ctx.save();
+      for (let i = 0; i < 8; i++) {
+        const angle = (i / 8) * Math.PI * 2 + time * 0.5;
+        const distance = radius + 3 + Math.sin(time * 3 + i) * 2;
+        const particleX = x + Math.cos(angle) * distance;
+        const particleY = y + Math.sin(angle) * distance;
+        const particleSize = 1 + Math.sin(time * 4 + i) * 0.5;
+        
+        ctx.beginPath();
+        ctx.arc(particleX, particleY, particleSize, 0, Math.PI * 2);
+        ctx.fillStyle = `rgba(255, ${100 + Math.sin(time * 2 + i) * 50}, 0, ${0.6 * flameIntensity})`;
+        ctx.fill();
+      }
+      ctx.restore();
+      
+      // Middle flame layer with animation
+      const middleRadius = (radius + 3) * flameSize;
+      const middleGradient = ctx.createRadialGradient(x, y, radius * 0.3, x, y, middleRadius);
+      middleGradient.addColorStop(0, `rgba(255, 200, 0, ${0.8 * flameIntensity})`);
+      middleGradient.addColorStop(0.6, `rgba(255, 99, 71, ${0.7 * flameIntensity})`);
+      middleGradient.addColorStop(1, 'rgba(255, 0, 0, 0)');
+      
+      ctx.beginPath();
+      ctx.arc(x, y, middleRadius, 0, Math.PI * 2);
+      ctx.fillStyle = middleGradient;
+      ctx.fill();
+      
+      // Main fireball core with animated gradient
+      ctx.beginPath();
+      ctx.arc(x, y, radius, 0, Math.PI * 2);
+      const coreGradient = ctx.createRadialGradient(
+        x - 3 + Math.sin(time) * 1, 
+        y - 3 + Math.cos(time) * 1, 
+        0, 
+        x, y, radius
+      );
+      coreGradient.addColorStop(0, '#ffff00');
+      coreGradient.addColorStop(0.3, '#ff6b35');
+      coreGradient.addColorStop(0.7, '#dc2626');
+      coreGradient.addColorStop(1, '#7f1d1d');
+      ctx.fillStyle = coreGradient;
+      ctx.fill();
+      
+      // Animated inner flame core
+      const innerFlameRadius = radius * (0.6 + Math.sin(time * 3) * 0.1);
+      ctx.beginPath();
+      ctx.arc(x - 1, y - 1, innerFlameRadius, 0, Math.PI * 2);
+      ctx.fillStyle = `rgba(255, 255, 100, ${0.8 * flameIntensity})`;
+      ctx.fill();
+      
+      // Bright white hot center
+      ctx.beginPath();
+      ctx.arc(x - 2, y - 2, radius * 0.2, 0, Math.PI * 2);
+      ctx.fillStyle = `rgba(255, 255, 255, ${0.6 * flameIntensity})`;
+      ctx.fill();
+      
+      // Flame trail effect when ball is moving
+      if (Math.abs(ball.dx) > 1 || Math.abs(ball.dy) > 1) {
+        const trailLength = Math.sqrt(ball.dx * ball.dx + ball.dy * ball.dy) * 2;
+        const trailAngle = Math.atan2(-ball.dy, -ball.dx);
+        
+        for (let i = 1; i <= 5; i++) {
+          const trailX = x + Math.cos(trailAngle) * i * trailLength * 0.5;
+          const trailY = y + Math.sin(trailAngle) * i * trailLength * 0.5;
+          const trailSize = radius * (0.8 - i * 0.1) * flameSize;
+          const trailAlpha = (0.4 - i * 0.06) * flameIntensity;
+          
+          if (trailAlpha > 0) {
+            ctx.beginPath();
+            ctx.arc(trailX, trailY, trailSize, 0, Math.PI * 2);
+            ctx.fillStyle = `rgba(255, ${69 + i * 30}, 0, ${trailAlpha})`;
+            ctx.fill();
+          }
+        }
+      }
+      
       ctx.closePath();
-      ctx.shadowColor = 'transparent';
-      ctx.shadowBlur = 0;
     }
 
     function drawBricks(ctx) {
       bricks.forEach(brick => {
         if (brick.status === BrickStatus.INTACT) {
+          // Ice block effect - much more detailed
+          const x = brick.x;
+          const y = brick.y;
+          const width = brick.width;
+          const height = brick.height;
+          
+          // Convert original color to ice tones
+          const iceColor = getIceColor(brick.color);
+          
+          // Main ice block with multiple gradients for depth
+          const mainGradient = ctx.createLinearGradient(x, y, x + width, y + height);
+          mainGradient.addColorStop(0, iceColor.light);
+          mainGradient.addColorStop(0.3, iceColor.medium);
+          mainGradient.addColorStop(0.7, iceColor.dark);
+          mainGradient.addColorStop(1, iceColor.shadow);
+          
           ctx.beginPath();
-          ctx.rect(brick.x, brick.y, brick.width, brick.height);
-          ctx.fillStyle = brick.color;
+          ctx.rect(x, y, width, height);
+          ctx.fillStyle = mainGradient;
           ctx.fill();
-          ctx.strokeStyle = "rgba(0,0,0,0.2)";
+          
+          // Ice crystal texture - multiple layers
+          ctx.save();
+          ctx.globalAlpha = 0.6;
+          
+          // Major ice cracks
+          ctx.strokeStyle = 'rgba(255, 255, 255, 0.8)';
+          ctx.lineWidth = 1.5;
+          ctx.beginPath();
+          ctx.moveTo(x + width * 0.15, y);
+          ctx.lineTo(x + width * 0.85, y + height);
+          ctx.moveTo(x + width * 0.75, y);
+          ctx.lineTo(x + width * 0.25, y + height);
+          ctx.moveTo(x, y + height * 0.3);
+          ctx.lineTo(x + width, y + height * 0.7);
+          ctx.stroke();
+          
+          // Minor ice cracks
+          ctx.strokeStyle = 'rgba(255, 255, 255, 0.4)';
+          ctx.lineWidth = 0.8;
+          ctx.beginPath();
+          ctx.moveTo(x + width * 0.4, y);
+          ctx.lineTo(x + width * 0.6, y + height * 0.5);
+          ctx.moveTo(x + width * 0.3, y + height * 0.2);
+          ctx.lineTo(x + width * 0.8, y + height * 0.4);
+          ctx.moveTo(x + width * 0.1, y + height * 0.6);
+          ctx.lineTo(x + width * 0.5, y + height);
+          ctx.stroke();
+          
+          ctx.restore();
+          
+          // Frosted glass effect overlay
+          const frostGradient = ctx.createRadialGradient(
+            x + width * 0.3, y + height * 0.3, 0,
+            x + width * 0.5, y + height * 0.5, Math.max(width, height) * 0.7
+          );
+          frostGradient.addColorStop(0, 'rgba(255, 255, 255, 0.4)');
+          frostGradient.addColorStop(0.5, 'rgba(255, 255, 255, 0.1)');
+          frostGradient.addColorStop(1, 'rgba(255, 255, 255, 0)');
+          
+          ctx.beginPath();
+          ctx.rect(x, y, width, height);
+          ctx.fillStyle = frostGradient;
+          ctx.fill();
+          
+          // Ice shine highlights
+          ctx.strokeStyle = 'rgba(255, 255, 255, 0.9)';
+          ctx.lineWidth = 2;
+          ctx.beginPath();
+          ctx.moveTo(x, y);
+          ctx.lineTo(x + width * 0.6, y);
+          ctx.moveTo(x, y);
+          ctx.lineTo(x, y + height * 0.4);
+          ctx.stroke();
+          
+          // Secondary highlight
+          ctx.strokeStyle = 'rgba(255, 255, 255, 0.5)';
           ctx.lineWidth = 1;
-          ctx.strokeRect(brick.x, brick.y, brick.width, brick.height);
+          ctx.beginPath();
+          ctx.moveTo(x + width * 0.7, y);
+          ctx.lineTo(x + width, y);
+          ctx.lineTo(x + width, y + height * 0.3);
+          ctx.stroke();
+          
+          // Ice crystal sparkles
+          ctx.fillStyle = 'rgba(255, 255, 255, 0.8)';
+          const sparkles = [
+            {x: x + width * 0.2, y: y + height * 0.3},
+            {x: x + width * 0.7, y: y + height * 0.2},
+            {x: x + width * 0.4, y: y + height * 0.7},
+            {x: x + width * 0.8, y: y + height * 0.6}
+          ];
+          
+          sparkles.forEach(sparkle => {
+            ctx.beginPath();
+            ctx.arc(sparkle.x, sparkle.y, 1, 0, Math.PI * 2);
+            ctx.fill();
+          });
+          
+          // Deep shadow on bottom and right edges
+          ctx.strokeStyle = 'rgba(0, 0, 0, 0.4)';
+          ctx.lineWidth = 2;
+          ctx.beginPath();
+          ctx.moveTo(x, y + height);
+          ctx.lineTo(x + width, y + height);
+          ctx.lineTo(x + width, y);
+          ctx.stroke();
+          
+          // Ice border with blue tint
+          ctx.strokeStyle = 'rgba(100, 200, 255, 0.8)';
+          ctx.lineWidth = 1;
+          ctx.strokeRect(x, y, width, height);
+          
           ctx.closePath();
         }
       });
+    }
+    
+    // Helper function to convert colors to ice tones
+    function getIceColor(originalColor) {
+      // Map original colors to ice variants with shadow
+      const iceColorMap = {
+        '#ef4444': { light: '#e0f2fe', medium: '#7dd3fc', dark: '#0ea5e9', shadow: '#075985' }, // Red -> Light blue ice
+        '#f97316': { light: '#f0f9ff', medium: '#bae6fd', dark: '#0284c7', shadow: '#0c4a6e' }, // Orange -> Blue ice
+        '#eab308': { light: '#ecfdf5', medium: '#a7f3d0', dark: '#059669', shadow: '#064e3b' }, // Yellow -> Green ice
+        '#22c55e': { light: '#f0fdf4', medium: '#bbf7d0', dark: '#16a34a', shadow: '#14532d' }, // Green -> Deeper green ice
+        '#3b82f6': { light: '#eff6ff', medium: '#dbeafe', dark: '#2563eb', shadow: '#1e3a8a' }, // Blue -> Deeper blue ice
+        '#8b5cf6': { light: '#faf5ff', medium: '#e9d5ff', dark: '#7c3aed', shadow: '#581c87' }  // Purple -> Purple ice
+      };
+      
+      return iceColorMap[originalColor] || { light: '#f0f9ff', medium: '#bae6fd', dark: '#0284c7', shadow: '#0c4a6e' };
     }
     
     function drawTextOnCanvas(text, x, y, color = '#FFFFFF', fontSize = '16px Arial', textAlign = 'left', textBaseline = 'top') {
