@@ -1,45 +1,173 @@
 :root {
-    --bs-body-bg: #faf8ef;
-    --bs-body-color: #343a40;
+    --primary-bg: #181a1b;
+    --primary-color: #faf8ef;
+    --accent: #4ea1f7;
+    --border-radius: 8px;
+    --shadow: 0 4px 8px rgba(0,0,0,0.5);
+    --card-bg: #23272a;
+    --card-border: #222;
+    --link: #4ea1f7;
+    --link-hover: #82cfff;
+    --footer: #888;
 }
 
 body {
     min-height: 100vh;
     display: flex;
     flex-direction: column;
+    padding: 0 15px;
+    background: var(--primary-bg);
+    color: var(--primary-color);
 }
 
-.profile-section {
+.container {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 20px 15px;
+}
+
+.title {
     text-align: center;
+    margin-bottom: 30px;
+}
+
+.profile-section h1 {
+    font-size: 2.5rem;
     margin-bottom: 20px;
+    color: var(--primary-color);
 }
 
 .media-container {
     display: flex;
     flex-direction: column;
     align-items: center;
-    gap: 20px;
+    gap: 25px;
     margin-bottom: 20px;
+}
+
+.media-item {
+    max-width: 640px;
+    width: 100%;
+    text-align: center;
+}
+
+.media-item p {
+    font-size: 1.1rem;
+    line-height: 1.6;
+    margin-bottom: 0;
+    text-align: left;
+    padding: 20px;
+    background-color: var(--card-bg);
+    border-radius: var(--border-radius);
+    box-shadow: var(--shadow);
+    color: var(--primary-color);
+    border: 1px solid var(--card-border);
+}
+
+.media-item a {
+    color: var(--link);
+    text-decoration: none;
+    word-break: break-all;
+}
+
+.media-item a:hover {
+    text-decoration: underline;
+    color: var(--link-hover);
 }
 
 .media-container video {
     max-width: 640px;
     width: 100%;
     height: auto;
-    border-radius: 8px;
-    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+    border-radius: var(--border-radius);
+    box-shadow: var(--shadow);
+    background: #000;
 }
 
 #map {
     height: 400px;
     max-width: 640px;
     width: 100%;
-    border-radius: 8px;
-    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+    border-radius: var(--border-radius);
+    box-shadow: var(--shadow);
     margin-bottom: 20px;
+    border: 1px solid var(--card-border);
 }
 
 #iss-info {
     font-size: 1.1rem;
     font-weight: 500;
+    max-width: 640px;
+    width: 100%;
+    color: var(--primary-color);
+}
+
+footer {
+    color: var(--footer);
+}
+
+/* Responsive breakpoints */
+
+/* Tablet styles */
+@media screen and (max-width: 768px) {
+    .container {
+        padding: 15px 10px;
+    }
+    
+    .profile-section h1 {
+        font-size: 2rem;
+    }
+    
+    .media-item p {
+        font-size: 1rem;
+        padding: 15px;
+    }
+    
+    #map {
+        height: 350px;
+    }
+    
+    #iss-info {
+        font-size: 1rem;
+    }
+}
+
+/* Mobile styles */
+@media screen and (max-width: 480px) {
+    body {
+        padding: 0 10px;
+    }
+    
+    .container {
+        padding: 10px 5px;
+    }
+    
+    .profile-section {
+        margin-bottom: 20px;
+    }
+    
+    .profile-section h1 {
+        font-size: 1.8rem;
+        margin-bottom: 15px;
+    }
+    
+    .media-container {
+        gap: 20px;
+    }
+    
+    .media-item p {
+        font-size: 0.9rem;
+        padding: 12px;
+        line-height: 1.5;
+    }
+    
+    #map {
+        height: 300px;
+    }
+    
+    #iss-info {
+        font-size: 0.9rem;
+        padding: 0 10px;
+        line-height: 1.4;
+    }
 }

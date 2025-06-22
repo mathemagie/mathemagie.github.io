@@ -29,11 +29,15 @@
 
      /**
       * Fetches the ISS data and updates the map and info display.
+      * Shows a loading state and user-friendly error message if needed.
       */
      async function updateIssPosition() {
+         // Show loading state while fetching
+         issInfo.innerHTML = 'Loading ISS position...';
          try {
              // 'await' pauses the function until the data is fetched from the API.
              const response = await fetch(issApiUrl);
+             if (!response.ok) throw new Error('Network response was not ok');
              // 'await' pauses the function until the response is converted to JSON.
              const data = await response.json();
 
@@ -45,14 +49,14 @@
 
              // Update the content of the 'iss-info' div with the new coordinates.
              // We use .toFixed(4) to show the coordinates with 4 decimal places for more precision.
-             issInfo.innerHTML = `Latitude: ${latitude.toFixed(4)} &nbsp;&nbsp;|&nbsp;&nbsp; Longitude: ${longitude.toFixed(4)}`;
+             issInfo.innerHTML = `Latitude: ${latitude.toFixed(4)} &nbsp;|&nbsp; Longitude: ${longitude.toFixed(4)}`;
 
          } catch (error) {
              // If something goes wrong with fetching the data, we log an error to the console.
              // This is helpful for debugging!
              console.error("Error fetching ISS position:", error);
              // Display an error message if the API call fails.
-             issInfo.innerHTML = 'Unable to retrieve ISS position at this time.';
+             issInfo.innerHTML = 'Could not retrieve ISS position. Please try again later.';
          }
      }
 
