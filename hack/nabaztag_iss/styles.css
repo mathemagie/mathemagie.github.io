@@ -139,6 +139,7 @@ body {
 @media screen and (max-width: 480px) {
     body {
         padding: 0 10px;
+        font-size: 1.5em;
     }
     .site-container {
         padding: 10px 5px;
@@ -147,14 +148,14 @@ body {
         margin-bottom: 20px;
     }
     .site-title {
-        font-size: 1.8rem;
+        font-size: 2.7rem;
         margin-bottom: 15px;
     }
     .content-block {
         gap: 20px;
     }
     .content-block__description p {
-        font-size: 0.9rem;
+        font-size: 1.35rem;
         padding: 12px;
         line-height: 1.5;
     }
@@ -162,7 +163,7 @@ body {
         height: 300px;
     }
     .iss-info {
-        font-size: 0.9rem;
+        font-size: 1.35rem;
         padding: 0 10px;
         line-height: 1.4;
     }
