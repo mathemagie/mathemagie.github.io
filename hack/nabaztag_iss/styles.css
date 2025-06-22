@@ -20,24 +20,25 @@ body {
     color: var(--primary-color);
 }
 
-.container {
+/* Container and Layout */
+.site-container {
     max-width: 1200px;
     margin: 0 auto;
     padding: 20px 15px;
 }
 
-.title {
+.site-header {
     text-align: center;
     margin-bottom: 30px;
 }
 
-.profile-section h1 {
+.site-title {
     font-size: 2.5rem;
     margin-bottom: 20px;
     color: var(--primary-color);
 }
 
-.media-container {
+.content-block {
     display: flex;
     flex-direction: column;
     align-items: center;
@@ -45,13 +46,13 @@ body {
     margin-bottom: 20px;
 }
 
-.media-item {
+.content-block__description {
     max-width: 640px;
     width: 100%;
     text-align: center;
 }
 
-.media-item p {
+.content-block__description p {
     font-size: 1.1rem;
     line-height: 1.6;
     margin-bottom: 0;
@@ -64,18 +65,24 @@ body {
     border: 1px solid var(--card-border);
 }
 
-.media-item a {
+.content-block__description a {
     color: var(--link);
     text-decoration: none;
     word-break: break-all;
 }
 
-.media-item a:hover {
+.content-block__description a:hover {
     text-decoration: underline;
     color: var(--link-hover);
 }
 
-.media-container video {
+.content-block__media {
+    max-width: 640px;
+    width: 100%;
+    text-align: center;
+}
+
+.content-block__media video {
     max-width: 640px;
     width: 100%;
     height: auto;
@@ -84,7 +91,7 @@ body {
     background: #000;
 }
 
-#map {
+.iss-map {
     height: 400px;
     max-width: 640px;
     width: 100%;
@@ -94,78 +101,67 @@ body {
     border: 1px solid var(--card-border);
 }
 
-#iss-info {
+.iss-info {
     font-size: 1.1rem;
     font-weight: 500;
     max-width: 640px;
     width: 100%;
     color: var(--primary-color);
+    text-align: center;
+    margin-bottom: 8px;
 }
 
-footer {
+.site-footer {
     color: var(--footer);
+    margin-top: 2rem;
+    font-size: 0.95rem;
 }
 
 /* Responsive breakpoints */
-
-/* Tablet styles */
 @media screen and (max-width: 768px) {
-    .container {
+    .site-container {
         padding: 15px 10px;
     }
-    
-    .profile-section h1 {
+    .site-title {
         font-size: 2rem;
     }
-    
-    .media-item p {
+    .content-block__description p {
         font-size: 1rem;
         padding: 15px;
     }
-    
-    #map {
+    .iss-map {
         height: 350px;
     }
-    
-    #iss-info {
+    .iss-info {
         font-size: 1rem;
     }
 }
-
-/* Mobile styles */
 @media screen and (max-width: 480px) {
     body {
         padding: 0 10px;
     }
-    
-    .container {
+    .site-container {
         padding: 10px 5px;
     }
-    
-    .profile-section {
+    .site-header {
         margin-bottom: 20px;
     }
-    
-    .profile-section h1 {
+    .site-title {
         font-size: 1.8rem;
         margin-bottom: 15px;
     }
-    
-    .media-container {
+    .content-block {
         gap: 20px;
     }
-    
-    .media-item p {
+    .content-block__description p {
         font-size: 0.9rem;
         padding: 12px;
         line-height: 1.5;
     }
-    
-    #map {
+    .iss-map {
         height: 300px;
     }
-    
-    #iss-info {
+    .iss-info {
         font-size: 0.9rem;
         padding: 0 10px;
         line-height: 1.4;

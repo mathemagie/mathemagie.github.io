@@ -7,7 +7,7 @@
      // Initialize the map and set its view to France's coordinates.
      // The first parameter is an array with latitude and longitude.
      // The second parameter is the zoom level. A higher number means more zoomed in.
-     const map = L.map('map').setView([46.2, 2.2], 5);
+     const map = L.map('map').setView([46.2, 2.2], 3);
 
      // Add a tile layer to the map. This is the background map image.
      // We're using OpenStreetMap, a free and open map provider.
@@ -33,7 +33,6 @@
       */
      async function updateIssPosition() {
          // Show loading state while fetching
-         issInfo.innerHTML = 'Loading ISS position...';
          try {
              // 'await' pauses the function until the data is fetched from the API.
              const response = await fetch(issApiUrl);

@@ -16,32 +16,40 @@
 </head>
 <body class="py-4">
     <main>
-        <section class="container">
-            <header class="title">
-                <h1>Nabaztag ISS</h1>
+        <section class="site-container">
+            <header class="site-header">
+                <h1 class="site-title">Nabaztag ISS</h1>
             </header>
-            <section class="media-container">
-                <article class="media-item"> 
-                    <p> <br/>My Nabaztag wiggles as the International Space Station flies over France!<br/>
-                        Here's the python source code to create this enchanted object: 
+            <section class="content-block">
+                <article class="content-block__description"> 
+                    <p>
+                        My Nabaztag robot <span class="wiggle-trigger" onclick="playVideo()" style="cursor: pointer; color: var(--link); text-decoration: underline;">wiggles</span> its ears when the International Space Station flies over France! 
+                        This creates a magical connection between space and Earth.
+                    </p>
+                    <p>
+                        Here's the Python source code that makes this enchanted object work:
                         <a href="https://raw.githubusercontent.com/mathemagie/nabaztag_ISS/main/ear.py" target="_blank" rel="noopener noreferrer" aria-label="Python source code for Nabaztag ISS (opens in new tab)">
-                            https://raw.githubusercontent.com/mathemagie/nabaztag_iss/main/ear.py
-                        </a><br/>
-                        The code repeatedly checks the ISS's location and, if it's over France, sends ear-movement commands to a Nabaztag robot via a local TCP connection.
+                            View the Python code
+                        </a>
+                    </p>
+                    
+                    <p>
+                        The program continuously monitors the ISS location and, when it detects the space station flying over France, 
+                        it sends ear-movement commands to the Nabaztag robot through a local network connection.
                     </p>
                 </article>
-                <article class="media-item">
-                    <video controls autoplay  aria-label="Nabaztag robot video demonstration">
+                <article class="content-block__media">
+                    <video controls autoplay aria-label="Nabaztag robot video demonstration">
                         <source src="nabaztag_ISS_scaled_x2.mp4" type="video/mp4">
                         <track kind="captions" label="English captions" src="captions_en.vtt" srclang="en" default>
                         Your browser does not support the video tag.
                     </video>
                 </article>
-                <div id="iss-info" class="text-center mb-2" aria-live="polite">Loading ISS position...</div>
-                <div id="map"></div>
+                <div id="iss-info" class="iss-info" aria-live="polite">Loading ISS position...</div>
+                <div id="map" class="iss-map"></div>
             </section>
         </section>
-        <footer class="text-center" style="margin-top: 2rem; font-size: 0.95rem; color: #888;">
+        <footer class="site-footer text-center">
             &copy; 2024 Mathemagie &mdash; <a href="https://github.com/mathemagie/nabaztag_ISS" target="_blank" rel="noopener noreferrer">Project on GitHub</a>
         </footer>
     </main>
@@ -50,5 +58,14 @@
     <!-- Leaflet JS -->
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" crossorigin=""></script>
     <script src="map.js"></script>
+    <script>
+    function playVideo() {
+        const video = document.querySelector('.content-block__media video');
+        if (video) {
+            video.play();
+            video.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        }
+    }
+    </script>
 </body>
 </html>
