@@ -36,6 +36,7 @@
         let jumpPower;
         let boingSound; // Add variable for boing sound
         let collisionSound; // Add variable for collision sound
+        let yesSound; // Add variable for "yes" sound when gamepad connects
 
         // Sound variables
         let mic;
@@ -60,6 +61,8 @@
         let gamepadJumpPressed = false; // Prevents repeated jumps from holding the button
         // Get references to gamepad status elements
         let gamepadStatus, gamepadIndicator;
+        // Track if we've already played the gamepad connection sound
+        let gamepadConnectSoundPlayed = false;
 
         // --- p5.js Preload Function ---
         // Add preload function before setup
@@ -69,10 +72,12 @@
                 dinoImg = loadImage('/dino/personnage2.png');
                 boingSound = loadSound('/dino/boing.mp3');
                 collisionSound = loadSound('/dino/sfx_A_sud_20250423_190033.mp3');
+                yesSound = loadSound('/dino/tts_yes_20250604_203415.mp3');
             } else {
                 dinoImg = loadImage('/personnage2.png');
                 boingSound = loadSound('/boing.mp3');
                 collisionSound = loadSound('sfx_A_sud_20250423_190033.mp3');
+                yesSound = loadSound('tts_yes_20250604_203415.mp3');
             }
         }
 
@@ -195,11 +200,21 @@
               gamepadStatus.textContent = 'Gamepad: Connected';
               gamepadIndicator.style.backgroundColor = 'limegreen';
               gamepadIndicator.style.boxShadow = '0 0 10px #0f0';
+              
+              // Play "yes" sound when gamepad is first connected
+              if (!gamepadConnectSoundPlayed) {
+                  yesSound.play();
+                  gamepadConnectSoundPlayed = true;
+                  console.log('Gamepad connected - playing "yes" sound');
+              }
           } else {
               // No gamepad connected
               gamepadStatus.textContent = 'Gamepad: Not Connected';
               gamepadIndicator.style.backgroundColor = 'gray';
               gamepadIndicator.style.boxShadow = 'none';
+              
+              // Reset the sound flag when gamepad is disconnected
+              gamepadConnectSoundPlayed = false;
           }
           if (gamepads[0]) { // Use the first connected gamepad
               let gp = gamepads[0];
