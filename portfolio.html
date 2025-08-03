@@ -13,28 +13,67 @@
   <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/css/bootstrap.min.css" integrity="sha384-ggOyR0iXCbMQv3Xipma34MD+dH/1fQ784/j6cY/iJTQUOhcWr7x9JvoRxT2MZw1T" crossorigin="anonymous">
      <title>Portfolio - Aur&eacute;lien Fache</title>
      <style>
+       :root {
+         --bg-color: #faf8ef;
+         --text-color: #343a40;
+         --btn-outline-color: #343a40;
+         --shadow-color: rgba(0, 0, 0, 0.1);
+         --profile-bg: rgba(255, 255, 255, 0.7);
+       }
+       
+       [data-theme="dark"] {
+         --bg-color: #1a1a1a;
+         --text-color: #e9ecef;
+         --btn-outline-color: #e9ecef;
+         --shadow-color: rgba(255, 255, 255, 0.1);
+         --profile-bg: rgba(40, 40, 40, 0.7);
+       }
+       
        body{
-         background-color: #faf8ef;
+         background-color: var(--bg-color);
+         color: var(--text-color);
        }
        h5{
-             color: #343a40;
+             color: var(--text-color);
        }
        .name{
-           color: #343a40;
+           color: var(--text-color);
        }
        .love{
-           color: #343a40 !important;
+           color: var(--text-color) !important;
        }
        /*----------------- Mail-------------------- */
        #email{
            text-decoration: none;
            float: right;
-           color:#343a40;
+           color: var(--text-color);
        }
        .footer{
            margin-top: 5% !important;
            margin-bottom: 10px;
        }
+       
+       .theme-toggle {
+         position: fixed;
+         top: 20px;
+         right: 20px;
+         z-index: 1000;
+         border: none;
+         background: var(--profile-bg);
+         color: var(--text-color);
+         width: 50px;
+         height: 50px;
+         border-radius: 50%;
+         box-shadow: 0 2px 8px var(--shadow-color);
+         transition: all 0.3s ease;
+         backdrop-filter: blur(10px);
+       }
+       
+       .theme-toggle:hover {
+         transform: scale(1.1);
+         box-shadow: 0 4px 12px var(--shadow-color);
+       }
+       
        @media (max-width: 479px) {
             .footer{
             margin-top: 35% !important;
@@ -43,6 +82,10 @@
      </style>
 </head>
 <body>
+<button class="theme-toggle" onclick="toggleTheme()" aria-label="Toggle dark mode">
+    <i class="fas fa-moon" id="theme-icon"></i>
+</button>
+
 <div class="container">
   <div class="media mt-5">
     <a href="/"><img src="https://pbs.twimg.com/profile_images/1351213542964400143/GJwBX4F9_400x400.jpg" class="m-3" alt="image" width="75px" height="75px"></a>
@@ -59,60 +102,60 @@
  
 <div class="mt-4">
 
-   <a href="https://twitter.com/mathemagie/status/1385906208020865027" class="btn btn-outline-dark btn-block" role="button" target="_blank"><i class="fab fa-link">&nbsp;</i>An SpaceART artistic performance in association with La Dame de Fer and ESA (wip)</a>
+   <a href="https://twitter.com/mathemagie/status/1385906208020865027" class="btn btn-block" style="border: 1px solid var(--btn-outline-color); color: var(--btn-outline-color);" role="button" target="_blank"><i class="fab fa-link">&nbsp;</i>An SpaceART artistic performance in association with La Dame de Fer and ESA (wip)</a>
   <br>
 
   
-  <a href="https://twitter.com/mathemagie/status/1351125971169140744" class="btn btn-outline-dark btn-block" role="button" target="_blank"><i class="fab fa-link">&nbsp;</i>Translate into the body of a LEGO train driver (prototype of a VR experience)</a>
+  <a href="https://twitter.com/mathemagie/status/1351125971169140744" class="btn btn-block" style="border: 1px solid var(--btn-outline-color); color: var(--btn-outline-color);" role="button" target="_blank"><i class="fab fa-link">&nbsp;</i>Translate into the body of a LEGO train driver (prototype of a VR experience)</a>
   <br>
 
-   <a href="https://www.youtube.com/watch?v=lPRYp4HrdGI&t=0s" class="btn btn-outline-dark btn-block" role="button" target="_blank"><i class="fab fa-youtube">&nbsp;</i>My keynote on the future of augmented reality</a>
+   <a href="https://www.youtube.com/watch?v=lPRYp4HrdGI&t=0s" class="btn btn-block" style="border: 1px solid var(--btn-outline-color); color: var(--btn-outline-color);" role="button" target="_blank"><i class="fab fa-youtube">&nbsp;</i>My keynote on the future of augmented reality</a>
   <br>
 
-  <a href="https://www.francetvlab.fr/articles/la-realite-augmentee-sinvite-sur-le-plateau-denvoye-special" class="btn btn-outline-dark btn-block" role="button" target="_blank"><i class="fab fa-link">&nbsp;</i>Augmented reality invites itself on the set of Envoyé Spécial</a>
-  <br>
-
-
-  <a href="https://twitter.com/mathemagie/status/1237302584488189953" class="btn btn-outline-dark btn-block" role="button" target="_blank"><i class="fab fa-link">&nbsp;</i>Visualizing my heartbeat in augmented reality (IOT + AR)</a>
+  <a href="https://www.francetvlab.fr/articles/la-realite-augmentee-sinvite-sur-le-plateau-denvoye-special" class="btn btn-block" style="border: 1px solid var(--btn-outline-color); color: var(--btn-outline-color);" role="button" target="_blank"><i class="fab fa-link">&nbsp;</i>Augmented reality invites itself on the set of Envoyé Spécial</a>
   <br>
 
 
-  <a href="https://twitter.com/mathemagie/status/1371413114541981697" class="btn btn-outline-dark btn-block" role="button" target="_blank"><i class="fab fa-link">&nbsp;</i>An ISS laser tracker.</a>
+  <a href="https://twitter.com/mathemagie/status/1237302584488189953" class="btn btn-block" style="border: 1px solid var(--btn-outline-color); color: var(--btn-outline-color);" role="button" target="_blank"><i class="fab fa-link">&nbsp;</i>Visualizing my heartbeat in augmented reality (IOT + AR)</a>
   <br>
 
-  <a href="https://www.numerama.com/tech/230559-qui-est-aurelien-fache-cet-api-artist-qui-vous-propose-de-faire-lamour-a-thomas-pesquet.html" class="btn btn-outline-dark btn-block" role="button" target="_blank"><i class="fab fa-github">&nbsp;</i> In Bed with Thomas Pesquet</a>
+
+  <a href="https://twitter.com/mathemagie/status/1371413114541981697" class="btn btn-block" style="border: 1px solid var(--btn-outline-color); color: var(--btn-outline-color);" role="button" target="_blank"><i class="fab fa-link">&nbsp;</i>An ISS laser tracker.</a>
   <br>
 
-   <a href="https://futureofsex.net/remote-sex/companies-explore-potential-benefits-mind-controlled-sex-toys/" class="btn btn-outline-dark btn-block" role="button" target="_blank"><i class="fab fa-link">&nbsp;</i> Companies Explore Potential Benefits of Mind-Controlled Sex Toys</a><br/>
+  <a href="https://www.numerama.com/tech/230559-qui-est-aurelien-fache-cet-api-artist-qui-vous-propose-de-faire-lamour-a-thomas-pesquet.html" class="btn btn-block" style="border: 1px solid var(--btn-outline-color); color: var(--btn-outline-color);" role="button" target="_blank"><i class="fab fa-github">&nbsp;</i> In Bed with Thomas Pesquet</a>
+  <br>
+
+   <a href="https://futureofsex.net/remote-sex/companies-explore-potential-benefits-mind-controlled-sex-toys/" class="btn btn-block" style="border: 1px solid var(--btn-outline-color); color: var(--btn-outline-color);" role="button" target="_blank"><i class="fab fa-link">&nbsp;</i> Companies Explore Potential Benefits of Mind-Controlled Sex Toys</a><br/>
 
 
-  <a href="https://github.com/mathemagie/in_bed_with" class="btn btn-outline-dark btn-block" role="button" target="_blank"><i class="fab fa-link">&nbsp;</i>The performance series "InbedWith*"</a>
+  <a href="https://github.com/mathemagie/in_bed_with" class="btn btn-block" style="border: 1px solid var(--btn-outline-color); color: var(--btn-outline-color);" role="button" target="_blank"><i class="fab fa-link">&nbsp;</i>The performance series "InbedWith*"</a>
   <br>
 
   Enchanted objects 
   <br>
 
-   <a href="https://twitter.com/mathemagie/status/745976161738588162" class="btn btn-outline-dark btn-block" role="button" target="_blank"><i class="fab fa-link">&nbsp;</i>My assistant the cat </a>
+   <a href="https://twitter.com/mathemagie/status/745976161738588162" class="btn btn-block" style="border: 1px solid var(--btn-outline-color); color: var(--btn-outline-color);" role="button" target="_blank"><i class="fab fa-link">&nbsp;</i>My assistant the cat </a>
   <br>
 
-   <a href="https://julienlevesque.net/en/little-umbrella--5bcollector-5d" class="btn btn-outline-dark btn-block" role="button" target="_blank"><i class="fab fa-link">&nbsp;</i>Little Umbrella Collector</a>
+   <a href="https://julienlevesque.net/en/little-umbrella--5bcollector-5d" class="btn btn-block" style="border: 1px solid var(--btn-outline-color); color: var(--btn-outline-color);" role="button" target="_blank"><i class="fab fa-link">&nbsp;</i>Little Umbrella Collector</a>
   <br>
 
-  <a href="https://julienlevesque.net/en/in-the-cloud-with-lulu" class="btn btn-outline-dark btn-block" role="button" target="_blank"><i class="fab fa-link">&nbsp;</i>In The Cloud With Lulu</a>
-  <br>
-
-
-  <a href="https://julienlevesque.net/en/requiem" class="btn btn-outline-dark btn-block" role="button" target="_blank"><i class="fab fa-link">&nbsp;</i>Requiem</a>
-  <br>
-
-  <a href="https://julienlevesque.net/en/zenith" class="btn btn-outline-dark btn-block" role="button" target="_blank"><i class="fab fa-link">&nbsp;</i>Zénith</a>
-  <br>
-
-  <a href="https://julienlevesque.net/en/7ieme-ciel" class="btn btn-outline-dark btn-block" role="button" target="_blank"><i class="fab fa-link">&nbsp;</i>7th Heaven</a>
+  <a href="https://julienlevesque.net/en/in-the-cloud-with-lulu" class="btn btn-block" style="border: 1px solid var(--btn-outline-color); color: var(--btn-outline-color);" role="button" target="_blank"><i class="fab fa-link">&nbsp;</i>In The Cloud With Lulu</a>
   <br>
 
 
-  <a href="https://julienlevesque.net/en/tu-chauffes" class="btn btn-outline-dark btn-block" role="button" target="_blank"><i class="fab fa-link">&nbsp;</i>You're Getting Warm</a>
+  <a href="https://julienlevesque.net/en/requiem" class="btn btn-block" style="border: 1px solid var(--btn-outline-color); color: var(--btn-outline-color);" role="button" target="_blank"><i class="fab fa-link">&nbsp;</i>Requiem</a>
+  <br>
+
+  <a href="https://julienlevesque.net/en/zenith" class="btn btn-block" style="border: 1px solid var(--btn-outline-color); color: var(--btn-outline-color);" role="button" target="_blank"><i class="fab fa-link">&nbsp;</i>Zénith</a>
+  <br>
+
+  <a href="https://julienlevesque.net/en/7ieme-ciel" class="btn btn-block" style="border: 1px solid var(--btn-outline-color); color: var(--btn-outline-color);" role="button" target="_blank"><i class="fab fa-link">&nbsp;</i>7th Heaven</a>
+  <br>
+
+
+  <a href="https://julienlevesque.net/en/tu-chauffes" class="btn btn-block" style="border: 1px solid var(--btn-outline-color); color: var(--btn-outline-color);" role="button" target="_blank"><i class="fab fa-link">&nbsp;</i>You're Getting Warm</a>
   <br>
 
 
@@ -138,6 +181,37 @@
     </h6>
   </div>-->
 </div>
+
+<script>
+    function toggleTheme() {
+        const html = document.documentElement;
+        const icon = document.getElementById('theme-icon');
+        const currentTheme = html.getAttribute('data-theme');
+        
+        if (currentTheme === 'dark') {
+            html.removeAttribute('data-theme');
+            icon.className = 'fas fa-moon';
+            localStorage.setItem('theme', 'light');
+        } else {
+            html.setAttribute('data-theme', 'dark');
+            icon.className = 'fas fa-sun';
+            localStorage.setItem('theme', 'dark');
+        }
+    }
+    
+    document.addEventListener('DOMContentLoaded', function() {
+        const savedTheme = localStorage.getItem('theme');
+        const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+        const icon = document.getElementById('theme-icon');
+        
+        if (savedTheme === 'dark' || (!savedTheme && prefersDark)) {
+            document.documentElement.setAttribute('data-theme', 'dark');
+            icon.className = 'fas fa-sun';
+        } else {
+            icon.className = 'fas fa-moon';
+        }
+    });
+</script>
 </body>
   
 </html>
