@@ -13,44 +13,148 @@
     .radio-ui {
       position: fixed;
       left: 12px;
-      bottom: 12px;
+      top: 12px;
       z-index: 10;
-      background: rgba(0, 0, 0, 0.55);
+      background: rgba(0, 0, 0, 0.8);
       color: #fff;
-      padding: 10px 12px;
-      border-radius: 10px;
+      padding: 10px 14px;
+      border-radius: 12px;
       font-family: system-ui, -apple-system, Segoe UI, Roboto, Ubuntu, Cantarell, Noto Sans, Arial, sans-serif;
-      font-size: 13px;
-      backdrop-filter: blur(4px);
-      max-width: min(92vw, 360px);
+      font-size: 12px;
+      backdrop-filter: blur(8px);
+      max-width: min(90vw, 320px);
+      min-width: 240px;
     }
-    .radio-ui strong { display: inline-block; margin-right: 6px; }
-    .radio-ui .row { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
-    .radio-ui audio { width: 100%; margin-top: 6px; }
-    .radio-hint { opacity: 0.8; font-size: 12px; margin-top: 6px; }
-    .ui-btn {
+    
+    .radio-header {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      margin-bottom: 8px;
+      flex-wrap: wrap;
+    }
+    
+    .radio-title {
+      font-size: 14px;
+      font-weight: 600;
+      margin: 0;
+    }
+    
+    .station-info {
+      font-size: 12px;
+      opacity: 0.9;
+      flex: 1;
+      min-width: 140px;
+    }
+    
+    .fullscreen-btn {
       appearance: none;
       border: 1px solid rgba(255,255,255,0.3);
-      background: rgba(255,255,255,0.08);
+      background: rgba(255,255,255,0.1);
       color: #fff;
-      padding: 4px 8px;
+      padding: 4px 10px;
       border-radius: 8px;
+      font-size: 11px;
+      font-weight: 500;
+      cursor: pointer;
+      transition: all 0.2s ease;
+      white-space: nowrap;
+    }
+    
+    .fullscreen-btn:hover {
+      background: rgba(255,255,255,0.2);
+      border-color: rgba(255,255,255,0.4);
+    }
+    
+    .audio-controls {
+      background: rgba(255,255,255,0.95);
+      border-radius: 8px;
+      padding: 8px 12px;
+      margin-bottom: 8px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    
+    .play-btn {
+      width: 28px;
+      height: 28px;
+      border-radius: 50%;
+      border: none;
+      background: #333;
+      color: #fff;
       font-size: 12px;
       cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
     }
-    .ui-btn:hover { background: rgba(255,255,255,0.15); }
-    .ui-btn[aria-pressed="true"] { background: rgba(255,255,255,0.25); }
+    
+    .time-display {
+      color: #333;
+      font-size: 11px;
+      font-weight: 500;
+      white-space: nowrap;
+    }
+    
+    .progress-container {
+      flex: 1;
+      height: 4px;
+      background: rgba(0,0,0,0.1);
+      border-radius: 2px;
+      overflow: hidden;
+      margin: 0 6px;
+    }
+    
+    .progress-bar {
+      height: 100%;
+      background: #333;
+      width: 0%;
+      transition: width 0.1s ease;
+    }
+    
+    .volume-btn, .menu-btn {
+      width: 20px;
+      height: 20px;
+      border: none;
+      background: none;
+      color: #333;
+      cursor: pointer;
+      font-size: 12px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    
+    .radio-hint {
+      color: rgba(255,255,255,0.8);
+      font-size: 11px;
+      line-height: 1.3;
+    }
   </style>
 </head>
 <body>
   <div class="radio-ui" id="radio-ui">
-    <div class="row">
-      <strong>Radio</strong>
-      <span id="station-label">Waiting for ISS location…</span>
-      <button id="fullscreen-btn" type="button" class="ui-btn" aria-pressed="false">Enter Fullscreen</button>
+    <div class="radio-header">
+      <h2 class="radio-title">Radio</h2>
+      <span id="station-label" class="station-info">Waiting for ISS location…</span>
+      <button id="fullscreen-btn" type="button" class="fullscreen-btn" aria-pressed="false">Enter Fullscreen</button>
     </div>
-    <audio id="radio-player" controls preload="none"></audio>
+    
+    <div class="audio-controls">
+      <button id="play-btn" class="play-btn" type="button">▶</button>
+      <span id="time-display" class="time-display">0:00 / 0:00</span>
+      <div class="progress-container">
+        <div id="progress-bar" class="progress-bar"></div>
+      </div>
+      <button id="volume-btn" class="volume-btn" type="button">🔊</button>
+      <button id="menu-btn" class="menu-btn" type="button">⋮</button>
+    </div>
+    
     <div class="radio-hint">Click Play once to enable audio. The station switches automatically as the ISS changes region.</div>
+    
+    <audio id="radio-player" preload="none" style="display: none;"></audio>
   </div>
   <script>
     let particles = [];
@@ -64,7 +168,13 @@
     let radioPlayer;
     let stationLabel;
     let fullscreenBtn;
+    let playBtn;
+    let timeDisplay;
+    let progressBar;
+    let volumeBtn;
+    let menuBtn;
     let currentRegion = null;
+    let isPlaying = false;
     const regionStations = {
       'Ocean': { name: 'SomaFM Mission Control', url: 'https://ice2.somafm.com/missioncontrol-128-mp3' },
       'North America': { name: 'KEXP 90.3 Seattle', url: 'https://kexp.streamguys1.com/kexp128.mp3' },
@@ -99,7 +209,11 @@
       radioPlayer.src = newSrc;
       radioPlayer.dataset.station = station.name;
       if (wasPlaying) {
-        radioPlayer.play().catch(() => {/* Autoplay blocked or user paused */});
+        radioPlayer.play().catch(() => {
+          /* Autoplay blocked or user paused */
+          isPlaying = false;
+          if (playBtn) playBtn.textContent = '▶';
+        });
       }
     }
 
@@ -186,9 +300,44 @@
       radioPlayer = document.getElementById('radio-player');
       stationLabel = document.getElementById('station-label');
       fullscreenBtn = document.getElementById('fullscreen-btn');
+      playBtn = document.getElementById('play-btn');
+      timeDisplay = document.getElementById('time-display');
+      progressBar = document.getElementById('progress-bar');
+      volumeBtn = document.getElementById('volume-btn');
+      menuBtn = document.getElementById('menu-btn');
+      
+      // Set up event listeners
       if (fullscreenBtn) {
         fullscreenBtn.addEventListener('click', toggleFullscreen);
         updateFullscreenUI();
+      }
+      
+      if (playBtn) {
+        playBtn.addEventListener('click', togglePlayback);
+      }
+      
+      if (volumeBtn) {
+        volumeBtn.addEventListener('click', toggleMute);
+      }
+      
+      if (radioPlayer) {
+        radioPlayer.addEventListener('timeupdate', updateProgress);
+        radioPlayer.addEventListener('loadstart', () => {
+          timeDisplay.textContent = '0:00 / 0:00';
+          progressBar.style.width = '0%';
+        });
+        radioPlayer.addEventListener('play', () => {
+          isPlaying = true;
+          playBtn.textContent = '⏸';
+        });
+        radioPlayer.addEventListener('pause', () => {
+          isPlaying = false;
+          playBtn.textContent = '▶';
+        });
+        radioPlayer.addEventListener('ended', () => {
+          isPlaying = false;
+          playBtn.textContent = '▶';
+        });
       }
       document.addEventListener('fullscreenchange', () => {
         updateFullscreenUI();
@@ -321,6 +470,45 @@
         exitFullscreen().catch(() => {});
       } else {
         enterFullscreen().catch(() => {});
+      }
+    }
+
+    // Audio control functions
+    function togglePlayback() {
+      if (!radioPlayer) return;
+      
+      if (isPlaying) {
+        radioPlayer.pause();
+      } else {
+        radioPlayer.play().catch(() => {
+          console.log('Autoplay blocked - user interaction required');
+        });
+      }
+    }
+    
+    function toggleMute() {
+      if (!radioPlayer) return;
+      
+      radioPlayer.muted = !radioPlayer.muted;
+      volumeBtn.textContent = radioPlayer.muted ? '🔇' : '🔊';
+    }
+    
+    function updateProgress() {
+      if (!radioPlayer || !timeDisplay || !progressBar) return;
+      
+      // For live streams, we'll show a simulated progress for visual feedback
+      const currentTime = radioPlayer.currentTime || 0;
+      const minutes = Math.floor(currentTime / 60);
+      const seconds = Math.floor(currentTime % 60);
+      const timeString = `${minutes}:${seconds.toString().padStart(2, '0')}`;
+      
+      // Since most radio streams are live, we'll show current time / live
+      timeDisplay.textContent = `${timeString} / Live`;
+      
+      // Simulate progress for live streams (cycling animation)
+      if (isPlaying) {
+        const progress = ((Date.now() / 1000) % 30) / 30 * 100; // 30-second cycle
+        progressBar.style.width = `${progress}%`;
       }
     }
 
