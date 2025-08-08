@@ -1,0 +1,4 @@
+# Run tests and lint-staged for the Radio ISS subproject
+cd hack/radio_iss || exit 1
+npm run test || exit 1
+npx lint-staged
