@@ -56,10 +56,6 @@
     let particles = [];
     const numParticles = 50;
     let continentPoints = [];
-    // Store original geographic data for particles to enable proper repositioning on resize
-    let particleGeoData = [];
-    let issGeoData = { lat: 0, lon: 0 }; // Current ISS geographic coordinates
-    
     // Radio globals
     let radioPlayer;
     let stationLabel;
@@ -133,53 +129,6 @@
       { lat: 0, lon: -30 }
     ];
 
-    // Convert lat/lon to screen coordinates
-    function latLonToXY(lat, lon) {
-      let x = map(lon, -180, 180, 0, width);
-      let y = map(lat, 90, -90, 0, height);
-      return {x: x, y: y};
-    }
-
-    // Convert screen coordinates back to lat/lon (for reverse calculation)
-    function xyToLatLon(x, y) {
-      let lon = map(x, 0, width, -180, 180);
-      let lat = map(y, 0, height, 90, -90);
-      return {lat: lat, lon: lon};
-    }
-
-    // Reposition all particles based on their stored geographic data
-    function repositionParticlesAfterResize() {
-      // Regenerate continent points with new canvas dimensions
-      generateContinentPoints();
-      
-      // Reposition continent-based particles
-      for (let i = 0; i < particles.length - 1; i++) { // All particles except ISS
-        let particle = particles[i];
-        let geoData = particleGeoData[i];
-        
-        if (geoData) {
-          // Convert geographic coordinates back to new screen coordinates
-          let newPos = latLonToXY(geoData.lat, geoData.lon);
-          particle.pos.set(newPos.x, newPos.y);
-          particle.originalPos.set(newPos.x, newPos.y);
-          
-          // If particle was resetting, maintain reset state but update positions
-          if (particle.isResetting) {
-            // The reset animation will continue from the new positions
-            continue;
-          }
-        }
-      }
-      
-      // Reposition ISS particle
-      let issParticle = particles[particles.length - 1]; // ISS is last particle
-      if (issParticle && issParticle.isIss) {
-        let issPos = latLonToXY(issGeoData.lat, issGeoData.lon);
-        issParticle.pos.set(issPos.x, issPos.y);
-        issParticle.target.set(issPos.x, issPos.y);
-      }
-    }
-
     function setup() {
       createCanvas(windowWidth, windowHeight);
       // Wire radio UI
@@ -194,13 +143,11 @@
         updateFullscreenUI();
         // Ensure canvas matches the new viewport size
         resizeCanvas(windowWidth, windowHeight);
-        repositionParticlesAfterResize();
       });
       // Safari
       document.addEventListener('webkitfullscreenchange', () => {
         updateFullscreenUI();
         resizeCanvas(windowWidth, windowHeight);
-        repositionParticlesAfterResize();
       });
       // Initial default
       setStationForRegion('Ocean');
@@ -212,22 +159,13 @@
       generateContinentPoints();
       
       // Create regular particles positioned on continents
-      particleGeoData = []; // Reset geographic data array
       for (let i = 0; i < numParticles; i++) {
         let point = random(continentPoints);
         particles.push(new Particle(point.x, point.y, false));
-        
-        // Store geographic coordinates for this particle
-        let geoCoords = xyToLatLon(point.x, point.y);
-        particleGeoData.push(geoCoords);
       }
-      
       // Create ISS particle
       let iss = new Particle(width / 2, height / 2, true);
       particles.push(iss);
-      
-      // Initialize ISS geographic data
-      issGeoData = xyToLatLon(width / 2, height / 2);
 
       // Real ISS update
       function updateISSReal() {
@@ -236,11 +174,6 @@
           .then(data => {
             let lat = data.latitude;
             let lon = data.longitude;
-            
-            // Store ISS geographic coordinates for resize handling
-            issGeoData.lat = lat;
-            issGeoData.lon = lon;
-            
             let x = map(lon, -180, 180, 0, width);
             let y = map(lat, 90, -90, 0, height);
             iss.target.set(x, y);
@@ -257,11 +190,6 @@
         simIndex += 1;
         const lat = point.lat;
         const lon = point.lon;
-        
-        // Store ISS geographic coordinates for resize handling
-        issGeoData.lat = lat;
-        issGeoData.lon = lon;
-        
         const x = map(lon, -180, 180, 0, width);
         const y = map(lat, 90, -90, 0, height);
         iss.target.set(x, y);
@@ -277,10 +205,9 @@
       }
     }
 
-    // Enhanced resize handling - repositions all particles properly
+    // Resize canvas when viewport changes (e.g., entering/exiting fullscreen)
     function windowResized() {
       resizeCanvas(windowWidth, windowHeight);
-      repositionParticlesAfterResize();
     }
 
     // Keyboard shortcut for fullscreen
@@ -326,6 +253,13 @@
 
     function generateContinentPoints() {
       continentPoints = [];
+      
+      // Convert lat/lon to screen coordinates
+      function latLonToXY(lat, lon) {
+        let x = map(lon, -180, 180, 0, width);
+        let y = map(lat, 90, -90, 0, height);
+        return {x: x, y: y};
+      }
       
       // North America outline (simplified)
       let northAmerica = [
