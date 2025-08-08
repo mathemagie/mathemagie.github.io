@@ -1,0 +1,76 @@
+## Cursor Rules for Radio ISS
+
+These rules guide Cursor when working in this repository. They are derived from `CLAUDE.md` and focus on preserving the single-file architecture and core behaviors of the app.
+
+### Purpose
+- **Goal**: Maintain and enhance an immersive ISS tracker with location-based internet radio and a particle physics visualization.
+- **Critical constraint**: The app is a **single HTML file** with embedded CSS and JavaScript.
+
+### Key Files
+- **`index.html`**: The only application file. All HTML, CSS, and JS live here.
+
+### How to Run
+- Open `index.html` directly in a web browser. No build step.
+
+### Debugging Aids
+- Add `?debug=1` to the URL to enable simulation mode that cycles through global positions/regions.
+- Press the `m` key to toggle continent outline visualization.
+- The radio UI displays the current station and region.
+
+### Architecture and External Dependencies
+- **Canvas/Graphics**: Uses p5.js v1.4.0 from CDN. Keep this dependency as-is unless explicitly asked to upgrade.
+- **ISS Tracking**: Fetch from `https://api.wheretheiss.at/v1/satellites/25544` every ~5 seconds; implement smooth steering of the ISS particle toward target coordinates.
+- **Radio Streaming**: Each of 7 regions maps to a specific internet radio station (MP3 streams). The radio should auto-switch based on the ISS region and preserve playback state across switches.
+
+### Core Components to Preserve
+- **Radio System**
+  - Function `getRegion(lat, lon)` determines the region from ISS coordinates.
+  - Function `setStationForRegion(region)` selects and transitions audio streams seamlessly.
+  - Fixed-position radio UI with station/region display and audio controls.
+- **Particle Physics Engine**
+  - A `Particle` class with multiple states (stationary, moving, resetting).
+  - Special ISS particle: red, heartbeat pulse, steering behavior, wrap-around edges.
+  - Continent particles positioned along continent outlines; ISS contact activates them.
+  - Elastic collisions with momentum conservation and separation handling.
+  - Visual effects: soap-bubble reset, glow rings, transparency.
+- **Geographic System**
+  - Simplified polygon outlines per continent stored as lat/lon.
+  - `latLonToXY()` to convert lat/lon to screen space.
+  - Continent boundary point generation with inland variation.
+
+### Implementation Guidelines (Do/Don’t)
+- Do keep everything in `index.html`; **do not** split into multiple files or introduce a bundler/build step.
+- Do keep p5.js loaded from CDN; avoid adding heavyweight libraries unless explicitly requested.
+- Do preserve station mappings and the 7-region model (Ocean, North America, South America, Europe, Africa, Asia, Oceania).
+- Do implement seamless audio transitions and maintain playback state across station changes.
+- Do handle network errors gracefully (e.g., failed ISS fetch or stream), retry sensibly, and keep the UI responsive.
+- Do maintain 60fps-friendly draws: avoid allocations in the draw loop, prefer precomputed structures and vector math.
+- Don’t add server-side components, package managers, or build configs.
+- Don’t hardcode credentials or private data; only public APIs/streams are allowed.
+
+### Browser/UX Considerations
+- Respect autoplay policies: ensure audio playback starts/resumes only after a user gesture if required by the browser.
+- Provide clear UI controls for play/pause and station display in the fixed radio UI.
+- Keep the heartbeat pulse double-beat pattern for the ISS particle.
+
+### Extending the App
+- New stations: update the region→station mapping and ensure `setStationForRegion()` transitions smoothly.
+- New regions: adjust `getRegion(lat, lon)` and mapping coherently; update debug mode coverage.
+- Visual toggles: maintain the `m` key behavior and consider adding non-conflicting keys if needed.
+- Upgrades: If changing p5.js or stream URLs, document the reason and verify cross-browser behavior.
+
+### Testing Checklist (Manual)
+- Load `index.html`: canvas renders; radio UI visible.
+- With `?debug=1`, ISS cycles through regions; station switches accordingly.
+- Press `m`: continent outlines toggle.
+- ISS particle shows a double-beat pulse, steers smoothly toward targets, wraps correctly.
+- Collisions are elastic; stationary continent particles activate on contact; separation resolves overlaps.
+- Audio transitions are smooth; playback state persists across region changes.
+
+### Security/Privacy
+- No API keys or user tracking. Use only public endpoints and streams.
+- Handle network failures without crashing; fall back to last known ISS position when necessary.
+
+### Maintenance
+- Keep this `.cursorrules` aligned with `CLAUDE.md` when the project’s architecture or behavior changes.
+- Prefer minimal, targeted edits that respect the single-file constraint and established function names.
