@@ -26,77 +26,77 @@ class GeographyManager {
 
   // Convert lat/lon to screen coordinates
   latLonToXY(lat, lon) {
-    let x = map(lon, -180, 180, 0, width);
-    let y = map(lat, 90, -90, 0, height);
+    const x = map(lon, -180, 180, 0, width);
+    const y = map(lat, 90, -90, 0, height);
     return {x: x, y: y};
   }
 
   // Convert screen coordinates back to lat/lon (for reverse calculation)
   xyToLatLon(x, y) {
-    let lon = map(x, 0, width, -180, 180);
-    let lat = map(y, 0, height, 90, -90);
+    const lon = map(x, 0, width, -180, 180);
+    const lat = map(y, 0, height, 90, -90);
     return {lat: lat, lon: lon};
   }
 
   generateContinentPoints() {
     window.continentPoints = [];
-    
+
     // North America outline (simplified)
-    let northAmerica = [
-      [-60, -141], [-45, -141], [-45, -52], [-25, -80], [-25, -95], 
+    const northAmerica = [
+      [-60, -141], [-45, -141], [-45, -52], [-25, -80], [-25, -95],
       [-30, -117], [-48, -125], [-60, -141]
     ];
-    
+
     // South America outline (simplified)
-    let southAmerica = [
-      [12, -81], [12, -34], [-20, -34], [-35, -58], [-55, -68], 
+    const southAmerica = [
+      [12, -81], [12, -34], [-20, -34], [-35, -58], [-55, -68],
       [-22, -81], [12, -81]
     ];
-    
-    // Europe outline (simplified)  
-    let europe = [
+
+    // Europe outline (simplified)
+    const europe = [
       [71, -10], [71, 40], [36, 40], [36, -10], [71, -10]
     ];
-    
+
     // Africa outline (simplified)
-    let africa = [
+    const africa = [
       [37, -18], [37, 51], [-35, 51], [-35, 15], [-22, -18], [37, -18]
     ];
-    
+
     // Asia outline (simplified)
-    let asia = [
+    const asia = [
       [77, 26], [77, 180], [10, 180], [10, 60], [40, 26], [77, 26]
     ];
-    
+
     // Australia outline (simplified)
-    let australia = [
+    const australia = [
       [-10, 113], [-10, 154], [-44, 154], [-44, 113], [-10, 113]
     ];
-    
-    let continents = [northAmerica, southAmerica, europe, africa, asia, australia];
-    
+
+    const continents = [northAmerica, southAmerica, europe, africa, asia, australia];
+
     // Generate points along continent outlines
-    for (let continent of continents) {
+    for (const continent of continents) {
       for (let i = 0; i < continent.length - 1; i++) {
-        let start = this.latLonToXY(continent[i][0], continent[i][1]);
-        let end = this.latLonToXY(continent[i + 1][0], continent[i + 1][1]);
-        
+        const start = this.latLonToXY(continent[i][0], continent[i][1]);
+        const end = this.latLonToXY(continent[i + 1][0], continent[i + 1][1]);
+
         // Generate points along the line between start and end
-        let steps = 10;
+        const steps = 10;
         for (let j = 0; j <= steps; j++) {
-          let t = j / steps;
-          let x = lerp(start.x, end.x, t);
-          let y = lerp(start.y, end.y, t);
+          const t = j / steps;
+          const x = lerp(start.x, end.x, t);
+          const y = lerp(start.y, end.y, t);
           window.continentPoints.push({x: x, y: y});
         }
       }
     }
-    
+
     // Add some inland points for more realistic distribution
     for (let i = 0; i < window.continentPoints.length; i += 3) {
-      let point = window.continentPoints[i];
-      let offsetX = random(-50, 50);
-      let offsetY = random(-50, 50);
+      const point = window.continentPoints[i];
+      const offsetX = random(-50, 50);
+      const offsetY = random(-50, 50);
       window.continentPoints.push({
         x: constrain(point.x + offsetX, 0, width),
         y: constrain(point.y + offsetY, 0, height)
@@ -108,18 +108,18 @@ class GeographyManager {
   repositionParticlesAfterResize() {
     // Regenerate continent points with new canvas dimensions
     this.generateContinentPoints();
-    
+
     // Reposition continent-based particles
     for (let i = 0; i < window.particles.length - 1; i++) { // All particles except ISS
-      let particle = window.particles[i];
-      let geoData = window.particleGeoData[i];
-      
+      const particle = window.particles[i];
+      const geoData = window.particleGeoData[i];
+
       if (geoData) {
         // Convert geographic coordinates back to new screen coordinates
-        let newPos = this.latLonToXY(geoData.lat, geoData.lon);
+        const newPos = this.latLonToXY(geoData.lat, geoData.lon);
         particle.pos.set(newPos.x, newPos.y);
         particle.originalPos.set(newPos.x, newPos.y);
-        
+
         // If particle was resetting, maintain reset state but update positions
         if (particle.isResetting) {
           // The reset animation will continue from the new positions
@@ -127,11 +127,11 @@ class GeographyManager {
         }
       }
     }
-    
+
     // Reposition ISS particle
-    let issParticle = window.particles[window.particles.length - 1]; // ISS is last particle
+    const issParticle = window.particles[window.particles.length - 1]; // ISS is last particle
     if (issParticle && issParticle.isIss) {
-      let issPos = this.latLonToXY(this.issGeoData.lat, this.issGeoData.lon);
+      const issPos = this.latLonToXY(this.issGeoData.lat, this.issGeoData.lon);
       issParticle.pos.set(issPos.x, issPos.y);
       issParticle.target.set(issPos.x, issPos.y);
     }
@@ -147,22 +147,22 @@ class GeographyManager {
       fetch('https://api.wheretheiss.at/v1/satellites/25544')
         .then(response => response.json())
         .then(data => {
-          let lat = data.latitude;
-          let lon = data.longitude;
-          
+          const lat = data.latitude;
+          const lon = data.longitude;
+
           // Store ISS geographic coordinates for resize handling
           this.issGeoData.lat = lat;
           this.issGeoData.lon = lon;
-          
-          let x = map(lon, -180, 180, 0, width);
-          let y = map(lat, 90, -90, 0, height);
-          
+
+          const x = map(lon, -180, 180, 0, width);
+          const y = map(lat, 90, -90, 0, height);
+
           // Update ISS particle target
           const issParticle = window.particles[window.particles.length - 1];
           if (issParticle && issParticle.isIss) {
             issParticle.target.set(x, y);
           }
-          
+
           radioManager.updateRadioForLocation(lat, lon);
         })
         .catch(() => {
@@ -176,20 +176,20 @@ class GeographyManager {
       this.simIndex += 1;
       const lat = point.lat;
       const lon = point.lon;
-      
+
       // Store ISS geographic coordinates for resize handling
       this.issGeoData.lat = lat;
       this.issGeoData.lon = lon;
-      
+
       const x = map(lon, -180, 180, 0, width);
       const y = map(lat, 90, -90, 0, height);
-      
+
       // Update ISS particle target
       const issParticle = window.particles[window.particles.length - 1];
       if (issParticle && issParticle.isIss) {
         issParticle.target.set(x, y);
       }
-      
+
       radioManager.updateRadioForLocation(lat, lon);
     };
 
