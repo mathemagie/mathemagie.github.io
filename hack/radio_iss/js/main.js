@@ -33,7 +33,7 @@ function setup() {
   // Create regular particles positioned on continents
   particleGeoData = []; // Reset geographic data array
   for (let i = 0; i < numParticles; i++) {
-    let point = random(continentPoints);
+    let point = random(window.continentPoints);
     particles.push(new Particle(point.x, point.y, false));
     
     // Store geographic coordinates for this particle
@@ -72,7 +72,7 @@ function draw() {
   if (keyIsPressed && key === 'm') {
     stroke(50);
     strokeWeight(1);
-    for (let point of continentPoints) {
+    for (let point of window.continentPoints) {
       point(point.x, point.y);
     }
   }
