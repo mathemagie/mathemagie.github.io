@@ -28,11 +28,27 @@
     .radio-ui .row { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
     .radio-ui audio { width: 100%; margin-top: 6px; }
     .radio-hint { opacity: 0.8; font-size: 12px; margin-top: 6px; }
+    .ui-btn {
+      appearance: none;
+      border: 1px solid rgba(255,255,255,0.3);
+      background: rgba(255,255,255,0.08);
+      color: #fff;
+      padding: 4px 8px;
+      border-radius: 8px;
+      font-size: 12px;
+      cursor: pointer;
+    }
+    .ui-btn:hover { background: rgba(255,255,255,0.15); }
+    .ui-btn[aria-pressed="true"] { background: rgba(255,255,255,0.25); }
   </style>
 </head>
 <body>
   <div class="radio-ui" id="radio-ui">
-    <div class="row"><strong>Radio</strong><span id="station-label">Waiting for ISS location…</span></div>
+    <div class="row">
+      <strong>Radio</strong>
+      <span id="station-label">Waiting for ISS location…</span>
+      <button id="fullscreen-btn" type="button" class="ui-btn" aria-pressed="false">Enter Fullscreen</button>
+    </div>
     <audio id="radio-player" controls preload="none"></audio>
     <div class="radio-hint">Click Play once to enable audio. The station switches automatically as the ISS changes region.</div>
   </div>
@@ -43,6 +59,7 @@
     // Radio globals
     let radioPlayer;
     let stationLabel;
+    let fullscreenBtn;
     let currentRegion = null;
     const regionStations = {
       'Ocean': { name: 'SomaFM Mission Control', url: 'https://ice2.somafm.com/missioncontrol-128-mp3' },
@@ -117,6 +134,21 @@
       // Wire radio UI
       radioPlayer = document.getElementById('radio-player');
       stationLabel = document.getElementById('station-label');
+      fullscreenBtn = document.getElementById('fullscreen-btn');
+      if (fullscreenBtn) {
+        fullscreenBtn.addEventListener('click', toggleFullscreen);
+        updateFullscreenUI();
+      }
+      document.addEventListener('fullscreenchange', () => {
+        updateFullscreenUI();
+        // Ensure canvas matches the new viewport size
+        resizeCanvas(windowWidth, windowHeight);
+      });
+      // Safari
+      document.addEventListener('webkitfullscreenchange', () => {
+        updateFullscreenUI();
+        resizeCanvas(windowWidth, windowHeight);
+      });
       // Initial default
       setStationForRegion('Ocean');
       // Determine simulation mode from URL param
@@ -170,6 +202,52 @@
       } else {
         updateISSReal();
         setInterval(updateISSReal, 5000);
+      }
+    }
+
+    // Resize canvas when viewport changes (e.g., entering/exiting fullscreen)
+    function windowResized() {
+      resizeCanvas(windowWidth, windowHeight);
+    }
+
+    // Keyboard shortcut for fullscreen
+    function keyPressed() {
+      if (key === 'f' || key === 'F') {
+        toggleFullscreen();
+      }
+    }
+
+    // Fullscreen helpers
+    function isFullscreen() {
+      return !!(document.fullscreenElement || document.webkitFullscreenElement);
+    }
+
+    function updateFullscreenUI() {
+      const active = isFullscreen();
+      if (fullscreenBtn) {
+        fullscreenBtn.textContent = active ? 'Exit Fullscreen' : 'Enter Fullscreen';
+        fullscreenBtn.setAttribute('aria-pressed', active ? 'true' : 'false');
+      }
+    }
+
+    function enterFullscreen() {
+      const root = document.documentElement;
+      if (root.requestFullscreen) return root.requestFullscreen();
+      if (root.webkitRequestFullscreen) return root.webkitRequestFullscreen();
+      return Promise.resolve();
+    }
+
+    function exitFullscreen() {
+      if (document.exitFullscreen) return document.exitFullscreen();
+      if (document.webkitExitFullscreen) return document.webkitExitFullscreen();
+      return Promise.resolve();
+    }
+
+    function toggleFullscreen() {
+      if (isFullscreen()) {
+        exitFullscreen().catch(() => {});
+      } else {
+        enterFullscreen().catch(() => {});
       }
     }
 
