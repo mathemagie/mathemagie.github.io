@@ -8,37 +8,43 @@ This is a "Radio ISS" application - an immersive ISS (International Space Statio
 
 ## Architecture
 
-**Single-file application**: The entire project consists of one HTML file (`index.html`) containing:
-- HTML structure with embedded CSS and JavaScript
+**Modular application**: The project consists of:
+- `index.html` - Main HTML structure that loads all components
+- `css/styles.css` - All styling including radio UI and visual effects
+- `js/main.js` - Core application setup, particle management, and draw loop
+- `js/radio.js` - RadioManager class handling station switching and audio controls
+- `js/geography.js` - GeographyManager class for ISS tracking and coordinate conversion  
+- `js/particles.js` - Particle class with physics simulation and visual effects
 - p5.js library (v1.4.0) loaded from CDN for canvas-based graphics
-- Real-time ISS position fetching from the "Where the ISS at?" API
-- Region-based internet radio streaming with automatic station switching
-- Advanced particle physics simulation with collision detection and visual effects
 
 **Core Components**:
 
-### Radio System
+### Radio System (`js/radio.js`)
+- **RadioManager Class**: Handles all radio functionality and UI management
 - **Regional Radio Mapping**: 7 regions (Ocean, North America, South America, Europe, Africa, Asia, Oceania) each mapped to specific internet radio stations
-- **Auto-switching Logic**: `getRegion(lat, lon)` function determines current region based on ISS coordinates
+- **Auto-switching Logic**: `getRegion(lat, lon)` method determines current region based on ISS coordinates
 - **Station Management**: `setStationForRegion()` handles seamless audio transitions
 - **UI Elements**: Fixed position radio UI with station display and audio controls
 
-### Particle Physics Engine
+### Particle Physics Engine (`js/particles.js`)
 - **Particle Class**: Advanced physics with multiple states (stationary, moving, resetting)
 - **ISS Particle**: Special red particle with heartbeat visual effect and steering behavior toward real coordinates
 - **Continent Particles**: Positioned along continent outlines, activate when hit by ISS
 - **Collision System**: Elastic collisions with momentum conservation, separation handling
 - **Visual Effects**: Soap bubble reset animation, glow rings, transparency effects
 
-### Geographic System
+### Geographic System (`js/geography.js`)
+- **GeographyManager Class**: Handles coordinate conversion and ISS tracking
 - **Continent Mapping**: Simplified polygon outlines for all continents stored as lat/lon coordinates
 - **Coordinate Conversion**: `latLonToXY()` converts geographic coordinates to screen space
 - **Continent Point Generation**: Creates particle spawn points along continent boundaries with inland variations
+- **Resize Handling**: Repositions particles when canvas dimensions change
 
-### ISS Tracking
+### ISS Tracking (`js/geography.js`)
 - **Real Mode**: Fetches actual ISS coordinates from `https://api.wheretheiss.at/v1/satellites/25544` every 5 seconds
 - **Debug Mode**: Simulation mode (`?debug=1` URL parameter) cycles through predefined global positions for testing
 - **Steering Behavior**: ISS particle smoothly moves toward target coordinates using vector math
+- **Geographic Persistence**: Maintains particle positions across window resizes
 
 ## Key Features
 
@@ -60,13 +66,29 @@ This is a "Radio ISS" application - an immersive ISS (International Space Statio
 - Edge bouncing for regular particles (ISS wraps around)
 - Smooth separation handling to prevent particle overlap
 
+## File Structure
+
+```
+radio_iss/
+├── index.html          # Main HTML file that loads all components
+├── css/
+│   └── styles.css      # All styling for UI and visual effects
+├── js/
+│   ├── main.js         # Core application setup and draw loop
+│   ├── radio.js        # RadioManager class
+│   ├── geography.js    # GeographyManager class  
+│   └── particles.js    # Particle class with physics
+└── CLAUDE.md           # This documentation file
+```
+
 ## Development
 
 **Running the application**: Simply open `index.html` in a web browser - no build process required.
 
 **Debug Features**:
 - Add `?debug=1` to URL for simulation mode (cycles through all regions)
-- Press 'm' key to visualize continent outline points
+- Press 'm' key to visualize continent outline points  
+- Press 'f' key to toggle fullscreen
 - Radio UI shows current station and region information
 
 **External dependencies**: 
