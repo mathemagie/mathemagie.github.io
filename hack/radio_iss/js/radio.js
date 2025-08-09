@@ -11,13 +11,37 @@ class RadioManager {
     this.isPlaying = false;
 
     this.regionStations = {
-      'Ocean': { name: 'SomaFM Mission Control', url: 'https://ice2.somafm.com/missioncontrol-128-mp3' },
-      'North America': { name: 'KEXP 90.3 Seattle', url: 'https://kexp.streamguys1.com/kexp128.mp3' },
-      'South America': { name: 'Radio Paradise World', url: 'https://stream.radioparadise.com/world-128' },
-      'Europe': { name: 'Radio Swiss Pop', url: 'https://stream.srg-ssr.ch/m/rsp/mp3_128' },
-      'Africa': { name: 'RFI Monde', url: 'https://rfimonde64k.ice.infomaniak.ch/rfimonde-64.mp3' },
-      'Asia': { name: 'SomaFM Groove Salad', url: 'https://ice2.somafm.com/groovesalad-128-mp3' },
-      'Oceania': { name: 'SomaFM Space Station Soma', url: 'https://ice2.somafm.com/spacestation-128-mp3' }
+      // Americas (6 regions)
+      'US West': { name: 'SomaFM Left Coast 70s', url: 'https://ice4.somafm.com/seventies-128-mp3' },
+      'US East': { name: 'SomaFM Indie Pop Rocks', url: 'https://ice2.somafm.com/indiepop-128-mp3' },
+      'Canada': { name: 'SomaFM Folk Forward', url: 'https://ice1.somafm.com/folkfwd-128-mp3' },
+      'Mexico/Central America': { name: 'SomaFM Sonic Universe', url: 'https://ice1.somafm.com/sonicuniverse-128-mp3' },
+      'Brazil': { name: 'SomaFM Bossa Beyond', url: 'https://ice2.somafm.com/bossa-128-mp3' },
+      'Argentina/Chile': { name: 'SomaFM ThistleRadio', url: 'https://ice1.somafm.com/thistle-128-mp3' },
+
+      // Europe (4 regions)
+      'Western Europe': { name: 'SomaFM PopTron', url: 'https://ice2.somafm.com/poptron-128-mp3' },
+      'Northern Europe': { name: 'SomaFM Deep Space One', url: 'https://ice1.somafm.com/deepspaceone-128-mp3' },
+      'Eastern Europe': { name: 'SomaFM Underground 80s', url: 'https://ice4.somafm.com/u80s-128-mp3' },
+      'Mediterranean': { name: 'Radio Swiss Pop', url: 'https://stream.srg-ssr.ch/m/rsp/mp3_128' },
+
+      // Asia (4 regions)
+      'East Asia': { name: 'SomaFM Drone Zone', url: 'https://ice1.somafm.com/dronezone-128-mp3' },
+      'Southeast Asia': { name: 'SomaFM Groove Salad', url: 'https://ice2.somafm.com/groovesalad-128-mp3' },
+      'South Asia': { name: 'SomaFM Beat Blender', url: 'https://ice1.somafm.com/beatblender-128-mp3' },
+      'Middle East': { name: 'SomaFM Digitalis', url: 'https://ice2.somafm.com/digitalis-128-mp3' },
+
+      // Africa (2 regions)
+      'North Africa': { name: 'SomaFM Doomed', url: 'https://ice4.somafm.com/doomed-128-mp3' },
+      'Sub-Saharan Africa': { name: 'SomaFM Seven Inch Soul', url: 'https://ice1.somafm.com/7soul-128-mp3' },
+
+      // Oceania/Pacific (2 regions)
+      'Australia': { name: 'SomaFM Suburbs of Goa', url: 'https://ice1.somafm.com/suburbsofgoa-128-mp3' },
+      'Pacific Islands': { name: 'SomaFM Illinois Street Lounge', url: 'https://ice1.somafm.com/illstreet-128-mp3' },
+
+      // Polar/Ocean (2 regions)
+      'Arctic': { name: 'SomaFM Fluid', url: 'https://ice1.somafm.com/fluid-128-mp3' },
+      'Ocean': { name: 'SomaFM Mission Control', url: 'https://ice2.somafm.com/missioncontrol-128-mp3' }
     };
   }
 
@@ -69,13 +93,40 @@ class RadioManager {
   }
 
   getRegion(lat, lon) {
-    // Rough continent bounding boxes; fall back to Ocean
-    if (lat >= 10 && lat <= 85 && lon >= -168 && lon <= -52) {return 'North America';}
-    if (lat >= -56 && lat <= 12 && lon >= -82 && lon <= -34) {return 'South America';}
-    if (lat >= 36 && lat <= 72 && lon >= -10 && lon <= 40) {return 'Europe';}
-    if (lat >= -35 && lat <= 37 && lon >= -18 && lon <= 51) {return 'Africa';}
-    if (lat >= 5 && lat <= 77 && lon >= 26 && lon <= 180) {return 'Asia';}
-    if (lat >= -50 && lat <= -10 && lon >= 112 && lon <= 154) {return 'Oceania';}
+    // ISS orbital coverage: ±51.6° latitude limit
+
+    // Americas (6 regions)
+    if (lat >= 32 && lat <= 49 && lon >= -125 && lon <= -114) {return 'US West';} // California, Oregon, Washington
+    if (lat >= 25 && lat <= 41 && lon >= -85 && lon <= -67) {return 'US East';} // East Coast US
+    if (lat >= 42 && lat <= 51.6 && lon >= -141 && lon <= -52) {return 'Canada';} // Canada
+    if (lat >= 14 && lat <= 32 && lon >= -118 && lon <= -77) {return 'Mexico/Central America';} // Mexico to Panama
+    if (lat >= -24 && lat <= 5 && lon >= -75 && lon <= -30) {return 'Brazil';} // Brazil
+    if (lat >= -51.6 && lat <= -24 && lon >= -75 && lon <= -47) {return 'Argentina/Chile';} // Southern South America
+
+    // Europe (4 regions)
+    if (lat >= 50 && lat <= 51.6 && lon >= -10 && lon <= 8) {return 'Western Europe';} // UK, Ireland, France
+    if (lat >= 55 && lat <= 70 && lon >= 4 && lon <= 31) {return 'Northern Europe';} // Scandinavia, Baltic
+    if (lat >= 44 && lat <= 51.6 && lon >= 9 && lon <= 50) {return 'Eastern Europe';} // Eastern Europe
+    if (lat >= 36 && lat <= 47 && lon >= -10 && lon <= 45) {return 'Mediterranean';} // Mediterranean Basin
+
+    // Asia (4 regions)
+    if (lat >= 24 && lat <= 46 && lon >= 121 && lon <= 146) {return 'East Asia';} // Japan, Korea, East China
+    if (lat >= -11 && lat <= 24 && lon >= 95 && lon <= 141) {return 'Southeast Asia';} // SE Asia
+    if (lat >= 8 && lat <= 37 && lon >= 68 && lon <= 97) {return 'South Asia';} // India, Pakistan, Bangladesh
+    if (lat >= 12 && lat <= 42 && lon >= 35 && lon <= 63) {return 'Middle East';} // Middle East
+
+    // Africa (2 regions)
+    if (lat >= 20 && lat <= 37 && lon >= -18 && lon <= 52) {return 'North Africa';} // North Africa
+    if (lat >= -35 && lat <= 17 && lon >= -18 && lon <= 52) {return 'Sub-Saharan Africa';} // Sub-Saharan Africa
+
+    // Oceania/Pacific (2 regions)
+    if (lat >= -44 && lat <= -10 && lon >= 113 && lon <= 154) {return 'Australia';} // Australia
+    if (lat >= -37 && lat <= -9 && (lon >= 160 || lon <= -140)) {return 'Pacific Islands';} // Pacific Islands
+
+    // Polar/Ocean (2 regions)
+    if (lat >= 66 || (lat >= 60 && lon >= -170 && lon <= -52)) {return 'Arctic';} // Arctic regions
+
+    // Default fallback
     return 'Ocean';
   }
 

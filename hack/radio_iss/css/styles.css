@@ -6,8 +6,8 @@ body {
 /* Mobile responsive radio UI */
 @media (width <= 768px) {
   .radio-ui {
-    max-width: min(85vw, 280px);
-    min-width: 240px;
+    max-width: min(90vw, 340px);
+    min-width: 300px;
     padding: 10px 14px;
   }
   
@@ -35,8 +35,8 @@ body {
   font-family: system-ui, -apple-system, Segoe UI, Roboto, Ubuntu, Cantarell, Noto Sans, Arial, sans-serif;
   font-size: 11px;
   backdrop-filter: blur(8px);
-  max-width: min(75vw, 260px);
-  min-width: 220px;
+  max-width: min(80vw, 320px);
+  min-width: 280px;
   transition: all 0.2s ease;
   display: flex;
   flex-direction: column;
@@ -56,7 +56,7 @@ body {
   white-space: nowrap;
   overflow: visible;
   text-overflow: unset;
-  min-width: 180px;
+  min-width: 240px;
   line-height: 1.2;
 }
 
