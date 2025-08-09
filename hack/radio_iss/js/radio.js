@@ -123,6 +123,13 @@ class RadioManager {
       if (this.radioHint && !this.radioHint.classList.contains('fade-out')) {
         setTimeout(() => {
           this.radioHint.classList.add('fade-out');
+          // Remove the element completely after fade-out animation (0.8s) completes
+          setTimeout(() => {
+            if (this.radioHint && this.radioHint.parentNode) {
+              this.radioHint.parentNode.removeChild(this.radioHint);
+              this.radioHint = null;
+            }
+          }, 800);
         }, 2000);
       }
     }
