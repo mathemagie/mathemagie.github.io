@@ -15,9 +15,11 @@ echo "URL: $URL"
 echo "Expected commit: $EXPECTED_COMMIT"
 echo ""
 
-# Fetch the live page
-echo "📥 Fetching live page..."
-if curl -s -L "$URL" -o "$TEMP_FILE"; then
+# Fetch the live page with cache-busting to avoid stale CDN
+echo "📥 Fetching live page (cache-busting)..."
+TS=$(date +%s)
+FETCH_URL="${URL}?v=${TS}"
+if curl -s -L -H 'Cache-Control: no-cache' -H 'Pragma: no-cache' "$FETCH_URL" -o "$TEMP_FILE"; then
     echo "✅ Successfully fetched page"
 else
     echo "❌ Failed to fetch page"
