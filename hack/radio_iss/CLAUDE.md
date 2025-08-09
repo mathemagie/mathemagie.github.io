@@ -85,6 +85,29 @@ radio_iss/
 
 **Running the application**: Simply open `index.html` in a web browser - no build process required.
 
+**Testing**: Run unit tests with Vitest:
+```bash
+npm test           # Run tests once
+npm run test:watch # Run tests in watch mode
+```
+Tests are located in `tests/` directory and cover core functionality of RadioManager and GeographyManager classes.
+
+**Linting**: Code quality is maintained with multiple linters:
+```bash
+npm run lint       # Run all linters (HTML, JS, CSS)
+npm run lint:html  # HTMLHint for HTML files
+npm run lint:js    # ESLint for JavaScript files  
+npm run lint:css   # Stylelint for CSS files
+npm run lint:fix   # Auto-fix JavaScript issues
+```
+
+**Pre-commit Hooks**: Automated quality checks run before each commit:
+- HTML linting with HTMLHint
+- JavaScript linting with ESLint (auto-fix enabled)
+- CSS linting with Stylelint (auto-fix enabled)  
+- Unit tests execution
+- All checks must pass before commit is allowed
+
 **Debug Features**:
 - Add `?debug=1` to URL for simulation mode (cycles through all regions)
 - Press 'm' key to visualize continent outline points  
