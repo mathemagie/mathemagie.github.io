@@ -27,8 +27,6 @@ class RadioManager {
     this.stationLabel = document.getElementById('station-label');
     this.fullscreenBtn = document.getElementById('fullscreen-btn');
     this.playBtn = document.getElementById('play-btn');
-    this.timeDisplay = document.getElementById('time-display');
-    this.progressBar = document.getElementById('progress-bar');
     this.radioHint = document.querySelector('.radio-hint');
 
     this.setupEventListeners();
@@ -47,11 +45,6 @@ class RadioManager {
 
 
     if (this.radioPlayer) {
-      this.radioPlayer.addEventListener('timeupdate', () => this.updateProgress());
-      this.radioPlayer.addEventListener('loadstart', () => {
-        this.timeDisplay.textContent = '0:00 / 0:00';
-        this.progressBar.style.width = '0%';
-      });
       this.radioPlayer.addEventListener('play', () => {
         this.isPlaying = true;
         this.playBtn.textContent = '⏸';
@@ -93,8 +86,8 @@ class RadioManager {
     const newSrc = station.url;
     const currentSrc = this.radioPlayer.currentSrc || this.radioPlayer.src;
     const isDifferent = !currentSrc || !currentSrc.includes(newSrc);
-    // Update label regardless
-    this.stationLabel.textContent = `${station.name} — ${region}`;
+    // Update label with compact format
+    this.stationLabel.textContent = `${station.name} • ${region}`;
     if (!isDifferent) {return;}
     this.radioPlayer.src = newSrc;
     this.radioPlayer.dataset.station = station.name;
@@ -142,24 +135,6 @@ class RadioManager {
     // Volume button removed from UI
   }
 
-  updateProgress() {
-    if (!this.radioPlayer || !this.timeDisplay || !this.progressBar) {return;}
-
-    // For live streams, we'll show a simulated progress for visual feedback
-    const currentTime = this.radioPlayer.currentTime || 0;
-    const minutes = Math.floor(currentTime / 60);
-    const seconds = Math.floor(currentTime % 60);
-    const timeString = `${minutes}:${seconds.toString().padStart(2, '0')}`;
-
-    // Since most radio streams are live, we'll show current time / live
-    this.timeDisplay.textContent = `${timeString} / Live`;
-
-    // Simulate progress for live streams (cycling animation)
-    if (this.isPlaying) {
-      const progress = ((Date.now() / 1000) % 30) / 30 * 100; // 30-second cycle
-      this.progressBar.style.width = `${progress}%`;
-    }
-  }
 
   // Fullscreen helpers
   isFullscreen() {

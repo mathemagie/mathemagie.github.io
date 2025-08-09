@@ -56,7 +56,7 @@ describe('RadioManager', () => {
 
     rm.setStationForRegion('Europe');
 
-    expect(label.textContent).toContain('Radio Swiss Pop — Europe');
+    expect(label.textContent).toContain('Radio Swiss Pop • Europe');
     expect(audio.src).toContain('https://stream.srg-ssr.ch/m/rsp/mp3_128');
     expect(audio.dataset.station).toBe('Radio Swiss Pop');
   });
