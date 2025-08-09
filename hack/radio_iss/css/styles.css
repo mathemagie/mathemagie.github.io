@@ -6,8 +6,8 @@ body {
 /* Mobile responsive radio UI */
 @media (width <= 768px) {
   .radio-ui {
-    max-width: min(50vw, 140px);
-    min-width: 120px;
+    max-width: min(70vw, 220px);
+    min-width: 180px;
     padding: 10px 14px;
   }
   
@@ -19,7 +19,7 @@ body {
   }
   
   .station-info {
-    font-size: 12px;
+    font-size: 13px;
   }
 }
 
@@ -35,8 +35,8 @@ body {
   font-family: system-ui, -apple-system, Segoe UI, Roboto, Ubuntu, Cantarell, Noto Sans, Arial, sans-serif;
   font-size: 11px;
   backdrop-filter: blur(8px);
-  max-width: min(40vw, 140px);
-  min-width: 120px;
+  max-width: min(60vw, 200px);
+  min-width: 160px;
   transition: all 0.2s ease;
   display: flex;
   flex-direction: column;
@@ -50,18 +50,19 @@ body {
 }
 
 .station-info {
-  font-size: 11px;
-  opacity: 0.9;
+  font-size: 12px;
+  opacity: 0.95;
   flex: 1;
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
-  min-width: 60px;
+  min-width: 100px;
+  line-height: 1.2;
 }
 
 .radio-hint {
   color: rgba(255,255,255,0.8);
-  font-size: 10px;
+  font-size: 11px;
   line-height: 1.3;
   opacity: 1;
   transition: opacity 0.8s ease-out;
