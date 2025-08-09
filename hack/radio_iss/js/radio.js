@@ -161,7 +161,7 @@ class RadioManager {
   updateFullscreenUI() {
     const active = this.isFullscreen();
     if (this.fullscreenBtn) {
-      this.fullscreenBtn.textContent = active ? 'Exit Fullscreen' : 'Enter Fullscreen';
+      this.fullscreenBtn.textContent = '⛶';
       this.fullscreenBtn.setAttribute('aria-pressed', active ? 'true' : 'false');
     }
   }
