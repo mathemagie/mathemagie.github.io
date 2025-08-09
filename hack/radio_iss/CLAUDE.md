@@ -90,7 +90,16 @@ radio_iss/
 npm test           # Run tests once
 npm run test:watch # Run tests in watch mode
 ```
-Tests are located in `tests/` directory and cover core functionality of RadioManager and GeographyManager classes.
+Tests are located in `tests/` directory and cover:
+- **RadioManager**: Region detection, station switching, audio controls
+- **GeographyManager**: Coordinate conversions, ISS tracking  
+- **Resize functionality**: Comprehensive coverage of window resize and fullscreen behavior including:
+  - Particle repositioning during resize operations
+  - Geographic data persistence across canvas dimension changes
+  - ISS particle wrapping and bounds handling
+  - Particle state preservation (moving, resetting, collision states)
+  - Velocity limiting and coordinate conversion accuracy
+  - Error handling for missing data scenarios
 
 **Linting**: Code quality is maintained with multiple linters:
 ```bash
