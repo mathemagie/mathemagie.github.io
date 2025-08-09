@@ -15,8 +15,8 @@ body {
   font-family: system-ui, -apple-system, Segoe UI, Roboto, Ubuntu, Cantarell, Noto Sans, Arial, sans-serif;
   font-size: 12px;
   backdrop-filter: blur(8px);
-  max-width: min(45vw, 160px);
-  min-width: 120px;
+  max-width: min(56vw, 200px);
+  min-width: 150px;
 }
 
 .radio-header {
