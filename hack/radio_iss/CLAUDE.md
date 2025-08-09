@@ -108,6 +108,18 @@ npm run lint:fix   # Auto-fix JavaScript issues
 - Unit tests execution
 - All checks must pass before commit is allowed
 
+**Cache-Busting for Development**: When making changes to CSS/JS files, update cache-busting parameters in `index.html`:
+```bash
+# Get current timestamp
+date +%s
+
+# Update index.html with new timestamp for all CSS/JS files:
+# <link rel="stylesheet" href="css/styles.css?v=NEW_TIMESTAMP">
+# <script src="js/main.js?v=NEW_TIMESTAMP"></script>
+# (Apply to all CSS and JS file references)
+```
+This forces browsers to reload updated files instead of using cached versions, essential for testing changes during development iterations.
+
 **Debug Features**:
 - Add `?debug=1` to URL for simulation mode (cycles through all regions)
 - Press 'm' key to visualize continent outline points  
