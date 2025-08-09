@@ -24,6 +24,6 @@ jobs:
 
       - name: Update index.html with commit hash
         run: |
-          sed -E -i "s/(<!-- BEGIN_COMMIT_HASH -->).*(<!-- END_COMMIT_HASH -->)/\\1${{ steps.vars.outputs.sha_short }}\\2/" index.html
+          sed -i -E "s/(<!-- BEGIN_COMMIT_HASH -->)[0-9a-f]+(<!-- END_COMMIT_HASH -->)/\1${{ steps.vars.outputs.sha_short }}\2/" index.html
           echo "Updated index.html with ${{ steps.vars.outputs.sha_short }}"
 
