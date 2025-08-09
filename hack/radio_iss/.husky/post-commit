@@ -3,17 +3,8 @@
 
 cd hack/radio_iss || exit 0
 
-echo "🔄 Updating version comment with latest commit hash..."
-node scripts/update-version-pre-commit.js
-
-# Amend commit only if index.html differs from HEAD (handles staged or unstaged)
-if ! git diff --quiet HEAD -- index.html; then
-  git add index.html
-  git commit --amend --no-edit --no-verify
-  echo "📝 Amended commit with updated version comment"
-else
-  echo "ℹ️  Version comment already up to date; no amend needed"
-fi
+# IMPORTANT: Do not modify or amend commits here — it creates
+# recursive hooks and leaves staged changes after commit/push.
 
 echo "🧪 Verifying deployment..."
 chmod +x verify-deployment.sh 2>/dev/null || true
