@@ -29,6 +29,7 @@ class RadioManager {
     this.playBtn = document.getElementById('play-btn');
     this.timeDisplay = document.getElementById('time-display');
     this.progressBar = document.getElementById('progress-bar');
+    this.radioHint = document.querySelector('.radio-hint');
 
     this.setupEventListeners();
     this.setStationForRegion('Ocean'); // Initial default
@@ -124,6 +125,13 @@ class RadioManager {
       this.radioPlayer.play().catch(() => {
         console.log('Autoplay blocked - user interaction required');
       });
+
+      // Fade out the radio hint after 2 seconds when play is clicked
+      if (this.radioHint && !this.radioHint.classList.contains('fade-out')) {
+        setTimeout(() => {
+          this.radioHint.classList.add('fade-out');
+        }, 2000);
+      }
     }
   }
 

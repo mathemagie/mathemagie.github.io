@@ -163,4 +163,10 @@ body {
   color: rgba(255,255,255,0.8);
   font-size: 11px;
   line-height: 1.3;
+  opacity: 1;
+  transition: opacity 0.8s ease-out;
+}
+
+.radio-hint.fade-out {
+  opacity: 0;
 }

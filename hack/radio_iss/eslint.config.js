@@ -11,6 +11,7 @@ module.exports = [
         fetch: "readonly",
         URLSearchParams: "readonly",
         setInterval: "readonly",
+        setTimeout: "readonly",
         // p5.js globals
         createCanvas: "readonly",
         windowWidth: "readonly",
