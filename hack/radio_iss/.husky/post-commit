@@ -1,0 +1,21 @@
+#!/usr/bin/env sh
+. "$(dirname -- "$0")/_/husky.sh"
+
+cd hack/radio_iss
+
+echo "🔄 Updating version comment with latest commit hash..."
+
+# Get the latest commit hash (the one just created)
+LATEST_COMMIT=$(git log --format="%h" -1)
+
+# Update the version comment in index.html
+sed -i.bak "s/<!-- Version: commit [a-f0-9]\{7\} - /<!-- Version: commit $LATEST_COMMIT - /" index.html
+rm -f index.html.bak
+
+echo "✅ Updated version comment to: $LATEST_COMMIT"
+
+# Create an amend commit to include the version update
+git add index.html
+git commit --amend --no-edit --no-verify
+
+echo "📝 Amended commit with updated version comment"
