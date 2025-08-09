@@ -5,9 +5,10 @@
   "main": "index.js",
   "scripts": {
     "test": "vitest run",
-    "lint": "npm run lint:html && npm run lint:js",
+    "lint": "npm run lint:html && npm run lint:js && npm run lint:css",
     "lint:html": "htmlhint index.html",
     "lint:js": "eslint js/**/*.js",
+    "lint:css": "stylelint css/**/*.css",
     "lint:fix": "eslint js/**/*.js --fix",
     "prepare": "husky",
     "test:watch": "vitest"
@@ -22,6 +23,8 @@
     "husky": "^9.1.7",
     "jsdom": "^26.1.0",
     "lint-staged": "^16.1.5",
+    "stylelint": "^16.23.1",
+    "stylelint-config-standard": "^39.0.0",
     "vitest": "^3.2.4"
   },
   "lint-staged": {
@@ -31,7 +34,10 @@
     "js/**/*.js": [
       "eslint --fix"
     ],
-    "*.{js,html}": [
+    "css/**/*.css": [
+      "stylelint --fix"
+    ],
+    "*.{js,html,css}": [
       "bash -c 'npm run test'"
     ]
   }
