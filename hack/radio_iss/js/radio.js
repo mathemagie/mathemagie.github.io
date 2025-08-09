@@ -7,8 +7,6 @@ class RadioManager {
     this.playBtn = null;
     this.timeDisplay = null;
     this.progressBar = null;
-    this.volumeBtn = null;
-    this.menuBtn = null;
     this.currentRegion = null;
     this.isPlaying = false;
 
@@ -31,8 +29,6 @@ class RadioManager {
     this.playBtn = document.getElementById('play-btn');
     this.timeDisplay = document.getElementById('time-display');
     this.progressBar = document.getElementById('progress-bar');
-    this.volumeBtn = document.getElementById('volume-btn');
-    this.menuBtn = document.getElementById('menu-btn');
 
     this.setupEventListeners();
     this.setStationForRegion('Ocean'); // Initial default
@@ -48,9 +44,6 @@ class RadioManager {
       this.playBtn.addEventListener('click', () => this.togglePlayback());
     }
 
-    if (this.volumeBtn) {
-      this.volumeBtn.addEventListener('click', () => this.toggleMute());
-    }
 
     if (this.radioPlayer) {
       this.radioPlayer.addEventListener('timeupdate', () => this.updateProgress());
@@ -138,7 +131,7 @@ class RadioManager {
     if (!this.radioPlayer) {return;}
 
     this.radioPlayer.muted = !this.radioPlayer.muted;
-    this.volumeBtn.textContent = this.radioPlayer.muted ? '🔇' : '🔊';
+    // Volume button removed from UI
   }
 
   updateProgress() {
@@ -188,9 +181,23 @@ class RadioManager {
 
   toggleFullscreen() {
     if (this.isFullscreen()) {
-      this.exitFullscreen().catch(() => {});
+      this.exitFullscreen().then(() => {
+        // Delay to allow DOM to update before resize
+        window.setTimeout(() => {
+          if (window.geographyManager) {
+            window.geographyManager.repositionParticlesAfterResize();
+          }
+        }, 100);
+      }).catch(() => {});
     } else {
-      this.enterFullscreen().catch(() => {});
+      this.enterFullscreen().then(() => {
+        // Delay to allow DOM to update before resize
+        window.setTimeout(() => {
+          if (window.geographyManager) {
+            window.geographyManager.repositionParticlesAfterResize();
+          }
+        }, 100);
+      }).catch(() => {});
     }
   }
 }

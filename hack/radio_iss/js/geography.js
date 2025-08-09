@@ -106,35 +106,85 @@ class GeographyManager {
 
   // Reposition all particles based on their stored geographic data
   repositionParticlesAfterResize() {
+    console.log(`Repositioning particles after resize... Canvas: ${width}x${height}`);
+
     // Regenerate continent points with new canvas dimensions
     this.generateContinentPoints();
 
+    // Check if we have the necessary data
+    if (!window.particles || !window.particleGeoData) {
+      console.warn('Missing particles or geographic data for resize');
+      return;
+    }
+
+    console.log(`Repositioning ${window.particles.length} particles using ${window.particleGeoData.length} geo data points`);
+
     // Reposition continent-based particles
-    for (let i = 0; i < window.particles.length - 1; i++) { // All particles except ISS
+    const regularParticleCount = window.particles.length - 1; // All particles except ISS
+    for (let i = 0; i < regularParticleCount; i++) {
       const particle = window.particles[i];
       const geoData = window.particleGeoData[i];
 
-      if (geoData) {
+      if (particle && geoData) {
+        // Store old position for comparison
+        const oldX = particle.pos.x;
+        const oldY = particle.pos.y;
+
         // Convert geographic coordinates back to new screen coordinates
         const newPos = this.latLonToXY(geoData.lat, geoData.lon);
         particle.pos.set(newPos.x, newPos.y);
         particle.originalPos.set(newPos.x, newPos.y);
 
-        // If particle was resetting, maintain reset state but update positions
+        // Ensure particle stays within canvas bounds
+        particle.pos.x = constrain(particle.pos.x, particle.r || 10, width - (particle.r || 10));
+        particle.pos.y = constrain(particle.pos.y, particle.r || 10, height - (particle.r || 10));
+        particle.originalPos.x = particle.pos.x;
+        particle.originalPos.y = particle.pos.y;
+
+        // Log position change for debugging
+        if (i < 3) { // Only log first 3 particles to avoid spam
+          console.log(`Particle ${i}: (${oldX.toFixed(1)}, ${oldY.toFixed(1)}) -> (${particle.pos.x.toFixed(1)}, ${particle.pos.y.toFixed(1)}) | Geo: ${geoData.lat.toFixed(2)}, ${geoData.lon.toFixed(2)}`);
+        }
+
+
+        // If particle was resetting, recalculate reset animation with new positions
         if (particle.isResetting) {
-          // The reset animation will continue from the new positions
-          continue;
+          // Reset animation will continue to the new originalPos
+          // No additional action needed as originalPos has been updated above
+        }
+
+        // Constrain moving particles to new canvas bounds
+        if (particle.isMoving && !particle.isResetting) {
+          particle.vel.limit(3); // Ensure velocity doesn't get too high during resize
         }
       }
     }
 
-    // Reposition ISS particle
+    // Reposition ISS particle with proper wrapping
     const issParticle = window.particles[window.particles.length - 1]; // ISS is last particle
-    if (issParticle && issParticle.isIss) {
+    if (issParticle && issParticle.isIss && this.issGeoData) {
       const issPos = this.latLonToXY(this.issGeoData.lat, this.issGeoData.lon);
-      issParticle.pos.set(issPos.x, issPos.y);
-      issParticle.target.set(issPos.x, issPos.y);
+
+      // Handle horizontal wrapping for ISS (longitude -180 to 180 maps to 0 to width)
+      let wrappedX = issPos.x;
+      if (wrappedX < 0) {
+        wrappedX += width;
+      }
+      if (wrappedX > width) {
+        wrappedX -= width;
+      }
+
+      issParticle.pos.set(wrappedX, issPos.y);
+      issParticle.target.set(wrappedX, issPos.y);
+
+      // Ensure ISS stays within vertical bounds
+      issParticle.pos.y = constrain(issParticle.pos.y, 0, height);
+      issParticle.target.y = constrain(issParticle.target.y, 0, height);
+
+      console.log(`ISS repositioned to: (${wrappedX}, ${issParticle.pos.y})`);
     }
+
+    console.log('Particle repositioning complete');
   }
 
   initTracking(radioManager) {

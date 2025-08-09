@@ -92,11 +92,35 @@ class Particle {
 
   update() {
     if (this.isIss) {
-      const desired = p5.Vector.sub(this.target, this.pos);
+      // Handle ISS horizontal wrapping at world edges
+      const target = this.target.copy();
+      const pos = this.pos.copy();
+
+      // Calculate shortest path considering wrapping
+      const directDistance = Math.abs(target.x - pos.x);
+      const wrapDistance = width - directDistance;
+
+      if (wrapDistance < directDistance) {
+        // Wrapping is shorter, adjust target
+        if (target.x > pos.x) {
+          target.x -= width;
+        } else {
+          target.x += width;
+        }
+      }
+
+      const desired = p5.Vector.sub(target, pos);
       desired.setMag(2);
       const steer = p5.Vector.sub(desired, this.vel);
       steer.limit(0.1);
       this.vel.add(steer);
+      this.pos.add(this.vel);
+
+      // Apply horizontal wrapping for ISS (longitude wrapping)
+      this.pos.x = ((this.pos.x % width) + width) % width;
+      this.pos.y = constrain(this.pos.y, 0, height);
+
+      return; // Skip normal position update for ISS
     } else if (this.isResetting) {
       // Handle bubble reset animation
       this.resetProgress += 0.025; // Slightly faster animation speed
@@ -135,19 +159,17 @@ class Particle {
       }
     }
 
-    if (this.isMoving && !this.isResetting) {
+    if (this.isMoving && !this.isResetting && !this.isIss) {
       this.pos.add(this.vel);
 
-      // Bounce off edges only for moving non-ISS particles
-      if (!this.isIss) {
-        if (this.pos.x < this.r || this.pos.x > width - this.r) {
-          this.vel.x *= -1;
-          this.pos.x = constrain(this.pos.x, this.r, width - this.r);
-        }
-        if (this.pos.y < this.r || this.pos.y > height - this.r) {
-          this.vel.y *= -1;
-          this.pos.y = constrain(this.pos.y, this.r, height - this.r);
-        }
+      // Bounce off edges for moving non-ISS particles
+      if (this.pos.x < this.r || this.pos.x > width - this.r) {
+        this.vel.x *= -1;
+        this.pos.x = constrain(this.pos.x, this.r, width - this.r);
+      }
+      if (this.pos.y < this.r || this.pos.y > height - this.r) {
+        this.vel.y *= -1;
+        this.pos.y = constrain(this.pos.y, this.r, height - this.r);
       }
     }
   }
