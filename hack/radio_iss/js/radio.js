@@ -209,8 +209,11 @@ class RadioManager {
 
   enterFullscreen() {
     const root = document.documentElement;
+    // Prefer Element fullscreen APIs
     if (root.requestFullscreen) {return root.requestFullscreen();}
     if (root.webkitRequestFullscreen) {return root.webkitRequestFullscreen();}
+    // iOS Safari does not support requestFullscreen reliably in page context
+    // As a fallback, prompt Add to Home Screen PWA for true fullscreen experience.
     return Promise.resolve();
   }
 

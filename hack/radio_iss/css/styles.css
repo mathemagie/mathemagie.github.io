@@ -1,6 +1,20 @@
-body {
+body, html {
   margin: 0;
+  padding: 0;
+  height: 100%;
+  width: 100%;
+}
+
+/* iOS Safari 100vh fix */
+:root {
+  --vh: 1vh;
+}
+
+body {
   overflow: hidden;
+  background-color: #000;
+  min-height: 100vh;
+  min-height: calc(var(--vh, 1vh) * 100);
 }
 
 /* Mobile responsive radio UI */
@@ -124,7 +138,7 @@ body {
   transform: scale(1.05);
 }
 
-/* Hide fullscreen button on mobile devices */
+/* Hide fullscreen button on mobile devices (iOS Fullscreen via PWA or UA chrome only) */
 @media (width <= 768px), (hover: none) and (pointer: coarse) {
   .fullscreen-btn-floating {
     display: none;

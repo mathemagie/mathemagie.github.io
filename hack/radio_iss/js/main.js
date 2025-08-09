@@ -8,6 +8,15 @@ let radioManager;
 let geographyManager;
 
 function setup() {
+  // iOS Safari viewport height fix
+  const setVh = () => {
+    const visualHeight = window.visualViewport ? window.visualViewport.height : window.innerHeight;
+    document.documentElement.style.setProperty('--vh', `${visualHeight * 0.01}px`);
+  };
+  setVh();
+  window.addEventListener('resize', setVh);
+  window.addEventListener('orientationchange', setVh);
+
   createCanvas(windowWidth, windowHeight);
 
   // Initialize managers
@@ -23,10 +32,13 @@ function setup() {
 
   // Set up fullscreen event listeners for canvas resizing
   document.addEventListener('fullscreenchange', () => {
+    // Recompute vh then resize canvas
+    setVh();
     resizeCanvas(windowWidth, windowHeight);
     geographyManager.repositionParticlesAfterResize();
   });
   document.addEventListener('webkitfullscreenchange', () => {
+    setVh();
     resizeCanvas(windowWidth, windowHeight);
     geographyManager.repositionParticlesAfterResize();
   });
