@@ -4,21 +4,6 @@
 cd hack/radio_iss
 
 # Auto-update version comment with latest commit hash
-INDEX_FILE="index.html"
-if git diff --cached --name-only | grep -q "^hack/radio_iss/$INDEX_FILE$"; then
-    echo "🔄 Auto-updating version comment with latest commit hash..."
-    
-    # Get the latest commit hash (7 characters)
-    LATEST_COMMIT=$(git log --format="%h" -1 2>/dev/null || echo "unknown")
-    
-    # Update the version comment
-    sed -i.bak "s/<!-- Version: commit [a-f0-9]\{7\} - /<!-- Version: commit $LATEST_COMMIT - /" "$INDEX_FILE"
-    rm -f "${INDEX_FILE}.bak"
-    
-    echo "✅ Updated version comment to: $LATEST_COMMIT"
-    
-    # Re-add the modified file to the staging area
-    git add "hack/radio_iss/$INDEX_FILE"
-fi
+node scripts/update-version-pre-commit.js
 
 npx lint-staged
