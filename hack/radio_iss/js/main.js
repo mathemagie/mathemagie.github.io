@@ -1,5 +1,5 @@
 /* eslint-env browser */
-/* global setup, draw, windowResized, keyPressed, createCanvas, background, fill, noStroke, circle, text, textSize, key, keyIsPressed, width, height, random, constrain, lerp, dist, cos, sin, TWO_PI, rect, navigator */
+/* global setup, draw, windowResized, keyPressed, createCanvas, background, fill, noStroke, circle, text, textSize, key, keyIsPressed, keyCode, width, height, random, constrain, lerp, dist, cos, sin, TWO_PI, rect, navigator */
 
 // Main application for ISS Radio
 // Global variables
@@ -19,6 +19,8 @@ let particleGeoData = []; // Store original geographic data for particles
 let radioManager;
 let geographyManager;
 let showContinentOutlines = false; // Toggle for continent outline visualization
+let helpOverlayEl; // Help overlay element
+let helpOverlayVisible = false;
 
 function setup() {
   // iOS Safari viewport height fix
@@ -42,6 +44,13 @@ function setup() {
 
   // Initialize radio UI
   radioManager.init();
+
+  // Help overlay wiring
+  helpOverlayEl = document.getElementById('help-overlay');
+  const overlayDismissEls = document.querySelectorAll('[data-overlay-dismiss]');
+  overlayDismissEls.forEach((el) => {
+    el.addEventListener('click', () => hideHelpOverlay());
+  });
 
   // Set up fullscreen event listeners for canvas resizing
   document.addEventListener('fullscreenchange', () => {
@@ -163,6 +172,30 @@ function keyPressed() {
       radioManager.togglePlayback();
     }
   }
+  // Toggle help overlay on '?' key
+  if (key === '?') {
+    if (helpOverlayVisible) {
+      hideHelpOverlay();
+    } else {
+      showHelpOverlay();
+    }
+  }
+  // Close help with Esc
+  if (keyCode === 27 && helpOverlayVisible) {
+    hideHelpOverlay();
+  }
+}
+
+function showHelpOverlay() {
+  if (!helpOverlayEl) {return;}
+  helpOverlayEl.setAttribute('aria-hidden', 'false');
+  helpOverlayVisible = true;
+}
+
+function hideHelpOverlay() {
+  if (!helpOverlayEl) {return;}
+  helpOverlayEl.setAttribute('aria-hidden', 'true');
+  helpOverlayVisible = false;
 }
 
 function draw() {

@@ -6,7 +6,7 @@ Below is a numbered, actionable list of UX improvements. Each item is scoped to 
    - Brief, auto-fading tooltip on first load: “Press P to play/pause, F fullscreen, M outlines. Tap ⛶ on mobile.”
    - Auto-hide after 6–8s or on any interaction.
 
-2. [ ] Help overlay (shortcut `?`)
+2. [x] Help overlay (shortcut `?`)
    - Press `?` to open a lightweight overlay listing shortcuts and toggles; tap/click outside or press `Esc` to dismiss.
    - Include: P play/pause, F fullscreen, M outlines, ? help; show mobile equivalents.
 
