@@ -20,20 +20,42 @@ body {
 /* Mobile responsive radio UI */
 @media (width <= 768px) {
   .radio-ui {
-    max-width: min(90vw, 340px);
-    min-width: 300px;
-    padding: 10px 14px;
+    max-width: 92vw;
+    min-width: 260px;
+    padding: 8px 10px;
+    gap: 4px;
+    border-radius: 8px;
+    left: max(6px, env(safe-area-inset-left));
+    top: max(6px, env(safe-area-inset-top));
+  }
+  
+  .radio-controls {
+    transform: scale(1);
+    gap: 6px;
   }
   
   .play-btn {
-    width: 32px;
-    height: 32px;
-    min-width: 32px;
-    font-size: 12px;
+    width: 24px;
+    height: 24px;
+    min-width: 24px;
+    font-size: 10px;
   }
   
   .station-info {
-    font-size: 13px;
+    font-size: 11px;
+    min-width: 120px;
+    white-space: normal;
+    overflow: visible;
+    line-height: 1.1;
+  }
+  
+  .radio-hint {
+    font-size: 12px;
+    padding: 4px;
+    margin-top: 0;
+    line-height: 1.1;
+    white-space: normal;
+    overflow-wrap: break-word;
   }
 }
 
