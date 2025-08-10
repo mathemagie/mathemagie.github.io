@@ -1,10 +1,19 @@
 /* eslint-env browser */
-/* global setup, draw, windowResized, keyPressed, createCanvas, background, fill, noStroke, circle, text, textSize, key, keyIsPressed, width, height, random, constrain, lerp, dist, cos, sin, TWO_PI, rect */
+/* global setup, draw, windowResized, keyPressed, createCanvas, background, fill, noStroke, circle, text, textSize, key, keyIsPressed, width, height, random, constrain, lerp, dist, cos, sin, TWO_PI, rect, navigator */
 
 // Main application for ISS Radio
 // Global variables
 const particles = [];
-const numParticles = 150;
+
+// Mobile detection function
+function isMobileDevice() {
+  return /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent) ||
+         (typeof window.orientation !== 'undefined') ||
+         window.innerWidth <= 768;
+}
+
+// Adjust particle count based on device type
+const numParticles = isMobileDevice() ? 75 : 150;
 const continentPoints = [];
 let particleGeoData = []; // Store original geographic data for particles
 let radioManager;
