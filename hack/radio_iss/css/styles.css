@@ -193,3 +193,86 @@ body {
   background: rgba(255,255,255,0.3);
 }
 
+/* Help overlay */
+.help-overlay {
+  position: fixed;
+  inset: 0;
+  display: none;
+  z-index: 20;
+}
+
+.help-overlay[aria-hidden="false"] {
+  display: block;
+}
+
+.help-overlay-backdrop {
+  position: absolute;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.6);
+  backdrop-filter: blur(4px);
+}
+
+.help-overlay-dialog {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  background: rgba(0,0,0,0.92);
+  color: #fff;
+  border-radius: 14px;
+  padding: 18px 18px 14px;
+  width: min(92vw, 520px);
+  box-shadow: 0 8px 40px rgba(0,0,0,0.6);
+  font-family: system-ui, -apple-system, Segoe UI, Roboto, Ubuntu, Cantarell, Noto Sans, Arial, sans-serif;
+}
+
+.help-overlay-title {
+  margin: 0 0 8px;
+  font-size: 18px;
+}
+
+.help-overlay-list {
+  margin: 0 0 10px;
+  padding-left: 18px;
+  line-height: 1.6;
+  font-size: 14px;
+}
+
+.help-overlay-list kbd {
+  background: rgba(255,255,255,0.12);
+  border: 1px solid rgba(255,255,255,0.2);
+  border-bottom-width: 2px;
+  border-radius: 6px;
+  padding: 2px 6px;
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
+  font-size: 12px;
+}
+
+.help-overlay-hint {
+  margin: 0;
+  opacity: 0.8;
+  font-size: 12px;
+}
+
+.help-overlay-close {
+  position: absolute;
+  top: 10px;
+  right: 10px;
+  width: 28px;
+  height: 28px;
+  border-radius: 6px;
+  border: 1px solid rgba(255,255,255,0.3);
+  background: rgba(255,255,255,0.08);
+  color: #fff;
+  cursor: pointer;
+}
+
+@media (width <= 768px) {
+  .help-overlay-dialog {
+    padding: 16px 14px 12px;
+  }
+  .help-overlay-title {font-size: 16px;}
+  .help-overlay-list {font-size: 13px;}
+  .help-overlay-hint {font-size: 12px;}
+}
+
