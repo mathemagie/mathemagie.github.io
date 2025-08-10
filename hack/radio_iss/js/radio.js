@@ -54,10 +54,7 @@ class RadioManager {
   init() {
     // Wire radio UI elements
     this.radioPlayer = document.getElementById('radio-player');
-    if (this.radioPlayer) {
-      // Attempt to allow WebAudio analysis on CORS-enabled streams
-      this.radioPlayer.crossOrigin = 'anonymous';
-    }
+    // Do NOT force crossOrigin on streams; some stations reject CORS and break playback
     this.stationLabel = document.getElementById('station-label');
     this.fullscreenBtn = document.getElementById('fullscreen-btn');
     this.playBtn = document.getElementById('play-btn');
@@ -98,13 +95,9 @@ class RadioManager {
             this.analyser = this.audioContext.createAnalyser();
             this.analyser.fftSize = 256; // small, low cost
             this.analyser.smoothingTimeConstant = 0.85;
-            const gain = this.audioContext.createGain();
-            // Keep gain ~0 to avoid double audio in browsers that already play element directly
-            gain.gain.value = 0.00001;
-            // Route: element -> analyser -> (near-silent) gain -> destination
+            // Route: element -> analyser (no destination to avoid double audio)
+            // The <audio> element still outputs directly; analyser only taps the signal
             this.mediaSource.connect(this.analyser);
-            this.analyser.connect(gain);
-            gain.connect(this.audioContext.destination);
             this.startLevelPolling();
           }
         } catch {
@@ -207,8 +200,6 @@ class RadioManager {
     // Update label with compact format
     this.stationLabel.textContent = `${station.name} • ${region}`;
     if (!isDifferent) {return;}
-    // Ensure crossOrigin stays set before changing src
-    this.radioPlayer.crossOrigin = 'anonymous';
     this.radioPlayer.src = newSrc;
     this.radioPlayer.dataset.station = station.name;
     if (wasPlaying) {
