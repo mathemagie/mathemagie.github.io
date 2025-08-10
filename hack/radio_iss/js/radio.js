@@ -1,3 +1,4 @@
+/* eslint-env browser */
 // Radio functionality for ISS Radio application
 class RadioManager {
   constructor() {
@@ -9,6 +10,7 @@ class RadioManager {
     this.progressBar = null;
     this.currentRegion = null;
     this.isPlaying = false;
+    this.toastContainer = null;
 
     this.regionStations = {
       // Americas (6 regions)
@@ -52,6 +54,7 @@ class RadioManager {
     this.fullscreenBtn = document.getElementById('fullscreen-btn');
     this.playBtn = document.getElementById('play-btn');
     this.radioHint = document.querySelector('.radio-hint');
+    this.ensureToastContainer();
 
     this.setupEventListeners();
     this.setStationForRegion('Ocean'); // Initial default
@@ -154,8 +157,17 @@ class RadioManager {
   updateRadioForLocation(lat, lon) {
     const region = this.getRegion(lat, lon);
     if (region !== this.currentRegion) {
+      const previousRegion = this.currentRegion;
       this.currentRegion = region;
       this.setStationForRegion(region);
+
+      // Show non-blocking toast on region switch (skip initial set)
+      if (previousRegion !== null) {
+        const station = this.regionStations[region] || this.regionStations['Ocean'];
+        if (station && station.name) {
+          this.showRegionToast(region, station.name);
+        }
+      }
     }
   }
 
@@ -243,6 +255,72 @@ class RadioManager {
         }, 100);
       }).catch(() => {});
     }
+  }
+
+  ensureToastContainer() {
+    if (this.toastContainer) {return;}
+    const existing = document.getElementById('toast-container');
+    if (existing) {
+      this.toastContainer = existing;
+      return;
+    }
+    const container = document.createElement('div');
+    container.id = 'toast-container';
+    container.className = 'toast-container';
+    document.body.appendChild(container);
+    this.toastContainer = container;
+  }
+
+  showRegionToast(region, stationName) {
+    this.ensureToastContainer();
+    if (!this.toastContainer) {return;}
+
+    const prefersReducedMotion = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+    const toast = document.createElement('div');
+    toast.className = 'toast';
+    toast.setAttribute('role', 'status');
+    toast.setAttribute('aria-live', 'polite');
+    toast.textContent = `Over ${region} — ${stationName}`;
+
+    // Limit maximum stacked toasts
+    const maxToasts = 3;
+    while (this.toastContainer.children.length >= maxToasts) {
+      this.toastContainer.removeChild(this.toastContainer.firstChild);
+    }
+
+    this.toastContainer.appendChild(toast);
+
+    // Trigger entrance
+    if (!prefersReducedMotion) {
+      if (typeof window.requestAnimationFrame === 'function') {
+        window.requestAnimationFrame(() => {
+          toast.classList.add('show');
+        });
+      } else {
+        setTimeout(() => { toast.classList.add('show'); }, 0);
+      }
+    } else {
+      toast.classList.add('show');
+    }
+
+    // Auto-dismiss after 3.5s
+    const lifetimeMs = 3500;
+    window.setTimeout(() => {
+      if (!toast.parentNode) {return;}
+      if (!prefersReducedMotion) {
+        toast.classList.remove('show');
+        // Wait for transition end before removing
+        const removeAfter = () => {
+          if (toast && toast.parentNode) {toast.parentNode.removeChild(toast);}
+        };
+        toast.addEventListener('transitionend', removeAfter, { once: true });
+        // Fallback removal in case transitionend doesn't fire
+        window.setTimeout(removeAfter, 300);
+      } else {
+        toast.parentNode.removeChild(toast);
+      }
+    }, lifetimeMs);
   }
 }
 

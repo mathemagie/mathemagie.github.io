@@ -10,7 +10,7 @@ Below is a numbered, actionable list of UX improvements. Each item is scoped to 
    - Press `?` to open a lightweight overlay listing shortcuts and toggles; tap/click outside or press `Esc` to dismiss.
    - Include: P play/pause, F fullscreen, M outlines, ? help; show mobile equivalents.
 
-3. [ ] Region switch toast
+3. [x] Region switch toast
    - Non-blocking toast bottom-left on station change: “Over Brazil — SomaFM Bossa Beyond”.
    - Auto-dismiss in 3–4s; respects reduced motion.
 
