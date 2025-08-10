@@ -1,5 +1,5 @@
 /* eslint-env browser */
-/* global setup, draw, windowResized, keyPressed, createCanvas, background, fill, noStroke, circle, text, textSize, key, keyIsPressed, width, height, random, constrain, lerp, dist, cos, sin, TWO_PI, rect, navigator */
+/* global setup, draw, windowResized, keyPressed, createCanvas, background, fill, noStroke, circle, text, textSize, key, keyIsPressed, width, height, random, constrain, lerp, dist, cos, sin, TWO_PI, rect, navigator, beginShape, vertex, endShape, localStorage */
 
 // Main application for ISS Radio
 // Global variables
@@ -19,6 +19,9 @@ let particleGeoData = []; // Store original geographic data for particles
 let radioManager;
 let geographyManager;
 let showContinentOutlines = false; // Toggle for continent outline visualization
+let showIssOverlay = false;
+let showPathTrace = false;
+const issPath = [];
 
 function setup() {
   // iOS Safari viewport height fix
@@ -42,6 +45,40 @@ function setup() {
 
   // Initialize radio UI
   radioManager.init();
+
+  // Wire ISS overlay UI
+  const overlay = document.getElementById('iss-overlay');
+  const infoBtn = document.getElementById('iss-info-btn');
+  const closeBtn = document.getElementById('iss-overlay-close');
+  const pathToggle = document.getElementById('iss-path-toggle');
+
+  // Restore preferences
+  try {
+    showIssOverlay = localStorage.getItem('issOverlayVisible') === '1';
+    showPathTrace = localStorage.getItem('issPathTrace') === '1';
+  } catch {}
+  if (overlay) { overlay.hidden = !showIssOverlay; }
+  if (pathToggle) { pathToggle.checked = showPathTrace; }
+  if (infoBtn) {
+    infoBtn.addEventListener('click', () => {
+      showIssOverlay = !showIssOverlay;
+      if (overlay) { overlay.hidden = !showIssOverlay; }
+      try { localStorage.setItem('issOverlayVisible', showIssOverlay ? '1' : '0'); } catch {}
+    });
+  }
+  if (closeBtn) {
+    closeBtn.addEventListener('click', () => {
+      showIssOverlay = false;
+      if (overlay) { overlay.hidden = true; }
+      try { localStorage.setItem('issOverlayVisible', '0'); } catch {}
+    });
+  }
+  if (pathToggle) {
+    pathToggle.addEventListener('change', (e) => {
+      showPathTrace = !!e.target.checked;
+      try { localStorage.setItem('issPathTrace', showPathTrace ? '1' : '0'); } catch {}
+    });
+  }
 
   // Set up fullscreen event listeners for canvas resizing
   document.addEventListener('fullscreenchange', () => {
@@ -163,6 +200,13 @@ function keyPressed() {
       radioManager.togglePlayback();
     }
   }
+  // Toggle ISS overlay with 'i' or 'I'
+  if (key === 'i' || key === 'I') {
+    const overlay = document.getElementById('iss-overlay');
+    showIssOverlay = !showIssOverlay;
+    if (overlay) { overlay.hidden = !showIssOverlay; }
+    try { localStorage.setItem('issOverlayVisible', showIssOverlay ? '1' : '0'); } catch {}
+  }
 }
 
 function draw() {
@@ -241,6 +285,31 @@ function draw() {
   for (const particle of particles) {
     particle.update();
     particle.show();
+  }
+
+  // Render ISS path trace if enabled
+  if (showPathTrace) {
+    const iss = particles[particles.length - 1];
+    if (iss && iss.isIss) {
+      issPath.push({ x: iss.pos.x, y: iss.pos.y });
+      if (issPath.length > 600) { issPath.shift(); }
+      noFill();
+      stroke(255, 80, 80, 120);
+      beginShape();
+      for (const pt of issPath) { vertex(pt.x, pt.y); }
+      endShape();
+    }
+  }
+
+  // Update overlay content
+  if (showIssOverlay && window.geographyManager && window.radioManager) {
+    const regionEl = document.getElementById('iss-region');
+    const latEl = document.getElementById('iss-lat');
+    const lonEl = document.getElementById('iss-lon');
+    const issGeo = window.geographyManager.issGeoData || { lat: 0, lon: 0 };
+    if (regionEl) { regionEl.textContent = window.radioManager.currentRegion || 'Ocean'; }
+    if (latEl) { latEl.textContent = issGeo.lat.toFixed(2); }
+    if (lonEl) { lonEl.textContent = issGeo.lon.toFixed(2); }
   }
 
 }

@@ -44,13 +44,27 @@
     <div class="radio-hint">Click Play to enable audio. Radio stations switch automatically as the International Space Station orbits Earth in real time.</div>
     <audio id="radio-player" preload="none" style="display: none;"></audio>
   </div>
+
+  <!-- ISS context mini-overlay -->
+  <div id="iss-overlay" class="iss-overlay" role="status" aria-live="polite" aria-atomic="true" hidden>
+    <div class="iss-row"><span class="iss-label">Region</span><span id="iss-region" class="iss-value">—</span></div>
+    <div class="iss-row"><span class="iss-label">Latitude</span><span id="iss-lat" class="iss-value">—</span></div>
+    <div class="iss-row"><span class="iss-label">Longitude</span><span id="iss-lon" class="iss-value">—</span></div>
+    <div class="iss-actions">
+      <label class="iss-toggle"><input type="checkbox" id="iss-path-toggle"> Path trace</label>
+      <button id="iss-overlay-close" class="iss-btn" type="button" aria-label="Hide ISS overlay">✕</button>
+    </div>
+  </div>
+
+  <!-- Floating info button to toggle overlay -->
+  <button id="iss-info-btn" type="button" class="info-btn-floating" aria-pressed="false" aria-label="Show ISS info">ℹ︎</button>
   
   <!-- Fullscreen button positioned in bottom right -->
   <button id="fullscreen-btn" type="button" class="fullscreen-btn-floating" aria-pressed="false">⛶</button>
-  <script src="js/particles.js?v=1754855385"></script>
-  <script src="js/radio.js?v=1754855385"></script>
-  <script src="js/geography.js?v=1754855385"></script>
-  <script src="js/main.js?v=1754855385"></script>
+  <script src="js/particles.js?v=1754857006"></script>
+  <script src="js/radio.js?v=1754857006"></script>
+  <script src="js/geography.js?v=1754857006"></script>
+  <script src="js/main.js?v=1754857006"></script>
 </body>
 </html>
 

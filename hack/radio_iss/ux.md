@@ -43,9 +43,9 @@ Below is a numbered, actionable list of UX improvements. Each item is scoped to 
     - Respect notches and home indicators via CSS env(safe-area-inset-*).
     - Keep controls clear of edges and ensure comfortable reach.
 
-11. [ ] ISS context mini-overlay
-    - Optional compact overlay with current lat/lon, current region, next region ETA, and a path-trace toggle.
-    - Toggle from help overlay and remember user preference.
+11. [x] ISS context mini-overlay
+    - Implemented: compact overlay with current region, lat/lon, path-trace toggle; remembers visibility and toggle via localStorage.
+    - Toggle via floating ℹ︎ button or keyboard 'I'.
 
 12. [ ] Discoverability of outlines (M)
     - When ‘M’ is pressed the first time, briefly label continent groups (“Europe”, “Oceania”) and fade labels.

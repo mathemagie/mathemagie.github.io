@@ -165,6 +165,103 @@ body {
   transform: scale(1.05);
 }
 
+/* Floating info button (top-right) */
+.info-btn-floating {
+  position: fixed;
+  top: max(12px, env(safe-area-inset-top));
+  right: max(12px, env(safe-area-inset-right));
+  z-index: 10;
+  appearance: none;
+  border: 1px solid rgba(255,255,255,0.3);
+  background: rgba(0, 0, 0, 0.8);
+  color: #fff;
+  padding: 10px 12px;
+  border-radius: 16px;
+  font-size: 14px;
+  font-family: system-ui, sans-serif;
+  line-height: 1;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  backdrop-filter: blur(8px);
+  user-select: none;
+}
+
+.info-btn-floating:hover {
+  background: rgba(0,0,0,0.9);
+  border-color: rgba(255,255,255,0.5);
+}
+
+/* ISS mini overlay */
+.iss-overlay {
+  position: fixed;
+  left: max(12px, env(safe-area-inset-left));
+  bottom: max(12px, env(safe-area-inset-bottom));
+  z-index: 10;
+  background: rgba(0, 0, 0, 0.85);
+  color: #fff;
+  padding: 10px 12px;
+  border-radius: 12px;
+  font-family: system-ui, -apple-system, Segoe UI, Roboto, Ubuntu, Cantarell, Noto Sans, Arial, sans-serif;
+  font-size: 12px;
+  min-width: 220px;
+  max-width: 60vw;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.iss-row {
+  display: flex;
+  justify-content: space-between;
+  gap: 10px;
+}
+
+.iss-label {
+  opacity: 0.75;
+}
+
+.iss-value {
+  font-variant-numeric: tabular-nums;
+}
+
+.iss-actions {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  margin-top: 4px;
+}
+
+.iss-toggle {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.iss-btn {
+  appearance: none;
+  border: 1px solid rgba(255,255,255,0.25);
+  background: rgba(255,255,255,0.1);
+  color: #fff;
+  padding: 4px 8px;
+  border-radius: 8px;
+  font-size: 12px;
+  cursor: pointer;
+}
+
+@media (width <= 768px) {
+  .info-btn-floating {
+    top: max(6px, env(safe-area-inset-top));
+    right: max(6px, env(safe-area-inset-right));
+  }
+
+  .iss-overlay {
+    left: max(6px, env(safe-area-inset-left));
+    bottom: max(6px, env(safe-area-inset-bottom));
+    font-size: 11px;
+  }
+}
+
 /* Hide fullscreen button on mobile devices (iOS Fullscreen via PWA or UA chrome only) */
 @media (width <= 768px), (hover: none) and (pointer: coarse) {
   .fullscreen-btn-floating {
