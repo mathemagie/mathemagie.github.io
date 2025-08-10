@@ -157,6 +157,12 @@ function keyPressed() {
     showContinentOutlines = !showContinentOutlines;
     console.log('Continent outlines:', showContinentOutlines ? 'ON' : 'OFF');
   }
+  // Toggle play/pause on 'p' or 'P'
+  if (key === 'p' || key === 'P') {
+    if (radioManager && typeof radioManager.togglePlayback === 'function') {
+      radioManager.togglePlayback();
+    }
+  }
 }
 
 function draw() {
