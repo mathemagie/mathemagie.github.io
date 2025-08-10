@@ -1,4 +1,4 @@
-name: Update commit hash in index.html
+name: Write commit hash to hack/radio_iss/COMMIT_HASH
 
 on:
   push:
@@ -9,7 +9,7 @@ permissions:
   contents: write
 
 jobs:
-  update-hash:
+  update-commit-hash:
     if: github.actor != 'github-actions[bot]'
     runs-on: ubuntu-latest
     steps:
@@ -22,8 +22,8 @@ jobs:
         id: vars
         run: echo "sha_short=$(git rev-parse --short HEAD)" >> $GITHUB_OUTPUT
 
-      - name: Update index.html with commit hash
+      - name: Write short SHA to hack/radio_iss/COMMIT_HASH
         run: |
-          sed -i -E "s/(<!-- BEGIN_COMMIT_HASH -->)[0-9a-f]+(<!-- END_COMMIT_HASH -->)/\1${{ steps.vars.outputs.sha_short }}\2/" index.html
-          echo "Updated index.html with ${{ steps.vars.outputs.sha_short }}"
-
+          mkdir -p hack/radio_iss
+          echo "${{ steps.vars.outputs.sha_short }}" > hack/radio_iss/COMMIT_HASH
+          echo "Wrote commit hash ${{ steps.vars.outputs.sha_short }} to hack/radio_iss/COMMIT_HASH"
