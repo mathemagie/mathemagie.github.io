@@ -50,9 +50,9 @@ Below is a numbered, actionable list of UX improvements. Each item is scoped to 
 12. [ ] Discoverability of outlines (M)
     - When ‘M’ is pressed the first time, briefly label continent groups (“Europe”, “Oceania”) and fade labels.
 
-13. [ ] Audio-reactive ISS pulse (subtle)
-    - Modulate ISS pulse intensity slightly with audio amplitude for perceived synchrony.
-    - Clamp to subtle range; disable if reduced motion is on.
+13. [x] Audio-reactive ISS pulse (subtle)
+    - Implemented: ISS pulse subtly modulates with audio amplitude via WebAudio analyser, clamped and smoothed.
+    - Honors “prefers-reduced-motion” by disabling extra modulation.
 
 14. [ ] Palette semantics
     - Cohesive color mapping per continent cluster; reserve red exclusively for ISS to maintain salience.

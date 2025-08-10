@@ -1,3 +1,4 @@
+/* eslint-env browser */
 // Radio functionality for ISS Radio application
 class RadioManager {
   constructor() {
@@ -9,6 +10,11 @@ class RadioManager {
     this.progressBar = null;
     this.currentRegion = null;
     this.isPlaying = false;
+    this.audioContext = null;
+    this.mediaSource = null;
+    this.analyser = null;
+    this.level = 0;
+    this.levelSmoothed = 0;
 
     this.regionStations = {
       // Americas (6 regions)
@@ -55,6 +61,9 @@ class RadioManager {
 
     this.setupEventListeners();
     this.setStationForRegion('Ocean'); // Initial default
+
+    // Expose for particles to read current audio level
+    window.radioManager = this;
   }
 
   setupEventListeners() {
@@ -69,9 +78,38 @@ class RadioManager {
 
 
     if (this.radioPlayer) {
+      // Lazily create audio analyser on first play to respect autoplay policies
+      const ensureAnalyser = () => {
+        try {
+          if (!this.audioContext) {
+            this.audioContext = new (window.AudioContext || window.webkitAudioContext)();
+          }
+          if (this.audioContext && this.audioContext.state === 'suspended') {
+            this.audioContext.resume().catch(() => {});
+          }
+          if (!this.mediaSource && this.audioContext) {
+            this.mediaSource = this.audioContext.createMediaElementSource(this.radioPlayer);
+          }
+          if (!this.analyser && this.audioContext) {
+            this.analyser = this.audioContext.createAnalyser();
+            this.analyser.fftSize = 256; // small, low cost
+            this.analyser.smoothingTimeConstant = 0.85;
+            const gain = this.audioContext.createGain();
+            gain.gain.value = 1.0;
+            // Route: element -> analyser -> gain -> destination
+            this.mediaSource.connect(this.analyser);
+            this.analyser.connect(gain);
+            gain.connect(this.audioContext.destination);
+            this.startLevelPolling();
+          }
+        } catch {
+          // Fallback silently if WebAudio is unavailable
+        }
+      };
       this.radioPlayer.addEventListener('play', () => {
         this.isPlaying = true;
         this.playBtn.textContent = '⏸';
+        ensureAnalyser();
       });
       this.radioPlayer.addEventListener('pause', () => {
         this.isPlaying = false;
@@ -90,6 +128,30 @@ class RadioManager {
     document.addEventListener('webkitfullscreenchange', () => {
       this.updateFullscreenUI();
     });
+  }
+
+  startLevelPolling() {
+    if (!this.analyser) {return;}
+    const buffer = new Uint8Array(this.analyser.frequencyBinCount);
+    const tick = () => {
+      if (!this.analyser) {return;}
+      this.analyser.getByteFrequencyData(buffer);
+      // Use low-mid band for smoother motion
+      let sum = 0;
+      let count = 0;
+      for (let i = 2; i < Math.min(24, buffer.length); i++) {
+        sum += buffer[i];
+        count++;
+      }
+      const avg = count > 0 ? sum / (count * 255) : 0; // 0..1
+      this.level = avg;
+      // Smooth aggressively to keep subtle
+      this.levelSmoothed = this.levelSmoothed * 0.9 + this.level * 0.1;
+      // Expose a clamped, subtle amplitude for visuals
+      this.visualLevel = Math.min(0.25, Math.max(0, this.levelSmoothed));
+      window.requestAnimationFrame(tick);
+    };
+    window.requestAnimationFrame(tick);
   }
 
   getRegion(lat, lon) {

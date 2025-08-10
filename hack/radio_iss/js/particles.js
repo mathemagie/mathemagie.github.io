@@ -224,7 +224,15 @@ class Particle {
       const t = (millis() % periodMs) / periodMs;
       const pulse1 = Math.exp(-Math.pow((t - 0.06) / 0.06, 2));
       const pulse2 = Math.exp(-Math.pow((t - 0.26) / 0.06, 2));
-      const amp = pulse1 + 0.75 * pulse2;
+      let amp = pulse1 + 0.75 * pulse2;
+
+      // Optional audio reactivity: subtly modulate with current audio level
+      // Honors prefers-reduced-motion by limiting modulation
+      const prefersReduced = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+      const audioLevel = (window.radioManager && window.radioManager.visualLevel) ? window.radioManager.visualLevel : 0;
+      const audioBoost = prefersReduced ? 0 : audioLevel * 0.6; // clamp subtle
+      amp = amp * (1 + audioBoost);
+
       const drawR = this.baseRadius * (1 + 0.22 * amp);
 
       // Outer glow rings
