@@ -40,67 +40,123 @@ class GeographyManager {
 
   generateContinentPoints() {
     window.continentPoints = [];
+    window.continentGroups = {}; // Store separate arrays for each continent
 
-    // North America outline (simplified)
-    const northAmerica = [
-      [-60, -141], [-45, -141], [-45, -52], [-25, -80], [-25, -95],
-      [-30, -117], [-48, -125], [-60, -141]
-    ];
+    // Define continent outlines with their names
+    const continentDefinitions = {
+      northAmerica: [
+        [71, -156], [66, -166], [60, -165], [55, -130], [60, -125], [69, -105], [74, -95], [82, -85],
+        [81, -68], [75, -57], [67, -53], [60, -57], [55, -62], [47, -52], [44, -57], [47, -67],
+        [42, -70], [35, -75], [25, -80], [18, -97], [14, -105], [32, -117], [42, -124], [49, -128],
+        [54, -132], [58, -134], [60, -139], [64, -141], [67, -148], [71, -156]
+      ],
+      southAmerica: [
+        [12, -61], [8, -59], [5, -51], [2, -44], [-5, -35], [-13, -38], [-19, -40], [-23, -43],
+        [-30, -51], [-33, -56], [-35, -58], [-38, -62], [-40, -65], [-43, -67], [-46, -67], [-50, -69],
+        [-52, -70], [-55, -68], [-53, -66], [-50, -65], [-45, -64], [-40, -62], [-35, -58], [-30, -52],
+        [-25, -48], [-20, -44], [-15, -39], [-10, -36], [-5, -35], [0, -44], [5, -50], [10, -55], [12, -61]
+      ],
+      europe: [
+        [71, -25], [71, -8], [70, 5], [69, 12], [66, 24], [64, 28], [59, 30], [56, 27], [54, 20],
+        [51, 13], [48, 7], [46, 2], [44, 9], [42, 19], [40, 27], [36, 28], [34, 23], [36, 12],
+        [38, 3], [41, -5], [43, -9], [46, -4], [49, -1], [52, -3], [55, -6], [58, -3], [61, 5],
+        [64, 10], [67, 15], [70, 20], [71, -25]
+      ],
+      africa: [
+        [37, -17], [35, -6], [33, 3], [31, 10], [32, 22], [34, 32], [37, 43], [35, 48], [31, 51],
+        [25, 50], [15, 51], [5, 50], [-5, 48], [-15, 45], [-20, 40], [-25, 32], [-30, 25], [-33, 18],
+        [-35, 15], [-34, 22], [-32, 28], [-28, 35], [-22, 40], [-15, 43], [-8, 45], [2, 47], [12, 48],
+        [22, 45], [30, 40], [35, 32], [37, 22], [36, 10], [35, -2], [37, -17]
+      ],
+      asia: [
+        [77, 40], [75, 60], [73, 80], [70, 100], [65, 120], [55, 135], [45, 145], [35, 140], [25, 135],
+        [20, 125], [15, 110], [10, 95], [8, 75], [12, 60], [18, 50], [25, 45], [35, 42], [45, 40],
+        [55, 35], [65, 30], [70, 35], [72, 45], [75, 55], [76, 65], [77, 75], [75, 85], [70, 95],
+        [65, 105], [60, 115], [58, 125], [60, 135], [65, 145], [70, 155], [75, 165], [77, 175], [77, 40]
+      ],
+      oceania: [
+        [-10, 113], [-12, 118], [-16, 122], [-20, 126], [-25, 129], [-30, 132], [-35, 135], [-40, 140],
+        [-43, 145], [-44, 148], [-43, 151], [-40, 153], [-35, 154], [-30, 153], [-25, 151], [-20, 148],
+        [-15, 145], [-12, 140], [-10, 135], [-9, 130], [-10, 125], [-12, 120], [-10, 115], [-10, 113]
+      ]
+    };
 
-    // South America outline (simplified)
-    const southAmerica = [
-      [12, -81], [12, -34], [-20, -34], [-35, -58], [-55, -68],
-      [-22, -81], [12, -81]
-    ];
+    // Generate points for each continent separately
+    for (const [continentName, continentOutline] of Object.entries(continentDefinitions)) {
+      window.continentGroups[continentName] = [];
 
-    // Europe outline (simplified)
-    const europe = [
-      [71, -10], [71, 40], [36, 40], [36, -10], [71, -10]
-    ];
+      // Generate outline points
+      for (let i = 0; i < continentOutline.length - 1; i++) {
+        const start = this.latLonToXY(continentOutline[i][0], continentOutline[i][1]);
+        const end = this.latLonToXY(continentOutline[i + 1][0], continentOutline[i + 1][1]);
 
-    // Africa outline (simplified)
-    const africa = [
-      [37, -18], [37, 51], [-35, 51], [-35, 15], [-22, -18], [37, -18]
-    ];
+        const distance = Math.sqrt((end.x - start.x) ** 2 + (end.y - start.y) ** 2);
+        const steps = Math.max(5, Math.floor(distance / 15));
 
-    // Asia outline (simplified)
-    const asia = [
-      [77, 26], [77, 180], [10, 180], [10, 60], [40, 26], [77, 26]
-    ];
-
-    // Australia outline (simplified)
-    const australia = [
-      [-10, 113], [-10, 154], [-44, 154], [-44, 113], [-10, 113]
-    ];
-
-    const continents = [northAmerica, southAmerica, europe, africa, asia, australia];
-
-    // Generate points along continent outlines
-    for (const continent of continents) {
-      for (let i = 0; i < continent.length - 1; i++) {
-        const start = this.latLonToXY(continent[i][0], continent[i][1]);
-        const end = this.latLonToXY(continent[i + 1][0], continent[i + 1][1]);
-
-        // Generate points along the line between start and end
-        const steps = 10;
         for (let j = 0; j <= steps; j++) {
           const t = j / steps;
-          const x = lerp(start.x, end.x, t);
-          const y = lerp(start.y, end.y, t);
-          window.continentPoints.push({x: x, y: y});
+          const x = start.x + (end.x - start.x) * t;
+          const y = start.y + (end.y - start.y) * t;
+
+          const offsetX = (Math.random() - 0.5) * 6;
+          const offsetY = (Math.random() - 0.5) * 6;
+
+          const point = {
+            x: Math.max(0, Math.min(width, x + offsetX)),
+            y: Math.max(0, Math.min(height, y + offsetY)),
+            continent: continentName
+          };
+
+          window.continentGroups[continentName].push(point);
+          window.continentPoints.push(point);
         }
+      }
+
+      // Add inland points for this continent
+      const originalCount = window.continentGroups[continentName].length;
+      for (let i = 0; i < originalCount; i += 2) {
+        const point = window.continentGroups[continentName][i];
+
+        for (let k = 0; k < 2; k++) {
+          const offsetDistance = 20 + Math.random() * 60;
+          const offsetAngle = Math.random() * Math.PI * 2;
+          const offsetX = Math.cos(offsetAngle) * offsetDistance;
+          const offsetY = Math.sin(offsetAngle) * offsetDistance;
+
+          const inlandPoint = {
+            x: Math.max(0, Math.min(width, point.x + offsetX)),
+            y: Math.max(0, Math.min(height, point.y + offsetY)),
+            continent: continentName
+          };
+
+          window.continentGroups[continentName].push(inlandPoint);
+          window.continentPoints.push(inlandPoint);
+        }
+      }
+
+      // Add coastal shelf points for this continent
+      for (let i = 0; i < originalCount; i += 4) {
+        const point = window.continentGroups[continentName][i];
+
+        const shelfDistance = 10 + Math.random() * 30;
+        const shelfAngle = Math.random() * Math.PI * 2;
+        const shelfX = Math.cos(shelfAngle) * shelfDistance;
+        const shelfY = Math.sin(shelfAngle) * shelfDistance;
+
+        const shelfPoint = {
+          x: Math.max(0, Math.min(width, point.x + shelfX)),
+          y: Math.max(0, Math.min(height, point.y + shelfY)),
+          continent: continentName
+        };
+
+        window.continentGroups[continentName].push(shelfPoint);
+        window.continentPoints.push(shelfPoint);
       }
     }
 
-    // Add some inland points for more realistic distribution
-    for (let i = 0; i < window.continentPoints.length; i += 3) {
-      const point = window.continentPoints[i];
-      const offsetX = random(-50, 50);
-      const offsetY = random(-50, 50);
-      window.continentPoints.push({
-        x: constrain(point.x + offsetX, 0, width),
-        y: constrain(point.y + offsetY, 0, height)
-      });
+    console.log('Continent point distribution:');
+    for (const [name, points] of Object.entries(window.continentGroups)) {
+      console.log(`${name}: ${points.length} points`);
     }
   }
 
