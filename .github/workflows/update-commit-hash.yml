@@ -1,4 +1,4 @@
-name: Write commit hash to hack/radio_iss/COMMIT_HASH
+name: Write commit hash to COMMIT_HASH.txt at root
 
 on:
   push:
@@ -22,16 +22,15 @@ jobs:
         id: vars
         run: echo "sha_short=$(git rev-parse --short HEAD)" >> $GITHUB_OUTPUT
 
-      - name: Write short SHA to hack/radio_iss/COMMIT_HASH
+      - name: Write short SHA to COMMIT_HASH.txt at root
         run: |
-          mkdir -p hack/radio_iss
-          echo "${{ steps.vars.outputs.sha_short }}" > hack/radio_iss/COMMIT_HASH
-          echo "Wrote commit hash ${{ steps.vars.outputs.sha_short }} to hack/radio_iss/COMMIT_HASH"
+          echo "${{ steps.vars.outputs.sha_short }}" > COMMIT_HASH.txt
+          echo "Wrote commit hash ${{ steps.vars.outputs.sha_short }} to COMMIT_HASH.txt"
 
-      - name: Commit and push COMMIT_HASH file
+      - name: Commit and push COMMIT_HASH.txt file
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
-          git add hack/radio_iss/COMMIT_HASH
-          git commit -m "Update COMMIT_HASH with latest commit SHA"
+          git add COMMIT_HASH.txt
+          git commit -m "Update COMMIT_HASH.txt with latest commit SHA"
           git push
