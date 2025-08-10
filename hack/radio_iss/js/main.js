@@ -1,5 +1,5 @@
 /* eslint-env browser */
-/* global setup, draw, windowResized, keyPressed, createCanvas, background, fill, noStroke, circle, text, textSize, key, keyIsPressed, width, height, random, constrain, lerp, dist, cos, sin, TWO_PI */
+/* global setup, draw, windowResized, keyPressed, createCanvas, background, fill, noStroke, circle, text, textSize, key, keyIsPressed, width, height, random, constrain, lerp, dist, cos, sin, TWO_PI, rect */
 
 // Main application for ISS Radio
 // Global variables
@@ -161,23 +161,58 @@ function draw() {
       circle(point.x, point.y, 4); // Draw small circles for continent points
     }
 
-    // Debug info
-    fill(255);
-    textSize(14);
-    text(`Total continent points: ${window.continentPoints.length}`, 10, height - 100);
-    text(`Total particles: ${particles.length}`, 10, height - 80);
+    // Debug info with improved layout
+    const debugInfoX = 10;
+    const debugLines = window.continentGroups ? Object.keys(window.continentGroups).length + 4 : 3;
+    const lineHeight = 18;
+    const padding = 12;
+    const panelHeight = debugLines * lineHeight + padding * 2;
+    const debugInfoY = height - panelHeight;
+    const panelWidth = 320;
 
-    // Show continent distribution
+    // Create semi-transparent background for debug panel
+    fill(0, 0, 0, 180);
+    noStroke();
+
+    // Draw background panel
+    rect(debugInfoX - 5, debugInfoY - 5, panelWidth, panelHeight, 5);
+
+    // Debug text with better spacing and organization
+    fill(255, 255, 255);
+    textSize(14);
+    let currentY = debugInfoY + padding;
+
+    // Header section
+    fill(100, 200, 255);
+    text('DEBUG MODE - Continent Visualization', debugInfoX, currentY);
+    currentY += lineHeight + 4;
+
+    // Statistics section
+    fill(255, 255, 255);
+    text(`Total continent points: ${window.continentPoints.length}`, debugInfoX, currentY);
+    currentY += lineHeight;
+    text(`Total particles: ${particles.length}`, debugInfoX, currentY);
+    currentY += lineHeight + 4;
+
+    // Continent distribution with improved formatting
     if (window.continentGroups) {
-      let yOffset = height - 60;
+      fill(150, 255, 150);
+      text('Continent Distribution:', debugInfoX, currentY);
+      currentY += lineHeight;
+
+      fill(255, 255, 255);
       Object.keys(window.continentGroups).forEach(continent => {
         const count = window.continentGroups[continent].length;
-        text(`${continent}: ${count} points`, 10, yOffset);
-        yOffset += 16;
+        const formattedName = continent.charAt(0).toUpperCase() + continent.slice(1);
+        text(`  ${formattedName}: ${count} points`, debugInfoX + 10, currentY);
+        currentY += lineHeight;
       });
+      currentY += 4;
     }
 
-    text('Press M to toggle outlines', 10, height - 20);
+    // Controls section
+    fill(255, 200, 100);
+    text('Press M to toggle outlines', debugInfoX, currentY);
   }
 
   // Handle collisions
