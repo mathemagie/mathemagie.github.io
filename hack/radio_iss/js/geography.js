@@ -42,6 +42,19 @@ class GeographyManager {
     window.continentPoints = [];
     window.continentGroups = {}; // Store separate arrays for each continent
 
+    // Calculate radio UI exclusion area
+    const radioUIWidth = window.innerWidth <= 768 ? Math.max(260, window.innerWidth * 0.92) : Math.min(window.innerWidth * 0.85, 500);
+    const radioUIHeight = 120; // Estimated height including padding and content
+    const radioUILeft = window.innerWidth <= 768 ? Math.max(6, 0) : Math.max(12, 0);
+    const radioUITop = window.innerWidth <= 768 ? Math.max(6, 0) : Math.max(12, 0);
+    const radioUIRight = radioUILeft + radioUIWidth;
+    const radioUIBottom = radioUITop + radioUIHeight;
+
+    // Helper function to check if a point overlaps with radio UI
+    const isInRadioUIArea = (x, y) => {
+      return x >= radioUILeft && x <= radioUIRight && y >= radioUITop && y <= radioUIBottom;
+    };
+
     // Define continent outlines with their names
     const continentDefinitions = {
       northAmerica: [
@@ -101,9 +114,28 @@ class GeographyManager {
           const offsetX = (Math.random() - 0.5) * 6;
           const offsetY = (Math.random() - 0.5) * 6;
 
+          let pointX = Math.max(0, Math.min(width, x + offsetX));
+          let pointY = Math.max(0, Math.min(height, y + offsetY));
+
+          // If point overlaps with radio UI, try to move it outside
+          if (isInRadioUIArea(pointX, pointY)) {
+            // Try moving below the radio UI first
+            if (pointY < radioUIBottom + 20) {
+              pointY = radioUIBottom + 20;
+            }
+            // If still in bounds, otherwise try moving to the right
+            if (pointY > height && pointX < radioUIRight + 20) {
+              pointX = radioUIRight + 20;
+              pointY = Math.max(0, Math.min(height, y + offsetY));
+            }
+            // Ensure final position is within canvas bounds
+            pointX = Math.max(0, Math.min(width, pointX));
+            pointY = Math.max(0, Math.min(height, pointY));
+          }
+
           const point = {
-            x: Math.max(0, Math.min(width, x + offsetX)),
-            y: Math.max(0, Math.min(height, y + offsetY)),
+            x: pointX,
+            y: pointY,
             continent: continentName
           };
 
@@ -123,9 +155,28 @@ class GeographyManager {
           const offsetX = Math.cos(offsetAngle) * offsetDistance;
           const offsetY = Math.sin(offsetAngle) * offsetDistance;
 
+          let inlandX = Math.max(0, Math.min(width, point.x + offsetX));
+          let inlandY = Math.max(0, Math.min(height, point.y + offsetY));
+
+          // If point overlaps with radio UI, try to move it outside
+          if (isInRadioUIArea(inlandX, inlandY)) {
+            // Try moving below the radio UI first
+            if (inlandY < radioUIBottom + 20) {
+              inlandY = radioUIBottom + 20;
+            }
+            // If still in bounds, otherwise try moving to the right
+            if (inlandY > height && inlandX < radioUIRight + 20) {
+              inlandX = radioUIRight + 20;
+              inlandY = Math.max(0, Math.min(height, point.y + offsetY));
+            }
+            // Ensure final position is within canvas bounds
+            inlandX = Math.max(0, Math.min(width, inlandX));
+            inlandY = Math.max(0, Math.min(height, inlandY));
+          }
+
           const inlandPoint = {
-            x: Math.max(0, Math.min(width, point.x + offsetX)),
-            y: Math.max(0, Math.min(height, point.y + offsetY)),
+            x: inlandX,
+            y: inlandY,
             continent: continentName
           };
 
@@ -143,9 +194,28 @@ class GeographyManager {
         const shelfX = Math.cos(shelfAngle) * shelfDistance;
         const shelfY = Math.sin(shelfAngle) * shelfDistance;
 
+        let shelfPointX = Math.max(0, Math.min(width, point.x + shelfX));
+        let shelfPointY = Math.max(0, Math.min(height, point.y + shelfY));
+
+        // If point overlaps with radio UI, try to move it outside
+        if (isInRadioUIArea(shelfPointX, shelfPointY)) {
+          // Try moving below the radio UI first
+          if (shelfPointY < radioUIBottom + 20) {
+            shelfPointY = radioUIBottom + 20;
+          }
+          // If still in bounds, otherwise try moving to the right
+          if (shelfPointY > height && shelfPointX < radioUIRight + 20) {
+            shelfPointX = radioUIRight + 20;
+            shelfPointY = Math.max(0, Math.min(height, point.y + shelfY));
+          }
+          // Ensure final position is within canvas bounds
+          shelfPointX = Math.max(0, Math.min(width, shelfPointX));
+          shelfPointY = Math.max(0, Math.min(height, shelfPointY));
+        }
+
         const shelfPoint = {
-          x: Math.max(0, Math.min(width, point.x + shelfX)),
-          y: Math.max(0, Math.min(height, point.y + shelfY)),
+          x: shelfPointX,
+          y: shelfPointY,
           continent: continentName
         };
 
@@ -191,9 +261,35 @@ class GeographyManager {
         particle.pos.set(newPos.x, newPos.y);
         particle.originalPos.set(newPos.x, newPos.y);
 
-        // Ensure particle stays within canvas bounds
+        // Ensure particle stays within canvas bounds and avoids radio UI
         particle.pos.x = constrain(particle.pos.x, particle.r || 10, width - (particle.r || 10));
         particle.pos.y = constrain(particle.pos.y, particle.r || 10, height - (particle.r || 10));
+
+        // Calculate radio UI exclusion area for resize
+        const radioUIWidth = window.innerWidth <= 768 ? Math.max(260, window.innerWidth * 0.92) : Math.min(window.innerWidth * 0.85, 500);
+        const radioUIHeight = 120;
+        const radioUILeft = window.innerWidth <= 768 ? Math.max(6, 0) : Math.max(12, 0);
+        const radioUITop = window.innerWidth <= 768 ? Math.max(6, 0) : Math.max(12, 0);
+        const radioUIRight = radioUILeft + radioUIWidth;
+        const radioUIBottom = radioUITop + radioUIHeight;
+
+        // If particle overlaps with radio UI, move it outside
+        if (particle.pos.x >= radioUILeft && particle.pos.x <= radioUIRight &&
+            particle.pos.y >= radioUITop && particle.pos.y <= radioUIBottom) {
+          // Try moving below the radio UI first
+          if (particle.pos.y < radioUIBottom + 20) {
+            particle.pos.y = radioUIBottom + 20;
+          }
+          // If still in bounds, otherwise try moving to the right
+          if (particle.pos.y > height && particle.pos.x < radioUIRight + 20) {
+            particle.pos.x = radioUIRight + 20;
+            particle.pos.y = constrain(particle.pos.y, particle.r || 10, height - (particle.r || 10));
+          }
+          // Ensure final position is within canvas bounds
+          particle.pos.x = constrain(particle.pos.x, particle.r || 10, width - (particle.r || 10));
+          particle.pos.y = constrain(particle.pos.y, particle.r || 10, height - (particle.r || 10));
+        }
+
         particle.originalPos.x = particle.pos.x;
         particle.originalPos.y = particle.pos.y;
 
