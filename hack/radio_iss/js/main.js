@@ -193,10 +193,6 @@ function draw() {
     particle.show();
   }
 
-  // Always show debug info in corner
-  fill(100);
-  textSize(12);
-  text(`Particles: ${particles.length} | Points: ${window.continentPoints ? window.continentPoints.length : 0}`, 10, 20);
 }
 
 // Make variables global for module access
