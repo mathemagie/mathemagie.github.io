@@ -79,7 +79,6 @@ body {
     line-height: 1.2;
     white-space: normal;
     overflow-wrap: break-word;
-    overflow-wrap: break-word;
     max-width: 100%;
     width: 100%;
     box-sizing: border-box;
@@ -213,9 +212,9 @@ body {
 /* ISS Context Mini-overlay */
 .iss-context-overlay {
   position: fixed;
-  top: 50%;
-  left: 50%;
-  transform: translate(-50%, -50%);
+  bottom: max(12px, env(safe-area-inset-bottom));
+  left: max(12px, env(safe-area-inset-left));
+  transform: none;
   z-index: 20;
   background: rgba(0, 0, 0, 0.95);
   color: #fff;
