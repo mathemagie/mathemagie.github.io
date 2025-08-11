@@ -38,7 +38,7 @@
       const randomId = Math.random().toString(36).substr(2, 9);
       document.write('<link rel="stylesheet" href="css/styles.css?v=' + randomId + '">');
     } else {
-      document.write('<link rel="stylesheet" href="css/styles.css?v=1754900397">');
+      document.write('<link rel="stylesheet" href="css/styles.css?v=1754902360">');
     }
   </script>
   <!-- Version: commit 222af77 - Ultra compact mobile UI -->
@@ -53,6 +53,11 @@
     <audio id="radio-player" preload="none" style="display: none;"></audio>
   </div>
   
+  <!-- Onboarding hint tooltip -->
+  <div id="onboarding-hint" class="onboarding-hint">
+    Press P to play/pause, F fullscreen, M outlines. Tap ⛶ on mobile.
+  </div>
+  
   <!-- Fullscreen button positioned in bottom right -->
   <button id="fullscreen-btn" type="button" class="fullscreen-btn-floating" aria-pressed="false">⛶</button>
   <script>
@@ -64,10 +69,10 @@
         document.write('<script src="' + file + '?v=' + randomId + '"><\/script>');
       });
     } else {
-      document.write('<script src="js/particles.js?v=1754855385"><\/script>');
-      document.write('<script src="js/radio.js?v=1754855385"><\/script>');
-      document.write('<script src="js/geography.js?v=1754855385"><\/script>');
-      document.write('<script src="js/main.js?v=1754855385"><\/script>');
+      document.write('<script src="js/particles.js?v=1754902360"><\/script>');
+      document.write('<script src="js/radio.js?v=1754902360"><\/script>');
+      document.write('<script src="js/geography.js?v=1754902360"><\/script>');
+      document.write('<script src="js/main.js?v=1754903253"><\/script>');
     }
   </script>
 </body>

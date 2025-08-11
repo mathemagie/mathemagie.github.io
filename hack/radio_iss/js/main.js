@@ -126,6 +126,11 @@ function setup() {
 
   // Start ISS tracking
   geographyManager.initTracking(radioManager);
+
+  // Initialize onboarding hint AFTER everything is loaded and settled
+  setTimeout(() => {
+    initOnboardingHint();
+  }, 3000); // Wait 3 seconds after setup completes
 }
 
 // Enhanced resize handling with debouncing - repositions all particles properly
@@ -243,6 +248,116 @@ function draw() {
     particle.show();
   }
 
+}
+
+// Onboarding hint functionality
+function initOnboardingHint() {
+  const timestamp = Date.now();
+  console.log(`🚀 [${timestamp}] initOnboardingHint() called`);
+
+  const hintElement = document.getElementById('onboarding-hint');
+  console.log(`🔍 [${Date.now() - timestamp}ms] hintElement found:`, !!hintElement);
+
+  if (!hintElement) {
+    console.error('❌ Onboarding hint element not found!');
+    return;
+  }
+
+  // Check if user has seen the hint before (localStorage)
+  const hasSeenOnboarding = window.localStorage.getItem('radio-iss-onboarding-seen');
+  console.log(`💾 [${Date.now() - timestamp}ms] localStorage check:`, hasSeenOnboarding);
+
+  if (hasSeenOnboarding === 'true' || hasSeenOnboarding === '1') {
+    console.log('👀 User has seen onboarding before, hiding element');
+    hintElement.style.display = 'none';
+    return;
+  }
+
+  console.log(`✨ [${Date.now() - timestamp}ms] Onboarding hint will be visible - starting 7s timer`);
+  console.log('📏 Element styles:', {
+    display: hintElement.style.display,
+    opacity: hintElement.style.opacity,
+    visibility: hintElement.style.visibility,
+    classList: hintElement.classList.toString()
+  });
+
+  let isHidden = false;
+  let fadeReason = '';
+
+  // Auto-fade after 7 seconds
+  const autoFadeTimeout = window.setTimeout(() => {
+    const elapsed = Date.now() - timestamp;
+    console.log(`⏰ [${elapsed}ms] Auto-fade timeout triggered after ${elapsed}ms`);
+    fadeReason = 'auto-timeout';
+    fadeOutHint();
+  }, 7000);
+
+  function fadeOutHint() {
+    const elapsed = Date.now() - timestamp;
+    if (isHidden) {
+      console.log(`🔄 [${elapsed}ms] fadeOutHint called but already hidden (reason was: ${fadeReason})`);
+      return;
+    }
+    isHidden = true;
+
+    console.log(`🌅 [${elapsed}ms] FADING OUT onboarding hint (reason: ${fadeReason})`);
+    console.log('📏 Element state before fade:', {
+      display: hintElement.style.display,
+      opacity: hintElement.style.opacity,
+      classList: hintElement.classList.toString(),
+      parentNode: !!hintElement.parentNode
+    });
+
+    hintElement.classList.add('fade-out');
+    window.localStorage.setItem('radio-iss-onboarding-seen', 'true');
+
+    // Remove element from DOM after transition
+    window.setTimeout(() => {
+      const finalElapsed = Date.now() - timestamp;
+      console.log(`🗑️ [${finalElapsed}ms] Removing element from DOM`);
+      if (hintElement.parentNode) {
+        hintElement.parentNode.removeChild(hintElement);
+      }
+    }, 500);
+  }
+
+  // Hide on deliberate user interaction (not automatic events)
+  const hideOnInteraction = (e) => {
+    const elapsed = Date.now() - timestamp;
+    console.log(`👆 [${elapsed}ms] User interaction detected:`, e.type, e.target, e.target.tagName);
+    fadeReason = `user-${e.type}`;
+    window.clearTimeout(autoFadeTimeout);
+    fadeOutHint();
+  };
+
+  // Wait 4 seconds before adding interaction listeners - hint should be clearly visible by then
+  window.setTimeout(() => {
+    const elapsed = Date.now() - timestamp;
+    console.log(`🎯 [${elapsed}ms] Adding interaction listeners`);
+    document.addEventListener('click', hideOnInteraction, { once: true });
+    document.addEventListener('touchstart', hideOnInteraction, { once: true });
+  }, 4000); // Increased to 4 seconds to ensure hint is stable
+
+  // Additional debugging - check if element gets hidden by other means
+  const observer = new window.MutationObserver((mutations) => {
+    mutations.forEach((mutation) => {
+      if (mutation.type === 'attributes' && mutation.attributeName === 'style') {
+        const elapsed = Date.now() - timestamp;
+        console.log(`🎨 [${elapsed}ms] Element style changed:`, hintElement.style.cssText);
+      }
+      if (mutation.type === 'attributes' && mutation.attributeName === 'class') {
+        const elapsed = Date.now() - timestamp;
+        console.log(`📝 [${elapsed}ms] Element class changed:`, hintElement.className);
+      }
+    });
+  });
+  observer.observe(hintElement, { attributes: true, attributeFilter: ['style', 'class'] });
+
+  // Clean up observer after 10 seconds
+  window.setTimeout(() => {
+    observer.disconnect();
+    console.log('🧹 Disconnected mutation observer');
+  }, 10000);
 }
 
 // Make variables global for module access
