@@ -138,7 +138,7 @@ class RadioManager {
     const currentSrc = this.radioPlayer.currentSrc || this.radioPlayer.src;
     const isDifferent = !currentSrc || !currentSrc.includes(newSrc);
     // Update label with compact format
-    this.stationLabel.textContent = `${station.name} • ${region}`;
+    this.stationLabel.textContent = `Over ${region} • ${station.name}`;
     if (!isDifferent) {return;}
     this.radioPlayer.src = newSrc;
     this.radioPlayer.dataset.station = station.name;
