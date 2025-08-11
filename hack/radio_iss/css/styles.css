@@ -194,3 +194,138 @@ body {
   background: rgba(255,255,255,0.3);
 }
 
+/* ISS Context Mini-overlay */
+.iss-context-overlay {
+  position: fixed;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  z-index: 20;
+  background: rgba(0, 0, 0, 0.95);
+  color: #fff;
+  border-radius: 12px;
+  font-family: system-ui, -apple-system, Segoe UI, Roboto, Ubuntu, Cantarell, Noto Sans, Arial, sans-serif;
+  backdrop-filter: blur(16px);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  width: min(90vw, 320px);
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.7);
+}
+
+.iss-context-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 16px 20px 8px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.iss-context-header h3 {
+  margin: 0;
+  font-size: 16px;
+  font-weight: 600;
+  color: #fff;
+}
+
+.iss-context-close {
+  background: none;
+  border: none;
+  color: rgba(255, 255, 255, 0.7);
+  font-size: 20px;
+  cursor: pointer;
+  padding: 4px;
+  line-height: 1;
+  transition: color 0.2s ease;
+}
+
+.iss-context-close:hover {
+  color: #fff;
+}
+
+.iss-context-content {
+  padding: 16px 20px;
+}
+
+.iss-context-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 12px;
+  font-size: 13px;
+}
+
+.iss-context-item:last-child {
+  margin-bottom: 0;
+}
+
+.iss-context-label {
+  color: rgba(255, 255, 255, 0.8);
+  font-weight: 500;
+}
+
+.iss-context-value {
+  color: #fff;
+  font-weight: 400;
+  text-align: right;
+  font-family: 'SF Mono', 'Monaco', 'Cascadia Code', 'Roboto Mono', Consolas, 'Courier New', monospace;
+}
+
+.iss-context-controls {
+  margin-top: 16px;
+  padding-top: 16px;
+  border-top: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.iss-context-toggle {
+  width: 100%;
+  appearance: none;
+  border: 1px solid rgba(255, 255, 255, 0.3);
+  background: rgba(255, 255, 255, 0.1);
+  color: #fff;
+  padding: 10px 16px;
+  border-radius: 8px;
+  font-size: 12px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.iss-context-toggle:hover {
+  background: rgba(255, 255, 255, 0.2);
+  border-color: rgba(255, 255, 255, 0.4);
+}
+
+.iss-context-toggle.active {
+  background: rgba(255, 255, 255, 0.2);
+  border-color: rgba(255, 255, 255, 0.5);
+}
+
+/* Mobile responsive adjustments */
+@media (width <= 768px) {
+  .iss-context-overlay {
+    width: min(95vw, 300px);
+    font-size: 12px;
+  }
+  
+  .iss-context-header {
+    padding: 12px 16px 6px;
+  }
+  
+  .iss-context-header h3 {
+    font-size: 14px;
+  }
+  
+  .iss-context-content {
+    padding: 12px 16px;
+  }
+  
+  .iss-context-item {
+    font-size: 12px;
+    margin-bottom: 10px;
+  }
+  
+  .iss-context-toggle {
+    font-size: 11px;
+    padding: 8px 12px;
+  }
+}
+

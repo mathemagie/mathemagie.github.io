@@ -38,7 +38,7 @@
       const randomId = Math.random().toString(36).substr(2, 9);
       document.write('<link rel="stylesheet" href="css/styles.css?v=' + randomId + '">');
     } else {
-      document.write('<link rel="stylesheet" href="css/styles.css?v=1754900397">');
+      document.write('<link rel="stylesheet" href="css/styles.css?v=1754906119">');
     }
   </script>
   <!-- Version: commit 222af77 - Ultra compact mobile UI -->
@@ -53,6 +53,31 @@
     <audio id="radio-player" preload="none" style="display: none;"></audio>
   </div>
   
+  <!-- ISS Context Mini-overlay -->
+  <div class="iss-context-overlay" id="iss-context-overlay" style="display: none;">
+    <div class="iss-context-header">
+      <h3>ISS Context</h3>
+      <button class="iss-context-close" type="button" aria-label="Close ISS context overlay">×</button>
+    </div>
+    <div class="iss-context-content">
+      <div class="iss-context-item">
+        <span class="iss-context-label">Position:</span>
+        <span class="iss-context-value" id="iss-lat-lon">Loading...</span>
+      </div>
+      <div class="iss-context-item">
+        <span class="iss-context-label">Region:</span>
+        <span class="iss-context-value" id="iss-current-region">Loading...</span>
+      </div>
+      <div class="iss-context-item">
+        <span class="iss-context-label">Next ETA:</span>
+        <span class="iss-context-value" id="iss-next-eta">Calculating...</span>
+      </div>
+      <div class="iss-context-controls">
+        <button class="iss-context-toggle" id="path-trace-toggle" type="button">Path Trace: OFF</button>
+      </div>
+    </div>
+  </div>
+
   <!-- Fullscreen button positioned in bottom right -->
   <button id="fullscreen-btn" type="button" class="fullscreen-btn-floating" aria-pressed="false">⛶</button>
   <script>
@@ -64,10 +89,10 @@
         document.write('<script src="' + file + '?v=' + randomId + '"><\/script>');
       });
     } else {
-      document.write('<script src="js/particles.js?v=1754855385"><\/script>');
-      document.write('<script src="js/radio.js?v=1754855385"><\/script>');
-      document.write('<script src="js/geography.js?v=1754855385"><\/script>');
-      document.write('<script src="js/main.js?v=1754855385"><\/script>');
+      document.write('<script src="js/particles.js?v=1754906119"><\/script>');
+      document.write('<script src="js/radio.js?v=1754906119"><\/script>');
+      document.write('<script src="js/geography.js?v=1754906119"><\/script>');
+      document.write('<script src="js/main.js?v=1754906119"><\/script>');
     }
   </script>
 </body>
