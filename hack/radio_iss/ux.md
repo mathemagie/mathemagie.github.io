@@ -30,9 +30,10 @@ Below is a numbered, actionable list of UX improvements. Each item is scoped to 
    - Toggle to temporarily “Lock station” (e.g., 10 minutes) to avoid surprise switches.
    - Toast shows remaining time and a “Resume auto” action.
 
-8. [ ] Smooth crossfade between stations
+8. [x] Smooth crossfade between stations
    - 300–600 ms volume crossfade on region switch (two <audio> elements or a gain envelope).
    - Fail-safe: instant switch if crossfade fails.
+   - ✅ Implemented: 400ms crossfade using dual audio elements with volume fade and fail-safe instant switching.
 
 9. [ ] Accessibility & preferences
    - Visible focus outlines and ARIA labels for all controls.

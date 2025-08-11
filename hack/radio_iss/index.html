@@ -38,7 +38,7 @@
       const randomId = Math.random().toString(36).substr(2, 9);
       document.write('<link rel="stylesheet" href="css/styles.css?v=' + randomId + '">');
     } else {
-      document.write('<link rel="stylesheet" href="css/styles.css?v=1754906119">');
+      document.write('<link rel="stylesheet" href="css/styles.css?v=1754906902">');
     }
   </script>
   <!-- Version: commit 222af77 - Ultra compact mobile UI -->
@@ -51,6 +51,7 @@
     </div>
     <div class="radio-hint">Click Play to enable audio. Radio stations switch automatically as the International Space Station orbits Earth in real time.</div>
     <audio id="radio-player" preload="none" style="display: none;"></audio>
+    <audio id="radio-player-b" preload="none" style="display: none;"></audio>
   </div>
   
   <!-- ISS Context Mini-overlay -->
@@ -89,10 +90,10 @@
         document.write('<script src="' + file + '?v=' + randomId + '"><\/script>');
       });
     } else {
-      document.write('<script src="js/particles.js?v=1754906119"><\/script>');
-      document.write('<script src="js/radio.js?v=1754906119"><\/script>');
-      document.write('<script src="js/geography.js?v=1754906119"><\/script>');
-      document.write('<script src="js/main.js?v=1754906119"><\/script>');
+      document.write('<script src="js/particles.js?v=1754906902"><\/script>');
+      document.write('<script src="js/radio.js?v=1754906902"><\/script>');
+      document.write('<script src="js/geography.js?v=1754906902"><\/script>');
+      document.write('<script src="js/main.js?v=1754906902"><\/script>');
     }
   </script>
 </body>

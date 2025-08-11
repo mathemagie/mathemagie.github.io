@@ -1,10 +1,12 @@
 /* eslint-env browser */
-/* global localStorage */
+/* global localStorage, performance, requestAnimationFrame */
 
 // Radio functionality for ISS Radio application
 class RadioManager {
   constructor() {
     this.radioPlayer = null;
+    this.radioPlayerB = null; // Second audio element for crossfade
+    this.activePlayer = 'A'; // Track which player is currently active
     this.stationLabel = null;
     this.fullscreenBtn = null;
     this.playBtn = null;
@@ -12,6 +14,7 @@ class RadioManager {
     this.progressBar = null;
     this.currentRegion = null;
     this.isPlaying = false;
+    this.crossfadeDuration = 400; // 400ms crossfade duration
 
     // ISS Context overlay properties
     this.issContextOverlay = null;
@@ -62,6 +65,7 @@ class RadioManager {
   init() {
     // Wire radio UI elements
     this.radioPlayer = document.getElementById('radio-player');
+    this.radioPlayerB = document.getElementById('radio-player-b');
     this.stationLabel = document.getElementById('station-label');
     this.fullscreenBtn = document.getElementById('fullscreen-btn');
     this.playBtn = document.getElementById('play-btn');
@@ -138,6 +142,22 @@ class RadioManager {
       });
     }
 
+    // Setup second audio player events
+    if (this.radioPlayerB) {
+      this.radioPlayerB.addEventListener('play', () => {
+        this.isPlaying = true;
+        this.playBtn.textContent = '⏸';
+      });
+      this.radioPlayerB.addEventListener('pause', () => {
+        this.isPlaying = false;
+        this.playBtn.textContent = '▶';
+      });
+      this.radioPlayerB.addEventListener('ended', () => {
+        this.isPlaying = false;
+        this.playBtn.textContent = '▶';
+      });
+    }
+
     // Fullscreen change events
     document.addEventListener('fullscreenchange', () => {
       this.updateFullscreenUI();
@@ -188,21 +208,31 @@ class RadioManager {
   setStationForRegion(region) {
     const station = this.regionStations[region] || this.regionStations['Ocean'];
     if (!this.radioPlayer || !station) {return;}
-    const wasPlaying = this.radioPlayer && !this.radioPlayer.paused && !this.radioPlayer.ended;
+
+    const currentPlayer = this.activePlayer === 'A' ? this.radioPlayer : this.radioPlayerB;
+    const wasPlaying = currentPlayer && !currentPlayer.paused && !currentPlayer.ended;
     const newSrc = station.url;
-    const currentSrc = this.radioPlayer.currentSrc || this.radioPlayer.src;
+    const currentSrc = currentPlayer.currentSrc || currentPlayer.src;
     const isDifferent = !currentSrc || !currentSrc.includes(newSrc);
+
     // Update label with compact format
     this.stationLabel.textContent = `Over ${region} • ${station.name}`;
     if (!isDifferent) {return;}
-    this.radioPlayer.src = newSrc;
-    this.radioPlayer.dataset.station = station.name;
-    if (wasPlaying) {
-      this.radioPlayer.play().catch(() => {
-        /* Autoplay blocked or user paused */
-        this.isPlaying = false;
-        if (this.playBtn) {this.playBtn.textContent = '▶';}
-      });
+
+    if (wasPlaying && this.radioPlayerB) {
+      // Crossfade to new station
+      this.crossfadeToStation(station);
+    } else {
+      // Instant switch for first load or when paused
+      currentPlayer.src = newSrc;
+      currentPlayer.dataset.station = station.name;
+      if (wasPlaying) {
+        currentPlayer.play().catch(() => {
+          /* Autoplay blocked or user paused */
+          this.isPlaying = false;
+          if (this.playBtn) {this.playBtn.textContent = '▶';}
+        });
+      }
     }
   }
 
@@ -220,14 +250,73 @@ class RadioManager {
     this.calculateNextRegionEta();
   }
 
+  // Crossfade between stations
+  crossfadeToStation(station) {
+    const currentPlayer = this.activePlayer === 'A' ? this.radioPlayer : this.radioPlayerB;
+    const nextPlayer = this.activePlayer === 'A' ? this.radioPlayerB : this.radioPlayer;
+
+    if (!nextPlayer) {
+      // Fallback to instant switch if second player not available
+      this.instantSwitchToStation(currentPlayer, station);
+      return;
+    }
+
+    // Set up the new station on the inactive player
+    nextPlayer.src = station.url;
+    nextPlayer.dataset.station = station.name;
+    nextPlayer.volume = 0;
+
+    // Start playing the new station
+    nextPlayer.play().then(() => {
+      // Begin crossfade
+      this.performCrossfade(currentPlayer, nextPlayer);
+    }).catch(() => {
+      // Fallback to instant switch if new station fails to load
+      this.instantSwitchToStation(currentPlayer, station);
+    });
+  }
+
+  performCrossfade(fromPlayer, toPlayer) {
+    const startTime = performance.now();
+    const fadeOut = (timestamp) => {
+      const elapsed = timestamp - startTime;
+      const progress = Math.min(elapsed / this.crossfadeDuration, 1);
+
+      fromPlayer.volume = Math.max(0, 1 - progress);
+      toPlayer.volume = Math.min(1, progress);
+
+      if (progress < 1) {
+        requestAnimationFrame(fadeOut);
+      } else {
+        // Crossfade complete
+        fromPlayer.pause();
+        fromPlayer.volume = 1; // Reset for next use
+        this.activePlayer = this.activePlayer === 'A' ? 'B' : 'A';
+      }
+    };
+    requestAnimationFrame(fadeOut);
+  }
+
+  instantSwitchToStation(player, station) {
+    player.src = station.url;
+    player.dataset.station = station.name;
+    if (this.isPlaying) {
+      player.play().catch(() => {
+        this.isPlaying = false;
+        if (this.playBtn) {this.playBtn.textContent = '▶';}
+      });
+    }
+  }
+
   // Audio control functions
   togglePlayback() {
-    if (!this.radioPlayer) {return;}
+    const currentPlayer = this.activePlayer === 'A' ? this.radioPlayer : this.radioPlayerB;
+    if (!currentPlayer) {return;}
 
     if (this.isPlaying) {
-      this.radioPlayer.pause();
+      currentPlayer.pause();
     } else {
-      this.radioPlayer.play().catch(() => {
+      currentPlayer.play().catch(() => {
         console.log('Autoplay blocked - user interaction required');
       });
 
@@ -248,9 +337,10 @@ class RadioManager {
   }
 
   toggleMute() {
-    if (!this.radioPlayer) {return;}
+    const currentPlayer = this.activePlayer === 'A' ? this.radioPlayer : this.radioPlayerB;
+    if (!currentPlayer) {return;}
 
-    this.radioPlayer.muted = !this.radioPlayer.muted;
+    currentPlayer.muted = !currentPlayer.muted;
     // Volume button removed from UI
   }
 
