@@ -355,6 +355,7 @@ class RadioManager {
     if (this.fullscreenBtn) {
       this.fullscreenBtn.textContent = '⛶';
       this.fullscreenBtn.setAttribute('aria-pressed', active ? 'true' : 'false');
+      this.fullscreenBtn.title = active ? 'Exit fullscreen' : 'Enter fullscreen';
     }
   }
 
