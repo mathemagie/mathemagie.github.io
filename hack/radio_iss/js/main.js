@@ -163,6 +163,12 @@ function keyPressed() {
       radioManager.togglePlayback();
     }
   }
+  // Toggle ISS context overlay on 'i' or 'I'
+  if (key === 'i' || key === 'I') {
+    if (radioManager && typeof radioManager.toggleIssContext === 'function') {
+      radioManager.toggleIssContext();
+    }
+  }
 }
 
 function draw() {

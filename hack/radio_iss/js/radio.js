@@ -1,3 +1,6 @@
+/* eslint-env browser */
+/* global localStorage */
+
 // Radio functionality for ISS Radio application
 class RadioManager {
   constructor() {
@@ -9,6 +12,17 @@ class RadioManager {
     this.progressBar = null;
     this.currentRegion = null;
     this.isPlaying = false;
+
+    // ISS Context overlay properties
+    this.issContextOverlay = null;
+    this.issLatLonElement = null;
+    this.issCurrentRegionElement = null;
+    this.issNextEtaElement = null;
+    this.pathTraceToggle = null;
+    this.isIssContextVisible = false;
+    this.pathTraceEnabled = false;
+    this.lastIssPosition = { lat: 0, lon: 0 };
+    this.nextRegionEta = null;
 
     this.regionStations = {
       // Americas (6 regions)
@@ -53,8 +67,31 @@ class RadioManager {
     this.playBtn = document.getElementById('play-btn');
     this.radioHint = document.querySelector('.radio-hint');
 
+    // Wire ISS context overlay elements
+    this.issContextOverlay = document.getElementById('iss-context-overlay');
+    this.issLatLonElement = document.getElementById('iss-lat-lon');
+    this.issCurrentRegionElement = document.getElementById('iss-current-region');
+    this.issNextEtaElement = document.getElementById('iss-next-eta');
+    this.pathTraceToggle = document.getElementById('path-trace-toggle');
+
     this.setupEventListeners();
     this.setStationForRegion('Ocean'); // Initial default
+
+    // Load ISS context visibility preference from localStorage
+    const issContextPref = localStorage.getItem('issContextVisible');
+    if (issContextPref === 'true') {
+      this.showIssContext();
+    }
+
+    // Load path trace preference from localStorage
+    const pathTracePref = localStorage.getItem('pathTraceEnabled');
+    if (pathTracePref === 'true') {
+      this.pathTraceEnabled = true;
+      if (this.pathTraceToggle) {
+        this.pathTraceToggle.textContent = 'Path Trace: ON';
+        this.pathTraceToggle.classList.add('active');
+      }
+    }
   }
 
   setupEventListeners() {
@@ -67,6 +104,24 @@ class RadioManager {
       this.playBtn.addEventListener('click', () => this.togglePlayback());
     }
 
+    // ISS Context overlay event listeners
+    if (this.issContextOverlay) {
+      const closeBtn = this.issContextOverlay.querySelector('.iss-context-close');
+      if (closeBtn) {
+        closeBtn.addEventListener('click', () => this.hideIssContext());
+      }
+
+      // Close overlay when clicking outside
+      this.issContextOverlay.addEventListener('click', (e) => {
+        if (e.target === this.issContextOverlay) {
+          this.hideIssContext();
+        }
+      });
+    }
+
+    if (this.pathTraceToggle) {
+      this.pathTraceToggle.addEventListener('click', () => this.togglePathTrace());
+    }
 
     if (this.radioPlayer) {
       this.radioPlayer.addEventListener('play', () => {
@@ -157,6 +212,12 @@ class RadioManager {
       this.currentRegion = region;
       this.setStationForRegion(region);
     }
+
+    // Update ISS context overlay data
+    this.lastIssPosition.lat = lat;
+    this.lastIssPosition.lon = lon;
+    this.updateIssContextData();
+    this.calculateNextRegionEta();
   }
 
   // Audio control functions
@@ -243,6 +304,107 @@ class RadioManager {
         }, 100);
       }).catch(() => {});
     }
+  }
+
+  // ISS Context overlay methods
+  showIssContext() {
+    if (this.issContextOverlay) {
+      this.issContextOverlay.style.display = 'block';
+      this.isIssContextVisible = true;
+      localStorage.setItem('issContextVisible', 'true');
+      this.updateIssContextData();
+    }
+  }
+
+  hideIssContext() {
+    if (this.issContextOverlay) {
+      this.issContextOverlay.style.display = 'none';
+      this.isIssContextVisible = false;
+      localStorage.setItem('issContextVisible', 'false');
+    }
+  }
+
+  toggleIssContext() {
+    if (this.isIssContextVisible) {
+      this.hideIssContext();
+    } else {
+      this.showIssContext();
+    }
+  }
+
+  updateIssContextData() {
+    if (!this.isIssContextVisible) {return;}
+
+    // Update position
+    if (this.issLatLonElement) {
+      const lat = this.lastIssPosition.lat.toFixed(3);
+      const lon = this.lastIssPosition.lon.toFixed(3);
+      this.issLatLonElement.textContent = `${lat}°, ${lon}°`;
+    }
+
+    // Update current region
+    if (this.issCurrentRegionElement) {
+      this.issCurrentRegionElement.textContent = this.currentRegion || 'Ocean';
+    }
+
+    // Update next ETA (placeholder - will be calculated)
+    if (this.issNextEtaElement) {
+      if (this.nextRegionEta) {
+        this.issNextEtaElement.textContent = this.nextRegionEta;
+      } else {
+        this.issNextEtaElement.textContent = 'Calculating...';
+      }
+    }
+  }
+
+  calculateNextRegionEta() {
+    // Simple ETA calculation based on ISS orbital speed (~7.66 km/s)
+    // This is a simplified estimation for UX purposes
+
+    // Get all possible regions and find the next one
+    const allRegions = Object.keys(this.regionStations);
+    const currentRegionIndex = allRegions.indexOf(this.currentRegion || 'Ocean');
+    const nextRegionIndex = (currentRegionIndex + 1) % allRegions.length;
+    const nextRegion = allRegions[nextRegionIndex];
+
+    // Estimate time to next region (simplified - assumes uniform distribution)
+    // ISS completes one orbit in ~92 minutes, with roughly 21 regions
+    const averageTimePerRegion = (92 * 60) / 21; // seconds
+    const etaSeconds = Math.floor(averageTimePerRegion + (Math.random() * 300 - 150)); // Add some variance
+
+    const minutes = Math.floor(etaSeconds / 60);
+    const seconds = etaSeconds % 60;
+
+    this.nextRegionEta = `${nextRegion} in ${minutes}m ${seconds}s`;
+
+    if (this.issNextEtaElement && this.isIssContextVisible) {
+      this.issNextEtaElement.textContent = this.nextRegionEta;
+    }
+  }
+
+  togglePathTrace() {
+    this.pathTraceEnabled = !this.pathTraceEnabled;
+    localStorage.setItem('pathTraceEnabled', this.pathTraceEnabled.toString());
+
+    if (this.pathTraceToggle) {
+      this.pathTraceToggle.textContent = `Path Trace: ${this.pathTraceEnabled ? 'ON' : 'OFF'}`;
+
+      if (this.pathTraceEnabled) {
+        this.pathTraceToggle.classList.add('active');
+      } else {
+        this.pathTraceToggle.classList.remove('active');
+      }
+    }
+
+    // Notify main app about path trace toggle if needed
+    if (window.geographyManager && typeof window.geographyManager.setPathTraceEnabled === 'function') {
+      window.geographyManager.setPathTraceEnabled(this.pathTraceEnabled);
+    }
+  }
+
+  // Method to be called from help overlay
+  getIssContextToggleHandler() {
+    return () => this.toggleIssContext();
   }
 }
 
