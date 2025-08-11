@@ -27,24 +27,30 @@ body {
   background: rgba(0, 0, 0, 0.9);
   padding: 8px;
   border-radius: 8px;
+  white-space: normal;
+  overflow-wrap: break-word;
 }
 
 /* Mobile responsive radio UI */
 @media (width <= 768px) {
   .radio-ui {
-    max-width: 88vw;
-    min-width: 200px;
-    padding: 4px 6px;
-    gap: 2px;
+    max-width: calc(100vw - 16px);
+    min-width: 120px;
+    width: auto;
+    padding: 3px 4px;
+    gap: 1px;
     border-radius: 6px;
-    left: max(4px, env(safe-area-inset-left));
+    left: max(8px, env(safe-area-inset-left));
     top: max(4px, env(safe-area-inset-top));
     font-size: 8px;
+    box-sizing: border-box;
   }
   
   .radio-controls {
     transform: scale(1);
-    gap: 4px;
+    gap: 2px;
+    flex-wrap: nowrap;
+    overflow: hidden;
   }
   
   .play-btn {
@@ -56,19 +62,28 @@ body {
   
   .station-info {
     font-size: 8px;
-    min-width: 80px;
+    min-width: 0;
+    max-width: calc(100% - 30px);
     white-space: normal;
-    overflow: visible;
+    overflow: hidden;
     line-height: 1.1;
+    flex: 1;
+    overflow-wrap: break-word;
+    text-overflow: ellipsis;
   }
   
   .radio-hint {
-    font-size: 10px;
-    padding: 3px;
-    margin-top: 1px;
-    line-height: 1.1;
+    font-size: 12px;
+    padding: 10px 2px 2px;
+    margin-top: 10px;
+    line-height: 1.2;
     white-space: normal;
     overflow-wrap: break-word;
+    overflow-wrap: break-word;
+    max-width: 100%;
+    width: 100%;
+    box-sizing: border-box;
+    hyphens: auto;
   }
 
 }
