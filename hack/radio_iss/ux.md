@@ -2,8 +2,8 @@
 
 Below is a numbered, actionable list of UX improvements. Each item is scoped to be independently shippable.
 
-1. [ ] Onboarding hint
-   - Brief, auto-fading tooltip on first load: “Press P to play/pause, F fullscreen, M outlines. Tap ⛶ on mobile.”
+1. [x] Onboarding hint
+   - Brief, auto-fading tooltip on first load: "Press P to play/pause, F fullscreen, M outlines. Tap ⛶ on mobile."
    - Auto-hide after 6–8s or on any interaction.
 
 2. [ ] Help overlay (shortcut `?`)
