@@ -79,10 +79,11 @@ Below is a numbered, actionable list of UX improvements. Each item is scoped to 
     - Subtle shading to show current day/night terminator line based on real solar position.
     - Dimmer particles in nighttime regions, brighter in daylight areas.
 
-20. [ ] ISS orbital path preview
+20. [x] ISS orbital path preview
     - Show faint dotted line of upcoming ISS trajectory (next 30-60 minutes).
     - Color-coded path segments indicating upcoming regional transitions.
     - Tracking branch: `feat/ux-20-iss-orbital-path-preview`
+    - ✅ Implemented: Press 'O' to toggle orbital path preview showing 60-minute ISS trajectory with color-coded regional segments, time markers every 15 minutes, and fading opacity over time. Uses simplified orbital mechanics with proper longitude wrapping and regional color mapping.
 
 21. [ ] Volume persistence
     - Remember user's preferred volume level across sessions in localStorage.
