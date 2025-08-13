@@ -63,6 +63,86 @@ Below is a numbered, actionable list of UX improvements. Each item is scoped to 
     - Graceful error state for offline/stream errors; exponential backoff auto-retry.
     - Offer alternate mirror/source when available.
 
+16. [ ] Particle density adaptive scaling
+    - Automatically reduce particle count based on device performance/battery level.
+    - Monitor frame rate and dynamically adjust particle count to maintain 60fps target.
+
+17. [ ] Smooth zoom & pan interactions
+    - Mouse wheel/pinch to zoom into specific regions, drag to pan around Earth.
+    - Smooth interpolated transitions with momentum-based easing.
+
+18. [ ] Particle trail effects
+    - Optional comet trails for moving particles that fade over time.
+    - Configurable trail length and opacity; disable with reduced motion preference.
+
+19. [ ] Day/night Earth visualization
+    - Subtle shading to show current day/night terminator line based on real solar position.
+    - Dimmer particles in nighttime regions, brighter in daylight areas.
+
+20. [ ] ISS orbital path preview
+    - Show faint dotted line of upcoming ISS trajectory (next 30-60 minutes).
+    - Color-coded path segments indicating upcoming regional transitions.
+
+21. [ ] Volume persistence
+    - Remember user's preferred volume level across sessions in localStorage.
+    - Smooth volume restoration on page load without audio interruption.
+
+22. [ ] Audio spectrum visualizer
+    - Subtle particle color/size modulation based on audio frequency data using Web Audio API.
+    - Real-time analysis with low-pass filtering to avoid jarring visual changes.
+
+23. [ ] Station history/favorites
+    - Quick access panel showing recently played or user-bookmarked stations.
+    - Persistent favorites list with manual station switching capability.
+
+24. [ ] Custom station addition
+    - Allow users to add their own radio stream URLs with validation.
+    - Support for common formats (MP3, AAC, OGG) with error handling.
+
+25. [ ] Radio quality selection
+    - Choose between low/medium/high bitrate streams based on connection quality.
+    - Automatic quality adaptation based on detected bandwidth and buffering events.
+
+26. [ ] Touch gestures on mobile
+    - Pinch-to-zoom, double-tap regions to focus, swipe for manual station switching.
+    - Haptic feedback integration where supported for tactile confirmation.
+
+27. [ ] Particle interaction modes
+    - Click/tap particles to create ripple effects or temporary gravitational pulls.
+    - Interactive physics playground mode with particle spawning and manipulation.
+
+28. [ ] Region preview
+    - Hover over continent clusters to preview that region's radio station info.
+    - Non-intrusive tooltip showing station name, genre, and country without switching.
+
+29. [ ] Share current view
+    - Generate shareable links with current ISS position, timestamp, and selected preferences.
+    - Social media integration with auto-generated descriptions and preview images.
+
+30. [ ] Screenshot/recording
+    - Capture current visualization as high-resolution image or short MP4 video.
+    - Export options with customizable duration and quality settings.
+
+31. [ ] High contrast mode
+    - Alternative color palette optimized for users with visual impairments.
+    - Enhanced borders, larger UI elements, and improved text contrast ratios.
+
+32. [ ] Particle size scaling
+    - User preference slider for larger/smaller particles (0.5x to 2x scaling).
+    - Maintains visual hierarchy while accommodating different vision needs.
+
+33. [ ] Color blind friendly mode
+    - Alternative colors and patterns that work for deuteranopia, protanopia, tritanopia.
+    - Shape-based differentiation in addition to color coding for regions.
+
+34. [ ] Keyboard navigation
+    - Full keyboard control for all UI elements with visible focus indicators.
+    - WASD/arrow keys for view navigation, spacebar for play/pause, number keys for regions.
+
+35. [ ] Voice announcements
+    - Optional screen reader and audio cues for region changes and station information.
+    - Configurable verbosity level and voice selection using Web Speech API.
+
 ---
 
 Notes
