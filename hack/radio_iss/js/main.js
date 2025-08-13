@@ -1,5 +1,5 @@
 /* eslint-env browser */
-/* global setup, draw, windowResized, keyPressed, createCanvas, background, fill, noStroke, circle, text, textSize, key, keyIsPressed, width, height, random, constrain, lerp, dist, cos, sin, TWO_PI, rect, navigator */
+/* global setup, draw, windowResized, keyPressed, createCanvas, background, fill, noStroke, circle, text, textSize, key, keyIsPressed, width, height, random, constrain, lerp, dist, cos, sin, TWO_PI, rect, navigator, line, stroke, strokeWeight, map, noFill */
 
 // Main application for ISS Radio
 // Global variables
@@ -169,6 +169,12 @@ function keyPressed() {
       radioManager.toggleIssContext();
     }
   }
+  // Toggle orbital path preview on 'o' or 'O'
+  if (key === 'o' || key === 'O') {
+    if (geographyManager && typeof geographyManager.toggleOrbitalPath === 'function') {
+      geographyManager.toggleOrbitalPath();
+    }
+  }
 }
 
 function draw() {
@@ -184,7 +190,7 @@ function draw() {
 
     // Debug info with improved layout
     const debugInfoX = 10;
-    const debugLines = window.continentGroups ? Object.keys(window.continentGroups).length + 4 : 3;
+    const debugLines = window.continentGroups ? Object.keys(window.continentGroups).length + 7 : 6;
     const lineHeight = 18;
     const padding = 12;
     const panelHeight = debugLines * lineHeight + padding * 2;
@@ -234,6 +240,23 @@ function draw() {
     // Controls section
     fill(255, 200, 100);
     text('Press M to toggle outlines', debugInfoX, currentY);
+    currentY += lineHeight;
+    text('Press O to toggle orbital path', debugInfoX, currentY);
+    currentY += lineHeight;
+
+    // Orbital path status
+    if (geographyManager && geographyManager.showOrbitalPath) {
+      fill(100, 255, 100);
+      text(`Orbital path: ON (${geographyManager.orbitalPath.length} points)`, debugInfoX, currentY);
+    } else {
+      fill(150, 150, 150);
+      text('Orbital path: OFF', debugInfoX, currentY);
+    }
+  }
+
+  // Draw ISS orbital path preview
+  if (geographyManager && geographyManager.showOrbitalPath && geographyManager.orbitalPath.length > 0) {
+    drawOrbitalPath();
   }
 
   // Handle collisions
@@ -249,6 +272,98 @@ function draw() {
     particle.show();
   }
 
+}
+
+// Draw ISS orbital path preview with color-coded regional segments
+function drawOrbitalPath() {
+  const path = geographyManager.orbitalPath;
+  if (path.length < 2) {return;}
+
+  // Define colors for different regions
+  const regionColors = {
+    'Ocean': [100, 150, 200],           // Blue
+    'North America': [255, 200, 100],   // Orange
+    'South America': [150, 255, 150],   // Light green
+    'Europe': [200, 100, 255],          // Purple
+    'Africa': [255, 150, 100],          // Coral
+    'Asia': [255, 255, 100],            // Yellow
+    'Oceania': [100, 255, 200],         // Cyan
+    'US West': [255, 150, 50],          // Orange-red
+    'US East': [255, 200, 50],          // Gold
+    'Canada': [200, 255, 100],          // Light green
+    'Mexico/Central America': [255, 180, 80],  // Orange
+    'Brazil': [150, 255, 100],          // Bright green
+    'Argentina/Chile': [180, 255, 120], // Pale green
+    'Western Europe': [180, 100, 255],  // Light purple
+    'Northern Europe': [150, 120, 255], // Blue-purple
+    'Eastern Europe': [220, 120, 255],  // Pink-purple
+    'Mediterranean': [200, 150, 255],   // Lavender
+    'East Asia': [255, 255, 150],       // Light yellow
+    'Southeast Asia': [255, 200, 150],  // Peach
+    'South Asia': [200, 255, 200],      // Mint
+    'Middle East': [255, 220, 150],     // Beige
+    'North Africa': [255, 180, 120],    // Sandy
+    'Sub-Saharan Africa': [255, 120, 80], // Reddish
+    'Australia': [120, 255, 200],       // Aqua
+    'Pacific Islands': [100, 200, 255], // Sky blue
+    'Arctic': [200, 200, 255],          // Ice blue
+  };
+
+  // Draw dotted path segments with color coding
+  for (let i = 0; i < path.length - 1; i++) {
+    const current = path[i];
+    const next = path[i + 1];
+
+    // Get color for this segment's region
+    const regionColor = regionColors[current.region] || [150, 150, 150]; // Default gray
+
+    // Calculate segment opacity based on time (fade out over time)
+    const maxTime = path[path.length - 1].timeOffset;
+    const opacity = map(current.timeOffset, 0, maxTime, 180, 60);
+
+    // Set stroke color with opacity
+    stroke(regionColor[0], regionColor[1], regionColor[2], opacity);
+    strokeWeight(2);
+
+    // Draw dotted line by drawing small segments
+    const segmentCount = 8;
+    const dx = (next.x - current.x) / segmentCount;
+    const dy = (next.y - current.y) / segmentCount;
+
+    for (let j = 0; j < segmentCount; j += 2) {
+      const x1 = current.x + dx * j;
+      const y1 = current.y + dy * j;
+      const x2 = current.x + dx * (j + 1);
+      const y2 = current.y + dy * (j + 1);
+
+      // Handle horizontal wrapping for ISS path
+      const drawX1 = x1, drawX2 = x2;
+      if (Math.abs(x2 - x1) > width / 2) {
+        // Path crosses screen edge, don't draw this segment
+        continue;
+      }
+
+      line(drawX1, y1, drawX2, y2);
+    }
+  }
+
+  // Draw time markers every 15 minutes
+  fill(255, 255, 255, 120);
+  noStroke();
+  textSize(10);
+
+  for (let i = 0; i < path.length; i++) {
+    const point = path[i];
+    if (point.timeOffset % 15 === 0 && point.timeOffset > 0) {
+      // Draw small circle at time marker
+      fill(255, 255, 255, 150);
+      circle(point.x, point.y, 6);
+
+      // Draw time label
+      fill(255, 255, 255, 200);
+      text(`+${point.timeOffset}m`, point.x + 8, point.y - 8);
+    }
+  }
 }
 
 // Make variables global for module access
