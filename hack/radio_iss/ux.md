@@ -82,6 +82,7 @@ Below is a numbered, actionable list of UX improvements. Each item is scoped to 
 20. [ ] ISS orbital path preview
     - Show faint dotted line of upcoming ISS trajectory (next 30-60 minutes).
     - Color-coded path segments indicating upcoming regional transitions.
+    - Tracking branch: `feat/ux-20-iss-orbital-path-preview`
 
 21. [ ] Volume persistence
     - Remember user's preferred volume level across sessions in localStorage.
