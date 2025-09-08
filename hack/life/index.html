@@ -1,0 +1,490 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Life</title>
+    <!-- Link to the p5.js library from a CDN to enable drawing and animation functionalities. -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/p5.js/1.9.0/p5.js"></script>
+    <style>
+        /* Full screen styling with darker background for higher contrast */
+        html, body {
+            margin: 0;
+            padding: 0;
+            width: 100%;
+            height: 100%;
+            background-color: #000000; /* Pure black background for ultimate contrast */
+            overflow: hidden; /* Prevents scrollbars */
+        }
+        body {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+        canvas {
+            display: block; /* Removes any default margins/padding from canvas */
+        }
+    </style>
+</head>
+<body>
+    <script>
+        // Global variables for animation control. These variables determine the characteristics and behavior of the animation elements.
+        let blob; // Represents the main amorphous organism in the center.
+        let particles = []; // An array to store small, randomly moving background particles.
+        let internalCircles = []; // An array to store the larger, pulsing circular elements inside the blob.
+        let stars = []; // Array to store twinkling stars for Milky Way effect.
+        let animationSpeed = 0.01; // Controls the overall speed of the animation. A lower value results in slower movement.
+        let particleCount = 250; // The total number of small background particles.
+        let internalCircleCount = 15; // The total number of internal pulsing circles within the blob.
+        let starCount = 150; // Number of stars in the Milky Way background.
+        let nebulaClouds = []; // Array for subtle nebula effects.
+        let nebulaCount = 8; // Number of nebula clouds.
+        let backgroundColorHSB; // HSB color object for the canvas background.
+
+        // Enhanced natural color palettes with higher contrast for better visibility
+        const naturalColorPalettes = {
+            // Aquatic cellular environments - blues and cyans (increased saturation and brightness)
+            aquatic: [
+                {hue: 190, sat: 45, bright: 18}, // Deep ocean blue - darker background
+                {hue: 200, sat: 55, bright: 25}, // Marine blue - more saturated
+                {hue: 210, sat: 50, bright: 35}, // Cyan blue - brighter
+                {hue: 220, sat: 60, bright: 45}  // Bright cyan - higher contrast
+            ],
+            // Organic cellular materials - greens and teal (increased saturation)
+            organic: [
+                {hue: 120, sat: 40, bright: 35}, // Forest green - more saturated
+                {hue: 140, sat: 50, bright: 42}, // Sea green - brighter
+                {hue: 160, sat: 45, bright: 48}, // Mint green - higher contrast
+                {hue: 180, sat: 55, bright: 55}  // Teal - more vivid
+            ],
+            // Metabolic processes - warm organic tones (increased brightness and saturation)
+            metabolic: [
+                {hue: 30, sat: 35, bright: 50},  // Warm amber - more saturated
+                {hue: 45, sat: 40, bright: 55},  // Golden yellow - brighter
+                {hue: 15, sat: 30, bright: 60},  // Soft peach - higher contrast
+                {hue: 60, sat: 45, bright: 70}   // Light yellow - very bright
+            ],
+            // Structural elements - purples and magentas (increased saturation and brightness)
+            structural: [
+                {hue: 270, sat: 40, bright: 35}, // Deep purple - more saturated
+                {hue: 290, sat: 50, bright: 40}, // Magenta purple - brighter
+                {hue: 310, sat: 45, bright: 50}, // Pink purple - higher contrast
+                {hue: 330, sat: 55, bright: 55}  // Rose pink - more vivid
+            ]
+        };
+
+        /**
+         * The setup() function is called once when the program starts.
+         * It initializes the canvas, sets up the color mode, and creates the initial animation elements.
+         */
+        function setup() {
+            // Creates a full-screen canvas that fills the entire window
+            createCanvas(windowWidth, windowHeight);
+            // Sets the color mode to HSB (Hue, Saturation, Brightness) for easier and more intuitive color manipulation.
+            // Hue ranges from 0-360, Saturation and Brightness from 0-100, and Alpha (transparency) from 0-1.
+            colorMode(HSB, 360, 100, 100, 1);
+            // pixelDensity(1) ensures consistent rendering across devices with different screen densities.
+            pixelDensity(1);
+
+            // Set a natural aquatic environment background color that mimics cellular fluid
+            let bgPalette = naturalColorPalettes.aquatic[0]; // Use deep ocean blue as base
+            backgroundColorHSB = color(bgPalette.hue, bgPalette.sat, bgPalette.bright);
+
+            // Initializes the small background particles with natural colors that mimic microscopic elements
+            for (let i = 0; i < particleCount; i++) {
+                // Select colors from different natural palettes to create variety
+                let paletteChoice = floor(random(4)); // Choose from 4 different palette categories
+                let selectedPalette;
+
+                switch(paletteChoice) {
+                    case 0: selectedPalette = naturalColorPalettes.aquatic[floor(random(naturalColorPalettes.aquatic.length))]; break;
+                    case 1: selectedPalette = naturalColorPalettes.organic[floor(random(naturalColorPalettes.organic.length))]; break;
+                    case 2: selectedPalette = naturalColorPalettes.metabolic[floor(random(naturalColorPalettes.metabolic.length))]; break;
+                    case 3: selectedPalette = naturalColorPalettes.structural[floor(random(naturalColorPalettes.structural.length))]; break;
+                }
+
+                particles.push({
+                    x: random(width), // Random X position within the canvas.
+                    y: random(height), // Random Y position within the canvas.
+                    size: random(1, 2.5), // Random size for each particle, making some larger than others.
+                    alpha: random(0.15, 0.55), // More translucent range for ethereal effect.
+                    speedX: random(-0.3, 0.3), // Horizontal movement speed, allowing particles to drift left or right.
+                    speedY: random(-0.3, 0.3), // Vertical movement speed, allowing particles to drift up or down.
+                    hue: selectedPalette.hue, // Natural hue from biological palette.
+                    saturation: selectedPalette.sat + random(-8, 12), // Increased saturation variation for contrast.
+                    brightness: selectedPalette.bright + random(-10, 20), // Increased brightness range for more contrast.
+                    noiseSeedA: random(1000), // Unique noise seed for alpha twinkling.
+                    // Enhanced color variation for higher contrast
+                    hueVariation: random(-8, 8), // More pronounced hue drift
+                    saturationVariation: random(-8, 8) // More saturation variation
+                });
+            }
+
+            // Initialize twinkling stars for Milky Way background effect
+            for (let i = 0; i < starCount; i++) {
+                stars.push({
+                    x: random(width), // Random position across the canvas
+                    y: random(height), // Random position across the canvas
+                    size: random(0.5, 2.5), // Small star sizes
+                    brightness: random(70, 100), // Bright stars
+                    twinkleSpeed: random(0.005, 0.02), // Different twinkle speeds
+                    twinkleOffset: random(TWO_PI), // Random twinkle phase
+                    // Some stars have subtle color variations (blue/white)
+                    hue: random() < 0.3 ? random(200, 220) : 0, // 30% blue stars, rest white
+                    saturation: random() < 0.3 ? random(10, 30) : 0 // Blue stars have slight saturation
+                });
+            }
+
+            // Initialize subtle nebula clouds for cosmic atmosphere
+            for (let i = 0; i < nebulaCount; i++) {
+                nebulaClouds.push({
+                    x: random(width), // Random position
+                    y: random(height), // Random position
+                    radius: random(100, 300), // Large cloud radius
+                    // Subtle cosmic colors
+                    hue: random([270, 300, 330, 200, 240]), // Purples, magentas, blues
+                    saturation: random(20, 40), // Low saturation for subtlety
+                    brightness: random(10, 25), // Very dim for background effect
+                    alpha: random(0.03, 0.08), // Very low opacity
+                    driftSpeed: random(0.001, 0.003), // Very slow movement
+                    pulseSpeed: random(0.002, 0.005) // Slow pulsing
+                });
+            }
+
+            // Initializes the larger, pulsing internal circles with natural biological colors.
+            for (let i = 0; i < internalCircleCount; i++) {
+                // Select from natural palettes based on cellular function types
+                let paletteChoice = floor(random(4));
+                let selectedPalette;
+                let cellFunction = ''; // Track the type for additional behavior
+
+                switch(paletteChoice) {
+                    case 0:
+                        selectedPalette = naturalColorPalettes.aquatic[floor(random(naturalColorPalettes.aquatic.length))];
+                        cellFunction = 'membrane'; // Cell membrane elements
+                        break;
+                    case 1:
+                        selectedPalette = naturalColorPalettes.organic[floor(random(naturalColorPalettes.organic.length))];
+                        cellFunction = 'organelle'; // Cellular organelles
+                        break;
+                    case 2:
+                        selectedPalette = naturalColorPalettes.metabolic[floor(random(naturalColorPalettes.metabolic.length))];
+                        cellFunction = 'metabolic'; // Metabolic processes
+                        break;
+                    case 3:
+                        selectedPalette = naturalColorPalettes.structural[floor(random(naturalColorPalettes.structural.length))];
+                        cellFunction = 'structural'; // Structural elements
+                        break;
+                }
+
+                internalCircles.push({
+                    // Initial positions are somewhat centered, but with random offsets to distribute them.
+                    x: width / 2 + random(-200, 200), // Wider spread for larger cell
+                    y: height / 2 + random(-150, 150), // Wider spread for larger cell
+                    initialRadius: random(12, 35), // Larger base radius for each internal circle to match bigger cell.
+                    radiusOffset: random(0.5, 2), // A factor that determines the magnitude of the circle's pulsing.
+                    // Use natural biological colors with enhanced contrast properties
+                    baseHue: selectedPalette.hue,
+                    baseSat: selectedPalette.sat,
+                    baseBright: selectedPalette.bright,
+                    cellFunction: cellFunction, // Track cellular function for specialized behavior
+                    color: color(selectedPalette.hue, selectedPalette.sat + random(-8, 12), selectedPalette.bright + random(-10, 20), 0.8),
+                    noiseSeedX: random(1000), // Unique Perlin noise seed for independent X-axis movement.
+                    noiseSeedY: random(2000), // Unique Perlin noise seed for independent Y-axis movement.
+                    noiseSeedR: random(3000), // Unique Perlin noise seed for independent radius pulsing.
+                    noiseSeedC: random(4000), // Unique noise seed for color shifting.
+                    // Enhanced color variation properties for higher contrast
+                    hueVariation: random(-10, 10), // More pronounced hue variation for internal elements
+                    brightnessVariation: random(-15, 15) // Brightness variation for metabolic activity effect
+                });
+            }
+
+            // Initializes the main Blob object with natural cellular colors, positioning it at the center.
+            let blobPalette = naturalColorPalettes.aquatic[1]; // Use marine blue for the main cell membrane
+            blob = new Blob(width / 2, height / 2, 200, blobPalette); // Increased size for bigger cell
+        }
+
+        /**
+         * The windowResized() function is called automatically by p5.js when the browser window is resized.
+         * It resizes the canvas to match the new window dimensions, making the animation truly full-screen.
+         */
+        function windowResized() {
+            // Resize canvas to fill the new window dimensions
+            resizeCanvas(windowWidth, windowHeight);
+        }
+
+        /**
+         * The draw() function is called continuously after setup().
+         * It updates the state of all animation elements and renders them frame by frame, creating the animation.
+         * By default, this function automatically runs in a continuous loop.
+         */
+        function draw() {
+            background(backgroundColorHSB); // Sets the canvas background to the deep muted blue-purple color.
+
+            // Draw twinkling stars for Milky Way background effect
+            noStroke();
+            for (let i = 0; i < stars.length; i++) {
+                let star = stars[i];
+                // Create twinkling effect using sine wave
+                let twinkle = sin(frameCount * star.twinkleSpeed + star.twinkleOffset) * 0.5 + 0.5; // 0 to 1 range
+                let currentBrightness = star.brightness * (0.3 + twinkle * 0.7); // Vary between 30% and 100% of base brightness
+
+                // Draw star with twinkling brightness
+                fill(star.hue, star.saturation, currentBrightness, 0.8 + twinkle * 0.2);
+                ellipse(star.x, star.y, star.size);
+
+                // Add a subtle glow effect for brighter stars
+                if (star.size > 1.5 && twinkle > 0.7) {
+                    fill(star.hue, star.saturation * 0.5, currentBrightness * 1.2, 0.3);
+                    ellipse(star.x, star.y, star.size * 2);
+                }
+            }
+
+            // Draw subtle nebula clouds for cosmic atmosphere
+            noStroke();
+            for (let i = 0; i < nebulaClouds.length; i++) {
+                let nebula = nebulaClouds[i];
+
+                // Very slow drift movement
+                nebula.x += sin(frameCount * nebula.driftSpeed + i) * 0.1;
+                nebula.y += cos(frameCount * nebula.driftSpeed * 0.7 + i) * 0.08;
+
+                // Wrap around screen edges
+                if (nebula.x < -nebula.radius) nebula.x = width + nebula.radius;
+                if (nebula.x > width + nebula.radius) nebula.x = -nebula.radius;
+                if (nebula.y < -nebula.radius) nebula.y = height + nebula.radius;
+                if (nebula.y > height + nebula.radius) nebula.y = -nebula.radius;
+
+                // Gentle pulsing effect
+                let pulse = sin(frameCount * nebula.pulseSpeed + i * 0.5) * 0.3 + 0.7;
+                let currentAlpha = nebula.alpha * pulse;
+
+                // Draw nebula cloud as a soft gradient
+                fill(nebula.hue, nebula.saturation, nebula.brightness, currentAlpha);
+                ellipse(nebula.x, nebula.y, nebula.radius);
+
+                // Add a softer outer glow
+                fill(nebula.hue, nebula.saturation * 0.5, nebula.brightness * 0.5, currentAlpha * 0.5);
+                ellipse(nebula.x, nebula.y, nebula.radius * 1.5);
+            }
+
+            // Updates and displays the small background particles with natural color variations.
+            for (let i = 0; i < particles.length; i++) {
+                let p = particles[i];
+                // Simple speed-based particle movement
+                p.x += p.speedX;
+                p.y += p.speedY;
+
+                // Wraps particles around the screen edges, creating a continuous flow effect.
+                if (p.x < 0) p.x = width;
+                if (p.x > width) p.x = 0;
+                if (p.y < 0) p.y = height;
+                if (p.y > height) p.y = 0;
+
+                noStroke(); // Ensures particles have no outline.
+
+                // Enhanced color variations for higher contrast and visibility
+                let dynamicHue = p.hue + sin(frameCount * animationSpeed * 0.5 + i * 0.1) * p.hueVariation;
+                let dynamicSat = constrain(p.saturation + cos(frameCount * animationSpeed * 0.3 + i * 0.15) * p.saturationVariation, 30, 95);
+                let dynamicBright = constrain(p.brightness + sin(frameCount * animationSpeed * 0.7 + i * 0.2) * 15, 40, 100);
+
+                // More translucent alpha twinkling for ethereal effect
+                let twinkleAlpha = map(noise(p.noiseSeedA + frameCount * animationSpeed * 2), 0, 1, 0.18, 0.65);
+                fill(dynamicHue, dynamicSat, dynamicBright, twinkleAlpha); // Fills particles with high-contrast colors.
+
+                ellipse(p.x, p.y, p.size); // Draws each particle as a small ellipse.
+            }
+
+            // Updates the state and displays the main blob organism.
+            blob.update();
+            blob.display();
+
+            // Updates and displays the internal pulsing circles with natural biological colors.
+            for (let i = 0; i < internalCircles.length; i++) {
+                let c = internalCircles[i];
+                // Animates the position of each internal circle using Perlin noise,
+                // keeping them generally centered around the main blob's position but with organic drift.
+                // Simple noise-based movement for internal organelles
+                c.x = blob.x + (noise(c.noiseSeedX + frameCount * animationSpeed * 0.5) * 2 - 1) * 120;
+                c.y = blob.y + (noise(c.noiseSeedY + frameCount * animationSpeed * 0.5) * 2 - 1) * 90;
+
+                // Animates the radius of each circle, creating a pulsing or breathing effect.
+                // Perlin noise and a sine wave are used to create smooth, organic size changes.
+                let currentRadius = c.initialRadius + sin(noise(c.noiseSeedR + frameCount * animationSpeed * 1.5)) * c.radiusOffset * 8;
+
+                // Enhanced natural color variations based on cellular function
+                let baseHue = c.baseHue;
+                let baseSat = c.baseSat;
+                let baseBright = c.baseBright;
+
+                // Function-specific color behaviors
+                let metabolicMultiplier = 1;
+                let activityLevel = 1;
+
+                if (c.cellFunction === 'metabolic') {
+                    // Metabolic elements pulse more brightly when "active"
+                    metabolicMultiplier = 1 + sin(frameCount * animationSpeed * 2 + i * 0.4) * 0.3;
+                    activityLevel = map(noise(c.noiseSeedC + frameCount * animationSpeed * 0.8), 0, 1, 0.7, 1.3);
+                } else if (c.cellFunction === 'membrane') {
+                    // Membrane elements have subtle aquatic variations
+                    baseHue += sin(frameCount * animationSpeed * 0.3 + i * 0.2) * 5;
+                } else if (c.cellFunction === 'organelle') {
+                    // Organelles have more stable, organic colors
+                    activityLevel = map(noise(c.noiseSeedC + frameCount * animationSpeed * 0.4), 0, 1, 0.8, 1.2);
+                }
+
+                // Natural color variations with enhanced biological realism
+                let dynamicHue = (baseHue + sin(frameCount * animationSpeed * 0.7 + i * 0.3) * c.hueVariation) % 360;
+                let dynamicSat = constrain(baseSat + cos(frameCount * animationSpeed * 1.2 + i * 0.7) * 8, 30, 90);
+                let dynamicBright = constrain(baseBright + sin(frameCount * animationSpeed * 0.9 + i * 0.4) * c.brightnessVariation * metabolicMultiplier, 50, 100) * activityLevel;
+
+                noStroke(); // Ensures internal circles have no outline.
+
+                // More translucent alpha variations for ethereal glow effects
+                let baseAlpha = map(noise(c.noiseSeedC + frameCount * animationSpeed * 0.6), 0, 1, 0.4, 0.7);
+                let currentAlpha = baseAlpha * activityLevel;
+
+                // Create layered glow effect with translucent ethereal appearance
+                // Outer glow layer - very translucent, larger
+                fill(dynamicHue, dynamicSat * 0.8, dynamicBright * 1.3, currentAlpha * 0.25);
+                ellipse(c.x, c.y, currentRadius * 3.0);
+
+                // Middle glow layer - more translucent
+                fill(dynamicHue, dynamicSat * 0.9, dynamicBright * 1.2, currentAlpha * 0.4);
+                ellipse(c.x, c.y, currentRadius * 2.5);
+
+                // Core layer - still translucent but more visible
+                fill(dynamicHue, dynamicSat, dynamicBright * 1.1, currentAlpha * 0.6);
+                ellipse(c.x, c.y, currentRadius * 2); // Draws the internal circle core with ethereal translucency.
+            }
+        }
+
+        /**
+         * Blob Class: Defines the properties and behavior of the main amorphous, pulsating organism.
+         */
+        class Blob {
+            constructor(x, y, r, colorPalette) {
+                this.x = x; // The X coordinate of the blob's center.
+                this.y = y; // The Y coordinate of the blob's center.
+                this.baseRadius = r; // The average or base radius of the blob.
+                this.noiseScale = 0.008; // Determines the 'granularity' or frequency of the Perlin noise, affecting the smoothness of the shape.
+                this.timeOffset = random(1000); // A unique time offset for noise, ensuring independent animation from other blobs or elements.
+                this.numPoints = 200; // The number of vertices used to draw the blob's outline. More points result in a smoother shape.
+                this.amplitude = 45; // Increased amplitude for more dramatic shape variation with larger cell.
+                this.hairLength = 25; // Increased maximum length of cilia to match bigger cell size.
+                this.hairDensity = 2; // Controls how frequently hair-like projections are drawn along the outline (lower value = more dense hairs).
+
+                // Enhanced color properties for the blob with higher contrast
+                this.baseHue = colorPalette.hue; // Use the natural palette hue.
+                this.baseSat = colorPalette.sat; // Use the natural palette saturation.
+                this.baseBright = colorPalette.bright; // Use the natural palette brightness.
+                this.hueSpeed = random(0.3, 0.7); // Slower, more natural hue oscillation.
+                this.saturation = this.baseSat + random(-8, 10); // Increased saturation range for contrast.
+                this.brightness = this.baseBright + random(-8, 15); // Increased brightness range for contrast.
+
+                // Enhanced color variation properties for higher contrast
+                this.hueVariation = random(-15, 15); // More pronounced hue drift for cellular appearance
+                this.saturationVariation = random(-10, 10); // Saturation variation for membrane fluidity
+                this.brightnessVariation = random(-20, 20); // Brightness variation for health/activity
+            }
+
+            /**
+             * Updates the state of the blob for animation purposes.
+             * This includes advancing its internal noise-based animation and overall position.
+             */
+            update() {
+                this.timeOffset += animationSpeed * 0.5; // Increments the time offset, causing the blob's shape to continuously morph.
+                // Simple smooth movement around the canvas center
+                this.x = width / 2 + sin(this.timeOffset * 0.8) * 30;
+                this.y = height / 2 + cos(this.timeOffset * 0.6) * 25;
+
+                // Enhanced natural color variations for cellular membrane effect
+                let membraneFluidity = map(noise(this.timeOffset * 0.1), 0, 1, 0.8, 1.2); // Simulates membrane fluidity
+                let metabolicActivity = map(noise(this.timeOffset * 0.05), 0, 1, 0.9, 1.1); // Simulates metabolic activity
+
+                // Natural hue variations with membrane fluidity effect
+                this.currentHue = (this.baseHue + sin(frameCount * animationSpeed * this.hueSpeed) * this.hueVariation * membraneFluidity) % 360;
+                if (this.currentHue < 0) this.currentHue += 360; // Ensure hue stays positive.
+
+                // Dynamic saturation and brightness with higher contrast ranges
+                this.currentSat = constrain(this.saturation + cos(frameCount * animationSpeed * 0.8) * this.saturationVariation, 45, 90);
+                this.currentBright = constrain(this.brightness + sin(frameCount * animationSpeed * 0.6) * this.brightnessVariation * metabolicActivity, 55, 100);
+            }
+
+            /**
+             * Draws the blob and its hair-like projections on the canvas.
+             */
+            display() {
+                push(); // Saves the current drawing style settings and transformations.
+                translate(this.x, this.y); // Moves the drawing origin to the blob's current center, simplifying coordinate calculations.
+
+                // Calculates the blob's current pulsing radius.
+                let currentRadius = this.baseRadius + map(noise(this.timeOffset * 0.5), 0, 1, -10, 10);
+                let outlineVertices = []; // An array to temporarily store the calculated vertices of the blob's outline.
+
+                // Create layered cellular membrane effect with translucency
+                // Outer membrane layer - translucent with ethereal appearance
+                beginShape();
+                fill(this.currentHue, this.currentSat * 0.85, this.currentBright * 1.2, 0.08);
+                stroke((this.currentHue + 15) % 360, this.currentSat * 0.8, this.currentBright * 1.3, 0.18);
+                strokeWeight(1.0);
+
+                // Generates the blob's organic, continuously morphing shape using Perlin noise.
+                for (let i = 0; i < this.numPoints; i++) {
+                    let angle = map(i, 0, this.numPoints, 0, TWO_PI); // Calculates an angle around the circle for each vertex.
+                    // Determines noise coordinates based on the angle, current radius, and time offset for a dynamic shape.
+                    let xoff = cos(angle) * currentRadius * this.noiseScale + this.timeOffset;
+                    let yoff = sin(angle) * currentRadius * this.noiseScale + this.timeOffset;
+                    // Perturbs the radius at each point based on Perlin noise, creating an uneven, organic edge.
+                    let distance = (currentRadius + map(noise(xoff, yoff), 0, 1, -this.amplitude, this.amplitude)) * 1.05; // Slightly larger for outer layer
+                    let x = cos(angle) * distance;
+                    let y = sin(angle) * distance;
+                    vertex(x, y); // Adds the calculated point as a vertex to the shape.
+                }
+                endShape(CLOSE); // Closes the outer membrane layer.
+
+                // Inner membrane layer - more translucent with ethereal quality
+                beginShape();
+                fill(this.currentHue, this.currentSat, this.currentBright * 1.1, 0.12);
+                stroke((this.currentHue + 25) % 360, this.currentSat * 0.95, this.currentBright * 1.05, 0.25);
+                strokeWeight(1.5);
+
+                // Regenerate vertices for inner layer (slightly smaller)
+                for (let i = 0; i < this.numPoints; i++) {
+                    let angle = map(i, 0, this.numPoints, 0, TWO_PI);
+                    let xoff = cos(angle) * currentRadius * this.noiseScale + this.timeOffset;
+                    let yoff = sin(angle) * currentRadius * this.noiseScale + this.timeOffset;
+                    let distance = currentRadius + map(noise(xoff, yoff), 0, 1, -this.amplitude, this.amplitude);
+                    let x = cos(angle) * distance;
+                    let y = sin(angle) * distance;
+                    vertex(x, y);
+                    outlineVertices.push({ x: x, y: y, angle: angle }); // Store for cilia
+                }
+                endShape(CLOSE); // Closes the inner membrane layer.
+
+                // Draws the hair-like projections (cilia/pseudopods) along the blob's perimeter with natural colors.
+                // It iterates through the stored outline vertices, drawing hairs at intervals determined by `hairDensity`.
+                for (let i = 0; i < outlineVertices.length; i += this.hairDensity) {
+                    let v = outlineVertices[i]; // Gets a specific vertex from the blob's outline.
+                    let angle = v.angle; // The angle of this vertex relative to the blob's center.
+
+                    // Simple noise-based cilia movement
+                    let hair_len = this.hairLength * map(noise(v.x * 0.01 + this.timeOffset * 5, v.y * 0.01), 0, 1, 0.3, 1.2);
+                    let hair_angle_offset = map(noise(v.x * 0.05 + this.timeOffset * 10, v.y * 0.05), 0, 1, -0.3, 0.3);
+
+                    // Enhanced cilia colors with higher contrast for better visibility
+                    let ciliaHue = (this.currentHue + random(-12, 12)) % 360; // Controlled hue variation
+                    let ciliaSat = constrain(this.currentSat + random(-8, 18), 60, 95); // More saturated for visibility
+                    let ciliaBright = constrain(this.currentBright + random(-3, 15), 75, 100); // Brighter for maximum contrast
+
+                    stroke(ciliaHue, ciliaSat, ciliaBright, 0.45); // More translucent cilia for ethereal effect.
+                    strokeWeight(1.2); // Thicker stroke for better visibility.
+                    // Draws a line extending outwards from the outline vertex, with modulated length and angle.
+                    line(v.x, v.y, v.x + cos(angle + hair_angle_offset) * hair_len, v.y + sin(angle + hair_angle_offset) * hair_len);
+                }
+                pop(); // Restores the previous drawing style settings and transformations, ensuring they don't affect other elements.
+            }
+        }
+    </script>
+</body>
+</html>
