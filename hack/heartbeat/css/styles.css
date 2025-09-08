@@ -1,0 +1,313 @@
+/* Agent by Night - Styles */
+
+body {
+  background-color: #0a0a0a !important;
+  position: relative;
+  z-index: 1;
+}
+
+#p5-canvas-container {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  z-index: -1;
+  pointer-events: none;
+  transition: width 0.2s ease, height 0.2s ease;
+}
+
+/* Fullscreen adjustments */
+body:fullscreen #p5-canvas-container,
+body:-webkit-full-screen #p5-canvas-container,
+body:-moz-full-screen #p5-canvas-container,
+body:-ms-fullscreen #p5-canvas-container {
+  width: 100vw !important;
+  height: 100vh !important;
+}
+
+#info-box {
+  position: fixed;
+  top: 20px;
+  left: 20px;
+  background: rgba(10, 10, 10, 0.95);
+  color: #ffffff;
+  padding: 15px;
+  border-radius: 8px;
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  max-width: 280px;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  font-size: 14px;
+  line-height: 1.4;
+  z-index: 1000;
+  backdrop-filter: blur(15px);
+  box-shadow: 0 6px 25px rgba(0, 0, 0, 0.5), 0 0 20px rgba(255, 255, 255, 0.1);
+  opacity: 1;
+  transform: translateX(0);
+  transition: opacity 1s ease-out, transform 1s ease-out;
+}
+
+#info-box h3 {
+  margin: 0 0 10px 0;
+  font-size: 16px;
+  font-weight: 600;
+  color: #ffffff;
+  text-shadow: 0 0 10px rgba(255, 255, 255, 0.3);
+}
+
+#info-box p {
+  margin: 5px 0;
+  opacity: 0.95;
+  color: #e0e0e0;
+}
+
+#info-box strong {
+  color: #ffffff;
+  font-weight: 700;
+  text-shadow: 0 0 5px rgba(255, 255, 255, 0.5);
+}
+
+#info-box.fade-out {
+  opacity: 0;
+  transform: translateX(-20px);
+}
+
+#info-toggle {
+  position: fixed;
+  top: 20px;
+  left: 20px;
+  z-index: 1000;
+}
+
+#show-info-btn {
+  background: rgba(10, 10, 10, 0.8);
+  border: 2px solid rgba(255, 255, 255, 0.3);
+  border-radius: 50%;
+  width: 45px;
+  height: 45px;
+  color: #ffffff;
+  font-size: 18px;
+  font-weight: bold;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.3s ease;
+  backdrop-filter: blur(10px);
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.4), 0 0 15px rgba(255, 255, 255, 0.2);
+}
+
+#show-info-btn:hover {
+  background: rgba(20, 20, 20, 0.9);
+  border-color: rgba(255, 255, 255, 0.6);
+  transform: scale(1.15);
+  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.5), 0 0 25px rgba(255, 255, 255, 0.3);
+}
+
+#theme-selector {
+  position: fixed;
+  top: 20px;
+  right: 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  z-index: 1000;
+}
+
+.theme-btn {
+  background: rgba(10, 10, 10, 0.8);
+  border: 2px solid rgba(255, 255, 255, 0.3);
+  border-radius: 50%;
+  width: 40px;
+  height: 40px;
+  color: #ffffff;
+  font-size: 16px;
+  font-weight: bold;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.3s ease;
+  backdrop-filter: blur(10px);
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.4), 0 0 15px rgba(255, 255, 255, 0.2);
+}
+
+.theme-btn:hover {
+  background: rgba(20, 20, 20, 0.9);
+  border-color: rgba(255, 255, 255, 0.6);
+  transform: scale(1.1);
+  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.5), 0 0 25px rgba(255, 255, 255, 0.3);
+}
+
+.theme-btn.active {
+  border-color: rgba(255, 255, 255, 0.9);
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.4), 0 0 25px rgba(255, 255, 255, 0.5);
+}
+
+#fullscreen-toggle {
+  position: fixed;
+  bottom: 20px;
+  right: 20px;
+  z-index: 1000;
+}
+
+#auto-theme-toggle {
+  position: fixed;
+  bottom: 20px;
+  right: 80px;
+  z-index: 1000;
+}
+
+#fullscreen-btn {
+  background: rgba(10, 10, 10, 0.8);
+  border: 2px solid rgba(255, 255, 255, 0.3);
+  border-radius: 50%;
+  width: 50px;
+  height: 50px;
+  color: #ffffff;
+  font-size: 20px;
+  font-weight: bold;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.3s ease;
+  backdrop-filter: blur(10px);
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.4), 0 0 15px rgba(255, 255, 255, 0.2);
+}
+
+#fullscreen-btn:hover {
+  background: rgba(20, 20, 20, 0.9);
+  border-color: rgba(255, 255, 255, 0.6);
+  transform: scale(1.1);
+  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.5), 0 0 25px rgba(255, 255, 255, 0.4);
+}
+
+#auto-theme-btn {
+  background: rgba(10, 10, 10, 0.8);
+  border: 2px solid rgba(255, 255, 255, 0.3);
+  border-radius: 50%;
+  width: 50px;
+  height: 50px;
+  color: #ffffff;
+  font-size: 20px;
+  font-weight: bold;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.3s ease;
+  backdrop-filter: blur(10px);
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.4), 0 0 15px rgba(255, 255, 255, 0.2);
+}
+
+#auto-theme-btn:hover {
+  background: rgba(20, 20, 20, 0.9);
+  border-color: rgba(255, 255, 255, 0.6);
+  transform: scale(1.1);
+  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.5), 0 0 25px rgba(255, 255, 255, 0.4);
+}
+
+#auto-theme-btn.active {
+  border-color: rgba(255, 255, 255, 0.9);
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.4), 0 0 25px rgba(255, 255, 255, 0.5);
+  animation: spin 2s linear infinite;
+}
+
+@keyframes spin {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}
+
+@media (max-width: 600px) {
+  #info-box {
+    top: 20px; /* Moved down by 10px for better mobile positioning */
+    left: 10px;
+    right: 10px;
+    max-width: none;
+    padding: 10px;
+  }
+
+  #theme-selector {
+    top: 15px;
+    right: 15px;
+    flex-direction: row;
+    gap: 6px;
+  }
+
+  .theme-btn {
+    width: 35px;
+    height: 35px;
+    font-size: 14px;
+  }
+
+  #fullscreen-toggle {
+    display: none; /* Hide fullscreen button on mobile devices */
+  }
+
+  #auto-theme-toggle {
+    right: 15px;
+  }
+
+  #fullscreen-btn {
+    width: 45px;
+    height: 45px;
+    font-size: 18px;
+  }
+}
+
+/* iOS Fullscreen Web App Support */
+@supports (-webkit-touch-callout: none) {
+  /* iOS Safari specific styles */
+  body {
+    -webkit-touch-callout: none;
+    -webkit-user-select: none;
+    -webkit-tap-highlight-color: transparent;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  /* Hide Safari UI when in fullscreen web app mode */
+  body:fullscreen,
+  body:-webkit-full-screen {
+    padding-top: env(safe-area-inset-top);
+    padding-bottom: env(safe-area-inset-bottom);
+    padding-left: env(safe-area-inset-left);
+    padding-right: env(safe-area-inset-right);
+  }
+
+  #p5-canvas-container {
+    -webkit-transform: translateZ(0);
+    transform: translateZ(0);
+  }
+
+  /* Prevent zoom on input focus */
+  input, textarea, select {
+    font-size: 16px;
+  }
+}
+
+/* iOS Status Bar Adjustments */
+@media screen and (display-mode: standalone) {
+  /* Web App mode specific adjustments */
+  body {
+    background-color: #0a0a0a !important;
+    min-height: 100vh;
+    min-height: -webkit-fill-available;
+  }
+
+  #p5-canvas-container {
+    min-height: 100vh;
+    min-height: -webkit-fill-available;
+  }
+}
+
+/* Handle notch and home indicator on modern iOS devices */
+@supports (padding: max(0px)) {
+  body:fullscreen,
+  body:-webkit-full-screen {
+    padding-top: max(0px, env(safe-area-inset-top));
+    padding-bottom: max(0px, env(safe-area-inset-bottom));
+    padding-left: max(0px, env(safe-area-inset-left));
+    padding-right: max(0px, env(safe-area-inset-right));
+  }
+}

@@ -1,0 +1,54 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no, viewport-fit=cover" />
+
+    <!-- iOS Web App Fullscreen Support -->
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+    <meta name="apple-mobile-web-app-title" content="Agent by Night" />
+
+    <!-- Web App Manifest -->
+    <link rel="manifest" href="manifest.json" />
+
+    <!-- iOS Touch Icons -->
+    <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png" />
+    <link rel="apple-touch-icon" sizes="152x152" href="/apple-touch-icon-152x152.png" />
+    <link rel="apple-touch-icon" sizes="120x120" href="/apple-touch-icon-120x120.png" />
+
+    <!-- iOS Startup Images -->
+    <link rel="apple-touch-startup-image" href="/apple-touch-startup-image-750x1334.png" media="(device-width: 375px) and (device-height: 667px) and (-webkit-device-pixel-ratio: 2)" />
+    <link rel="apple-touch-startup-image" href="/apple-touch-startup-image-640x1136.png" media="(device-width: 320px) and (device-height: 568px) and (-webkit-device-pixel-ratio: 2)" />
+
+    <script defer src="/_vercel/insights/script.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/p5@1.7.0/lib/p5.min.js"></script>
+    <link
+      rel="stylesheet"
+      href="https://cdn.jsdelivr.net/npm/@exampledev/new.css@1.1.2/new.min.css"
+    />
+    <title>Agent by Night</title>
+    <meta name="description" content="Animation interactive p5.js" />
+    <link rel="stylesheet" href="css/styles.css" />
+  </head>
+  <body>
+    <div id="p5-canvas-container"></div>
+    <div id="info-box">
+      <h3>Interactive Effects</h3>
+      <p><strong>Move your mouse</strong> to attract particles</p>
+      <p><strong>Click anywhere</strong> to create ripple effects</p>
+      <p><strong>On mobile:</strong> Tilt device and shake for sensor effects</p>
+      <p><strong>Multi-touch:</strong> Pinch to zoom, 3-finger tap for explosion</p>
+      <p><strong>Themes:</strong> Auto-cycling through themes every 5 seconds</p>
+      <p><strong>Heartbeat:</strong> Press 'H' to toggle heartbeat pulsing effect</p>
+      <p><strong>Watch</strong> the dynamic particle connections and heartbeat rhythm</p>
+    </div>
+    <div id="info-toggle" style="display: none;">
+      <button id="show-info-btn" title="Show interaction guide">ℹ️</button>
+    </div>
+    <div id="fullscreen-toggle">
+      <button id="fullscreen-btn" title="Toggle fullscreen">⛶</button>
+    </div>
+    <script src="js/script.js"></script>
+  </body>
+</html>
