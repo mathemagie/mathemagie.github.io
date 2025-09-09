@@ -1,0 +1,178 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Interactive Face Animation</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/p5.js/1.4.0/p5.min.js"></script>
+    <style>
+        body {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            margin: 0;
+            background-color: #f0f0f0;
+        }
+        canvas {
+            border: 1px solid #ccc;
+        }
+    </style>
+</head>
+<body>
+    <script>
+        // --- Animation Control Variables ---
+
+        // These variables control the "lerp" (linear interpolation) speed.
+        // A smaller value (e.g., 0.05) results in slower, smoother following.
+        // A larger value (e.g., 0.2) makes the movement faster and more responsive.
+        const easing = 0.08;
+
+        // These variables control the parallax effect. Each value is a multiplier
+        // for the mouse's distance from the center. A larger number means the
+        // element will move more, appearing "closer" to the viewer.
+        const bodyParallax = 0.02;
+        const headParallax = 0.04;
+        const earsParallax = 0.06;
+        const shadowParallax = 0.05;
+        const eyesParallax = 0.1;
+        const hairParallax = 0.12;
+        const hairSwoopParallax = 0.18;
+
+        // --- Color Palette ---
+        // Storing colors in variables makes them easy to change later.
+        const bgColor = '#FFFFFF';
+        const shadowColor = '#E0E0E0';
+        const bodyColor = '#BDBDBD';
+        const neckColor = '#D1D1D1';
+        const headColor = '#C2C2C2';
+        const hairColor = '#8D8D8D';
+        const glassesColor = '#757575';
+        const eyesColor = '#FFFFFF';
+
+        // Variables to store the current "eased" position of the mouse.
+        // Instead of using mouseX/mouseY directly, we'll smoothly move
+        // these values towards the actual mouse position.
+        let easedMouseX = 0;
+        let easedMouseY = 0;
+
+
+        /**
+         * The setup() function runs once when the program starts.
+         * It's used to define initial environment properties like
+         * screen size and background color.
+         */
+        function setup() {
+            createCanvas(800, 600);
+            // Set the initial eased mouse position to the center of the canvas.
+            easedMouseX = width / 2;
+            easedMouseY = height / 2;
+        }
+
+        /**
+         * The draw() function runs continuously in a loop after setup() has finished.
+         * All animation and drawing logic is placed here.
+         */
+        function draw() {
+            background(bgColor);
+
+            // --- Smooth Mouse Movement (Lerping) ---
+            // Calculate the distance between the current eased position and the actual mouse position.
+            let dx = mouseX - easedMouseX;
+            let dy = mouseY - easedMouseY;
+            // Move the eased position a fraction of the distance (controlled by 'easing')
+            // towards the actual mouse position. This creates a smooth following effect.
+            easedMouseX += dx * easing;
+            easedMouseY += dy * easing;
+
+            // --- Calculate Parallax Offsets ---
+            // The offset is calculated based on the distance of the eased mouse
+            // from the center of the canvas, multiplied by the parallax factor.
+            let centerX = width / 2;
+            let centerY = height / 2;
+
+            // --- Draw Elements in Order (Back to Front) ---
+            // The order is important for correct layering.
+
+            // 1. Shoulders / Body
+            let bodyOffsetX = (easedMouseX - centerX) * bodyParallax;
+            let bodyOffsetY = (easedMouseY - centerY) * bodyParallax;
+            noStroke();
+            fill(bodyColor);
+            arc(centerX + bodyOffsetX, centerY + bodyOffsetY + 150, 300, 200, PI, TWO_PI);
+            fill(shadowColor);
+            rect(centerX + bodyOffsetX - 170, centerY + bodyOffsetY + 145, 340, 10);
+
+            // 2. Ears (drawn behind the head)
+            let earsOffsetX = (easedMouseX - centerX) * earsParallax;
+            let earsOffsetY = (easedMouseY - centerY) * earsParallax;
+            fill(headColor);
+            // Left Ear
+            ellipse(centerX + earsOffsetX - 105, centerY + earsOffsetY, 30, 50);
+            // Right Ear
+            ellipse(centerX + earsOffsetX + 105, centerY + earsOffsetY, 30, 50);
+
+            // 3. Neck
+            // The neck uses the same parallax as the body to look connected.
+            fill(neckColor);
+            rect(centerX + bodyOffsetX - 25, centerY + bodyOffsetY + 60, 50, 50, 5);
+
+            // 4. Face Shadow
+            let shadowOffsetX = (easedMouseX - centerX) * shadowParallax;
+            let shadowOffsetY = (easedMouseY - centerY) * shadowParallax;
+            fill(shadowColor);
+            ellipse(centerX + shadowOffsetX, centerY + shadowOffsetY, 220, 245);
+
+            // 5. Head
+            let headOffsetX = (easedMouseX - centerX) * headParallax;
+            let headOffsetY = (easedMouseY - centerY) * headParallax;
+            fill(headColor);
+            ellipse(centerX + headOffsetX, centerY + headOffsetY, 210, 240);
+
+
+            // 6. Hair (Back Layer)
+            let hairOffsetX = (easedMouseX - centerX) * hairParallax;
+            let hairOffsetY = (easedMouseY - centerY) * hairParallax;
+            fill(hairColor);
+            arc(centerX + hairOffsetX, centerY + hairOffsetY - 70, 220, 150, PI, TWO_PI);
+
+            // 7. Eyes, Glasses, and Mouth
+            let eyesOffsetX = (easedMouseX - centerX) * eyesParallax;
+            let eyesOffsetY = (easedMouseY - centerY) * eyesParallax;
+
+            // Glasses
+            fill(glassesColor);
+            ellipse(centerX + eyesOffsetX - 50, centerY + eyesOffsetY - 10, 70, 70); // Left lens
+            ellipse(centerX + eyesOffsetX + 50, centerY + eyesOffsetY - 10, 70, 70); // Right lens
+            rect(centerX + eyesOffsetX - 15, centerY + eyesOffsetY - 15, 30, 5); // Bridge
+
+            // Eyes
+            fill(eyesColor);
+            ellipse(centerX + eyesOffsetX - 50, centerY + eyesOffsetY - 10, 20, 20); // Left eye
+            ellipse(centerX + eyesOffsetX + 50, centerY + eyesOffsetY - 10, 20, 20); // Right eye
+
+            // Mouth
+            noFill();
+            stroke(glassesColor);
+            strokeWeight(8);
+            arc(centerX + eyesOffsetX, centerY + eyesOffsetY + 50, 80, 50, 0, PI);
+            strokeWeight(1);
+            noStroke();
+
+
+            // 8. Hair (Front Swoop - moves the most)
+            let swoopOffsetX = (easedMouseX - centerX) * hairSwoopParallax;
+            let swoopOffsetY = (easedMouseY - centerY) * hairSwoopParallax;
+            fill(hairColor);
+            beginShape();
+            vertex(centerX + swoopOffsetX - 100, centerY + swoopOffsetY - 80);
+            bezierVertex(
+                centerX + swoopOffsetX - 50, centerY + swoopOffsetY - 180,
+                centerX + swoopOffsetX + 80, centerY + swoopOffsetY - 150,
+                centerX + swoopOffsetX + 40, centerY + swoopOffsetY - 80
+            );
+            endShape(CLOSE);
+        }
+    </script>
+</body>
+</html>
