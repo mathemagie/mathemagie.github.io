@@ -90,14 +90,10 @@
                 const isAudioReady = () => window.__audioReady === true && audioOpen && audioOpen.src && audioClose && audioClose.src;
 
                 let segmentDelays = [];
-                let bounceFactor = 0;
                 let lastStateChange = 0;
 
-                // Couleurs extraites du parapluie rouge de l'image
-                let colors = [
-                    '#DC2626', '#EF4444', '#F87171', '#FCA5A5',
-                    '#B91C1C', '#991B1B', '#7F1D1D', '#450A0A'
-                ];
+                // Single red color for all umbrella segments
+                let umbrellaColor = '#DC2626';
 
                 p.setup = function() {
                     let canvas = p.createCanvas(100, 100);
@@ -174,13 +170,11 @@
                 function startOpening() {
                     animationState = 'opening';
                     targetOpenFactor = 1;
-                    bounceFactor = 0;
                 }
 
                 function startClosing() {
                     animationState = 'closing';
                     targetOpenFactor = 0;
-                    bounceFactor = 0;
                 }
 
                 function animateToTarget() {
@@ -199,11 +193,6 @@
 
                     let easing = 0.15; // Plus rapide pour une animation plus dynamique
                     currentOpenFactor += difference * easing;
-
-                    if (p.abs(difference) < 0.1) {
-                        bounceFactor = p.sin(p.frameCount * 10) * 0.02;
-                        currentOpenFactor += bounceFactor;
-                    }
                 }
 
                 function drawBackground() {
@@ -225,7 +214,7 @@
                         p.rotate(i * segmentAngle);
 
                         let segmentOpenFactor = calculateSegmentOpenFactor(i, openFactor);
-                        let segmentColor = p.color(colors[i]);
+                        let segmentColor = p.color(umbrellaColor);
                         let brightness = p.map(segmentOpenFactor, 0, 1, 0.6, 1);
                         segmentColor = p.lerpColor(segmentColor, p.color(0, 0, 0), 1 - brightness);
 
@@ -288,8 +277,8 @@
                     let baseR = umbrellaRadius * openFactor;
                     if (baseR <= 0.5) return;
                     p.noFill();
-                    p.stroke(180, 180, 180, 220);
-                    p.strokeWeight(1.8);
+                    p.stroke(120, 120, 120, 120);  // Much darker and less opaque
+                    p.strokeWeight(1.5);             // Slightly thinner
                     p.circle(0, 0, baseR * 2);
                 }
 
@@ -307,9 +296,9 @@
                         p.fill(0, 0, 0, alpha);
                         p.circle(0, 0, r * 2);
                     }
-                    // highlight doux en haut-gauche
-                    p.fill(255, 255, 255, 30);
-                    p.ellipse(-baseR * 0.25, -baseR * 0.25, baseR * 0.6, baseR * 0.35);
+                    // highlight doux en haut-gauche (much subtler)
+                    p.fill(255, 255, 255, 8);   // Much less bright
+                    p.ellipse(-baseR * 0.25, -baseR * 0.25, baseR * 0.4, baseR * 0.2);
                     p.pop();
                 }
 
