@@ -63,11 +63,89 @@
 <body>
     <div id="canvases-container" class="canvases-container"></div>
 
-    <!-- Sons (optionnels). Déposez vos fichiers dans assets/ et mettez les src ci-dessous -->
+    <!-- Enhanced Audio System for Umbrella Sounds -->
     <audio id="audio-open" preload="auto" muted playsinline style="display:none"></audio>
     <audio id="audio-close" preload="auto" muted playsinline style="display:none"></audio>
 
+    <!-- Audio pool for multiple simultaneous sounds -->
+    <audio id="audio-open-1" preload="auto" muted playsinline style="display:none"></audio>
+    <audio id="audio-open-2" preload="auto" muted playsinline style="display:none"></audio>
+    <audio id="audio-close-1" preload="auto" muted playsinline style="display:none"></audio>
+    <audio id="audio-close-2" preload="auto" muted playsinline style="display:none"></audio>
+
     <script>
+        // Enhanced Audio Manager for realistic umbrella sounds
+        class UmbrellaAudioManager {
+            constructor() {
+                this.masterVolume = 0.4; // Overall volume control (0-1)
+                this.openPool = [
+                    document.getElementById('audio-open'),
+                    document.getElementById('audio-open-1'),
+                    document.getElementById('audio-open-2')
+                ];
+                this.closePool = [
+                    document.getElementById('audio-close'),
+                    document.getElementById('audio-close-1'),
+                    document.getElementById('audio-close-2')
+                ];
+                this.currentOpenIndex = 0;
+                this.currentCloseIndex = 0;
+                this.lastPlayTime = 0;
+                this.minPlayInterval = 150; // Minimum time between sounds (ms)
+            }
+
+            isReady() {
+                return window.__audioUnlocked === true && window.__audioReady === true;
+            }
+
+            playOpen(volume = 1.0) {
+                if (!this.isReady()) return;
+
+                const now = Date.now();
+                if (now - this.lastPlayTime < this.minPlayInterval) return;
+
+                const audio = this.openPool[this.currentOpenIndex];
+                if (audio && audio.src) {
+                    try {
+                        audio.volume = this.masterVolume * volume;
+                        audio.currentTime = 0;
+                        audio.play();
+                        this.currentOpenIndex = (this.currentOpenIndex + 1) % this.openPool.length;
+                        this.lastPlayTime = now;
+                    } catch(e) {
+                        console.warn('Audio play failed:', e);
+                    }
+                }
+            }
+
+            playClose(volume = 1.0) {
+                if (!this.isReady()) return;
+
+                const now = Date.now();
+                if (now - this.lastPlayTime < this.minPlayInterval) return;
+
+                const audio = this.closePool[this.currentCloseIndex];
+                if (audio && audio.src) {
+                    try {
+                        audio.volume = this.masterVolume * volume;
+                        audio.currentTime = 0;
+                        audio.play();
+                        this.currentCloseIndex = (this.currentCloseIndex + 1) % this.closePool.length;
+                        this.lastPlayTime = now;
+                    } catch(e) {
+                        console.warn('Audio play failed:', e);
+                    }
+                }
+            }
+
+            setMasterVolume(volume) {
+                this.masterVolume = Math.max(0, Math.min(1, volume));
+            }
+        }
+
+        // Create global audio manager instance
+        const audioManager = new UmbrellaAudioManager();
+
         // Fonction pour créer une animation de parapluie
         function createUmbrellaAnimation(containerId) {
             return new p5((p) => {
@@ -83,14 +161,41 @@
                 let animationSpeed = 0.02;
                 let animationActive = false;
 
-                // Audio refs (partagés par la page)
-                const audioOpen = document.getElementById('audio-open');
-                const audioClose = document.getElementById('audio-close');
-                const isAudioUnlocked = () => window.__audioUnlocked === true;
-                const isAudioReady = () => window.__audioReady === true && audioOpen && audioOpen.src && audioClose && audioClose.src;
+                // Enhanced audio functions with randomization and state-based volume
+                function playOpenSound() {
+                    // Vary volume based on how open the umbrella currently is
+                    let baseVolume = 0.6 + (currentOpenFactor * 0.3); // 0.6 to 0.9
+                    let randomVariation = p.random(-0.1, 0.1); // ±10% variation
+                    let finalVolume = Math.max(0.3, Math.min(0.9, baseVolume + randomVariation));
+
+                    audioManager.playOpen(finalVolume);
+                }
+
+                function playCloseSound() {
+                    // Closing sound gets louder as umbrella closes
+                    let baseVolume = 0.5 + ((1 - currentOpenFactor) * 0.4); // 0.5 to 0.9
+                    let randomVariation = p.random(-0.08, 0.08); // ±8% variation
+                    let finalVolume = Math.max(0.4, Math.min(0.8, baseVolume + randomVariation));
+
+                    audioManager.playClose(finalVolume);
+                }
+
+                function playHoverSound() {
+                    if (hasPlayedHoverSound) return; // Only play once per umbrella
+
+                    const now = p.millis();
+                    if (now - lastHoverTime < 2000) return; // Minimum 2 seconds between hover sounds
+
+                    // Very quiet hover sound (20% of normal volume)
+                    audioManager.playOpen(0.2);
+                    hasPlayedHoverSound = true;
+                    lastHoverTime = now;
+                }
 
                 let segmentDelays = [];
                 let lastStateChange = 0;
+                let hasPlayedHoverSound = false; // Track if we've played hover sound for this umbrella
+                let lastHoverTime = 0;
 
                 // Single red color for all umbrella segments
                 let umbrellaColor = '#DC2626';
@@ -116,19 +221,14 @@
                     drawHandle();
                 };
 
-                function playOpenSound() {
-                    if (!isAudioUnlocked() || !isAudioReady()) return;
-                    try { audioOpen.currentTime = 0; audioOpen.play(); } catch(e) {}
-                }
-                function playCloseSound() {
-                    if (!isAudioUnlocked() || !isAudioReady()) return;
-                    try { audioClose.currentTime = 0; audioClose.play(); } catch(e) {}
-                }
 
                 function updateAnimation() {
                     let mouseIsOver = p.mouseX >= 0 && p.mouseX <= p.width && p.mouseY >= 0 && p.mouseY <= p.height;
 
                     if (mouseIsOver) {
+                        // Play subtle hover sound for first-time hover
+                        playHoverSound();
+
                         // Fermer sur hover
                         if (animationState !== 'closing' && animationState !== 'closed') {
                             if (!animationActive) {
@@ -401,41 +501,85 @@
     </script>
 
     <script>
-        // Configurer des sons par défaut (modifiable). Nécessite un geste utilisateur pour jouer.
+        // Enhanced Audio Configuration with multiple sound sources
         (function initAudioDefaults(){
+            // Primary audio elements
             const openEl = document.getElementById('audio-open');
             const closeEl = document.getElementById('audio-close');
-            // Définir des sources par défaut (remplacez ce chemin si besoin)
-            // ATTENTION: le caractère # doit être encodé en %23 dans une URL
-            // If running on localhost, use a different audio file for development
-            const umbrellaSfx = (location.hostname === "127.0.0.1" || location.hostname === "localhost")
-                ? "assets/audio.mp3"
-                : "/hack/umbrella/assets/audio.mp3";
-            console.info('[AUDIO] set src', { umbrellaSfx });
-            if (!openEl.src) openEl.src = umbrellaSfx;
-            if (!closeEl.src) closeEl.src = umbrellaSfx;
-            console.info('[AUDIO] set src', { openSrc: openEl.src, closeSrc: closeEl.src });
+
+            // Audio pool elements
+            const open1El = document.getElementById('audio-open-1');
+            const open2El = document.getElementById('audio-open-2');
+            const close1El = document.getElementById('audio-close-1');
+            const close2El = document.getElementById('audio-close-2');
+
+            // Audio file paths (you can replace these with different sounds)
+            const basePath = (location.hostname === "127.0.0.1" || location.hostname === "localhost")
+                ? "assets/"
+                : "/hack/umbrella/assets/";
+
+            // For now, use the same sound file for all (you can replace with different sounds)
+            const openSound = basePath + "audio.mp3";
+            const closeSound = basePath + "audio.mp3";
+
+            console.info('[AUDIO] Initializing enhanced audio system');
+
+            // Set sources for all audio elements
+            const allAudioElements = [openEl, closeEl, open1El, open2El, close1El, close2El];
+            allAudioElements.forEach((el, index) => {
+                if (el && !el.src) {
+                    // Alternate between open and close sounds
+                    el.src = (index % 2 === 0) ? openSound : closeSound;
+                }
+            });
+
+            console.info('[AUDIO] Sources set for all audio elements');
 
             // Marqueurs globaux
             window.__audioUnlocked = false;
             window.__audioReady = false;
 
-            // Quand au moins une source peut jouer, on marque prêt
-            const markReady = () => { window.__audioReady = true; console.info('[AUDIO] canplaythrough → ready=true'); };
-            openEl.addEventListener('canplaythrough', markReady, { once: true });
-            closeEl.addEventListener('canplaythrough', markReady, { once: true });
+            // Mark ready when all audio elements are loaded
+            let loadedCount = 0;
+            const totalElements = allAudioElements.length;
+            const markReady = () => {
+                loadedCount++;
+                console.info(`[AUDIO] ${loadedCount}/${totalElements} elements loaded`);
+                if (loadedCount >= totalElements) {
+                    window.__audioReady = true;
+                    console.info('[AUDIO] All elements ready - audio system active!');
+                }
+            };
+
+            allAudioElements.forEach(el => {
+                if (el) el.addEventListener('canplaythrough', markReady, { once: true });
+            });
 
             const unlock = async (ev) => {
                 console.info('[AUDIO] unlock gesture', ev && ev.type);
                 try {
-                    // Essayer de jouer en mode muet pour déverrouiller
-                    openEl.muted = true; closeEl.muted = true;
-                    await Promise.allSettled([openEl.play(), closeEl.play()]);
-                    openEl.pause(); closeEl.pause();
-                    // Déverrouiller: enlever muted et marquer l'état global
-                    openEl.muted = false; closeEl.muted = false;
+                    // Unlock all audio elements by playing them muted first
+                    allAudioElements.forEach(el => { if (el) el.muted = true; });
+
+                    const playPromises = allAudioElements.map(el =>
+                        el ? el.play() : Promise.resolve()
+                    );
+
+                    await Promise.allSettled(playPromises);
+
+                    // Pause all and unmute
+                    allAudioElements.forEach(el => {
+                        if (el) {
+                            el.pause();
+                            el.muted = false;
+                        }
+                    });
+
+                    // Mark as unlocked and set master volume
                     window.__audioUnlocked = true;
-                    console.info('[AUDIO] unlocked=true');
+                    audioManager.setMasterVolume(0.4); // Set comfortable default volume
+                    console.info('[AUDIO] All elements unlocked and ready!');
+
                 } catch(e) {
                     console.warn('[AUDIO] unlock failed', e);
                 } finally {
