@@ -74,10 +74,14 @@
     <audio id="audio-close-2" preload="auto" muted playsinline style="display:none"></audio>
 
     <script>
-        // Enhanced Audio Manager for realistic umbrella sounds
+        // Advanced Web Audio Manager with synthesis and effects
         class UmbrellaAudioManager {
             constructor() {
-                this.masterVolume = 0.4; // Overall volume control (0-1)
+                this.masterVolume = 0.4;
+                this.audioContext = null;
+                this.isInitialized = false;
+
+                // Audio element pools
                 this.openPool = [
                     document.getElementById('audio-open'),
                     document.getElementById('audio-open-1'),
@@ -88,58 +92,517 @@
                     document.getElementById('audio-close-1'),
                     document.getElementById('audio-close-2')
                 ];
+
                 this.currentOpenIndex = 0;
                 this.currentCloseIndex = 0;
                 this.lastPlayTime = 0;
-                this.minPlayInterval = 150; // Minimum time between sounds (ms)
+                this.minPlayInterval = 150;
+
+                // Web Audio nodes for effects
+                this.masterGain = null;
+                this.reverb = null;
+                this.filter = null;
+                this.spatialPanner = null;
+            }
+
+            async initializeWebAudio() {
+                if (this.isInitialized) return true;
+
+                try {
+                    // Create audio context
+                    this.audioContext = new (window.AudioContext || window.webkitAudioContext)();
+
+                    // Create master gain node
+                    this.masterGain = this.audioContext.createGain();
+                    this.masterGain.gain.value = this.masterVolume;
+                    this.masterGain.connect(this.audioContext.destination);
+
+                    // Create reverb effect
+                    await this.createReverb();
+
+                    // Create filter for sound shaping
+                    this.filter = this.audioContext.createBiquadFilter();
+                    this.filter.type = 'lowpass';
+                    this.filter.frequency.value = 3000;
+                    this.filter.Q.value = 1;
+                    this.filter.connect(this.masterGain);
+
+                    // Create spatial audio panner
+                    this.spatialPanner = this.audioContext.createPanner();
+                    this.spatialPanner.panningModel = 'HRTF';
+                    this.spatialPanner.distanceModel = 'inverse';
+                    this.spatialPanner.refDistance = 1;
+                    this.spatialPanner.maxDistance = 1000;
+                    this.spatialPanner.rolloffFactor = 1;
+                    this.spatialPanner.coneInnerAngle = 360;
+                    this.spatialPanner.coneOuterAngle = 0;
+                    this.spatialPanner.coneOuterGain = 0;
+                    this.spatialPanner.connect(this.filter);
+
+                    this.isInitialized = true;
+                    console.info('[WebAudio] Initialized successfully');
+                    return true;
+
+                } catch (error) {
+                    console.warn('[WebAudio] Initialization failed:', error);
+                    return false;
+                }
+            }
+
+            async createReverb() {
+                // Create a simple reverb effect
+                this.reverb = this.audioContext.createConvolver();
+
+                // Create impulse response for reverb
+                const sampleRate = this.audioContext.sampleRate;
+                const length = sampleRate * 2; // 2 second reverb
+                const impulse = this.audioContext.createBuffer(2, length, sampleRate);
+
+                for (let channel = 0; channel < 2; channel++) {
+                    const channelData = impulse.getChannelData(channel);
+                    for (let i = 0; i < length; i++) {
+                        // Create a decaying noise for reverb
+                        const decay = Math.pow(1 - i / length, 2);
+                        channelData[i] = (Math.random() * 2 - 1) * decay * 0.1;
+                    }
+                }
+
+                this.reverb.buffer = impulse;
+                this.reverb.connect(this.masterGain);
             }
 
             isReady() {
                 return window.__audioUnlocked === true && window.__audioReady === true;
             }
 
-            playOpen(volume = 1.0) {
+            async playOpen(volume = 1.0, position = { x: 0, y: 0, z: 0 }) {
                 if (!this.isReady()) return;
 
                 const now = Date.now();
                 if (now - this.lastPlayTime < this.minPlayInterval) return;
 
+                // Initialize Web Audio if not already done
+                if (!this.isInitialized) {
+                    await this.initializeWebAudio();
+                }
+
                 const audio = this.openPool[this.currentOpenIndex];
                 if (audio && audio.src) {
                     try {
+                        // Set spatial position
+                        this.spatialPanner.positionX.value = position.x;
+                        this.spatialPanner.positionY.value = position.y;
+                        this.spatialPanner.positionZ.value = position.z;
+
+                        // Create Web Audio source from HTML5 audio
+                        const source = this.audioContext.createMediaElementSource(audio);
+
+                        // Apply effects chain
+                        source.connect(this.spatialPanner);
+
+                        // Add volume envelope for more natural sound
+                        const envelopeGain = this.audioContext.createGain();
+                        envelopeGain.gain.setValueAtTime(0, this.audioContext.currentTime);
+                        envelopeGain.gain.linearRampToValueAtTime(volume * this.masterVolume, this.audioContext.currentTime + 0.01);
+                        envelopeGain.gain.exponentialRampToValueAtTime(volume * this.masterVolume * 0.3, this.audioContext.currentTime + 0.5);
+                        envelopeGain.connect(this.spatialPanner);
+
+                        source.connect(envelopeGain);
+
+                        // Play the audio
+                        audio.volume = 1; // Let Web Audio handle volume
+                        audio.currentTime = 0;
+                        audio.play();
+
+                        // Clean up after sound ends
+                        audio.onended = () => {
+                            try {
+                                source.disconnect();
+                                envelopeGain.disconnect();
+                            } catch(e) {}
+                        };
+
+                        this.currentOpenIndex = (this.currentOpenIndex + 1) % this.openPool.length;
+                        this.lastPlayTime = now;
+
+                    } catch(e) {
+                        console.warn('WebAudio play failed, falling back to HTML5:', e);
+                        // Fallback to simple HTML5 audio
                         audio.volume = this.masterVolume * volume;
                         audio.currentTime = 0;
                         audio.play();
                         this.currentOpenIndex = (this.currentOpenIndex + 1) % this.openPool.length;
                         this.lastPlayTime = now;
-                    } catch(e) {
-                        console.warn('Audio play failed:', e);
                     }
                 }
             }
 
-            playClose(volume = 1.0) {
+            async playClose(volume = 1.0, position = { x: 0, y: 0, z: 0 }) {
                 if (!this.isReady()) return;
 
                 const now = Date.now();
                 if (now - this.lastPlayTime < this.minPlayInterval) return;
 
+                // Initialize Web Audio if not already done
+                if (!this.isInitialized) {
+                    await this.initializeWebAudio();
+                }
+
                 const audio = this.closePool[this.currentCloseIndex];
                 if (audio && audio.src) {
                     try {
+                        // Set spatial position
+                        this.spatialPanner.positionX.value = position.x;
+                        this.spatialPanner.positionY.value = position.y;
+                        this.spatialPanner.positionZ.value = position.z;
+
+                        // Create Web Audio source from HTML5 audio
+                        const source = this.audioContext.createMediaElementSource(audio);
+
+                        // Apply effects chain
+                        const envelopeGain = this.audioContext.createGain();
+                        envelopeGain.gain.setValueAtTime(0, this.audioContext.currentTime);
+                        envelopeGain.gain.linearRampToValueAtTime(volume * this.masterVolume, this.audioContext.currentTime + 0.01);
+                        envelopeGain.gain.exponentialRampToValueAtTime(volume * this.masterVolume * 0.2, this.audioContext.currentTime + 0.8);
+                        envelopeGain.connect(this.spatialPanner);
+
+                        source.connect(envelopeGain);
+
+                        // Play the audio
+                        audio.volume = 1;
+                        audio.currentTime = 0;
+                        audio.play();
+
+                        // Clean up after sound ends
+                        audio.onended = () => {
+                            try {
+                                source.disconnect();
+                                envelopeGain.disconnect();
+                            } catch(e) {}
+                        };
+
+                        this.currentCloseIndex = (this.currentCloseIndex + 1) % this.closePool.length;
+                        this.lastPlayTime = now;
+
+                    } catch(e) {
+                        console.warn('WebAudio play failed, falling back to HTML5:', e);
+                        // Fallback to simple HTML5 audio
                         audio.volume = this.masterVolume * volume;
                         audio.currentTime = 0;
                         audio.play();
                         this.currentCloseIndex = (this.currentCloseIndex + 1) % this.closePool.length;
                         this.lastPlayTime = now;
-                    } catch(e) {
-                        console.warn('Audio play failed:', e);
                     }
                 }
             }
 
             setMasterVolume(volume) {
                 this.masterVolume = Math.max(0, Math.min(1, volume));
+                if (this.masterGain) {
+                    this.masterGain.gain.value = this.masterVolume;
+                }
+            }
+
+            // Create a symphonic synthesized sound effect
+            createSynthSound(frequency = 440, duration = 0.5, type = 'sine') {
+                if (!this.audioContext) return;
+
+                const now = this.audioContext.currentTime;
+
+                try {
+                    // Create main oscillator
+                    const oscillator = this.audioContext.createOscillator();
+                    const gainNode = this.audioContext.createGain();
+
+                    oscillator.connect(gainNode);
+                    gainNode.connect(this.spatialPanner || this.masterGain);
+
+                    oscillator.frequency.setValueAtTime(frequency, now);
+                    oscillator.type = type;
+
+                    // Create symphonic envelope (bell-like curve)
+                    const attackTime = 0.02;
+                    const decayTime = duration * 0.3;
+                    const sustainTime = duration * 0.4;
+                    const releaseTime = duration * 0.3;
+
+                    gainNode.gain.setValueAtTime(0, now);
+                    gainNode.gain.linearRampToValueAtTime(this.masterVolume * 0.15, now + attackTime);
+                    gainNode.gain.exponentialRampToValueAtTime(this.masterVolume * 0.08, now + attackTime + decayTime);
+                    gainNode.gain.setValueAtTime(this.masterVolume * 0.08, now + attackTime + decayTime + sustainTime);
+                    gainNode.gain.exponentialRampToValueAtTime(0.001, now + attackTime + decayTime + sustainTime + releaseTime);
+
+                    oscillator.start(now);
+                    oscillator.stop(now + duration);
+
+                    // Add harmonic overtones for richness
+                    this.addHarmonics(frequency, now, duration, type);
+
+                    // Clean up
+                    oscillator.onended = () => {
+                        try {
+                            oscillator.disconnect();
+                            gainNode.disconnect();
+                        } catch(e) {}
+                    };
+
+                } catch(e) {
+                    console.warn('Symphonic synth sound creation failed:', e);
+                }
+            }
+
+            // Add harmonic overtones for richer sound
+            addHarmonics(baseFreq, startTime, duration, mainType) {
+                try {
+                    const harmonics = [
+                        { freq: baseFreq * 2, gain: 0.3, type: 'sine' },
+                        { freq: baseFreq * 3, gain: 0.2, type: 'triangle' },
+                        { freq: baseFreq * 4, gain: 0.1, type: 'sine' }
+                    ];
+
+                    harmonics.forEach((harmonic, index) => {
+                        const osc = this.audioContext.createOscillator();
+                        const gain = this.audioContext.createGain();
+
+                        osc.connect(gain);
+                        gain.connect(this.spatialPanner || this.masterGain);
+
+                        osc.frequency.setValueAtTime(harmonic.freq, startTime);
+                        osc.type = harmonic.type;
+
+                        const delay = index * 0.01; // Slight delay for each harmonic
+                        const harmonicStart = startTime + delay;
+
+                        gain.gain.setValueAtTime(0, startTime);
+                        gain.gain.setValueAtTime(this.masterVolume * harmonic.gain, harmonicStart);
+                        gain.gain.exponentialRampToValueAtTime(0.001, harmonicStart + duration - delay);
+
+                        osc.start(harmonicStart);
+                        osc.stop(harmonicStart + duration - delay);
+                    });
+
+                } catch(e) {
+                    console.warn('Harmonics creation failed:', e);
+                }
+            }
+
+            // Create a symphonic umbrella opening/closing sound
+            createUmbrellaSound(isOpening = true, intensity = 0.5) {
+                if (!this.audioContext) return;
+
+                const now = this.audioContext.currentTime;
+
+                try {
+                    // Create symphonic sound layers
+                    const oscillators = [];
+                    const gains = [];
+
+                    // Musical scale frequencies (C major pentatonic for harmony)
+                    const baseNote = isOpening ? 261.63 : 220.00; // C4 or A3
+                    const scale = [1, 1.125, 1.25, 1.333, 1.5, 1.667, 1.875, 2]; // Musical intervals
+
+                    // Create chord progression for opening/closing
+                    const chordProgression = isOpening ?
+                        [0, 2, 4, 7] : // C major chord (opening)
+                        [9, 11, 14, 16]; // A minor chord (closing)
+
+                    chordProgression.forEach((noteIndex, index) => {
+                        const freq = baseNote * scale[noteIndex % scale.length];
+                        const osc = this.audioContext.createOscillator();
+                        const gain = this.audioContext.createGain();
+
+                        osc.connect(gain);
+                        gain.connect(this.spatialPanner || this.masterGain);
+
+                        // Musical waveforms for symphonic feel
+                        osc.frequency.setValueAtTime(freq, now);
+                        osc.type = index === 0 ? 'triangle' : // Fundamental - warm
+                                  index === 1 ? 'sine' :     // Third - smooth
+                                  index === 2 ? 'triangle' : // Fifth - rich
+                                  'sine';                   // Octave - clear
+
+                        // Sophisticated musical envelope (ADSR)
+                        const attackTime = 0.1 + (index * 0.05);  // Staggered attack
+                        const decayTime = isOpening ? 0.4 : 0.6;  // Longer decay for closing
+                        const sustainLevel = intensity * (0.15 + index * 0.05); // Varying sustain
+                        const releaseTime = isOpening ? 0.8 : 1.2; // Longer release for closing
+
+                        gain.gain.setValueAtTime(0, now);
+                        gain.gain.linearRampToValueAtTime(this.masterVolume * intensity * (0.8 + index * 0.1), now + attackTime);
+                        gain.gain.exponentialRampToValueAtTime(this.masterVolume * sustainLevel, now + attackTime + decayTime);
+
+                        // Add musical vibrato for richness
+                        const vibratoRate = 4 + index; // Different rates for each voice
+                        const vibratoDepth = 0.02 + (index * 0.01);
+                        const vibratoStart = now + attackTime + 0.1;
+
+                        if (isOpening) {
+                            osc.frequency.setValueCurveAtTime(
+                                this.createVibrato(freq, vibratoRate, vibratoDepth, 1.5),
+                                vibratoStart,
+                                1.5
+                            );
+                        }
+
+                        gain.gain.exponentialRampToValueAtTime(0.001, now + attackTime + decayTime + releaseTime);
+
+                        const startTime = now + (index * 0.02); // Slight delay for each voice
+                        osc.start(startTime);
+                        osc.stop(startTime + attackTime + decayTime + releaseTime);
+
+                        oscillators.push(osc);
+                        gains.push(gain);
+                    });
+
+                    // Add orchestral string-like resonance
+                    this.addResonance(baseNote, now, intensity, isOpening);
+
+                    // Clean up when done
+                    const cleanup = () => {
+                        oscillators.forEach(osc => {
+                            try { osc.disconnect(); } catch(e) {}
+                        });
+                        gains.forEach(gain => {
+                            try { gain.disconnect(); } catch(e) {}
+                        });
+                    };
+
+                    oscillators[oscillators.length - 1].onended = cleanup;
+
+                } catch(e) {
+                    console.warn('Symphonic sound creation failed:', e);
+                }
+            }
+
+            // Create vibrato curve for musical expression
+            createVibrato(baseFreq, rate, depth, duration) {
+                const sampleRate = this.audioContext.sampleRate;
+                const samples = Math.floor(sampleRate * duration);
+                const curve = new Float32Array(samples);
+
+                for (let i = 0; i < samples; i++) {
+                    const t = i / sampleRate;
+                    curve[i] = baseFreq * (1 + Math.sin(t * rate * 2 * Math.PI) * depth);
+                }
+
+                return curve;
+            }
+
+            // Add orchestral resonance effect
+            addResonance(baseFreq, startTime, intensity, isOpening) {
+                try {
+                    // Create resonance with harmonics
+                    const resonanceFreqs = [
+                        baseFreq * 2,   // Octave
+                        baseFreq * 3,   // Fifth + octave
+                        baseFreq * 4,   // Two octaves
+                        baseFreq * 5    // Third + two octaves
+                    ];
+
+                    resonanceFreqs.forEach((freq, index) => {
+                        const osc = this.audioContext.createOscillator();
+                        const gain = this.audioContext.createGain();
+                        const filter = this.audioContext.createBiquadFilter();
+
+                        osc.connect(filter);
+                        filter.connect(gain);
+                        gain.connect(this.spatialPanner || this.masterGain);
+
+                        osc.frequency.setValueAtTime(freq, startTime);
+                        osc.type = 'sine';
+
+                        filter.type = 'lowpass';
+                        filter.frequency.setValueAtTime(freq * 2, startTime);
+                        filter.Q.setValueAtTime(8 + index, startTime);
+
+                        const delay = index * 0.05;
+                        const resonanceStart = startTime + delay;
+                        const resonanceDuration = isOpening ? 0.8 : 1.2;
+
+                        gain.gain.setValueAtTime(0, startTime);
+                        gain.gain.setValueAtTime(this.masterVolume * intensity * 0.1 * (1 / (index + 1)), resonanceStart);
+                        gain.gain.exponentialRampToValueAtTime(0.001, resonanceStart + resonanceDuration);
+
+                        osc.start(resonanceStart);
+                        osc.stop(resonanceStart + resonanceDuration);
+                    });
+
+                } catch(e) {
+                    console.warn('Resonance creation failed:', e);
+                }
+            }
+
+            // Resume audio context (needed for some browsers)
+            async resumeContext() {
+                if (this.audioContext && this.audioContext.state === 'suspended') {
+                    try {
+                        await this.audioContext.resume();
+                        console.info('[WebAudio] Context resumed');
+                    } catch(e) {
+                        console.warn('[WebAudio] Failed to resume context:', e);
+                    }
+                }
+            }
+
+            // Adjust reverb level
+            setReverbLevel(level) {
+                if (this.reverb && this.reverb.gain) {
+                    this.reverb.gain.value = level;
+                }
+            }
+
+            // Adjust filter frequency
+            setFilterFrequency(freq) {
+                if (this.filter) {
+                    this.filter.frequency.value = freq;
+                }
+            }
+
+            // Toggle spatial audio
+            setSpatialAudio(enabled) {
+                // This would require restructuring the audio graph
+                // For now, just log the intent
+                console.info('[WebAudio] Spatial audio ' + (enabled ? 'enabled' : 'disabled'));
+            }
+
+            // Create an orchestral flourish for special moments
+            createOrchestralFlourish(intensity = 0.3) {
+                if (!this.audioContext) return;
+
+                const now = this.audioContext.currentTime;
+
+                try {
+                    // Create a cascading arpeggio
+                    const baseNote = 261.63; // C4
+                    const flourishNotes = [0, 4, 7, 12, 16, 19, 24]; // C major scale
+
+                    flourishNotes.forEach((noteOffset, index) => {
+                        const freq = baseNote * Math.pow(2, noteOffset / 12);
+                        const delay = index * 0.08; // Cascading effect
+                        const startTime = now + delay;
+
+                        // Create note with ADSR envelope
+                        const osc = this.audioContext.createOscillator();
+                        const gain = this.audioContext.createGain();
+
+                        osc.connect(gain);
+                        gain.connect(this.spatialPanner || this.masterGain);
+
+                        osc.frequency.setValueAtTime(freq, startTime);
+                        osc.type = index % 2 === 0 ? 'triangle' : 'sine';
+
+                        // Quick attack, medium decay
+                        gain.gain.setValueAtTime(0, startTime);
+                        gain.gain.linearRampToValueAtTime(this.masterVolume * intensity, startTime + 0.02);
+                        gain.gain.exponentialRampToValueAtTime(0.001, startTime + 0.3);
+
+                        osc.start(startTime);
+                        osc.stop(startTime + 0.3);
+                    });
+
+                } catch(e) {
+                    console.warn('Orchestral flourish creation failed:', e);
+                }
             }
         }
 
@@ -161,14 +624,35 @@
                 let animationSpeed = 0.02;
                 let animationActive = false;
 
-                // Enhanced audio functions with randomization and state-based volume
+                // Enhanced audio functions with spatial positioning and randomization
                 function playOpenSound() {
                     // Vary volume based on how open the umbrella currently is
                     let baseVolume = 0.6 + (currentOpenFactor * 0.3); // 0.6 to 0.9
                     let randomVariation = p.random(-0.1, 0.1); // ±10% variation
                     let finalVolume = Math.max(0.3, Math.min(0.9, baseVolume + randomVariation));
 
-                    audioManager.playOpen(finalVolume);
+                    // Calculate spatial position based on umbrella position on screen
+                    const position = {
+                        x: (centerX - p.width/2) * 0.01,  // Convert to audio space (-5 to 5)
+                        y: (centerY - p.height/2) * 0.01,
+                        z: currentOpenFactor * 2  // Closer when more open
+                    };
+
+                    audioManager.playOpen(finalVolume, position);
+
+                    // Add symphonic synthesized sound for musical enhancement
+                    if (p.random() < 0.6) { // 60% chance for more musical feel
+                        setTimeout(() => {
+                            audioManager.createUmbrellaSound(true, finalVolume * 0.7);
+                        }, 80);
+                    }
+
+                    // Add harmonic counterpoint (25% chance)
+                    if (p.random() < 0.25) {
+                        setTimeout(() => {
+                            audioManager.createSynthSound(440, 0.8, 'triangle');
+                        }, 150);
+                    }
                 }
 
                 function playCloseSound() {
@@ -177,17 +661,74 @@
                     let randomVariation = p.random(-0.08, 0.08); // ±8% variation
                     let finalVolume = Math.max(0.4, Math.min(0.8, baseVolume + randomVariation));
 
-                    audioManager.playClose(finalVolume);
+                    // Calculate spatial position
+                    const position = {
+                        x: (centerX - p.width/2) * 0.01,
+                        y: (centerY - p.height/2) * 0.01,
+                        z: (1 - currentOpenFactor) * 2  // Closer when more closed
+                    };
+
+                    audioManager.playClose(finalVolume, position);
+
+                    // Add symphonic synthesized sound for musical enhancement
+                    if (p.random() < 0.7) { // 70% chance for closing (more frequent)
+                        setTimeout(() => {
+                            audioManager.createUmbrellaSound(false, finalVolume * 0.8);
+                        }, 120);
+                    }
+
+                    // Add descending harmonic line for closing (35% chance)
+                    if (p.random() < 0.35) {
+                        setTimeout(() => {
+                            audioManager.createSynthSound(330, 0.6, 'sine'); // E4
+                        }, 200);
+                    }
+
+                    // Special orchestral flourish for closing (10% chance)
+                    if (p.random() < 0.1) {
+                        setTimeout(() => {
+                            audioManager.createOrchestralFlourish(0.2);
+                        }, 300);
+                    }
                 }
 
                 function playHoverSound() {
                     if (hasPlayedHoverSound) return; // Only play once per umbrella
 
                     const now = p.millis();
-                    if (now - lastHoverTime < 2000) return; // Minimum 2 seconds between hover sounds
+                    if (now - lastHoverTime < 1500) return; // Shorter cooldown for more musical feel
 
-                    // Very quiet hover sound (20% of normal volume)
-                    audioManager.playOpen(0.2);
+                    // Calculate spatial position for hover sound
+                    const position = {
+                        x: (centerX - p.width/2) * 0.005,  // Closer for hover
+                        y: (centerY - p.height/2) * 0.005,
+                        z: 0.8  // Medium distance
+                    };
+
+                    // Create a symphonic hover melody
+                    const baseNote = 523.25; // C5
+                    const melodyNotes = [0, 4, 7, 12]; // C major arpeggio
+                    const noteIndex = Math.floor(p.random() * melodyNotes.length);
+                    const frequency = baseNote * Math.pow(2, melodyNotes[noteIndex] / 12);
+
+                    // Play a beautiful symphonic hover sound
+                    audioManager.createSynthSound(frequency, 0.4, 'triangle');
+
+                    // Add harmonic accompaniment (30% chance)
+                    if (p.random() < 0.3) {
+                        setTimeout(() => {
+                            const harmonyFreq = frequency * (p.random() < 0.5 ? 1.25 : 1.5); // Perfect fifth or major third
+                            audioManager.createSynthSound(harmonyFreq, 0.3, 'sine');
+                        }, 100);
+                    }
+
+                    // Add subtle orchestral flourish (15% chance)
+                    if (p.random() < 0.15) {
+                        setTimeout(() => {
+                            audioManager.createUmbrellaSound(true, 0.15);
+                        }, 200);
+                    }
+
                     hasPlayedHoverSound = true;
                     lastHoverTime = now;
                 }
@@ -575,10 +1116,13 @@
                         }
                     });
 
+                    // Resume Web Audio context if available
+                    await audioManager.resumeContext();
+
                     // Mark as unlocked and set master volume
                     window.__audioUnlocked = true;
                     audioManager.setMasterVolume(0.4); // Set comfortable default volume
-                    console.info('[AUDIO] All elements unlocked and ready!');
+                    console.info('[AUDIO] All elements unlocked and Web Audio ready!');
 
                 } catch(e) {
                     console.warn('[AUDIO] unlock failed', e);
