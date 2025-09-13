@@ -57,11 +57,135 @@
             font-size: 24px;
             font-weight: bold;
             text-shadow: 2px 2px 4px rgba(0,0,0,0.5);
+            background: rgba(0, 0, 0, 0.7);
+            padding: 10px 20px;
+            border-radius: 25px;
+            border: 2px solid rgba(255, 255, 255, 0.2);
+            transition: all 0.3s ease;
+            display: none; /* Hidden by default, shown only in debug mode */
+        }
+
+        .title:hover {
+            background: rgba(0, 0, 0, 0.9);
+            border-color: rgba(255, 255, 255, 0.4);
+        }
+
+        /* Fullscreen Button */
+        #fullscreen-btn {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            background: rgba(255, 255, 255, 0.9);
+            border: 2px solid #666666;
+            border-radius: 8px;
+            color: #000000;
+            font-size: 16px;
+            font-weight: bold;
+            padding: 10px 12px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            z-index: 1000;
+            box-shadow: 0 4px 8px rgba(0,0,0,0.3);
+        }
+
+        #fullscreen-btn:hover {
+            background: rgba(255, 255, 255, 1);
+            transform: scale(1.05);
+            box-shadow: 0 6px 12px rgba(0,0,0,0.4);
+        }
+
+        #fullscreen-btn:active {
+            transform: scale(0.95);
+        }
+
+        #fullscreen-btn.fullscreen {
+            background: rgba(0, 0, 0, 0.9);
+            color: white;
+            border-color: #333333;
+        }
+
+        #fullscreen-btn.fullscreen:hover {
+            background: rgba(0, 0, 0, 1);
+        }
+
+        /* Heartbeat Controls */
+        #heartbeat-controls {
+            position: fixed;
+            bottom: 20px;
+            left: 20px;
+            background: rgba(0, 0, 0, 0.8);
+            border: 2px solid rgba(255, 255, 255, 0.2);
+            border-radius: 25px;
+            padding: 10px;
+            display: none; /* Hidden by default, shown only in debug mode */
+            align-items: center;
+            gap: 10px;
+            z-index: 1000;
+            backdrop-filter: blur(10px);
+        }
+
+        #heartbeat-controls button {
+            background: rgba(255, 255, 255, 0.1);
+            border: 1px solid rgba(255, 255, 255, 0.3);
+            border-radius: 50%;
+            color: white;
+            font-size: 16px;
+            font-weight: bold;
+            width: 35px;
+            height: 35px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        #heartbeat-controls button:hover {
+            background: rgba(255, 255, 255, 0.2);
+            border-color: rgba(255, 255, 255, 0.5);
+            transform: scale(1.1);
+        }
+
+        #heartbeat-controls button:active {
+            transform: scale(0.95);
+        }
+
+        #heartbeat-controls #heartbeat-pause {
+            border-radius: 8px;
+            width: auto;
+            padding: 0 12px;
+            font-size: 14px;
+        }
+
+        #heartbeat-controls #bpm-display {
+            color: #ecf0f1;
+            font-weight: bold;
+            font-size: 14px;
+            min-width: 60px;
+            text-align: center;
         }
     </style>
 </head>
 <body>
     <div id="canvases-container" class="canvases-container"></div>
+
+    <!-- Heartbeat Display -->
+    <div class="title" id="heartbeat-display">
+        <span id="bpm-value">72</span> BPM - <span id="heartbeat-phase">Diastole</span>
+    </div>
+
+    <!-- Fullscreen Button -->
+    <button id="fullscreen-btn" title="Toggle Fullscreen (F11)">
+        ⛶
+    </button>
+
+    <!-- Heartbeat Controls -->
+    <div id="heartbeat-controls">
+        <button id="bpm-decrease" title="Decrease BPM">-</button>
+        <span id="bpm-display">72 BPM</span>
+        <button id="bpm-increase" title="Increase BPM">+</button>
+        <button id="heartbeat-pause" title="Pause/Resume Rhythm">⏸️</button>
+    </div>
 
     <!-- Enhanced Audio System for Umbrella Sounds -->
     <audio id="audio-open" preload="auto" muted playsinline style="display:none"></audio>
@@ -103,6 +227,7 @@
                 this.reverb = null;
                 this.filter = null;
                 this.spatialPanner = null;
+                this.quartetRhythmPlayer = null;
             }
 
             async initializeWebAudio() {
@@ -139,8 +264,11 @@
                     this.spatialPanner.coneOuterGain = 0;
                     this.spatialPanner.connect(this.filter);
 
+                    // Initialize quartet rhythm player
+                    this.quartetRhythmPlayer = new QuartetRhythmPlayer(this.audioContext, this.masterGain);
+
                     this.isInitialized = true;
-                    console.info('[WebAudio] Initialized successfully');
+                    console.info('[WebAudio] Initialized successfully with quartet rhythm');
                     return true;
 
                 } catch (error) {
@@ -335,9 +463,6 @@
                     oscillator.start(now);
                     oscillator.stop(now + duration);
 
-                    // Add harmonic overtones for richness
-                    this.addHarmonics(frequency, now, duration, type);
-
                     // Clean up
                     oscillator.onended = () => {
                         try {
@@ -351,186 +476,9 @@
                 }
             }
 
-            // Add harmonic overtones for richer sound
-            addHarmonics(baseFreq, startTime, duration, mainType) {
-                try {
-                    const harmonics = [
-                        { freq: baseFreq * 2, gain: 0.3, type: 'sine' },
-                        { freq: baseFreq * 3, gain: 0.2, type: 'triangle' },
-                        { freq: baseFreq * 4, gain: 0.1, type: 'sine' }
-                    ];
 
-                    harmonics.forEach((harmonic, index) => {
-                        const osc = this.audioContext.createOscillator();
-                        const gain = this.audioContext.createGain();
 
-                        osc.connect(gain);
-                        gain.connect(this.spatialPanner || this.masterGain);
 
-                        osc.frequency.setValueAtTime(harmonic.freq, startTime);
-                        osc.type = harmonic.type;
-
-                        const delay = index * 0.01; // Slight delay for each harmonic
-                        const harmonicStart = startTime + delay;
-
-                        gain.gain.setValueAtTime(0, startTime);
-                        gain.gain.setValueAtTime(this.masterVolume * harmonic.gain, harmonicStart);
-                        gain.gain.exponentialRampToValueAtTime(0.001, harmonicStart + duration - delay);
-
-                        osc.start(harmonicStart);
-                        osc.stop(harmonicStart + duration - delay);
-                    });
-
-                } catch(e) {
-                    console.warn('Harmonics creation failed:', e);
-                }
-            }
-
-            // Create a symphonic umbrella opening/closing sound
-            createUmbrellaSound(isOpening = true, intensity = 0.5) {
-                if (!this.audioContext) return;
-
-                const now = this.audioContext.currentTime;
-
-                try {
-                    // Create symphonic sound layers
-                    const oscillators = [];
-                    const gains = [];
-
-                    // Musical scale frequencies (C major pentatonic for harmony)
-                    const baseNote = isOpening ? 261.63 : 220.00; // C4 or A3
-                    const scale = [1, 1.125, 1.25, 1.333, 1.5, 1.667, 1.875, 2]; // Musical intervals
-
-                    // Create chord progression for opening/closing
-                    const chordProgression = isOpening ?
-                        [0, 2, 4, 7] : // C major chord (opening)
-                        [9, 11, 14, 16]; // A minor chord (closing)
-
-                    chordProgression.forEach((noteIndex, index) => {
-                        const freq = baseNote * scale[noteIndex % scale.length];
-                        const osc = this.audioContext.createOscillator();
-                        const gain = this.audioContext.createGain();
-
-                        osc.connect(gain);
-                        gain.connect(this.spatialPanner || this.masterGain);
-
-                        // Musical waveforms for symphonic feel
-                        osc.frequency.setValueAtTime(freq, now);
-                        osc.type = index === 0 ? 'triangle' : // Fundamental - warm
-                                  index === 1 ? 'sine' :     // Third - smooth
-                                  index === 2 ? 'triangle' : // Fifth - rich
-                                  'sine';                   // Octave - clear
-
-                        // Sophisticated musical envelope (ADSR)
-                        const attackTime = 0.1 + (index * 0.05);  // Staggered attack
-                        const decayTime = isOpening ? 0.4 : 0.6;  // Longer decay for closing
-                        const sustainLevel = intensity * (0.15 + index * 0.05); // Varying sustain
-                        const releaseTime = isOpening ? 0.8 : 1.2; // Longer release for closing
-
-                        gain.gain.setValueAtTime(0, now);
-                        gain.gain.linearRampToValueAtTime(this.masterVolume * intensity * (0.8 + index * 0.1), now + attackTime);
-                        gain.gain.exponentialRampToValueAtTime(this.masterVolume * sustainLevel, now + attackTime + decayTime);
-
-                        // Add musical vibrato for richness
-                        const vibratoRate = 4 + index; // Different rates for each voice
-                        const vibratoDepth = 0.02 + (index * 0.01);
-                        const vibratoStart = now + attackTime + 0.1;
-
-                        if (isOpening) {
-                            osc.frequency.setValueCurveAtTime(
-                                this.createVibrato(freq, vibratoRate, vibratoDepth, 1.5),
-                                vibratoStart,
-                                1.5
-                            );
-                        }
-
-                        gain.gain.exponentialRampToValueAtTime(0.001, now + attackTime + decayTime + releaseTime);
-
-                        const startTime = now + (index * 0.02); // Slight delay for each voice
-                        osc.start(startTime);
-                        osc.stop(startTime + attackTime + decayTime + releaseTime);
-
-                        oscillators.push(osc);
-                        gains.push(gain);
-                    });
-
-                    // Add orchestral string-like resonance
-                    this.addResonance(baseNote, now, intensity, isOpening);
-
-                    // Clean up when done
-                    const cleanup = () => {
-                        oscillators.forEach(osc => {
-                            try { osc.disconnect(); } catch(e) {}
-                        });
-                        gains.forEach(gain => {
-                            try { gain.disconnect(); } catch(e) {}
-                        });
-                    };
-
-                    oscillators[oscillators.length - 1].onended = cleanup;
-
-                } catch(e) {
-                    console.warn('Symphonic sound creation failed:', e);
-                }
-            }
-
-            // Create vibrato curve for musical expression
-            createVibrato(baseFreq, rate, depth, duration) {
-                const sampleRate = this.audioContext.sampleRate;
-                const samples = Math.floor(sampleRate * duration);
-                const curve = new Float32Array(samples);
-
-                for (let i = 0; i < samples; i++) {
-                    const t = i / sampleRate;
-                    curve[i] = baseFreq * (1 + Math.sin(t * rate * 2 * Math.PI) * depth);
-                }
-
-                return curve;
-            }
-
-            // Add orchestral resonance effect
-            addResonance(baseFreq, startTime, intensity, isOpening) {
-                try {
-                    // Create resonance with harmonics
-                    const resonanceFreqs = [
-                        baseFreq * 2,   // Octave
-                        baseFreq * 3,   // Fifth + octave
-                        baseFreq * 4,   // Two octaves
-                        baseFreq * 5    // Third + two octaves
-                    ];
-
-                    resonanceFreqs.forEach((freq, index) => {
-                        const osc = this.audioContext.createOscillator();
-                        const gain = this.audioContext.createGain();
-                        const filter = this.audioContext.createBiquadFilter();
-
-                        osc.connect(filter);
-                        filter.connect(gain);
-                        gain.connect(this.spatialPanner || this.masterGain);
-
-                        osc.frequency.setValueAtTime(freq, startTime);
-                        osc.type = 'sine';
-
-                        filter.type = 'lowpass';
-                        filter.frequency.setValueAtTime(freq * 2, startTime);
-                        filter.Q.setValueAtTime(8 + index, startTime);
-
-                        const delay = index * 0.05;
-                        const resonanceStart = startTime + delay;
-                        const resonanceDuration = isOpening ? 0.8 : 1.2;
-
-                        gain.gain.setValueAtTime(0, startTime);
-                        gain.gain.setValueAtTime(this.masterVolume * intensity * 0.1 * (1 / (index + 1)), resonanceStart);
-                        gain.gain.exponentialRampToValueAtTime(0.001, resonanceStart + resonanceDuration);
-
-                        osc.start(resonanceStart);
-                        osc.stop(resonanceStart + resonanceDuration);
-                    });
-
-                } catch(e) {
-                    console.warn('Resonance creation failed:', e);
-                }
-            }
 
             // Resume audio context (needed for some browsers)
             async resumeContext() {
@@ -565,49 +513,386 @@
                 console.info('[WebAudio] Spatial audio ' + (enabled ? 'enabled' : 'disabled'));
             }
 
-            // Create an orchestral flourish for special moments
-            createOrchestralFlourish(intensity = 0.3) {
-                if (!this.audioContext) return;
-
-                const now = this.audioContext.currentTime;
-
-                try {
-                    // Create a cascading arpeggio
-                    const baseNote = 261.63; // C4
-                    const flourishNotes = [0, 4, 7, 12, 16, 19, 24]; // C major scale
-
-                    flourishNotes.forEach((noteOffset, index) => {
-                        const freq = baseNote * Math.pow(2, noteOffset / 12);
-                        const delay = index * 0.08; // Cascading effect
-                        const startTime = now + delay;
-
-                        // Create note with ADSR envelope
-                        const osc = this.audioContext.createOscillator();
-                        const gain = this.audioContext.createGain();
-
-                        osc.connect(gain);
-                        gain.connect(this.spatialPanner || this.masterGain);
-
-                        osc.frequency.setValueAtTime(freq, startTime);
-                        osc.type = index % 2 === 0 ? 'triangle' : 'sine';
-
-                        // Quick attack, medium decay
-                        gain.gain.setValueAtTime(0, startTime);
-                        gain.gain.linearRampToValueAtTime(this.masterVolume * intensity, startTime + 0.02);
-                        gain.gain.exponentialRampToValueAtTime(0.001, startTime + 0.3);
-
-                        osc.start(startTime);
-                        osc.stop(startTime + 0.3);
-                    });
-
-                } catch(e) {
-                    console.warn('Orchestral flourish creation failed:', e);
+            // Control quartet rhythm
+            startQuartetRhythm() {
+                if (this.quartetRhythmPlayer) {
+                    this.quartetRhythmPlayer.start();
                 }
             }
+
+            stopQuartetRhythm() {
+                if (this.quartetRhythmPlayer) {
+                    this.quartetRhythmPlayer.stop();
+                }
+            }
+
+            updateQuartetRhythm(heartbeatPhase, bpm) {
+                if (this.quartetRhythmPlayer) {
+                    this.quartetRhythmPlayer.update(heartbeatPhase, bpm);
+                }
+            }
+
         }
 
         // Create global audio manager instance
         const audioManager = new UmbrellaAudioManager();
+
+        // Heartbeat simulation system
+        class HeartbeatSimulator {
+            constructor() {
+                this.baseBPM = 72; // Normal resting heart rate
+                this.currentBPM = this.baseBPM;
+                this.heartbeatPhase = 0; // 0 to 1 representing heartbeat cycle
+                this.lastUpdate = Date.now();
+                this.heartbeatDuration = (60 / this.baseBPM) * 1000; // Duration in milliseconds
+                this.isBeating = true;
+
+                // Add some natural variation
+                this.variation = 0;
+                this.variationSpeed = 0.002;
+                this.variationAmplitude = 0.1; // ±10% variation
+
+                console.log('[HEARTBEAT] Simulator initialized - BPM:', this.baseBPM);
+            }
+
+            update() {
+                if (!this.isBeating) return;
+
+                const now = Date.now();
+                const deltaTime = now - this.lastUpdate;
+                this.lastUpdate = now;
+
+                // Update heartbeat phase
+                this.heartbeatPhase += deltaTime / this.heartbeatDuration;
+                if (this.heartbeatPhase >= 1) {
+                    this.heartbeatPhase = 0;
+                }
+
+                // Add natural variation to BPM
+                this.variation += this.variationSpeed;
+                const bpmVariation = Math.sin(this.variation) * this.variationAmplitude;
+                this.currentBPM = this.baseBPM * (1 + bpmVariation);
+                this.heartbeatDuration = (60 / this.currentBPM) * 1000;
+
+                // Simulate slight irregularities (like real heartbeat)
+                if (Math.random() < 0.02) { // 2% chance of slight irregularity
+                    this.heartbeatDuration *= (0.95 + Math.random() * 0.1);
+                }
+            }
+
+            // Get current heartbeat intensity (0 to 1)
+            // Higher during systole (contraction), lower during diastole (relaxation)
+            getHeartbeatIntensity() {
+                // Create a realistic heartbeat waveform
+                const phase = this.heartbeatPhase;
+
+                if (phase < 0.1) {
+                    // Rapid systole spike
+                    return 0.3 + (phase / 0.1) * 0.7; // 0.3 to 1.0
+                } else if (phase < 0.3) {
+                    // Systole plateau
+                    return 1.0;
+                } else if (phase < 0.4) {
+                    // Initial diastole drop
+                    return 1.0 - ((phase - 0.3) / 0.1) * 0.3; // 1.0 to 0.7
+                } else {
+                    // Rest of diastole (relaxation)
+                    return 0.7 - ((phase - 0.4) / 0.6) * 0.4; // 0.7 to 0.3
+                }
+            }
+
+            // Check if we're in systole (contraction phase)
+            isSystole() {
+                return this.heartbeatPhase < 0.3;
+            }
+
+            // Check if we're in diastole (relaxation phase)
+            isDiastole() {
+                return this.heartbeatPhase >= 0.3;
+            }
+
+            // Get current BPM for display
+            getCurrentBPM() {
+                return Math.round(this.currentBPM);
+            }
+
+            // Pause/resume heartbeat simulation
+            setPaused(paused) {
+                this.isBeating = !paused;
+
+                // Also control quartet rhythm
+                if (paused) {
+                    audioManager.stopQuartetRhythm();
+                } else {
+                    audioManager.startQuartetRhythm();
+                }
+
+                console.log('[HEARTBEAT]', paused ? 'Paused' : 'Resumed');
+            }
+        }
+
+        // Debug mode detection
+        function isDebugMode() {
+            const urlParams = new URLSearchParams(window.location.search);
+            return urlParams.get('debug') === '1';
+        }
+
+        // Show debug elements if debug mode is enabled
+        function showDebugElements() {
+            if (isDebugMode()) {
+                const heartbeatDisplay = document.getElementById('heartbeat-display');
+                const heartbeatControls = document.getElementById('heartbeat-controls');
+
+                if (heartbeatDisplay) {
+                    heartbeatDisplay.style.display = 'block';
+                    console.log('[DEBUG] Heartbeat display shown');
+                }
+
+                if (heartbeatControls) {
+                    heartbeatControls.style.display = 'flex';
+                    console.log('[DEBUG] Heartbeat controls shown');
+                }
+
+                console.log('[DEBUG] Debug mode enabled - showing debug elements');
+            } else {
+                console.log('[DEBUG] Debug mode disabled - debug elements hidden');
+            }
+        }
+
+        // Function to toggle debug mode (for development)
+        window.toggleDebugMode = function() {
+            const currentUrl = new URL(window.location);
+            const hasDebug = currentUrl.searchParams.has('debug');
+
+            if (hasDebug) {
+                currentUrl.searchParams.delete('debug');
+            } else {
+                currentUrl.searchParams.set('debug', '1');
+            }
+
+            window.location.href = currentUrl.toString();
+        };
+
+        // Add keyboard shortcut for debug mode (Ctrl+D)
+        document.addEventListener('keydown', function(event) {
+            if (event.ctrlKey && event.key === 'd') {
+                event.preventDefault();
+                window.toggleDebugMode();
+            }
+        });
+
+        // Create global heartbeat simulator
+        const heartbeatSimulator = new HeartbeatSimulator();
+
+        // Visual rhythm effects manager
+        const visualRhythmEffects = {
+            flashIntensity: 0,
+            flashDecay: 0.95,
+            flashColor: [255, 255, 255], // White flash
+
+            triggerFlash(intensity = 1.0, color = [255, 255, 255]) {
+                this.flashIntensity = Math.min(1.0, this.flashIntensity + intensity);
+                this.flashColor = color;
+            },
+
+            update() {
+                this.flashIntensity *= this.flashDecay;
+                if (this.flashIntensity < 0.01) {
+                    this.flashIntensity = 0;
+                }
+            },
+
+            getFlashColor() {
+                return this.flashColor;
+            },
+
+            getFlashIntensity() {
+                return this.flashIntensity;
+            }
+        };
+
+        // Quartet Rhythm Player - creates rhythmic sounds synchronized with heartbeat
+        class QuartetRhythmPlayer {
+            constructor(audioContext, masterGain) {
+                this.audioContext = audioContext;
+                this.masterGain = masterGain;
+                this.isPlaying = false;
+                this.lastBeatTime = 0;
+                this.quarterNoteDuration = 0;
+                this.visualFlashCallback = null; // Callback for visual effects
+
+                // Quartet rhythm patterns (4/4 time signature)
+                this.rhythmPatterns = {
+                    kick: [1, 0, 0, 0],     // Downbeat
+                    snare: [0, 0, 1, 0],    // Backbeat
+                    hihat: [1, 1, 1, 1],    // Every beat
+                    bass: [1, 0, 1, 0]      // Alternating
+                };
+
+                this.currentStep = 0;
+                this.stepsPerBeat = 4; // 16th notes
+
+                console.log('[QUARTET] Rhythm player initialized');
+            }
+
+            start() {
+                if (this.isPlaying) return;
+                this.isPlaying = true;
+                this.lastBeatTime = this.audioContext.currentTime;
+                console.log('[QUARTET] Rhythm started');
+            }
+
+            stop() {
+                this.isPlaying = false;
+                console.log('[QUARTET] Rhythm stopped');
+            }
+
+            // Update rhythm based on heartbeat phase
+            update(heartbeatPhase, bpm) {
+                if (!this.isPlaying || !this.audioContext) return;
+
+                // Calculate quarter note duration based on current BPM
+                this.quarterNoteDuration = (60 / bpm) * 0.25; // Quarter note = 1/4 of whole note
+
+                const currentTime = this.audioContext.currentTime;
+                const timeSinceLastBeat = currentTime - this.lastBeatTime;
+
+                // Trigger sounds at specific phases of the heartbeat
+                if (heartbeatPhase < 0.1 && timeSinceLastBeat > this.quarterNoteDuration * 0.8) {
+                    // Systole start - play kick and bass
+                    this.playKick(0.8);
+                    this.playBass(0.6);
+                    visualRhythmEffects.triggerFlash(0.8, [255, 100, 100]); // Red flash for kick
+                    this.lastBeatTime = currentTime;
+                } else if (heartbeatPhase > 0.25 && heartbeatPhase < 0.35 && timeSinceLastBeat > this.quarterNoteDuration * 0.5) {
+                    // Systole peak - play snare
+                    this.playSnare(0.7);
+                    visualRhythmEffects.triggerFlash(0.6, [100, 255, 100]); // Green flash for snare
+                    this.lastBeatTime = currentTime;
+                } else if (heartbeatPhase > 0.6 && heartbeatPhase < 0.7 && timeSinceLastBeat > this.quarterNoteDuration * 0.3) {
+                    // Diastole - play hihat
+                    this.playHihat(0.4);
+                    visualRhythmEffects.triggerFlash(0.3, [100, 100, 255]); // Blue flash for hihat
+                    this.lastBeatTime = currentTime;
+                }
+            }
+
+            // Create kick drum sound
+            playKick(volume = 0.8) {
+                if (!this.audioContext) return;
+
+                const now = this.audioContext.currentTime;
+                const oscillator = this.audioContext.createOscillator();
+                const gainNode = this.audioContext.createGain();
+
+                oscillator.connect(gainNode);
+                gainNode.connect(this.masterGain || this.audioContext.destination);
+
+                // Kick drum envelope
+                oscillator.frequency.setValueAtTime(150, now);
+                oscillator.frequency.exponentialRampToValueAtTime(60, now + 0.1);
+
+                gainNode.gain.setValueAtTime(0, now);
+                gainNode.gain.linearRampToValueAtTime(volume, now + 0.01);
+                gainNode.gain.exponentialRampToValueAtTime(0.001, now + 0.15);
+
+                oscillator.start(now);
+                oscillator.stop(now + 0.15);
+            }
+
+            // Create snare drum sound
+            playSnare(volume = 0.7) {
+                if (!this.audioContext) return;
+
+                const now = this.audioContext.currentTime;
+                const noise = this.createNoiseBuffer();
+                const noiseSource = this.audioContext.createBufferSource();
+                const gainNode = this.audioContext.createGain();
+                const filter = this.audioContext.createBiquadFilter();
+
+                noiseSource.buffer = noise;
+                noiseSource.connect(filter);
+                filter.connect(gainNode);
+                gainNode.connect(this.masterGain || this.audioContext.destination);
+
+                // Snare characteristics
+                filter.type = 'highpass';
+                filter.frequency.setValueAtTime(1000, now);
+                filter.Q.setValueAtTime(5, now);
+
+                gainNode.gain.setValueAtTime(0, now);
+                gainNode.gain.linearRampToValueAtTime(volume, now + 0.005);
+                gainNode.gain.exponentialRampToValueAtTime(0.001, now + 0.08);
+
+                noiseSource.start(now);
+                noiseSource.stop(now + 0.08);
+            }
+
+            // Create hihat sound
+            playHihat(volume = 0.4) {
+                if (!this.audioContext) return;
+
+                const now = this.audioContext.currentTime;
+                const noise = this.createNoiseBuffer();
+                const noiseSource = this.audioContext.createBufferSource();
+                const gainNode = this.audioContext.createGain();
+                const filter = this.audioContext.createBiquadFilter();
+
+                noiseSource.buffer = noise;
+                noiseSource.connect(filter);
+                filter.connect(gainNode);
+                gainNode.connect(this.masterGain || this.audioContext.destination);
+
+                // Hi-hat characteristics
+                filter.type = 'highpass';
+                filter.frequency.setValueAtTime(7000, now);
+                filter.Q.setValueAtTime(1, now);
+
+                gainNode.gain.setValueAtTime(0, now);
+                gainNode.gain.linearRampToValueAtTime(volume * 0.3, now + 0.005);
+                gainNode.gain.exponentialRampToValueAtTime(0.001, now + 0.05);
+
+                noiseSource.start(now);
+                noiseSource.stop(now + 0.05);
+            }
+
+            // Create bass sound
+            playBass(volume = 0.6) {
+                if (!this.audioContext) return;
+
+                const now = this.audioContext.currentTime;
+                const oscillator = this.audioContext.createOscillator();
+                const gainNode = this.audioContext.createGain();
+
+                oscillator.connect(gainNode);
+                gainNode.connect(this.masterGain || this.audioContext.destination);
+
+                // Bass characteristics - low frequency
+                oscillator.frequency.setValueAtTime(80, now);
+                oscillator.type = 'triangle';
+
+                gainNode.gain.setValueAtTime(0, now);
+                gainNode.gain.linearRampToValueAtTime(volume, now + 0.01);
+                gainNode.gain.exponentialRampToValueAtTime(0.001, now + 0.12);
+
+                oscillator.start(now);
+                oscillator.stop(now + 0.12);
+            }
+
+            // Create noise buffer for percussion
+            createNoiseBuffer() {
+                const bufferSize = this.audioContext.sampleRate * 0.1; // 100ms buffer
+                const buffer = this.audioContext.createBuffer(1, bufferSize, this.audioContext.sampleRate);
+                const output = buffer.getChannelData(0);
+
+                for (let i = 0; i < bufferSize; i++) {
+                    output[i] = Math.random() * 2 - 1;
+                }
+
+                return buffer;
+            }
+        }
+
 
         // Fonction pour créer une animation de parapluie
         function createUmbrellaAnimation(containerId) {
@@ -641,19 +926,6 @@
 
                     audioManager.playOpen(finalVolume, position);
 
-                    // Add symphonic synthesized sound for musical enhancement
-                    if (p.random() < 0.6) { // 60% chance for more musical feel
-                        setTimeout(() => {
-                            audioManager.createUmbrellaSound(true, finalVolume * 0.7);
-                        }, 80);
-                    }
-
-                    // Add harmonic counterpoint (25% chance)
-                    if (p.random() < 0.25) {
-                        setTimeout(() => {
-                            audioManager.createSynthSound(440, 0.8, 'triangle');
-                        }, 150);
-                    }
                 }
 
                 function playCloseSound() {
@@ -671,67 +943,18 @@
 
                     audioManager.playClose(finalVolume, position);
 
-                    // Add symphonic synthesized sound for musical enhancement
-                    if (p.random() < 0.7) { // 70% chance for closing (more frequent)
-                        setTimeout(() => {
-                            audioManager.createUmbrellaSound(false, finalVolume * 0.8);
-                        }, 120);
-                    }
-
-                    // Add descending harmonic line for closing (35% chance)
-                    if (p.random() < 0.35) {
-                        setTimeout(() => {
-                            audioManager.createSynthSound(330, 0.6, 'sine'); // E4
-                        }, 200);
-                    }
-
-                    // Special orchestral flourish for closing (10% chance)
-                    if (p.random() < 0.1) {
-                        setTimeout(() => {
-                            audioManager.createOrchestralFlourish(0.2);
-                        }, 300);
-                    }
                 }
 
                 function playHoverSound() {
-                    if (hasPlayedHoverSound) return; // Only play once per umbrella
+                    // Disabled hover sound to keep only open/close sounds
+                }
 
-                    const now = p.millis();
-                    if (now - lastHoverTime < 1500) return; // Shorter cooldown for more musical feel
 
-                    // Calculate spatial position for hover sound
-                    const position = {
-                        x: (centerX - p.width/2) * 0.005,  // Closer for hover
-                        y: (centerY - p.height/2) * 0.005,
-                        z: 0.8  // Medium distance
-                    };
-
-                    // Create a symphonic hover melody
-                    const baseNote = 523.25; // C5
-                    const melodyNotes = [0, 4, 7, 12]; // C major arpeggio
-                    const noteIndex = Math.floor(p.random() * melodyNotes.length);
-                    const frequency = baseNote * Math.pow(2, melodyNotes[noteIndex] / 12);
-
-                    // Play a beautiful symphonic hover sound
-                    audioManager.createSynthSound(frequency, 0.4, 'triangle');
-
-                    // Add harmonic accompaniment (30% chance)
-                    if (p.random() < 0.3) {
-                        setTimeout(() => {
-                            const harmonyFreq = frequency * (p.random() < 0.5 ? 1.25 : 1.5); // Perfect fifth or major third
-                            audioManager.createSynthSound(harmonyFreq, 0.3, 'sine');
-                        }, 100);
-                    }
-
-                    // Add subtle orchestral flourish (15% chance)
-                    if (p.random() < 0.15) {
-                        setTimeout(() => {
-                            audioManager.createUmbrellaSound(true, 0.15);
-                        }, 200);
-                    }
-
-                    hasPlayedHoverSound = true;
-                    lastHoverTime = now;
+                function addHeartbeatPulseEffect(intensity) {
+                    // Add subtle visual pulse effect based on heartbeat
+                    // This could be enhanced with background color changes or scale effects
+                    // For now, we'll store the intensity for potential use in draw functions
+                    this.heartbeatPulse = intensity;
                 }
 
                 let segmentDelays = [];
@@ -765,48 +988,46 @@
 
 
                 function updateAnimation() {
-                    let mouseIsOver = p.mouseX >= 0 && p.mouseX <= p.width && p.mouseY >= 0 && p.mouseY <= p.height;
+                    // Update global heartbeat simulator
+                    heartbeatSimulator.update();
 
-                    if (mouseIsOver) {
-                        // Play subtle hover sound for first-time hover
-                        playHoverSound();
+                    // Get current heartbeat intensity
+                    const heartbeatIntensity = heartbeatSimulator.getHeartbeatIntensity();
+                    const isSystole = heartbeatSimulator.isSystole();
+                    const isDiastole = heartbeatSimulator.isDiastole();
 
-                        // Fermer sur hover
-                        if (animationState !== 'closing' && animationState !== 'closed') {
-                            if (!animationActive) {
-                                animationActive = true;
-                                lastStateChange = p.millis();
-                            }
-                            // lancer son de fermeture une seule fois au déclenchement
-                            playCloseSound();
-                            if (animationState === 'open' || animationState === 'opening') {
-                                startClosing();
-                                lastStateChange = p.millis();
-                            }
-                        }
+                    // Synchronize all umbrellas with heartbeat rhythm
+                    // During systole (contraction): umbrellas close
+                    // During diastole (relaxation): umbrellas open
 
-                        if (animationState === 'opening' || animationState === 'closing') {
-                            animateToTarget();
-                        }
-                    } else {
-                        // Ouvrir sur mouse out
-                        if (animationState !== 'opening' && animationState !== 'open') {
-                            if (!animationActive) {
-                                animationActive = true;
-                                lastStateChange = p.millis();
-                            }
-                            // lancer son d'ouverture une seule fois au déclenchement
-                            playOpenSound();
-                            if (animationState === 'closed' || animationState === 'closing') {
-                                startOpening();
-                                lastStateChange = p.millis();
-                            }
-                        }
+                    const targetState = isSystole ? 0 : 1; // 0 = closed, 1 = open
 
-                        if (animationState === 'opening' || animationState === 'closing') {
-                            animateToTarget();
+                    // Only trigger state change when crossing phase boundaries
+                    if (isSystole && (animationState === 'open' || animationState === 'opening')) {
+                        if (!animationActive) {
+                            animationActive = true;
+                            lastStateChange = p.millis();
                         }
+                        startClosing();
+                    } else if (isDiastole && (animationState === 'closed' || animationState === 'closing')) {
+                        if (!animationActive) {
+                            animationActive = true;
+                            lastStateChange = p.millis();
+                        }
+                        startOpening();
                     }
+
+                    // Continue animation if active
+                    if (animationState === 'opening' || animationState === 'closing') {
+                        animateToTarget();
+                    }
+
+                    // Update quartet rhythm synchronized with heartbeat
+                    const currentBPM = heartbeatSimulator.getCurrentBPM();
+                    audioManager.updateQuartetRhythm(heartbeatSimulator.heartbeatPhase, currentBPM);
+
+                    // Add subtle pulsing effect based on heartbeat intensity
+                    addHeartbeatPulseEffect(heartbeatIntensity);
                 }
 
                 function startOpening() {
@@ -856,7 +1077,28 @@
 
                 function drawBackground() {
                     // Fond noir dramatique pour effet élégant
-                    p.background(15, 15, 15); // #0F0F0F en RGB
+                    let baseColor = 15; // Base color value
+                    let r = baseColor, g = baseColor, b = baseColor;
+
+                    // Add heartbeat pulse effect
+                    if (this.heartbeatPulse !== undefined) {
+                        // Subtle color variation based on heartbeat intensity
+                        const pulseIntensity = this.heartbeatPulse * 0.1; // Very subtle effect
+                        baseColor = p.lerp(baseColor, 25, pulseIntensity);
+                        r = g = b = baseColor;
+                    }
+
+                    // Add quartet rhythm flash effects
+                    visualRhythmEffects.update();
+                    const flashIntensity = visualRhythmEffects.getFlashIntensity();
+                    if (flashIntensity > 0) {
+                        const flashColor = visualRhythmEffects.getFlashColor();
+                        r = p.lerp(r, flashColor[0], flashIntensity * 0.3);
+                        g = p.lerp(g, flashColor[1], flashIntensity * 0.3);
+                        b = p.lerp(b, flashColor[2], flashIntensity * 0.3);
+                    }
+
+                    p.background(r, g, b);
                 }
 
                 function drawUmbrella(openFactor) {
@@ -1273,6 +1515,203 @@
             window.addEventListener('keydown', unlock, { once: true });
             console.info('[AUDIO] bootstrap done, waiting for user gesture...');
         })();
+
+        // Fullscreen Functionality
+        (function initFullscreen() {
+            const fullscreenBtn = document.getElementById('fullscreen-btn');
+
+            // Check if fullscreen is supported
+            const fullscreenEnabled = document.fullscreenEnabled ||
+                                    document.webkitFullscreenEnabled ||
+                                    document.mozFullScreenEnabled ||
+                                    document.msFullscreenEnabled;
+
+            if (!fullscreenEnabled) {
+                fullscreenBtn.style.display = 'none';
+                console.info('[FULLSCREEN] Not supported, hiding button');
+                return;
+            }
+
+            function isFullscreen() {
+                return document.fullscreenElement ||
+                       document.webkitFullscreenElement ||
+                       document.mozFullScreenElement ||
+                       document.msFullscreenElement;
+            }
+
+            function updateButtonState() {
+                const inFullscreen = isFullscreen();
+                fullscreenBtn.classList.toggle('fullscreen', inFullscreen);
+            }
+
+            async function toggleFullscreen() {
+                try {
+                    if (isFullscreen()) {
+                        // Exit fullscreen
+                        if (document.exitFullscreen) {
+                            await document.exitFullscreen();
+                        } else if (document.webkitExitFullscreen) {
+                            await document.webkitExitFullscreen();
+                        } else if (document.mozCancelFullScreen) {
+                            await document.mozCancelFullScreen();
+                        } else if (document.msExitFullscreen) {
+                            await document.msExitFullscreen();
+                        }
+                    } else {
+                        // Enter fullscreen
+                        const element = document.documentElement;
+                        if (element.requestFullscreen) {
+                            await element.requestFullscreen();
+                        } else if (element.webkitRequestFullscreen) {
+                            await element.webkitRequestFullscreen();
+                        } else if (element.mozRequestFullScreen) {
+                            await element.mozRequestFullScreen();
+                        } else if (element.msRequestFullscreen) {
+                            await element.msRequestFullscreen();
+                        }
+                    }
+                } catch (error) {
+                    console.warn('[FULLSCREEN] Toggle failed:', error);
+                }
+            }
+
+            // Button click handler
+            fullscreenBtn.addEventListener('click', toggleFullscreen);
+
+            // Keyboard shortcuts (F11 and Escape)
+            document.addEventListener('keydown', (event) => {
+                if (event.key === 'F11') {
+                    event.preventDefault();
+                    toggleFullscreen();
+                } else if (event.key === 'Escape' && isFullscreen()) {
+                    toggleFullscreen();
+                }
+            });
+
+            // Listen for fullscreen changes
+            function handleFullscreenChange() {
+                updateButtonState();
+
+                // Recalculate umbrellas when entering/exiting fullscreen
+                setTimeout(() => {
+                    const resizeEvent = new Event('resize');
+                    window.dispatchEvent(resizeEvent);
+                }, 100); // Small delay to ensure fullscreen change is complete
+            }
+
+            document.addEventListener('fullscreenchange', handleFullscreenChange);
+            document.addEventListener('webkitfullscreenchange', handleFullscreenChange);
+            document.addEventListener('mozfullscreenchange', handleFullscreenChange);
+            document.addEventListener('MSFullscreenChange', handleFullscreenChange);
+
+            // Initial state update
+            updateButtonState();
+
+            console.info('[FULLSCREEN] Initialized successfully');
+        })();
+
+        // Heartbeat Display Update Function
+        function updateHeartbeatDisplay() {
+            // Only update if debug mode is enabled
+            if (!isDebugMode()) return;
+
+            const bpmElement = document.getElementById('bpm-value');
+            const phaseElement = document.getElementById('heartbeat-phase');
+            const controlsDisplay = document.getElementById('bpm-display');
+
+            if (bpmElement && phaseElement) {
+                // Update BPM value
+                const currentBPM = heartbeatSimulator.getCurrentBPM();
+                bpmElement.textContent = currentBPM;
+
+                // Update phase indicator
+                const isSystole = heartbeatSimulator.isSystole();
+                phaseElement.textContent = isSystole ? 'Systole' : 'Diastole';
+
+                // Add visual feedback for heartbeat phase
+                phaseElement.style.color = isSystole ? '#ff6b6b' : '#4ecdc4';
+
+                // Update controls display too
+                if (controlsDisplay) {
+                    controlsDisplay.textContent = `${currentBPM} BPM`;
+                }
+            }
+        }
+
+        // Update heartbeat display every 100ms for smooth animation
+        setInterval(updateHeartbeatDisplay, 100);
+
+        // Heartbeat Controls Functionality
+        function initHeartbeatControls() {
+            // Show debug elements if debug mode is enabled
+            showDebugElements();
+
+            // If not in debug mode, don't initialize controls
+            if (!isDebugMode()) {
+                console.log('[DEBUG] Debug mode disabled - skipping heartbeat controls initialization');
+                return;
+            }
+
+            const bpmDecreaseBtn = document.getElementById('bpm-decrease');
+            const bpmIncreaseBtn = document.getElementById('bpm-increase');
+            const bpmDisplay = document.getElementById('bpm-display');
+            const pauseBtn = document.getElementById('heartbeat-pause');
+
+            if (!bpmDecreaseBtn || !bpmIncreaseBtn || !bpmDisplay || !pauseBtn) {
+                console.warn('[HEARTBEAT] Control elements not found');
+                return;
+            }
+
+            // Update display function
+            function updateBPMDisplay() {
+                const currentBPM = heartbeatSimulator.getCurrentBPM();
+                bpmDisplay.textContent = `${currentBPM} BPM`;
+                pauseBtn.textContent = heartbeatSimulator.isBeating ? '⏸️' : '▶️';
+            }
+
+            // Event listeners
+            bpmDecreaseBtn.addEventListener('click', () => {
+                const newBPM = Math.max(40, heartbeatSimulator.baseBPM - 5);
+                heartbeatSimulator.baseBPM = newBPM;
+                updateBPMDisplay();
+                console.info(`[HEARTBEAT] BPM decreased to ${newBPM}`);
+            });
+
+            bpmIncreaseBtn.addEventListener('click', () => {
+                const newBPM = Math.min(150, heartbeatSimulator.baseBPM + 5);
+                heartbeatSimulator.baseBPM = newBPM;
+                updateBPMDisplay();
+                console.info(`[HEARTBEAT] BPM increased to ${newBPM}`);
+            });
+
+            pauseBtn.addEventListener('click', () => {
+                heartbeatSimulator.setPaused(!heartbeatSimulator.isBeating);
+                updateBPMDisplay();
+            });
+
+            // Initial update
+            updateBPMDisplay();
+
+            // Start quartet rhythm if audio is ready
+            if (audioManager.isReady()) {
+                audioManager.startQuartetRhythm();
+            }
+
+            console.info('[HEARTBEAT] Controls initialized');
+        }
+
+        // Initialize controls when DOM is ready
+        if (document.readyState === 'loading') {
+            document.addEventListener('DOMContentLoaded', () => {
+                showDebugElements(); // Show debug elements immediately
+                initHeartbeatControls();
+            });
+        } else {
+            showDebugElements(); // Show debug elements immediately
+            initHeartbeatControls();
+        }
+
+        console.info('[HEARTBEAT] Display system initialized');
     </script>
 </body>
 </html>
