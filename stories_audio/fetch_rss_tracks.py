@@ -105,6 +105,14 @@ def fetch_rss_audio_tracks(rss_url):
         # Parse the XML
         root = ET.fromstring(rss_content)
 
+        # Extract channel title for thematique tag
+        thematique = None
+        channel = root.find('channel')
+        if channel is not None:
+            channel_title = channel.find('title')
+            if channel_title is not None and channel_title.text:
+                thematique = channel_title.text.strip().lower().replace(' ', '_')
+
         # Find all item elements and extract their audio enclosures with titles and tags
         audio_tracks = []
         for item in root.iter('item'):
@@ -114,6 +122,10 @@ def fetch_rss_audio_tracks(rss_url):
 
             # Extract tags from the title
             tags = extract_tags_from_title(title)
+
+            # Add thematique tag if available
+            if thematique:
+                tags.append(f'thematique:{thematique}')
 
             # Find enclosure elements within this item
             for enclosure in item.iter('enclosure'):
