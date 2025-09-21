@@ -1,9 +1,28 @@
 {
     "tracks": [
-        "19721-21.12.2022-ITEMA_23181447-2022F33264E0017-21.mp3",
-        "19721-22.11.2022-ITEMA_23190072-2022F33264E0014-21.mp3",
-        "VDB.mp3",
-        "_Ignatus_le_dragon_par_Anne_Pauly.mp3",
-        "_Rainette_la_grenouille_qui_de\u0301testait_se_laver_les_cheveux_d_Emmanuelle_Bayamack_Tam.mp3"
+        {
+            "url": "19721-21.12.2022-ITEMA_23181447-2022F33264E0017-21.mp3",
+            "title": "Histoire du soir - 21 décembre 2022"
+        },
+        {
+            "url": "19721-22.11.2022-ITEMA_23190072-2022F33264E0014-21.mp3",
+            "title": "Histoire du soir - 22 novembre 2022"
+        },
+        {
+            "url": "VDB.mp3",
+            "title": "VDB"
+        },
+        {
+            "url": "https://proxycast.radiofrance.fr/7cb007dd-34c4-4171-a9fb-10e4d53a1c07/19721-11.07.2025-ITEMA_24194876-2025F33264E0018-NET_MFI_B53699FA-C51F-4982-94BB-934788F5F891-21.mp3",
+            "title": "Histoire du soir - 11 juillet 2025"
+        },
+        {
+            "url": "_Ignatus_le_dragon_par_Anne_Pauly.mp3",
+            "title": "Ignatus le dragon par Anne Pauly"
+        },
+        {
+            "url": "_Rainette_la_grenouille_qui_de\u0301testait_se_laver_les_cheveux_d_Emmanuelle_Bayamack_Tam.mp3",
+            "title": "Rainette la grenouille qui détestait se laver les cheveux d'Emmanuelle Bayamack-Tam"
+        }
     ]
 }

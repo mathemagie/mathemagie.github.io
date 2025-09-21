@@ -4,11 +4,22 @@ const tracks = [];
 
 const urls3Amazon = 'https://audiod.s3.eu-west-3.amazonaws.com/';
 
+// Fisher-Yates shuffle algorithm to randomize array
+function shuffleArray(array) {
+    for (let i = array.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [array[i], array[j]] = [array[j], array[i]];
+    }
+}
+
 function loadTracksFromJson(jsonFile) {
     fetch(jsonFile)
         .then(response => response.json())
         .then(data => {
             tracks.push(...data.tracks);
+            // Shuffle tracks after loading for random playback order
+            shuffleArray(tracks);
+            console.log('Tracks shuffled on load:', tracks.length, 'tracks');
         })
         .catch(error => {
             console.error('Error loading tracks:', error);
@@ -32,18 +43,21 @@ function nextTrack() {
     playTrack();
 }
 
-//create random track function to pick random track from array tracks
-function randomTrack() {
-    trackIndex = Math.floor(Math.random() * tracks.length);
-    console.log(trackIndex);
-    playTrack();
-}
 
 function playTrack() {
-    console.log(tracks[trackIndex] + ' is playing');
-    audioPlayer.src = urls3Amazon + tracks[trackIndex];
     var currentTrack = tracks[trackIndex];
+    console.log(currentTrack.title + ' is playing');
+
+    // Check if the track URL already begins with "http"
+    if (currentTrack.url.startsWith('http')) {
+        // Use the full URL as-is (don't add urls3Amazon)
+        audioPlayer.src = currentTrack.url;
+    } else {
+        // Add the S3 Amazon URL prefix for local tracks
+        audioPlayer.src = urls3Amazon + currentTrack.url;
+    }
+
     var trackDiv = document.getElementById("currentTrack");
-    trackDiv.textContent = currentTrack;
+    trackDiv.textContent = currentTrack.title;
     audioPlayer.play();
 }
