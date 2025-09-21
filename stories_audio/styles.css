@@ -1,0 +1,18 @@
+body {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    height: 100vh;
+    background-color: black; /* Updated background color to black */
+}
+
+.player {
+    text-align: center;
+}
+
+
+#currentTrack {
+    color: white;
+    font-size: 1.3em;
+    margin-bottom: 0.5em;
+}

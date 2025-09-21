@@ -1,0 +1,54 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="theme-color" content="#000000">
+    <meta name="apple-touch-fullscreen" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black">
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
+    <link id="stylesLink" rel="stylesheet" href="styles.css">
+    <link rel="manifest" href="manifest.json">
+
+    <title>Lecteur audio Fabrizio</title>
+</head>
+<body>
+    <div class="player">
+        <audio id="audioPlayer" src="output.mp3"></audio>
+        <!-- <button onclick="prevTrack()" class="btn btn-success btn-lg">Précédent</button>
+        &nbsp;&nbsp;&nbsp;
+        <button onclick="nextTrack()" class="btn btn-success btn-lg">Suivant</button> -->
+        <button onclick="randomTrack()" class="btn btn-success btn-lg">Random</button>
+        <br/><br/>
+        <div id="currentTrack"></div>
+    </div>
+    <script src="https://code.jquery.com/jquery-3.5.1.slim.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.5.4/dist/umd/popper.min.js"></script>
+    <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
+    <script>
+      var random = Math.random();
+      var script = document.createElement('script');
+      script.src = "app.js?random=" + random;
+      document.head.appendChild(script);
+    </script>
+    <script>
+        if ('serviceWorker' in navigator) {
+          window.addEventListener('load', function() {
+            var serviceWorkerUrl = window.location.hostname === '127.0.0.1' ? '/service-worker.js' : '/audio/service-worker.js';
+            navigator.serviceWorker.register(serviceWorkerUrl).then(function(registration) {
+              // L'enregistrement du service worker a réussi
+              console.log('ServiceWorker registration successful with scope: ', registration.scope);
+            }, function(err) {
+              // L'enregistrement a échoué :(
+              console.log('ServiceWorker registration failed: ', err);
+            });
+          });
+        }
+
+        var stylesLink = document.getElementById("stylesLink");
+        var random = Math.random();
+        stylesLink.href = "styles.css?random=" + random;
+      </script>
+</body>
+</html>
