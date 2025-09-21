@@ -99,9 +99,9 @@ function updateTrackCount() {
     const total = tracks.length;
 
     if (count === total) {
-        countElement.textContent = `${total} histoires disponibles`;
+        countElement.textContent = `${total} histoires à écouter`;
     } else {
-        countElement.textContent = `${count} sur ${total} histoires`;
+        countElement.textContent = `${count} histoires trouvées`;
     }
 }
 
