@@ -96,6 +96,7 @@ def extract_tags_from_title(title):
 def fetch_rss_audio_tracks(rss_url):
     """
     Fetch RSS feed and extract audio tracks with URLs and titles from enclosure elements
+    Returns tuple: (audio_tracks, thematique)
     """
     try:
         # Fetch the RSS feed
@@ -140,11 +141,11 @@ def fetch_rss_audio_tracks(rss_url):
                         'tags': tags
                     })
 
-        return audio_tracks
+        return audio_tracks, thematique
 
     except Exception as e:
         print(f"Error fetching or parsing RSS feed: {e}")
-        return []
+        return [], None
 
 
 def load_existing_tracks(tracks_file='tracks.json'):
@@ -202,13 +203,19 @@ def main():
     print(f"Fetching audio tracks from: {args.rss_url}")
 
     # Fetch audio tracks from RSS
-    audio_tracks = fetch_rss_audio_tracks(args.rss_url)
+    audio_tracks, thematique = fetch_rss_audio_tracks(args.rss_url)
 
     if not audio_tracks:
         print("No audio tracks found in RSS feed.")
         return
 
     print(f"Found {len(audio_tracks)} audio tracks in RSS feed.")
+
+    # Display thematique tag if available
+    if thematique:
+        print(f"Thematique: {thematique}")
+    else:
+        print("Thematique: Not available")
 
     # Load existing tracks
     existing_tracks = load_existing_tracks(args.tracks_file)
