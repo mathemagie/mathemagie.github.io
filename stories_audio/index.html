@@ -4,23 +4,64 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="apple-mobile-web-app-capable" content="yes">
-    <meta name="theme-color" content="#000000">
+    <meta name="theme-color" content="#FF6B9D">
     <meta name="apple-touch-fullscreen" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black">
     <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
     <link id="stylesLink" rel="stylesheet" href="styles.css">
     <link rel="manifest" href="manifest.json">
+    <link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
 
-    <title>Lecteur audio Fabrizio</title>
+    <title>🎵 Histoires Magiques pour Enfants 🎵</title>
 </head>
 <body>
-    <div class="player">
-        <audio id="audioPlayer" src="output.mp3"></audio>
-        <button onclick="prevTrack()" class="btn btn-success btn-lg">Précédent</button>
-        &nbsp;&nbsp;&nbsp;
-        <button onclick="nextTrack()" class="btn btn-success btn-lg">Suivant</button>
-        <br/><br/>
-        <div id="currentTrack"></div>
+    <div class="container-fluid">
+        <div class="player-container">
+            <div class="header-section">
+                <h1 class="main-title">
+                    <i class="fas fa-magic-wand-sparkles"></i>
+                    Histoires Magiques
+                    <i class="fas fa-magic-wand-sparkles"></i>
+                </h1>
+                <p class="subtitle">Écoute des histoires merveilleuses ! ✨</p>
+            </div>
+
+            <audio id="audioPlayer" src="output.mp3"></audio>
+
+            <div class="controls-section">
+                <button onclick="prevTrack()" class="control-btn prev-btn">
+                    <i class="fas fa-chevron-left"></i>
+                    <span>Précédent</span>
+                </button>
+
+                <div class="play-indicator">
+                    <div class="music-note">🎵</div>
+                </div>
+
+                <button onclick="nextTrack()" class="control-btn next-btn">
+                    <span>Suivant</span>
+                    <i class="fas fa-chevron-right"></i>
+                </button>
+            </div>
+
+            <div class="track-info">
+                <div class="track-display">
+                    <div class="track-icon">📖</div>
+                    <div id="currentTrack" class="track-title">Clique sur Suivant pour commencer !</div>
+                </div>
+            </div>
+
+            <div class="decoration">
+                <div class="stars">
+                    <span>⭐</span>
+                    <span>🌟</span>
+                    <span>⭐</span>
+                    <span>🌟</span>
+                    <span>⭐</span>
+                </div>
+            </div>
+        </div>
     </div>
     <script src="https://code.jquery.com/jquery-3.5.1.slim.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.5.4/dist/umd/popper.min.js"></script>
