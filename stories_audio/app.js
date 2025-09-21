@@ -1,6 +1,9 @@
 const audioPlayer = document.getElementById('audioPlayer');
 let trackIndex = 0;
 const tracks = [];
+let filteredTracks = []; // Tracks after filtering
+let currentFilter = 'all'; // Current filter type
+let currentSearch = ''; // Current search text
 
 const urls3Amazon = 'https://audiod.s3.eu-west-3.amazonaws.com/';
 
@@ -19,7 +22,11 @@ function loadTracksFromJson(jsonFile) {
             tracks.push(...data.tracks);
             // Shuffle tracks after loading for random playback order
             shuffleArray(tracks);
-            console.log('Tracks shuffled on load:', tracks.length, 'tracks');
+            // Initialize filtered tracks (start with all tracks)
+            filteredTracks = [...tracks];
+            updateTrackCount();
+            setupFilters();
+            console.log('Tracks loaded and shuffled:', tracks.length, 'tracks');
         })
         .catch(error => {
             console.error('Error loading tracks:', error);
@@ -27,17 +34,88 @@ function loadTracksFromJson(jsonFile) {
 }
 
 loadTracksFromJson('tracks.json?random=' + Math.random());
+
+// Filter and search functions
+function setupFilters() {
+    // Setup filter buttons
+    const filterButtons = document.querySelectorAll('.filter-btn');
+    filterButtons.forEach(button => {
+        button.addEventListener('click', () => {
+            const filterType = button.getAttribute('data-filter');
+
+            // Update active button
+            document.querySelectorAll('.filter-btn').forEach(btn => btn.classList.remove('active'));
+            button.classList.add('active');
+
+            currentFilter = filterType;
+            applyFilters();
+        });
+    });
+
+    // Setup search input
+    const searchInput = document.getElementById('searchInput');
+    searchInput.addEventListener('input', (e) => {
+        currentSearch = e.target.value.toLowerCase().trim();
+        applyFilters();
+    });
+}
+
+function applyFilters() {
+    let filtered = [...tracks];
+
+    // Apply tag filter
+    if (currentFilter !== 'all') {
+        filtered = filtered.filter(track => {
+            if (!track.tags) return false;
+            return track.tags.includes(currentFilter);
+        });
+    }
+
+    // Apply search filter
+    if (currentSearch) {
+        filtered = filtered.filter(track => {
+            const title = (track.title || '').toLowerCase();
+            const tags = (track.tags || []).join(' ').toLowerCase();
+            return title.includes(currentSearch) || tags.includes(currentSearch);
+        });
+    }
+
+    // Shuffle the filtered results for random playback
+    shuffleArray(filtered);
+    filteredTracks = filtered;
+    updateTrackCount();
+
+    // Reset to first track if current track is out of bounds
+    if (trackIndex >= filteredTracks.length) {
+        trackIndex = 0;
+    }
+
+    console.log(`Filtered to ${filteredTracks.length} tracks (filter: ${currentFilter}, search: "${currentSearch}")`);
+}
+
+function updateTrackCount() {
+    const countElement = document.getElementById('trackCount');
+    const count = filteredTracks.length;
+    const total = tracks.length;
+
+    if (count === total) {
+        countElement.textContent = `${total} histoires disponibles`;
+    } else {
+        countElement.textContent = `${count} sur ${total} histoires`;
+    }
+}
+
 function prevTrack() {
     trackIndex--;
     if (trackIndex < 0) {
-        trackIndex = tracks.length - 1;
+        trackIndex = filteredTracks.length - 1;
     }
     playTrack();
 }
 
 function nextTrack() {
     trackIndex++;
-    if (trackIndex >= tracks.length) {
+    if (trackIndex >= filteredTracks.length) {
         trackIndex = 0;
     }
     playTrack();
@@ -45,7 +123,12 @@ function nextTrack() {
 
 
 function playTrack() {
-    var currentTrack = tracks[trackIndex];
+    if (filteredTracks.length === 0) {
+        console.log('No tracks available with current filters');
+        return;
+    }
+
+    var currentTrack = filteredTracks[trackIndex];
     console.log(currentTrack.title + ' is playing');
 
     // Check if the track URL already begins with "http"

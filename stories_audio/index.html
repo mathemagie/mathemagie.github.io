@@ -45,10 +45,29 @@
                 </button>
             </div>
 
+            <div class="filter-section">
+                <div class="search-container">
+                    <input type="text" id="searchInput" placeholder="🔍 Rechercher une histoire..." class="search-input">
+                </div>
+
+                <div class="filter-buttons">
+                    <button class="filter-btn active" data-filter="all">Toutes</button>
+                    <button class="filter-btn" data-filter="magique">✨ Magique</button>
+                    <button class="filter-btn" data-filter="animaux">🐾 Animaux</button>
+                    <button class="filter-btn" data-filter="aventure">🗺️ Aventure</button>
+                    <button class="filter-btn" data-filter="amitié">🤝 Amitié</button>
+                    <button class="filter-btn" data-filter="famille">👨‍👩‍👧 Famille</button>
+                    <button class="filter-btn" data-filter="nature">🌿 Nature</button>
+                </div>
+            </div>
+
             <div class="track-info">
                 <div class="track-display">
                     <div class="track-icon">📖</div>
                     <div id="currentTrack" class="track-title">Clique sur Suivant pour commencer !</div>
+                </div>
+                <div class="track-stats">
+                    <span id="trackCount" class="track-count">0 histoires disponibles</span>
                 </div>
             </div>
 

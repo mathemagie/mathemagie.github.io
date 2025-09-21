@@ -149,8 +149,84 @@ body {
     50% { transform: translateY(-10px); }
 }
 
+.filter-section {
+    margin: 25px 0;
+    position: relative;
+    z-index: 2;
+}
+
+.search-container {
+    margin-bottom: 15px;
+    text-align: center;
+}
+
+.search-input {
+    width: 100%;
+    max-width: 300px;
+    padding: 12px 16px;
+    border: 2px solid rgba(255, 107, 157, 0.3);
+    border-radius: 25px;
+    background: rgba(255, 255, 255, 0.9);
+    font-size: 1rem;
+    font-family: 'Fredoka', cursive;
+    color: #2D3436;
+    outline: none;
+    transition: all 0.3s ease;
+}
+
+.search-input:focus {
+    border-color: #FF6B9D;
+    box-shadow: 0 0 10px rgba(255, 107, 157, 0.3);
+    transform: scale(1.02);
+}
+
+.search-input::placeholder {
+    color: #6C5CE7;
+    opacity: 0.7;
+}
+
+.filter-buttons {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    justify-content: center;
+    margin-bottom: 10px;
+}
+
+.filter-btn {
+    background: rgba(255, 255, 255, 0.8);
+    border: 2px solid rgba(108, 92, 231, 0.3);
+    border-radius: 20px;
+    padding: 8px 16px;
+    font-size: 0.85rem;
+    font-weight: 600;
+    color: #6C5CE7;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    font-family: 'Fredoka', cursive;
+    min-width: 80px;
+}
+
+.filter-btn:hover {
+    background: rgba(108, 92, 231, 0.1);
+    border-color: #6C5CE7;
+    transform: translateY(-2px);
+}
+
+.filter-btn.active {
+    background: linear-gradient(45deg, #FF6B9D, #FDCB6E);
+    border-color: #FF6B9D;
+    color: white;
+    box-shadow: 0 4px 15px rgba(255, 107, 157, 0.3);
+}
+
+.filter-btn.active:hover {
+    background: linear-gradient(45deg, #FF4757, #FFA726);
+    box-shadow: 0 6px 20px rgba(255, 107, 157, 0.4);
+}
+
 .track-info {
-    margin: 30px 0;
+    margin: 25px 0;
     position: relative;
     z-index: 2;
 }
@@ -182,6 +258,21 @@ body {
     color: #2D3436;
     line-height: 1.4;
     flex: 1;
+}
+
+.track-stats {
+    margin-top: 10px;
+    text-align: center;
+}
+
+.track-count {
+    font-size: 0.9rem;
+    color: #6C5CE7;
+    font-weight: 500;
+    background: rgba(108, 92, 231, 0.1);
+    padding: 5px 12px;
+    border-radius: 15px;
+    display: inline-block;
 }
 
 .decoration {
@@ -282,6 +373,26 @@ body {
 
     .track-info {
         margin: 25px 0;
+    }
+
+    .filter-section {
+        margin: 20px 0;
+    }
+
+    .search-input {
+        max-width: 250px;
+        padding: 10px 14px;
+        font-size: 0.95rem;
+    }
+
+    .filter-buttons {
+        gap: 6px;
+    }
+
+    .filter-btn {
+        padding: 6px 12px;
+        font-size: 0.8rem;
+        min-width: 70px;
     }
 
     .track-display {
