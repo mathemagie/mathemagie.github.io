@@ -4,6 +4,7 @@ const tracks = [];
 let filteredTracks = []; // Tracks after filtering
 let currentFilter = 'all'; // Current filter type
 let currentSearch = ''; // Current search text
+let isPlaying = false; // Track playback state
 
 const urls3Amazon = 'https://audiod.s3.eu-west-3.amazonaws.com/';
 
@@ -28,12 +29,16 @@ function loadTracksFromJson(jsonFile) {
             generateThematiqueButtons(); // Generate thematique buttons dynamically
             setupFilters();
             updateButtonStates(); // Update button visibility after loading tracks
+            updateCurrentTrackDisplay(); // Display the current track title
             console.log('Tracks loaded and shuffled:', tracks.length, 'tracks');
         })
         .catch(error => {
             console.error('Error loading tracks:', error);
         });
 }
+
+// Initialize audio listeners when the page loads
+initializeAudioListeners();
 
 loadTracksFromJson('tracks.json?random=' + Math.random());
 
@@ -152,6 +157,9 @@ function applyFilters() {
         trackIndex = 0;
     }
 
+    updateCurrentTrackDisplay(); // Update the displayed track title
+    updateButtonStates(); // Update button visibility
+
     console.log(`Filtered to ${filteredTracks.length} tracks (filter: ${currentFilter}, search: "${currentSearch}")`);
 }
 
@@ -180,11 +188,22 @@ function updateButtonStates() {
     }
 }
 
+function updateCurrentTrackDisplay() {
+    const trackDiv = document.getElementById("currentTrack");
+
+    if (filteredTracks.length > 0 && trackIndex < filteredTracks.length) {
+        trackDiv.textContent = filteredTracks[trackIndex].title;
+    } else {
+        trackDiv.textContent = "Aucune histoire disponible";
+    }
+}
+
 function prevTrack() {
     trackIndex--;
     if (trackIndex < 0) {
         trackIndex = filteredTracks.length - 1;
     }
+    updateCurrentTrackDisplay();
     playTrack();
     updateButtonStates();
 }
@@ -194,19 +213,71 @@ function nextTrack() {
     if (trackIndex >= filteredTracks.length) {
         trackIndex = 0;
     }
+    updateCurrentTrackDisplay();
     playTrack();
     updateButtonStates();
 }
 
 
-function playTrack() {
+// Initialize audio event listeners
+function initializeAudioListeners() {
+    const playPauseBtn = document.getElementById('playPauseBtn');
+    const playIcon = playPauseBtn.querySelector('i');
+    const playText = playPauseBtn.querySelector('span');
+
+    // Update button when audio starts playing
+    audioPlayer.addEventListener('play', () => {
+        isPlaying = true;
+        playIcon.className = 'fas fa-pause';
+        playText.textContent = 'Pause';
+    });
+
+    // Update button when audio pauses
+    audioPlayer.addEventListener('pause', () => {
+        isPlaying = false;
+        playIcon.className = 'fas fa-play';
+        playText.textContent = 'Jouer';
+    });
+
+    // Update button when audio ends
+    audioPlayer.addEventListener('ended', () => {
+        isPlaying = false;
+        playIcon.className = 'fas fa-play';
+        playText.textContent = 'Jouer';
+
+        // Advance to next track but don't auto-play
+        trackIndex++;
+        if (trackIndex >= filteredTracks.length) {
+            trackIndex = 0;
+        }
+        updateCurrentTrackDisplay();
+        updateButtonStates();
+    });
+}
+
+function togglePlayPause() {
+    if (filteredTracks.length === 0) {
+        console.log('No tracks available with current filters');
+        return;
+    }
+
+    if (isPlaying) {
+        audioPlayer.pause();
+    } else {
+        // Always load the current track to ensure we're playing the right one
+        loadCurrentTrack();
+        audioPlayer.play();
+    }
+}
+
+function loadCurrentTrack() {
     if (filteredTracks.length === 0) {
         console.log('No tracks available with current filters');
         return;
     }
 
     var currentTrack = filteredTracks[trackIndex];
-    console.log(currentTrack.title + ' is playing');
+    console.log('Loading track: ' + currentTrack.title);
 
     // Check if the track URL already begins with "http"
     if (currentTrack.url.startsWith('http')) {
@@ -217,7 +288,10 @@ function playTrack() {
         audioPlayer.src = urls3Amazon + currentTrack.url;
     }
 
-    var trackDiv = document.getElementById("currentTrack");
-    trackDiv.textContent = currentTrack.title;
+    updateCurrentTrackDisplay();
+}
+
+function playTrack() {
+    loadCurrentTrack();
     audioPlayer.play();
 }

@@ -135,16 +135,14 @@ body {
     font-size: 1.4rem;
 }
 
-.play-indicator {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    gap: 5px;
+.play-pause-btn {
+    background: linear-gradient(45deg, #4CAF50, #66BB6A) !important;
 }
 
-.music-note {
-    font-size: 2.5rem;
+.play-pause-btn:hover {
+    background: linear-gradient(45deg, #388E3C, #4CAF50) !important;
 }
+
 
 @keyframes float {
     0%, 100% { transform: translateY(0px) rotate(0deg); }
@@ -162,6 +160,7 @@ body {
 .search-container {
     margin-bottom: 15px;
     text-align: center;
+    display: none;
 }
 
 .search-input {
@@ -339,13 +338,7 @@ body {
         font-size: 1.3rem;
     }
 
-    .play-indicator {
-        margin: 10px 0;
-    }
 
-    .music-note {
-        font-size: 2.2rem;
-    }
 
     .track-info {
         margin: 25px 0;
@@ -362,13 +355,13 @@ body {
     }
 
     .filter-buttons {
-        gap: 6px;
+        gap: 8px;
     }
 
     .filter-btn {
-        padding: 6px 12px;
-        font-size: 0.8rem;
-        min-width: 70px;
+        padding: 12px 18px;
+        font-size: 0.95rem;
+        min-width: 90px;
     }
 
     .track-display {
@@ -438,13 +431,7 @@ body {
         display: inline;
     }
 
-    .play-indicator {
-        margin: 8px 0;
-    }
 
-    .music-note {
-        font-size: 2rem;
-    }
 
     .track-info {
         margin: 20px 0;
@@ -525,9 +512,6 @@ body {
         padding: 10px 16px;
     }
 
-    .play-indicator {
-        margin: 0;
-    }
 
     .track-info {
         margin: 15px 0;
@@ -572,6 +556,42 @@ body {
         border: 2px solid #000;
         background: rgba(108, 92, 231, 0.15);
     }
+
+    .filter-btn {
+        background: #FFFFFF;
+        border: 3px solid #000000;
+        color: #000000;
+        font-weight: 700;
+    }
+
+    .filter-btn:hover {
+        background: #000000;
+        color: #FFFFFF;
+        border-color: #000000;
+    }
+
+    .filter-btn.active {
+        background: #000000;
+        border-color: #000000;
+        color: #FFFFFF;
+        box-shadow: 0 4px 15px rgba(0, 0, 0, 0.5);
+    }
+
+    .filter-btn.active:hover {
+        background: #333333;
+        box-shadow: 0 6px 20px rgba(0, 0, 0, 0.6);
+    }
+
+    .play-pause-btn {
+        background: #000000 !important;
+        border: 3px solid #FFFFFF !important;
+        color: #FFFFFF !important;
+    }
+
+    .play-pause-btn:hover {
+        background: #333333 !important;
+        border-color: #FFFFFF !important;
+    }
 }
 
 /* Reduced motion for accessibility */
@@ -584,7 +604,6 @@ body {
 
     .main-title,
     .main-title i,
-    .music-note,
     .track-icon,
     .stars span {
         animation: none;
