@@ -26,6 +26,7 @@ function loadTracksFromJson(jsonFile) {
             filteredTracks = [...tracks];
             updateTrackCount();
             setupFilters();
+            updateButtonStates(); // Update button visibility after loading tracks
             console.log('Tracks loaded and shuffled:', tracks.length, 'tracks');
         })
         .catch(error => {
@@ -103,6 +104,19 @@ function updateTrackCount() {
     } else {
         countElement.textContent = `${count} histoires trouvées`;
     }
+
+    updateButtonStates();
+}
+
+function updateButtonStates() {
+    const prevButton = document.querySelector('.prev-btn');
+
+    // Hide previous button if on first track or no tracks available
+    if (trackIndex === 0 || filteredTracks.length === 0) {
+        prevButton.style.display = 'none';
+    } else {
+        prevButton.style.display = 'flex';
+    }
 }
 
 function prevTrack() {
@@ -111,6 +125,7 @@ function prevTrack() {
         trackIndex = filteredTracks.length - 1;
     }
     playTrack();
+    updateButtonStates();
 }
 
 function nextTrack() {
@@ -119,6 +134,7 @@ function nextTrack() {
         trackIndex = 0;
     }
     playTrack();
+    updateButtonStates();
 }
 
 
