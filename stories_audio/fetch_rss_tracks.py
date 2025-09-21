@@ -27,10 +27,6 @@ def fetch_rss_audio_tracks(rss_url):
         # Find all item elements and extract their audio enclosures with titles
         audio_tracks = []
         for item in root.iter('item'):
-            # Get the title from the item
-            title_elem = item.find('title')
-            title = title_elem.text if title_elem is not None else "Unknown Title"
-
             # Find enclosure elements within this item
             for enclosure in item.iter('enclosure'):
                 enclosure_type = enclosure.get('type')
@@ -40,7 +36,7 @@ def fetch_rss_audio_tracks(rss_url):
                 if enclosure_type == 'audio/mpeg' and enclosure_url:
                     audio_tracks.append({
                         'url': enclosure_url,
-                        'title': title
+                        'title': 'Oli'
                     })
 
         return audio_tracks
