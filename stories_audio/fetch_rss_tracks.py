@@ -13,6 +13,38 @@ import xml.etree.ElementTree as ET
 from urllib.request import urlopen
 
 
+def update_existing_tracks_with_tags(tracks_file='tracks.json'):
+    """
+    Update existing tracks in tracks.json to add tags field
+    """
+    try:
+        # Load existing tracks
+        with open(tracks_file, 'r', encoding='utf-8') as f:
+            data = json.load(f)
+            tracks = data.get('tracks', [])
+
+        updated_count = 0
+
+        # Update each track with tags
+        for track in tracks:
+            if isinstance(track, dict) and 'title' in track and 'tags' not in track:
+                tags = extract_tags_from_title(track['title'])
+                track['tags'] = tags
+                updated_count += 1
+
+        # Save updated tracks
+        data['tracks'] = tracks
+        with open(tracks_file, 'w', encoding='utf-8') as f:
+            json.dump(data, f, indent=4, ensure_ascii=False)
+
+        print(f"Updated {updated_count} tracks with tags in {tracks_file}")
+        return updated_count
+
+    except Exception as e:
+        print(f"Error updating tracks with tags: {e}")
+        return 0
+
+
 def extract_tags_from_title(title):
     """
     Extract meaningful tags from RSS title
@@ -136,13 +168,24 @@ def main():
     parser = argparse.ArgumentParser(
         description='Fetch audio URLs from RSS feed and add to tracks.json'
     )
-    parser.add_argument('rss_url', help='URL of the RSS feed to parse')
+    parser.add_argument('rss_url', nargs='?', help='URL of the RSS feed to parse')
     parser.add_argument('--tracks-file', default='tracks.json',
                        help='Path to tracks.json file (default: tracks.json)')
     parser.add_argument('--dry-run', action='store_true',
                        help='Show what would be added without modifying tracks.json')
+    parser.add_argument('--update-tags', action='store_true',
+                       help='Update existing tracks in tracks.json to add tags field')
 
     args = parser.parse_args()
+
+    # Handle update-tags command (doesn't require RSS URL)
+    if args.update_tags:
+        updated_count = update_existing_tracks_with_tags(args.tracks_file)
+        return
+
+    # Require RSS URL for normal operation
+    if not args.rss_url:
+        parser.error("RSS URL is required unless using --update-tags")
 
     print(f"Fetching audio tracks from: {args.rss_url}")
 

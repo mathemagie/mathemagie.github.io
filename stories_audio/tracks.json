@@ -2,675 +2,2191 @@
     "tracks": [
         {
             "url": "19721-21.12.2022-ITEMA_23181447-2022F33264E0017-21.mp3",
-            "title": "Histoire du soir - 21 décembre 2022"
+            "title": "Histoire du soir - 21 décembre 2022",
+            "tags": [
+                "enfants",
+                "histoire",
+                "oli",
+                "radiofrance"
+            ]
         },
         {
             "url": "19721-22.11.2022-ITEMA_23190072-2022F33264E0014-21.mp3",
-            "title": "Histoire du soir - 22 novembre 2022"
+            "title": "Histoire du soir - 22 novembre 2022",
+            "tags": [
+                "enfants",
+                "histoire",
+                "oli",
+                "radiofrance"
+            ]
         },
         {
             "url": "VDB.mp3",
-            "title": "VDB"
+            "title": "VDB",
+            "tags": [
+                "enfants",
+                "histoire",
+                "oli",
+                "radiofrance"
+            ]
         },
         {
             "url": "https://proxycast.radiofrance.fr/7cb007dd-34c4-4171-a9fb-10e4d53a1c07/19721-11.07.2025-ITEMA_24194876-2025F33264E0018-NET_MFI_B53699FA-C51F-4982-94BB-934788F5F891-21.mp3",
-            "title": "Histoire du soir - 11 juillet 2025"
+            "title": "Histoire du soir - 11 juillet 2025",
+            "tags": [
+                "enfants",
+                "histoire",
+                "oli",
+                "radiofrance"
+            ]
         },
         {
             "url": "_Ignatus_le_dragon_par_Anne_Pauly.mp3",
-            "title": "Ignatus le dragon par Anne Pauly"
+            "title": "Ignatus le dragon par Anne Pauly",
+            "tags": [
+                "enfants",
+                "histoire",
+                "oli",
+                "radiofrance"
+            ]
         },
         {
             "url": "_Rainette_la_grenouille_qui_détestait_se_laver_les_cheveux_d_Emmanuelle_Bayamack_Tam.mp3",
-            "title": "Rainette la grenouille qui détestait se laver les cheveux d'Emmanuelle Bayamack-Tam"
+            "title": "Rainette la grenouille qui détestait se laver les cheveux d'Emmanuelle Bayamack-Tam",
+            "tags": [
+                "enfants",
+                "histoire",
+                "oli",
+                "radiofrance"
+            ]
         },
         {
             "url": "https://proxycast.radiofrance.fr/e096da3e-ad18-4563-8e88-ded9b19c5ec1/19721-11.07.2025-ITEMA_24194876-2025F33264E0015-NET_MFI_0E37BD20-B387-48A0-B686-4D92B00B5223-21.mp3",
-            "title": "\"Zoé et les chaussures magiques\", de Sophie Astrabie"
+            "title": "\"Zoé et les chaussures magiques\", de Sophie Astrabie",
+            "tags": [
+                "auteur:sophie astrabie",
+                "chaussures",
+                "enfants",
+                "histoire",
+                "magique",
+                "magiques",
+                "oli",
+                "radiofrance"
+            ]
         },
         {
             "url": "https://proxycast.radiofrance.fr/16fa106f-3b18-4ae5-856f-996a1455f02d/19721-11.07.2025-ITEMA_24194876-2025F33264E0016-NET_MFI_61355E1E-CFDA-47F6-917B-94E57D6B0738-21.mp3",
-            "title": "\"Gaucho sans cheval\" de Thibault de Montaigu"
+            "title": "\"Gaucho sans cheval\" de Thibault de Montaigu",
+            "tags": [
+                "animaux",
+                "auteur:thibault de montaigu",
+                "cheval",
+                "enfants",
+                "gaucho",
+                "histoire",
+                "oli",
+                "radiofrance"
+            ]
         },
         {
             "url": "https://proxycast.radiofrance.fr/5148e131-3f49-497c-accd-44feca4a479c/19721-11.07.2025-ITEMA_24194876-2025F33264E0017-NET_MFI_6F479164-46BF-44C9-B3C3-2C465BA43DB6-21.mp3",
-            "title": "\"Capitaine prisonnier de la mer\", de Clémentine Beauvais"
+            "title": "\"Capitaine prisonnier de la mer\", de Clémentine Beauvais",
+            "tags": [
+                "auteur:la mer\"",
+                "capitaine",
+                "enfants",
+                "histoire",
+                "nature",
+                "oli",
+                "prisonnier",
+                "radiofrance"
+            ]
         },
         {
             "url": "https://proxycast.radiofrance.fr/9d5fc5af-cece-4682-ae9f-da9fe407e2ba/19721-22.04.2025-ITEMA_24106662-2025F33264E0006-NET_MFI_A628C7EE-0231-4FD8-9479-78612F12898F-21.mp3",
-            "title": "\"Socrate le pirate\" de Adrien Borne "
+            "title": "\"Socrate le pirate\" de Adrien Borne ",
+            "tags": [
+                "auteur:adrien borne",
+                "aventure",
+                "enfants",
+                "histoire",
+                "oli",
+                "pirate",
+                "radiofrance",
+                "socrate"
+            ]
         },
         {
             "url": "https://proxycast.radiofrance.fr/eedc7211-34fc-4fa3-830f-a3b3b3bc1ff1/19721-22.04.2025-ITEMA_24106662-2025F33264E0007-NET_MFI_2A9B3CC1-83EB-45C8-BA74-FF7C291073B8-21.mp3",
-            "title": "“Hector le castor” de Marine Léonardi "
+            "title": "“Hector le castor” de Marine Léonardi ",
+            "tags": [
+                "auteur:marine léonardi",
+                "enfants",
+                "histoire",
+                "oli",
+                "radiofrance"
+            ]
         },
         {
             "url": "https://proxycast.radiofrance.fr/2fe1191d-6c3d-4027-a0d4-2054574eda54/19721-22.04.2025-ITEMA_24106662-2025F33264E0008-NET_MFI_CAFA3541-ADD8-46D3-8A78-BC88606AF26C-21.mp3",
-            "title": "“De la véritable histoire de Pataugas, le serpent rêveur” François Beaune   "
+            "title": "“De la véritable histoire de Pataugas, le serpent rêveur” François Beaune   ",
+            "tags": [
+                "auteur:pataugas",
+                "enfants",
+                "histoire",
+                "oli",
+                "radiofrance"
+            ]
         },
         {
             "url": "https://proxycast.radiofrance.fr/7101eba0-9a03-4fab-a87d-467eb75fbdff/19721-22.04.2025-ITEMA_24106662-2025F33264E0009-NET_MFI_E55F341B-9B9E-4AFD-8290-1B640377A1F2-21.mp3",
-            "title": "“Zaza et ses chats” de Grégory Le Floch  "
+            "title": "“Zaza et ses chats” de Grégory Le Floch  ",
+            "tags": [
+                "auteur:grégory le floch",
+                "enfants",
+                "histoire",
+                "oli",
+                "radiofrance"
+            ]
         },
         {
             "url": "https://proxycast.radiofrance.fr/ef2787cf-fc72-4d0b-bfa8-a0675f25a8cc/19721-22.04.2025-ITEMA_24106662-2025F33264E0014-NET_MFI_A76DD5AD-B3B2-4A1A-9473-CCC151D0EDF8-21.mp3",
-            "title": "OLI en concert : \"Dans le pays des Bleu-Vert et des Bleu-Turquoise\" de Marie Modiano"
+            "title": "OLI en concert : \"Dans le pays des Bleu-Vert et des Bleu-Turquoise\" de Marie Modiano",
+            "tags": [
+                "auteur:marie modiano",
+                "bleu",
+                "enfants",
+                "histoire",
+                "oli",
+                "pays",
+                "radiofrance",
+                "turquoise",
+                "vert"
+            ]
         },
         {
             "url": "https://proxycast.radiofrance.fr/60a83325-baf4-4075-a469-0981ef7adf96/19721-12.02.2025-ITEMA_24011125-2025F33264E0001-NET_MFI_8130C140-E6C2-46F0-8BAE-CE68DAEA49AF-21.mp3",
-            "title": "\"Léon et ses moutons\", par Luciole "
+            "title": "\"Léon et ses moutons\", par Luciole ",
+            "tags": [
+                "enfants",
+                "histoire",
+                "léon",
+                "moutons",
+                "oli",
+                "radiofrance"
+            ]
         },
         {
             "url": "https://proxycast.radiofrance.fr/169bd790-ae2d-4287-b716-c5588564b4a8/19721-12.02.2025-ITEMA_24011125-2025F33264E0002-NET_MFI_DDD9D479-B377-4AA1-8C0E-7EDDCADF343B-21.mp3",
-            "title": "\"Zane, la cigogne mélomane\", par Sandra Reinflet"
+            "title": "\"Zane, la cigogne mélomane\", par Sandra Reinflet",
+            "tags": [
+                "cigogne",
+                "enfants",
+                "histoire",
+                "mélomane",
+                "oli",
+                "radiofrance",
+                "zane"
+            ]
         },
         {
             "url": "https://proxycast.radiofrance.fr/fb086f9d-392f-4668-8aba-4de47da43f07/19721-12.02.2025-ITEMA_24011125-2025F33264E0003-NET_MFI_4FAA52F0-6BAF-4FA1-B35B-B1AFF9C2AFE9-21.mp3",
-            "title": "\"La mésange et la pharaonne\", par Paul Greveillac"
+            "title": "\"La mésange et la pharaonne\", par Paul Greveillac",
+            "tags": [
+                "enfants",
+                "histoire",
+                "mésange",
+                "oli",
+                "pharaonne",
+                "radiofrance"
+            ]
         },
         {
             "url": "https://proxycast.radiofrance.fr/b57f09d3-e8bd-4937-86c7-6cdfdb67f5d3/19721-12.02.2025-ITEMA_24011125-2025F33264E0004-NET_MFI_8C39BD6F-C33B-4E61-9190-F8D4A109D32B-21.mp3",
-            "title": " \"Le super-héros du dimanche\", par Frédérick Sigrist"
+            "title": " \"Le super-héros du dimanche\", par Frédérick Sigrist",
+            "tags": [
+                "dimanche",
+                "enfants",
+                "histoire",
+                "héros",
+                "oli",
+                "radiofrance",
+                "super"
+            ]
         },
         {
             "url": "https://proxycast.radiofrance.fr/16db05f7-3b45-47bf-9a12-406015557020/19721-12.02.2025-ITEMA_24011125-2025F33264E0005-NET_MFI_1711EA47-B345-47E4-BB7C-D396A9A09556-21.mp3",
-            "title": "OLI en concert : \"Le Chant des cailloux\" par Claire Berest"
+            "title": "OLI en concert : \"Le Chant des cailloux\" par Claire Berest",
+            "tags": [
+                "cailloux",
+                "chant",
+                "enfants",
+                "histoire",
+                "oli",
+                "radiofrance"
+            ]
         },
         {
             "url": "https://proxycast.radiofrance.fr/5bdb6083-e247-433b-93a0-05d8b77d0270/19721-18.12.2024-ITEMA_23963456-2024F33264E0023-21.mp3",
-            "title": "\"Le dilemme de Jimmy Saucisse\", par Nine Antico"
+            "title": "\"Le dilemme de Jimmy Saucisse\", par Nine Antico",
+            "tags": [
+                "auteur:jimmy saucisse\"",
+                "dilemme",
+                "enfants",
+                "histoire",
+                "jimmy",
+                "oli",
+                "radiofrance",
+                "saucisse"
+            ]
         },
         {
             "url": "https://proxycast.radiofrance.fr/1de9f1eb-3914-4646-aaf4-92de77456178/19721-18.12.2024-ITEMA_23963456-2024F33264E0022-21.mp3",
-            "title": "\"La jeune fille qui vivait dans un moulin à paroles\", par Vincent Almendros"
+            "title": "\"La jeune fille qui vivait dans un moulin à paroles\", par Vincent Almendros",
+            "tags": [
+                "enfants",
+                "fille",
+                "histoire",
+                "jeune",
+                "moulin",
+                "oli",
+                "paroles",
+                "radiofrance",
+                "vivait"
+            ]
         },
         {
             "url": "https://proxycast.radiofrance.fr/b7e6f761-3eb9-456b-81c2-76e06802460f/19721-18.12.2024-ITEMA_23963456-2024F33264E0021-21.mp3",
-            "title": "\"La petite fille qui avait peur du blanc\", par Marie Nimier, racontée par Philippe Katerine et sa fille Edie"
+            "title": "\"La petite fille qui avait peur du blanc\", par Marie Nimier, racontée par Philippe Katerine et sa fille Edie",
+            "tags": [
+                "avait",
+                "blanc",
+                "enfants",
+                "fille",
+                "histoire",
+                "oli",
+                "petite",
+                "peur",
+                "radiofrance"
+            ]
         },
         {
             "url": "https://proxycast.radiofrance.fr/ee34951e-3a77-4a1d-9195-a932a0bfc313/19721-18.12.2024-ITEMA_23963456-2024F33264E0020-21.mp3",
-            "title": "\"Alvida, princesse des mers\", par Léa Chauvel-Levy"
+            "title": "\"Alvida, princesse des mers\", par Léa Chauvel-Levy",
+            "tags": [
+                "alvida",
+                "enfants",
+                "histoire",
+                "mers",
+                "nature",
+                "oli",
+                "princesse",
+                "radiofrance"
+            ]
         },
         {
             "url": "https://proxycast.radiofrance.fr/cdb94e32-0b01-4ceb-a5fb-cec1182c98f6/19721-18.12.2024-ITEMA_23963456-2024F33264E0024-21.mp3",
-            "title": "OLI en concert : \"Emilio, le chien à six pattes\", par Daniel Morin"
+            "title": "OLI en concert : \"Emilio, le chien à six pattes\", par Daniel Morin",
+            "tags": [
+                "animaux",
+                "chien",
+                "emilio",
+                "enfants",
+                "histoire",
+                "oli",
+                "pattes",
+                "radiofrance"
+            ]
         },
         {
             "url": "https://proxycast.radiofrance.fr/1682d2ba-cad3-46be-9dbb-3da7515de0a9/19721-25.10.2024-ITEMA_23905037-2024F33264E0019-NET_MFI_1AE84CF3-33B4-4268-94C0-E9169EC80165-21.mp3",
-            "title": "OLI en concert : \"Léo, l’enfant qui ne parle pas\", par Eric-Emmanuel Schmitt"
+            "title": "OLI en concert : \"Léo, l’enfant qui ne parle pas\", par Eric-Emmanuel Schmitt",
+            "tags": [
+                "enfant",
+                "enfants",
+                "histoire",
+                "oli",
+                "parle",
+                "radiofrance"
+            ]
         },
         {
             "url": "https://proxycast.radiofrance.fr/aae2617f-51e6-4203-b7cf-07c554cd919f/19721-25.10.2024-ITEMA_23905037-2024F33264E0015-NET_MFI_CDB2987F-84D4-4329-8F88-671FE2F8320D-21.mp3",
-            "title": "\"Le petit nuage\", par Marion Seclin"
+            "title": "\"Le petit nuage\", par Marion Seclin",
+            "tags": [
+                "enfants",
+                "histoire",
+                "nuage",
+                "oli",
+                "radiofrance"
+            ]
         },
         {
             "url": "https://proxycast.radiofrance.fr/af1267a2-2979-44f8-a571-be3dd7bf7d26/19721-25.10.2024-ITEMA_23905037-2024F33264E0016-NET_MFI_DF3DEC13-EE0A-40C6-BE81-38DB496D5DE2-21.mp3",
-            "title": "\"Le petit lapin pas magicien\", par Nadia Daam"
+            "title": "\"Le petit lapin pas magicien\", par Nadia Daam",
+            "tags": [
+                "animaux",
+                "enfants",
+                "histoire",
+                "lapin",
+                "magicien",
+                "oli",
+                "radiofrance"
+            ]
         },
         {
             "url": "https://proxycast.radiofrance.fr/fbff9203-ec63-457e-937d-34a0b4d22740/19721-25.10.2024-ITEMA_23905037-2024F33264E0017-NET_MFI_2FDC72F1-6FFD-4164-B326-FBF88145F416-21.mp3",
-            "title": "\"Bianca, et la machine à fabriquer le hasard\", par Pauline Klein"
+            "title": "\"Bianca, et la machine à fabriquer le hasard\", par Pauline Klein",
+            "tags": [
+                "bianca",
+                "enfants",
+                "fabriquer",
+                "hasard",
+                "histoire",
+                "machine",
+                "oli",
+                "radiofrance"
+            ]
         },
         {
             "url": "https://proxycast.radiofrance.fr/ad217731-bf60-4bf7-ab24-a7ea0e1f79fb/19721-05.07.2024-ITEMA_23793599-2024F33264E0014-21.mp3",
-            "title": "\"La licorne et le grand concert\", par Aline Afanoukoé"
+            "title": "\"La licorne et le grand concert\", par Aline Afanoukoé",
+            "tags": [
+                "concert",
+                "enfants",
+                "famille",
+                "histoire",
+                "licorne",
+                "oli",
+                "radiofrance"
+            ]
         },
         {
             "url": "https://proxycast.radiofrance.fr/b492a187-8a4c-4403-bc23-5db2f75c511c/19721-03.07.2024-ITEMA_23762914-2024F33264E0012-21.mp3",
-            "title": "\"La petite souris qui voulait découvrir le monde\", par Julia Kerninon"
+            "title": "\"La petite souris qui voulait découvrir le monde\", par Julia Kerninon",
+            "tags": [
+                "découvrir",
+                "enfants",
+                "histoire",
+                "monde",
+                "oli",
+                "petite",
+                "radiofrance",
+                "souris",
+                "voulait"
+            ]
         },
         {
             "url": "https://proxycast.radiofrance.fr/0f9a0aca-0ab8-4970-93e2-12a546d036a1/19721-03.07.2024-ITEMA_23762914-2024F33264E0010-21.mp3",
-            "title": "\"Le papillon qui lisait\", par Charles Dantzig"
+            "title": "\"Le papillon qui lisait\", par Charles Dantzig",
+            "tags": [
+                "enfants",
+                "histoire",
+                "lisait",
+                "oli",
+                "papillon",
+                "radiofrance"
+            ]
         },
         {
             "url": "https://proxycast.radiofrance.fr/ccf59de0-6de3-437a-9a17-4eb33f0a241d/19721-03.07.2024-ITEMA_23762914-2024F33264E0011-21.mp3",
-            "title": "\"L'enfant qui ne sentait rien\", par Mathieu Simonet"
+            "title": "\"L'enfant qui ne sentait rien\", par Mathieu Simonet",
+            "tags": [
+                "enfant",
+                "enfants",
+                "histoire",
+                "oli",
+                "radiofrance",
+                "rien",
+                "sentait"
+            ]
         },
         {
             "url": "https://proxycast.radiofrance.fr/b701e53f-bf36-42c9-a195-11e6b5c6287b/19721-03.07.2024-ITEMA_23762914-2024F33264E0013-21.mp3",
-            "title": "\"L’histoire de la princesse qui voulait dormir cent ans\", par Wendy Delorme"
+            "title": "\"L’histoire de la princesse qui voulait dormir cent ans\", par Wendy Delorme",
+            "tags": [
+                "auteur:la princesse qui voulait dormir cent ans\"",
+                "cent",
+                "dormir",
+                "enfants",
+                "histoire",
+                "livre",
+                "oli",
+                "princesse",
+                "radiofrance",
+                "voulait"
+            ]
         },
         {
             "url": "https://proxycast.radiofrance.fr/c0475968-bd82-4ce9-8b5a-2dbb17e2579a/19721-10.04.2024-ITEMA_23662578-2024F33264E0005-21.mp3",
-            "title": "\"Mademoiselle Non-merci\", par Joffrine Donnadieu"
+            "title": "\"Mademoiselle Non-merci\", par Joffrine Donnadieu",
+            "tags": [
+                "enfants",
+                "histoire",
+                "mademoiselle",
+                "merci",
+                "nature",
+                "oli",
+                "radiofrance"
+            ]
         },
         {
             "url": "https://proxycast.radiofrance.fr/af5c0f6d-ec4f-41c5-bc0a-e3b1ebbc4657/19721-10.04.2024-ITEMA_23662578-2024F33264E0006-21.mp3",
-            "title": "\"Le premier chat qui a posé une patte sur Mars\" par Hélène Frappat"
+            "title": "\"Le premier chat qui a posé une patte sur Mars\" par Hélène Frappat",
+            "tags": [
+                "animaux",
+                "chat",
+                "enfants",
+                "histoire",
+                "mars",
+                "oli",
+                "patte",
+                "posé",
+                "premier",
+                "radiofrance"
+            ]
         },
         {
             "url": "https://proxycast.radiofrance.fr/07c76ea2-2d65-4ba4-acbb-f1fd734b5700/19721-10.04.2024-ITEMA_23662578-2024F33264E0007-21.mp3",
-            "title": "\"La cabane au fond du bureau\", par Marie Misset et Marine Baousson "
+            "title": "\"La cabane au fond du bureau\", par Marie Misset et Marine Baousson ",
+            "tags": [
+                "bureau",
+                "cabane",
+                "enfants",
+                "fond",
+                "histoire",
+                "oli",
+                "radiofrance"
+            ]
         },
         {
             "url": "https://proxycast.radiofrance.fr/d8ee702a-908f-4b96-ae3d-d9ac09f95a0f/19721-10.04.2024-ITEMA_23662578-2024F33264E0008-21.mp3",
-            "title": "\"Le petit galet gris qui rêvait de Tahiti\", par Christophe Ono-dit-Biot"
+            "title": "\"Le petit galet gris qui rêvait de Tahiti\", par Christophe Ono-dit-Biot",
+            "tags": [
+                "auteur:tahiti\"",
+                "enfants",
+                "galet",
+                "gris",
+                "histoire",
+                "oli",
+                "radiofrance",
+                "rêvait",
+                "tahiti"
+            ]
         },
         {
             "url": "https://proxycast.radiofrance.fr/c742c8ee-acdc-4850-8348-b52220c1f354/19721-10.04.2024-ITEMA_23662578-2024F33264E0009-21.mp3",
-            "title": "\"Le petit pois et la princesse\", par Gaspard Koenig"
+            "title": "\"Le petit pois et la princesse\", par Gaspard Koenig",
+            "tags": [
+                "enfants",
+                "histoire",
+                "oli",
+                "pois",
+                "princesse",
+                "radiofrance"
+            ]
         },
         {
             "url": "https://proxycast.radiofrance.fr/fe61467a-9e87-4de3-aa68-1f39e753cfed/19721-07.02.2024-ITEMA_23610274-2024F33264E0004-21.mp3",
-            "title": "OLI en concert : \"Idriss et le secret du poulpe\", par Simon Johannin"
+            "title": "OLI en concert : \"Idriss et le secret du poulpe\", par Simon Johannin",
+            "tags": [
+                "enfants",
+                "histoire",
+                "idriss",
+                "oli",
+                "poulpe",
+                "radiofrance",
+                "secret"
+            ]
         },
         {
             "url": "https://proxycast.radiofrance.fr/905d972e-e2ee-4a7d-bb11-973d6eec029b/19721-07.02.2024-ITEMA_23610274-2024F33264E0003-21.mp3",
-            "title": "OLI en concert : \"Le Paon rose\" par Kaouther Adimi"
+            "title": "OLI en concert : \"Le Paon rose\" par Kaouther Adimi",
+            "tags": [
+                "enfants",
+                "histoire",
+                "oli",
+                "paon",
+                "radiofrance",
+                "rose"
+            ]
         },
         {
             "url": "https://proxycast.radiofrance.fr/dba784fe-35bd-41e7-aa56-a50d3296c06d/19721-07.02.2024-ITEMA_23610274-2024F33264E0002-21.mp3",
-            "title": "OLI en concert : \"Au fond de l’Océan\" par Adeline Dieudonné"
+            "title": "OLI en concert : \"Au fond de l’Océan\" par Adeline Dieudonné",
+            "tags": [
+                "auteur:l’océan\" par adeline dieudonné",
+                "aventure",
+                "enfants",
+                "fond",
+                "histoire",
+                "nature",
+                "océan",
+                "oli",
+                "radiofrance"
+            ]
         },
         {
             "url": "https://proxycast.radiofrance.fr/584639b3-3d09-40ac-a13e-4f5525a2d88e/19721-07.02.2024-ITEMA_23610274-2024F33264E0001-21.mp3",
-            "title": "OLI en concert : \"Les Jumellomanes\" par Alex Vizorek"
+            "title": "OLI en concert : \"Les Jumellomanes\" par Alex Vizorek",
+            "tags": [
+                "enfants",
+                "histoire",
+                "jumellomanes",
+                "oli",
+                "radiofrance"
+            ]
         },
         {
             "url": "https://proxycast.radiofrance.fr/fa389347-2a6c-4d51-9c4f-e991200bdf9f/19721-20.12.2023-ITEMA_23573213-2023F33264E0021-21.mp3",
-            "title": "\"Les dinosaures de Noël\", par Jérôme Lambert"
+            "title": "\"Les dinosaures de Noël\", par Jérôme Lambert",
+            "tags": [
+                "auteur:noël\"",
+                "dinosaures",
+                "enfants",
+                "histoire",
+                "noël",
+                "oli",
+                "radiofrance"
+            ]
         },
         {
             "url": "https://proxycast.radiofrance.fr/0d4917aa-1ee8-4589-bd80-a1bb29e6388d/19721-20.12.2023-ITEMA_23573213-2023F33264E0020-21.mp3",
-            "title": "Esmeralda la petite ogresse, par Leonor de Recondo"
+            "title": "Esmeralda la petite ogresse, par Leonor de Recondo",
+            "tags": [
+                "auteur:recondo",
+                "enfants",
+                "histoire",
+                "oli",
+                "radiofrance"
+            ]
         },
         {
             "url": "https://proxycast.radiofrance.fr/a6d7fd92-82fd-4652-8c8f-9b74f8e8b362/19721-20.12.2023-ITEMA_23573213-2023F33264E0019-21.mp3",
-            "title": "Le Requin Joe, par Mathieu Palain"
+            "title": "Le Requin Joe, par Mathieu Palain",
+            "tags": [
+                "enfants",
+                "histoire",
+                "oli",
+                "radiofrance"
+            ]
         },
         {
             "url": "https://proxycast.radiofrance.fr/d091a67f-17ce-4458-94a3-61b6f5e11331/19721-20.12.2023-ITEMA_23573213-2023F33264E0018-21.mp3",
-            "title": "La princesse qui tombait amoureuse tout le temps, par Maud Ventura"
+            "title": "La princesse qui tombait amoureuse tout le temps, par Maud Ventura",
+            "tags": [
+                "enfants",
+                "histoire",
+                "oli",
+                "radiofrance"
+            ]
         },
         {
             "url": "https://proxycast.radiofrance.fr/abe89ce3-acfa-432f-81af-0abcaeafc2cb/19721-20.12.2023-ITEMA_23573213-2023F33264E0017-21.mp3",
-            "title": "Le chevalier à l'épée en chocolat, par Mathilde Serrell"
+            "title": "Le chevalier à l'épée en chocolat, par Mathilde Serrell",
+            "tags": [
+                "auteur:serrell",
+                "enfants",
+                "histoire",
+                "oli",
+                "radiofrance"
+            ]
         },
         {
             "url": "https://proxycast.radiofrance.fr/694760a6-3461-4fa2-bd1f-8418caeef17f/19721-18.10.2023-ITEMA_23521526-2023F33264E0012-21.mp3",
-            "title": "\"Le petit cheval ailé\""
+            "title": "\"Le petit cheval ailé\"",
+            "tags": [
+                "ailé",
+                "animaux",
+                "cheval",
+                "enfants",
+                "histoire",
+                "oli",
+                "radiofrance"
+            ]
         },
         {
             "url": "https://proxycast.radiofrance.fr/94d14cba-d16c-4035-bded-6c4b2868d59d/19721-18.10.2023-ITEMA_23521526-2023F33264E0013-21.mp3",
-            "title": "\"Le croissant de nuit\""
+            "title": "\"Le croissant de nuit\"",
+            "tags": [
+                "auteur:nuit\"",
+                "croissant",
+                "enfants",
+                "histoire",
+                "nuit",
+                "oli",
+                "radiofrance"
+            ]
         },
         {
             "url": "https://proxycast.radiofrance.fr/6452e33e-fb73-4695-8a00-d67f5cadae45/19721-18.10.2023-ITEMA_23521526-2023F33264E0014-21.mp3",
-            "title": "\"Les mots du soir \""
+            "title": "\"Les mots du soir \"",
+            "tags": [
+                "enfants",
+                "histoire",
+                "mots",
+                "oli",
+                "radiofrance",
+                "soir"
+            ]
         },
         {
             "url": "https://proxycast.radiofrance.fr/def321bb-1dca-42ce-9aac-507f4c629138/19721-18.10.2023-ITEMA_23521526-2023F33264E0015-21.mp3",
-            "title": "\"Genialstein\", par Anne Akrich"
+            "title": "\"Genialstein\", par Anne Akrich",
+            "tags": [
+                "enfants",
+                "genialstein",
+                "histoire",
+                "oli",
+                "radiofrance"
+            ]
         },
         {
             "url": "https://proxycast.radiofrance.fr/0f091fd3-4c7e-4fcc-ad08-d40209ed62d6/19721-18.10.2023-ITEMA_23521526-2023F33264E0016-21.mp3",
-            "title": "\"Le sourire sérieux\" par Philippe Torreton"
+            "title": "\"Le sourire sérieux\" par Philippe Torreton",
+            "tags": [
+                "enfants",
+                "histoire",
+                "oli",
+                "radiofrance",
+                "sourire",
+                "sérieux"
+            ]
         },
         {
             "url": "https://proxycast.radiofrance.fr/06d2b286-68fa-453f-bde5-d31fc5b29c71/19721-28.06.2023-ITEMA_23420888-2023F33264E0007-21.mp3",
-            "title": "L'histoire du rêve de l'enfant bleu"
+            "title": "L'histoire du rêve de l'enfant bleu",
+            "tags": [
+                "auteur:l'enfant bleu",
+                "enfants",
+                "histoire",
+                "oli",
+                "radiofrance"
+            ]
         },
         {
             "url": "https://proxycast.radiofrance.fr/628381e5-20f9-40f1-aa6a-71f09e09d732/19721-28.06.2023-ITEMA_23420888-2023F33264E0008-21.mp3",
-            "title": "\"Théo et le grand pouvoir de son imagination\""
+            "title": "\"Théo et le grand pouvoir de son imagination\"",
+            "tags": [
+                "auteur:son imagination\"",
+                "enfants",
+                "famille",
+                "histoire",
+                "imagination",
+                "oli",
+                "pouvoir",
+                "radiofrance",
+                "théo"
+            ]
         },
         {
             "url": "https://proxycast.radiofrance.fr/94b3a06f-8e9a-47ae-931b-feebb4e46b09/19721-28.06.2023-ITEMA_23420888-2023F33264E0009-21.mp3",
-            "title": "\"Hey la vache\""
+            "title": "\"Hey la vache\"",
+            "tags": [
+                "enfants",
+                "histoire",
+                "oli",
+                "radiofrance",
+                "vache"
+            ]
         },
         {
             "url": "https://proxycast.radiofrance.fr/023a05f9-15bd-473b-af08-e0cf0400e3fd/19721-28.06.2023-ITEMA_23420888-2023F33264E0011-21.mp3",
-            "title": "\"L’enfant aux yeux de mer\""
+            "title": "\"L’enfant aux yeux de mer\"",
+            "tags": [
+                "auteur:mer\"",
+                "enfant",
+                "enfants",
+                "histoire",
+                "nature",
+                "oli",
+                "radiofrance",
+                "yeux"
+            ]
         },
         {
             "url": "https://proxycast.radiofrance.fr/9938f9d9-a0a0-4bc9-8ebe-6762abce1270/19721-28.06.2023-ITEMA_23420888-2023F33264E0010-21.mp3",
-            "title": "\"La crique bleue\""
+            "title": "\"La crique bleue\"",
+            "tags": [
+                "bleue",
+                "crique",
+                "enfants",
+                "histoire",
+                "oli",
+                "radiofrance"
+            ]
         },
         {
             "url": "https://proxycast.radiofrance.fr/a7fe50ef-8693-4f0c-a0a3-d9675f8fe32a/19721-12.04.2023-ITEMA_23326757-2023F33264E0003-21.mp3",
-            "title": "\"Bruno le baleineau et le concours de splash\""
+            "title": "\"Bruno le baleineau et le concours de splash\"",
+            "tags": [
+                "animaux",
+                "auteur:splash\"",
+                "baleineau",
+                "bruno",
+                "concours",
+                "enfants",
+                "histoire",
+                "oli",
+                "radiofrance",
+                "splash"
+            ]
         },
         {
             "url": "https://proxycast.radiofrance.fr/706bbd10-3947-4cb2-9111-e62dbda3f300/19721-12.04.2023-ITEMA_23326757-2023F33264E0004-21.mp3",
-            "title": "\"Zazou et la faim des vacances\""
+            "title": "\"Zazou et la faim des vacances\"",
+            "tags": [
+                "enfants",
+                "faim",
+                "histoire",
+                "oli",
+                "radiofrance",
+                "vacances",
+                "zazou"
+            ]
         },
         {
             "url": "https://proxycast.radiofrance.fr/a33836f2-ae9b-42d6-8bf6-dddf1e582287/19721-12.04.2023-ITEMA_23326757-2023F33264E0005-21.mp3",
-            "title": "\"La terrible histoire d’un petit géant qui n’était pas à la hauteur\""
+            "title": "\"La terrible histoire d’un petit géant qui n’était pas à la hauteur\"",
+            "tags": [
+                "enfants",
+                "géant",
+                "hauteur",
+                "histoire",
+                "livre",
+                "oli",
+                "radiofrance",
+                "terrible",
+                "était"
+            ]
         },
         {
             "url": "https://proxycast.radiofrance.fr/60eb6e55-1f4b-48c1-bf88-9d9a22cc82b4/19721-10.04.2023-ITEMA_23351660-2023F33264E0002-21.mp3",
-            "title": "\"La grotte des couleurs\""
+            "title": "\"La grotte des couleurs\"",
+            "tags": [
+                "couleurs",
+                "enfants",
+                "grotte",
+                "histoire",
+                "oli",
+                "radiofrance"
+            ]
         },
         {
             "url": "https://proxycast.radiofrance.fr/64b5adbd-f076-4be7-a269-8a7f36e5b01d/19721-10.04.2023-ITEMA_23351660-2023F33264E0001-21.mp3",
-            "title": "\"Le grand concours\""
+            "title": "\"Le grand concours\"",
+            "tags": [
+                "animaux",
+                "concours",
+                "enfants",
+                "famille",
+                "histoire",
+                "oli",
+                "radiofrance"
+            ]
         },
         {
             "url": "https://proxycast.radiofrance.fr/a01ece96-7d8c-420a-aeb6-63f95e27dfcc/19721-05.03.2023-ITEMA_23347001-2023F33264E0006-21.mp3",
-            "title": "Bande Annonce : Les nouveaux épisodes d'OLI"
+            "title": "Bande Annonce : Les nouveaux épisodes d'OLI",
+            "tags": [
+                "auteur:annonce : les nouveaux épisodes d'oli",
+                "enfants",
+                "histoire",
+                "oli",
+                "radiofrance"
+            ]
         },
         {
             "url": "https://proxycast.radiofrance.fr/7430817e-13f6-4bc3-a923-d2d735d11cea/19721-21.12.2022-ITEMA_23181447-2022F33264E0017-21.mp3",
-            "title": "OLI en concert : \"Camille s'est perdu\" de Marie Desplechin"
+            "title": "OLI en concert : \"Camille s'est perdu\" de Marie Desplechin",
+            "tags": [
+                "amitié",
+                "auteur:marie desplechin",
+                "camille",
+                "enfants",
+                "histoire",
+                "oli",
+                "perdu",
+                "radiofrance"
+            ]
         },
         {
             "url": "https://proxycast.radiofrance.fr/ef3888d6-6b4f-4bf8-a9ef-085701bedffe/19721-21.12.2022-ITEMA_23181447-2022F33264E0016-21.mp3",
-            "title": "OLI en concert : \"Ma première note\" de Pierre Ducrozet et Jean-René Ducrozet"
+            "title": "OLI en concert : \"Ma première note\" de Pierre Ducrozet et Jean-René Ducrozet",
+            "tags": [
+                "auteur:pierre ducrozet et jean-rené ducrozet",
+                "enfants",
+                "histoire",
+                "note",
+                "oli",
+                "première",
+                "radiofrance"
+            ]
         },
         {
             "url": "https://proxycast.radiofrance.fr/84015a91-0ae3-4b76-aaad-8afbedd25e8f/19721-22.11.2022-ITEMA_23190072-2022F33264E0011-21.mp3",
-            "title": "\"Néraïda de l'Olympe\""
+            "title": "\"Néraïda de l'Olympe\"",
+            "tags": [
+                "auteur:l'olympe\"",
+                "enfants",
+                "histoire",
+                "néraïda",
+                "oli",
+                "olympe",
+                "radiofrance"
+            ]
         },
         {
             "url": "https://proxycast.radiofrance.fr/8ad42e99-f811-41b1-b285-28da9a28e7e7/19721-22.11.2022-ITEMA_23190072-2022F33264E0015-21.mp3",
-            "title": "\"Toutoune et Constantin et la grosse dame\""
+            "title": "\"Toutoune et Constantin et la grosse dame\"",
+            "tags": [
+                "constantin",
+                "dame",
+                "enfants",
+                "grosse",
+                "histoire",
+                "oli",
+                "radiofrance",
+                "toutoune"
+            ]
         },
         {
             "url": "https://proxycast.radiofrance.fr/b499706a-bda0-41f5-98f6-d51d5a67eabc/19721-22.11.2022-ITEMA_23190072-2022F33264E0014-21.mp3",
-            "title": "\"Idriss et le secret du poulpe\""
+            "title": "\"Idriss et le secret du poulpe\"",
+            "tags": [
+                "enfants",
+                "histoire",
+                "idriss",
+                "oli",
+                "poulpe",
+                "radiofrance",
+                "secret"
+            ]
         },
         {
             "url": "https://proxycast.radiofrance.fr/b5c54271-2fe6-40cf-b5c7-9dd894ea4c26/19721-22.11.2022-ITEMA_23190072-2022F33264E0013-21.mp3",
-            "title": "\"La libellule et le bison, ou la fable de l'ouest américain\""
+            "title": "\"La libellule et le bison, ou la fable de l'ouest américain\"",
+            "tags": [
+                "américain",
+                "auteur:l'ouest américain\"",
+                "bison",
+                "enfants",
+                "fable",
+                "histoire",
+                "libellule",
+                "oli",
+                "ouest",
+                "radiofrance"
+            ]
         },
         {
             "url": "https://proxycast.radiofrance.fr/06fd76c4-fa1b-4466-91ab-f168426fb7c0/19721-22.11.2022-ITEMA_23190072-2022F33264E0012-21.mp3",
-            "title": "\"Nansen, celui qui voulait être tout en haut\" "
+            "title": "\"Nansen, celui qui voulait être tout en haut\" ",
+            "tags": [
+                "celui",
+                "enfants",
+                "haut",
+                "histoire",
+                "nansen",
+                "oli",
+                "radiofrance",
+                "voulait"
+            ]
         },
         {
             "url": "https://proxycast.radiofrance.fr/cec6c417-c04b-4b82-b4c5-ae1f9a6e1994/19721-29.06.2022-ITEMA_23052811-2022F33264E0010-21.mp3",
-            "title": "\"Le jour où Betty fait disparaître sa petite sœur Wanda\""
+            "title": "\"Le jour où Betty fait disparaître sa petite sœur Wanda\"",
+            "tags": [
+                "betty",
+                "disparaître",
+                "enfants",
+                "famille",
+                "histoire",
+                "jour",
+                "oli",
+                "petite",
+                "radiofrance",
+                "sœur",
+                "wanda"
+            ]
         },
         {
             "url": "https://proxycast.radiofrance.fr/5777ca50-11d4-4039-9604-c0f85e100882/19721-29.06.2022-ITEMA_23052811-2022F33264E0009-21.mp3",
-            "title": "\"Les pirates du mercredi\""
+            "title": "\"Les pirates du mercredi\"",
+            "tags": [
+                "aventure",
+                "enfants",
+                "histoire",
+                "mercredi",
+                "nature",
+                "oli",
+                "pirates",
+                "radiofrance"
+            ]
         },
         {
             "url": "https://proxycast.radiofrance.fr/90e5007a-5a51-43b1-a8bc-1c6c635ed970/19721-29.06.2022-ITEMA_23052811-2022F33264E0008-21.mp3",
-            "title": "La véritable histoire de Bernard l'ermite"
+            "title": "La véritable histoire de Bernard l'ermite",
+            "tags": [
+                "auteur:bernard l'ermite",
+                "enfants",
+                "histoire",
+                "oli",
+                "radiofrance"
+            ]
         },
         {
             "url": "https://proxycast.radiofrance.fr/494d0dcc-4922-4fc7-9f6d-f2411f362448/19721-29.06.2022-ITEMA_23052811-2022F33264E0007-21.mp3",
-            "title": "\"Le chapeau de Gigi, Sourina et Pipo\""
+            "title": "\"Le chapeau de Gigi, Sourina et Pipo\"",
+            "tags": [
+                "auteur:gigi",
+                "chapeau",
+                "enfants",
+                "gigi",
+                "histoire",
+                "oli",
+                "pipo",
+                "radiofrance",
+                "sourina"
+            ]
         },
         {
             "url": "https://proxycast.radiofrance.fr/082fa728-a291-4414-a97d-8b9a80d02983/19721-29.06.2022-ITEMA_23052811-2022F33264E0006-21.mp3",
-            "title": "\"L'histoire qui fait un petit peu peur mais heureusement y a des prouts dedans\""
+            "title": "\"L'histoire qui fait un petit peu peur mais heureusement y a des prouts dedans\"",
+            "tags": [
+                "dedans",
+                "enfants",
+                "heureusement",
+                "histoire",
+                "livre",
+                "oli",
+                "peur",
+                "prouts",
+                "radiofrance"
+            ]
         },
         {
             "url": "https://proxycast.radiofrance.fr/ff63cc52-9e9a-4135-9fa2-afd33a852f4f/19721-13.04.2022-ITEMA_22986020-2022F33264E0001-21.mp3",
-            "title": "\"Le chapeau melon qui voulait partir en voyage\""
+            "title": "\"Le chapeau melon qui voulait partir en voyage\"",
+            "tags": [
+                "aventure",
+                "chapeau",
+                "enfants",
+                "histoire",
+                "melon",
+                "oli",
+                "partir",
+                "radiofrance",
+                "voulait",
+                "voyage"
+            ]
         },
         {
             "url": "https://proxycast.radiofrance.fr/e4353717-15b6-4bd4-bd57-6c72540c9969/19721-13.04.2022-ITEMA_22986020-2022F33264E0002-21.mp3",
-            "title": "\"Anong et la grenouille de jade\""
+            "title": "\"Anong et la grenouille de jade\"",
+            "tags": [
+                "anong",
+                "auteur:jade\"",
+                "enfants",
+                "grenouille",
+                "histoire",
+                "jade",
+                "oli",
+                "radiofrance"
+            ]
         },
         {
             "url": "https://proxycast.radiofrance.fr/d6a673ee-99d7-40a9-b8d1-cfcb2921b47f/19721-13.04.2022-ITEMA_22986020-2022F33264E0003-21.mp3",
-            "title": "\"La compagnie des rêves\""
+            "title": "\"La compagnie des rêves\"",
+            "tags": [
+                "compagnie",
+                "enfants",
+                "histoire",
+                "oli",
+                "radiofrance",
+                "rêves"
+            ]
         },
         {
             "url": "https://proxycast.radiofrance.fr/d48b96a1-1642-45d5-a068-69aef21b8cd5/19721-13.04.2022-ITEMA_22986020-2022F33264E0004-21.mp3",
-            "title": "\"L’homme le plus lent du monde\""
+            "title": "\"L’homme le plus lent du monde\"",
+            "tags": [
+                "enfants",
+                "histoire",
+                "homme",
+                "lent",
+                "monde",
+                "oli",
+                "radiofrance"
+            ]
         },
         {
             "url": "https://proxycast.radiofrance.fr/6d979c2b-a1e2-4362-a6ad-0dd67ce51c5a/19721-13.04.2022-ITEMA_22986020-2022F33264E0005-21.mp3",
-            "title": "\"Tête d’œuf et le voyage au Royaume des Rêves\""
+            "title": "\"Tête d’œuf et le voyage au Royaume des Rêves\"",
+            "tags": [
+                "aventure",
+                "enfants",
+                "histoire",
+                "oli",
+                "radiofrance",
+                "royaume",
+                "rêves",
+                "tête",
+                "voyage"
+            ]
         },
         {
             "url": "https://proxycast.radiofrance.fr/5bd8a0b9-7858-4ff8-875c-54b40bc5416b/19721-22.12.2021-ITEMA_22870772-2021F33264E0058-21.mp3",
-            "title": "\"L'arbre qui voulait voir le monde\""
+            "title": "\"L'arbre qui voulait voir le monde\"",
+            "tags": [
+                "arbre",
+                "enfants",
+                "histoire",
+                "monde",
+                "nature",
+                "oli",
+                "radiofrance",
+                "voir",
+                "voulait"
+            ]
         },
         {
             "url": "https://proxycast.radiofrance.fr/a750d249-0b0f-4697-800e-840b9b048b08/19721-22.12.2021-ITEMA_22870772-2021F33264E0057-21.mp3",
-            "title": "\"Lili, Tina, les clowns et les footballeuses\""
+            "title": "\"Lili, Tina, les clowns et les footballeuses\"",
+            "tags": [
+                "clowns",
+                "enfants",
+                "footballeuses",
+                "histoire",
+                "lili",
+                "oli",
+                "radiofrance",
+                "tina"
+            ]
         },
         {
             "url": "https://proxycast.radiofrance.fr/ef97eb6f-5a6e-450f-8886-67fc4543772d/19721-22.12.2021-ITEMA_22870772-2021F33264E0056-21.mp3",
-            "title": "\"Le Petit Pince\""
+            "title": "\"Le Petit Pince\"",
+            "tags": [
+                "enfants",
+                "histoire",
+                "oli",
+                "pince",
+                "radiofrance"
+            ]
         },
         {
             "url": "https://proxycast.radiofrance.fr/b125ee40-3906-4855-af20-a76cb5695f2b/19721-22.12.2021-ITEMA_22870772-2021F33264E0055-21.mp3",
-            "title": "\"Alzarus et le bâton de pluie\""
+            "title": "\"Alzarus et le bâton de pluie\"",
+            "tags": [
+                "alzarus",
+                "auteur:pluie\"",
+                "bâton",
+                "enfants",
+                "histoire",
+                "oli",
+                "pluie",
+                "radiofrance"
+            ]
         },
         {
             "url": "https://proxycast.radiofrance.fr/2b4a49ff-334e-4861-b77c-28debe11c088/19721-22.12.2021-ITEMA_22870772-2021F33264E0054-21.mp3",
-            "title": "\"Owen, le petit zombie d'appartement\""
+            "title": "\"Owen, le petit zombie d'appartement\"",
+            "tags": [
+                "appartement",
+                "enfants",
+                "histoire",
+                "oli",
+                "owen",
+                "radiofrance",
+                "zombie"
+            ]
         },
         {
             "url": "https://proxycast.radiofrance.fr/d6f391f9-3681-41d0-81f1-30c4e82e51b1/19721-22.12.2021-ITEMA_22870772-2021F33264E0060-21.mp3",
-            "title": "OLI en concert : \"Secret des parents\" de Nicolas Mathieu"
+            "title": "OLI en concert : \"Secret des parents\" de Nicolas Mathieu",
+            "tags": [
+                "auteur:nicolas mathieu",
+                "enfants",
+                "famille",
+                "histoire",
+                "oli",
+                "parents",
+                "radiofrance",
+                "secret"
+            ]
         },
         {
             "url": "https://proxycast.radiofrance.fr/c2bdc4ed-e45d-4b75-b037-409d6fad76ca/19721-22.12.2021-ITEMA_22870772-2021F33264E0059-21.mp3",
-            "title": "OLI en concert : \"Le poisson d'argent\" de Nina Bouraoui"
+            "title": "OLI en concert : \"Le poisson d'argent\" de Nina Bouraoui",
+            "tags": [
+                "animaux",
+                "argent",
+                "auteur:nina bouraoui",
+                "enfants",
+                "histoire",
+                "oli",
+                "poisson",
+                "radiofrance"
+            ]
         },
         {
             "url": "https://proxycast.radiofrance.fr/3dc35588-ee76-43b9-abcb-6afa7f3d5a6a/19721-21.10.2021-ITEMA_22814609-2021F33264E0053-21.mp3",
-            "title": "\"Jojo le Ninja\""
+            "title": "\"Jojo le Ninja\"",
+            "tags": [
+                "enfants",
+                "histoire",
+                "jojo",
+                "ninja",
+                "oli",
+                "radiofrance"
+            ]
         },
         {
             "url": "https://proxycast.radiofrance.fr/e795cad1-e2de-4060-92b6-d338e4c761fb/19721-21.10.2021-ITEMA_22814609-2021F33264E0052-21.mp3",
-            "title": "\"Kim et son cœur sur la main\""
+            "title": "\"Kim et son cœur sur la main\"",
+            "tags": [
+                "cœur",
+                "enfants",
+                "histoire",
+                "main",
+                "oli",
+                "radiofrance"
+            ]
         },
         {
             "url": "https://proxycast.radiofrance.fr/6386f45d-ba08-4d86-9250-8f2a873618ff/19721-21.10.2021-ITEMA_22814609-2021F33264E0051-21.mp3",
-            "title": "\"Le voleur de sapin\""
+            "title": "\"Le voleur de sapin\"",
+            "tags": [
+                "auteur:sapin\"",
+                "enfants",
+                "histoire",
+                "oli",
+                "radiofrance",
+                "sapin",
+                "voleur"
+            ]
         },
         {
             "url": "https://proxycast.radiofrance.fr/aec7c125-d02d-45da-af42-eac8c9222317/19721-21.10.2021-ITEMA_22814609-2021F33264E0050-21.mp3",
-            "title": "\"Le paon rose\""
+            "title": "\"Le paon rose\"",
+            "tags": [
+                "enfants",
+                "histoire",
+                "oli",
+                "paon",
+                "radiofrance",
+                "rose"
+            ]
         },
         {
             "url": "https://proxycast.radiofrance.fr/2676acf3-4c1c-431e-8a77-694019c8bcb2/19721-21.10.2021-ITEMA_22814609-2021F33264E0049-21.mp3",
-            "title": "\"Le jeu de la vérité\""
+            "title": "\"Le jeu de la vérité\"",
+            "tags": [
+                "auteur:la vérité\"",
+                "enfants",
+                "histoire",
+                "oli",
+                "radiofrance",
+                "vérité"
+            ]
         },
         {
             "url": "https://proxycast.radiofrance.fr/22d8a4e2-86aa-4ef6-971e-1d89cfcb489b/19721-07.07.2021-ITEMA_22721872-2021F33264E0048-21.mp3",
-            "title": "\"Le petit chevalier\""
+            "title": "\"Le petit chevalier\"",
+            "tags": [
+                "animaux",
+                "chevalier",
+                "enfants",
+                "histoire",
+                "oli",
+                "radiofrance"
+            ]
         },
         {
             "url": "https://proxycast.radiofrance.fr/2b5298df-e803-437d-aa18-8b0ef9e07a2f/19721-07.07.2021-ITEMA_22721872-2021F33264E0047-21.mp3",
-            "title": "\"L’histoire de la petite fille qui se trouvait trop petite dans un monde trop grand\""
+            "title": "\"L’histoire de la petite fille qui se trouvait trop petite dans un monde trop grand\"",
+            "tags": [
+                "auteur:la petite fille qui se trouvait trop petite dans un monde trop grand\"",
+                "enfants",
+                "famille",
+                "fille",
+                "histoire",
+                "livre",
+                "monde",
+                "oli",
+                "petite",
+                "radiofrance",
+                "trop",
+                "trouvait"
+            ]
         },
         {
             "url": "https://proxycast.radiofrance.fr/56dee7e1-f7a8-4ec2-a14b-d7162f991547/19721-07.07.2021-ITEMA_22721872-2021F33264E0046-21.mp3",
-            "title": "\"Zouzou et les nuggets magiques\""
+            "title": "\"Zouzou et les nuggets magiques\"",
+            "tags": [
+                "enfants",
+                "histoire",
+                "magique",
+                "magiques",
+                "nuggets",
+                "oli",
+                "radiofrance",
+                "zouzou"
+            ]
         },
         {
             "url": "https://proxycast.radiofrance.fr/cd1551d1-c55a-4f6a-8bdb-c24a8cd513fa/19721-07.07.2021-ITEMA_22721872-2021F33264E0045-21.mp3",
-            "title": "\"Au pays des Tout-oui\""
+            "title": "\"Au pays des Tout-oui\"",
+            "tags": [
+                "enfants",
+                "histoire",
+                "oli",
+                "pays",
+                "radiofrance"
+            ]
         },
         {
             "url": "https://proxycast.radiofrance.fr/22c203e7-af2d-4437-a155-c127c9740762/19721-07.07.2021-ITEMA_22721872-2021F33264E0044-21.mp3",
-            "title": "\"Toutoune et Constantin\""
+            "title": "\"Toutoune et Constantin\"",
+            "tags": [
+                "constantin",
+                "enfants",
+                "histoire",
+                "oli",
+                "radiofrance",
+                "toutoune"
+            ]
         },
         {
             "url": "https://proxycast.radiofrance.fr/7e99c57e-d3d9-4c19-9409-22b5a211c17d/19721-23.04.2021-ITEMA_22645181-2021F33264E0043-21.mp3",
-            "title": "\"L'histoire des Mims Petro et Jean Pims\""
+            "title": "\"L'histoire des Mims Petro et Jean Pims\"",
+            "tags": [
+                "enfants",
+                "histoire",
+                "jean",
+                "livre",
+                "mims",
+                "oli",
+                "petro",
+                "pims",
+                "radiofrance"
+            ]
         },
         {
             "url": "https://proxycast.radiofrance.fr/a4b2bbbd-f9f8-4542-a051-e3dbc4364801/19721-23.04.2021-ITEMA_22645181-2021F33264E0042-21.mp3",
-            "title": "\"Messidor et les bananes de compagnie\""
+            "title": "\"Messidor et les bananes de compagnie\"",
+            "tags": [
+                "auteur:compagnie\"",
+                "bananes",
+                "compagnie",
+                "enfants",
+                "histoire",
+                "messidor",
+                "oli",
+                "radiofrance"
+            ]
         },
         {
             "url": "https://proxycast.radiofrance.fr/28af4c8b-027c-4597-83c4-1f5bce2c46d6/19721-23.04.2021-ITEMA_22645181-2021F33264E0041-21.mp3",
-            "title": "\"Fabien et la housse de couette\""
+            "title": "\"Fabien et la housse de couette\"",
+            "tags": [
+                "auteur:couette\"",
+                "couette",
+                "enfants",
+                "fabien",
+                "histoire",
+                "housse",
+                "oli",
+                "radiofrance"
+            ]
         },
         {
             "url": "https://proxycast.radiofrance.fr/5729b8e4-4dcb-4d52-873c-46dca6379efc/19721-23.04.2021-ITEMA_22645181-2021F33264E0040-21.mp3",
-            "title": "\"Ignatus le Dragon\""
+            "title": "\"Ignatus le Dragon\"",
+            "tags": [
+                "dragon",
+                "enfants",
+                "histoire",
+                "ignatus",
+                "oli",
+                "radiofrance"
+            ]
         },
         {
             "url": "https://proxycast.radiofrance.fr/11e8c151-442b-4527-b266-a2d70003373e/19721-23.04.2021-ITEMA_22645181-2021F33264E0039-21.mp3",
-            "title": "\"La fourmi et le croque-monsieur\""
+            "title": "\"La fourmi et le croque-monsieur\"",
+            "tags": [
+                "croque",
+                "enfants",
+                "fourmi",
+                "histoire",
+                "monsieur",
+                "oli",
+                "radiofrance"
+            ]
         },
         {
             "url": "https://proxycast.radiofrance.fr/26f6d37f-0a72-476f-b528-4107e90ea8fb/19721-05.02.2021-ITEMA_22565468-2021F33264E0038-21.mp3",
-            "title": "\"Victoria, la femme qui n'aimait pas les enfants\""
+            "title": "\"Victoria, la femme qui n'aimait pas les enfants\"",
+            "tags": [
+                "aimait",
+                "enfants",
+                "femme",
+                "histoire",
+                "oli",
+                "radiofrance",
+                "victoria"
+            ]
         },
         {
             "url": "https://proxycast.radiofrance.fr/9e2ceafe-30d5-40c1-9190-e08b3fe22e25/19721-05.02.2021-ITEMA_22565468-2021F33264E0036-21.mp3",
-            "title": "\"Coline la chaussette orpheline\" "
+            "title": "\"Coline la chaussette orpheline\" ",
+            "tags": [
+                "chaussette",
+                "coline",
+                "enfants",
+                "histoire",
+                "oli",
+                "orpheline",
+                "radiofrance"
+            ]
         },
         {
             "url": "https://proxycast.radiofrance.fr/7e04e63a-2fa5-471f-afa7-a30feaab467d/19721-05.02.2021-ITEMA_22565468-2021F33264E0037-21.mp3",
-            "title": "\"Cueillette et le prince de feu\" "
+            "title": "\"Cueillette et le prince de feu\" ",
+            "tags": [
+                "auteur:feu\"",
+                "cueillette",
+                "enfants",
+                "histoire",
+                "oli",
+                "prince",
+                "radiofrance"
+            ]
         },
         {
             "url": "https://proxycast.radiofrance.fr/b005e304-9bda-4663-8c81-caff3d96cba9/19721-05.02.2021-ITEMA_22565468-2021F33264E0035-21.mp3",
-            "title": "\"Le dernier poisson\""
+            "title": "\"Le dernier poisson\"",
+            "tags": [
+                "animaux",
+                "dernier",
+                "enfants",
+                "histoire",
+                "oli",
+                "poisson",
+                "radiofrance"
+            ]
         },
         {
             "url": "https://proxycast.radiofrance.fr/169e4c89-15a5-4d57-8f94-98f868284da7/19721-05.02.2021-ITEMA_22565468-2021F33264E0034-21.mp3",
-            "title": "\"Léo et le chat de la plage\""
+            "title": "\"Léo et le chat de la plage\"",
+            "tags": [
+                "animaux",
+                "auteur:la plage\"",
+                "chat",
+                "enfants",
+                "histoire",
+                "oli",
+                "plage",
+                "radiofrance"
+            ]
         },
         {
             "url": "https://proxycast.radiofrance.fr/9bc86f71-04b4-4cb9-880f-f02b1fedfc71/19721-30.11.2020-ITEMA_22499530-2020F33264E0033-21.mp3",
-            "title": "\"Le petit garçon et les animaux disparus\""
+            "title": "\"Le petit garçon et les animaux disparus\"",
+            "tags": [
+                "animaux",
+                "disparus",
+                "enfants",
+                "garçon",
+                "histoire",
+                "oli",
+                "radiofrance"
+            ]
         },
         {
             "url": "https://proxycast.radiofrance.fr/4ceb50bd-b2bd-4861-96f0-ba6a2d7efe37/19721-30.11.2020-ITEMA_22499530-2020F33264E0032-21.mp3",
-            "title": "\"Les métamorphoses d'Adèle\""
+            "title": "\"Les métamorphoses d'Adèle\"",
+            "tags": [
+                "adèle",
+                "enfants",
+                "histoire",
+                "métamorphoses",
+                "oli",
+                "radiofrance"
+            ]
         },
         {
             "url": "https://proxycast.radiofrance.fr/bce4da0c-8afd-4006-8329-e92b9a55be67/19721-30.11.2020-ITEMA_22499530-2020F33264E0031-21.mp3",
-            "title": "\"Le procès de Chatoune\""
+            "title": "\"Le procès de Chatoune\"",
+            "tags": [
+                "animaux",
+                "auteur:chatoune\"",
+                "chatoune",
+                "enfants",
+                "histoire",
+                "oli",
+                "procès",
+                "radiofrance"
+            ]
         },
         {
             "url": "https://proxycast.radiofrance.fr/7d17f1ae-17da-455a-b75a-cc2a37aba66a/19721-30.11.2020-ITEMA_22499530-2020F33264E0030-21.mp3",
-            "title": "\"Madeleine et les mots qui fâchent\""
+            "title": "\"Madeleine et les mots qui fâchent\"",
+            "tags": [
+                "enfants",
+                "fâchent",
+                "histoire",
+                "madeleine",
+                "mots",
+                "oli",
+                "radiofrance"
+            ]
         },
         {
             "url": "https://proxycast.radiofrance.fr/25034f30-4773-4965-aac2-44e9861142d4/19721-30.11.2020-ITEMA_22499530-2020F33264E0029-21.mp3",
-            "title": "\"Le Sapin de Saint-Etienne\""
+            "title": "\"Le Sapin de Saint-Etienne\"",
+            "tags": [
+                "auteur:saint-etienne\"",
+                "enfants",
+                "etienne",
+                "histoire",
+                "oli",
+                "radiofrance",
+                "saint",
+                "sapin"
+            ]
         },
         {
             "url": "https://proxycast.radiofrance.fr/8c20d068-d4d8-47c6-bed8-7631cb4f75b8/19721-28.09.2020-ITEMA_22439963-2020F33264E0028-21.mp3",
-            "title": "\"Bouboule, la poule trop cool\""
+            "title": "\"Bouboule, la poule trop cool\"",
+            "tags": [
+                "bouboule",
+                "cool",
+                "enfants",
+                "histoire",
+                "oli",
+                "poule",
+                "radiofrance",
+                "trop"
+            ]
         },
         {
             "url": "https://proxycast.radiofrance.fr/ada4fb9d-b173-41d8-b7c3-e15488fbde0d/19721-28.09.2020-ITEMA_22439963-2020F33264E0027-21.mp3",
-            "title": "\"Danser !\" "
+            "title": "\"Danser !\" ",
+            "tags": [
+                "danser",
+                "enfants",
+                "histoire",
+                "oli",
+                "radiofrance"
+            ]
         },
         {
             "url": "https://proxycast.radiofrance.fr/2cd68264-1ffd-4010-8408-a5be0da53f69/19721-28.09.2020-ITEMA_22439963-2020F33264E0026-21.mp3",
-            "title": "\"Jean-Bébé\" "
+            "title": "\"Jean-Bébé\" ",
+            "tags": [
+                "bébé",
+                "enfants",
+                "histoire",
+                "jean",
+                "oli",
+                "radiofrance"
+            ]
         },
         {
             "url": "https://proxycast.radiofrance.fr/b4d86ec6-64a0-4b80-8594-825713dfef04/19721-28.09.2020-ITEMA_22439963-2020F33264E0025-21.mp3",
-            "title": "\"Les baisers envoyés\""
+            "title": "\"Les baisers envoyés\"",
+            "tags": [
+                "baisers",
+                "enfants",
+                "envoyés",
+                "histoire",
+                "oli",
+                "radiofrance"
+            ]
         },
         {
             "url": "https://proxycast.radiofrance.fr/a2e331c9-4d1d-432d-9f94-f4a8bbf0966c/19721-28.09.2020-ITEMA_22439963-2020F33264E0024-21.mp3",
-            "title": "\"Les fées des courgettes\""
+            "title": "\"Les fées des courgettes\"",
+            "tags": [
+                "courgettes",
+                "enfants",
+                "fées",
+                "histoire",
+                "magique",
+                "oli",
+                "radiofrance"
+            ]
         },
         {
             "url": "https://proxycast.radiofrance.fr/7e1ee9f1-d520-4de2-9e8e-76628f3683ce/19721-23.07.2020-ITEMA_22388000-2020F33264E0023-21.mp3",
-            "title": "\"La fable de l’enfant qui avait trop de choses à dire\""
+            "title": "\"La fable de l’enfant qui avait trop de choses à dire\"",
+            "tags": [
+                "auteur:l’enfant qui avait trop de choses à dire\"",
+                "avait",
+                "choses",
+                "enfant",
+                "enfants",
+                "fable",
+                "histoire",
+                "oli",
+                "radiofrance",
+                "trop"
+            ]
         },
         {
             "url": "https://proxycast.radiofrance.fr/e6b894d9-f88e-47d7-8ece-b59d59a45e3b/19721-23.07.2020-ITEMA_22388000-2020F33264E0022-21.mp3",
-            "title": "\"Miss Mousse\""
+            "title": "\"Miss Mousse\"",
+            "tags": [
+                "enfants",
+                "histoire",
+                "miss",
+                "mousse",
+                "oli",
+                "radiofrance"
+            ]
         },
         {
             "url": "https://proxycast.radiofrance.fr/5663f85e-ef36-496c-9b81-a3fc890e4d2c/19721-23.07.2020-ITEMA_22388000-2020F33264E0021-21.mp3",
-            "title": "\"Jeannette et les fées du temps qu’il fait\""
+            "title": "\"Jeannette et les fées du temps qu’il fait\"",
+            "tags": [
+                "enfants",
+                "fées",
+                "histoire",
+                "jeannette",
+                "magique",
+                "oli",
+                "radiofrance",
+                "temps"
+            ]
         },
         {
             "url": "https://proxycast.radiofrance.fr/119862e3-98f8-4051-8d35-156c99cc73db/19721-23.07.2020-ITEMA_22388000-2020F33264E0019-21.mp3",
-            "title": "\"L’histoire d’Ava et Ivanhoé\""
+            "title": "\"L’histoire d’Ava et Ivanhoé\"",
+            "tags": [
+                "enfants",
+                "histoire",
+                "ivanhoé",
+                "livre",
+                "oli",
+                "radiofrance"
+            ]
         },
         {
             "url": "https://proxycast.radiofrance.fr/66d86bfe-eb6e-4e4d-83af-fbbf1bd6778f/19721-23.07.2020-ITEMA_22388000-2020F33264E0020-21.mp3",
-            "title": "\"Le peintre qui volait la couleur des choses\""
+            "title": "\"Le peintre qui volait la couleur des choses\"",
+            "tags": [
+                "choses",
+                "couleur",
+                "enfants",
+                "histoire",
+                "oli",
+                "peintre",
+                "radiofrance",
+                "volait"
+            ]
         },
         {
             "url": "https://proxycast.radiofrance.fr/69cef0af-3cb7-43d9-b4b9-75c617a878d4/19721-28.04.2020-ITEMA_22331422-2020F33264E0017-21.mp3",
-            "title": "\"La vie secrète de Doudou Lapin\""
+            "title": "\"La vie secrète de Doudou Lapin\"",
+            "tags": [
+                "animaux",
+                "auteur:doudou lapin\"",
+                "doudou",
+                "enfants",
+                "histoire",
+                "lapin",
+                "oli",
+                "radiofrance",
+                "secrète"
+            ]
         },
         {
             "url": "https://proxycast.radiofrance.fr/f60f8bde-a72e-4c9c-90c5-0480f4541c74/19721-18.02.2020-ITEMA_22285929-2020F33264E0016-21.mp3",
-            "title": "\"Le Prince oublié et la sorcière malfaisante\""
+            "title": "\"Le Prince oublié et la sorcière malfaisante\"",
+            "tags": [
+                "enfants",
+                "histoire",
+                "malfaisante",
+                "oli",
+                "oublié",
+                "prince",
+                "radiofrance",
+                "sorcière"
+            ]
         },
         {
             "url": "https://proxycast.radiofrance.fr/e89e0a9f-80b4-4611-9787-4558ef92cf77/19721-18.02.2020-ITEMA_22285929-2020F33264E0015-21.mp3",
-            "title": "\"Taly, la p'tite souris\""
+            "title": "\"Taly, la p'tite souris\"",
+            "tags": [
+                "enfants",
+                "histoire",
+                "oli",
+                "radiofrance",
+                "souris",
+                "taly",
+                "tite"
+            ]
         },
         {
             "url": "https://proxycast.radiofrance.fr/269cbcb7-d19c-4b5c-8cbd-5a36829fb46e/19721-18.02.2020-ITEMA_22285929-2020F33264E0014-21.mp3",
-            "title": "\"Les papiers d'Omar\""
+            "title": "\"Les papiers d'Omar\"",
+            "tags": [
+                "enfants",
+                "histoire",
+                "oli",
+                "omar",
+                "papiers",
+                "radiofrance"
+            ]
         },
         {
             "url": "https://proxycast.radiofrance.fr/e5dbffa7-eac2-4421-bd1a-5e4e9fe40abf/19721-18.02.2020-ITEMA_22285929-2020F33264E0013-21.mp3",
-            "title": "\"Luna à Manhattan\""
+            "title": "\"Luna à Manhattan\"",
+            "tags": [
+                "enfants",
+                "histoire",
+                "luna",
+                "manhattan",
+                "oli",
+                "radiofrance"
+            ]
         },
         {
             "url": "https://proxycast.radiofrance.fr/c9e5d9ae-6fca-458a-927f-0e56fef59547/19721-18.02.2020-ITEMA_22285929-2020F33264E0012-21.mp3",
-            "title": "\"Le secret des parents\""
+            "title": "\"Le secret des parents\"",
+            "tags": [
+                "enfants",
+                "famille",
+                "histoire",
+                "oli",
+                "parents",
+                "radiofrance",
+                "secret"
+            ]
         },
         {
             "url": "https://proxycast.radiofrance.fr/84cfcde3-cad0-4a37-bfa7-66c68bd73bf6/19721-17.12.2019-ITEMA_22232156-2019F33264E0011-21.mp3",
-            "title": "\"Le réseau du Père Noël\""
+            "title": "\"Le réseau du Père Noël\"",
+            "tags": [
+                "enfants",
+                "famille",
+                "histoire",
+                "noël",
+                "oli",
+                "père",
+                "radiofrance",
+                "réseau"
+            ]
         },
         {
             "url": "https://proxycast.radiofrance.fr/b6493d75-c5d8-44b9-969c-ca30bc3d5922/19721-17.12.2019-ITEMA_22232156-2019F33264E0010-21.mp3",
-            "title": "\"La petite patate qui voulait être un chien féroce\""
+            "title": "\"La petite patate qui voulait être un chien féroce\"",
+            "tags": [
+                "animaux",
+                "chien",
+                "enfants",
+                "féroce",
+                "histoire",
+                "oli",
+                "patate",
+                "petite",
+                "radiofrance",
+                "voulait"
+            ]
         },
         {
             "url": "https://proxycast.radiofrance.fr/497b0889-a2b1-4740-93a9-eb33cbb14fe9/19721-17.12.2019-ITEMA_22232156-2019F33264E0009-21.mp3",
-            "title": "\"Baïla, la petite Louve\" "
+            "title": "\"Baïla, la petite Louve\" ",
+            "tags": [
+                "baïla",
+                "enfants",
+                "histoire",
+                "louve",
+                "oli",
+                "petite",
+                "radiofrance"
+            ]
         },
         {
             "url": "https://proxycast.radiofrance.fr/1a06570f-61bb-4054-ab62-93f1febdb3df/19721-17.12.2019-ITEMA_22232156-2019F33264E0008-21.mp3",
-            "title": "\"Constance veut changer le monde\""
+            "title": "\"Constance veut changer le monde\"",
+            "tags": [
+                "changer",
+                "constance",
+                "enfants",
+                "histoire",
+                "monde",
+                "oli",
+                "radiofrance",
+                "veut"
+            ]
         },
         {
             "url": "https://proxycast.radiofrance.fr/3800abae-89dc-4101-bc95-ba001052d5bd/19721-17.12.2019-ITEMA_22232156-2019F33264E0007-21.mp3",
-            "title": "\"Le marchand d'amis\""
+            "title": "\"Le marchand d'amis\"",
+            "tags": [
+                "amis",
+                "amitié",
+                "enfants",
+                "histoire",
+                "marchand",
+                "oli",
+                "radiofrance"
+            ]
         },
         {
             "url": "https://proxycast.radiofrance.fr/cfc6eb32-f17f-4dd9-8841-2f6ddb6f4547/19721-17.12.2019-ITEMA_22232156-2019F33264E0006-21.mp3",
-            "title": "\"Le Lapin Shérif\""
+            "title": "\"Le Lapin Shérif\"",
+            "tags": [
+                "animaux",
+                "enfants",
+                "histoire",
+                "lapin",
+                "oli",
+                "radiofrance",
+                "shérif"
+            ]
         },
         {
             "url": "https://proxycast.radiofrance.fr/ce2a6c49-8e16-425b-b1ef-1be62804319d/19721-15.10.2019-ITEMA_22176330-2019F33264E0005-21.mp3",
-            "title": "\"Babouchka Babachka\""
+            "title": "\"Babouchka Babachka\"",
+            "tags": [
+                "babachka",
+                "babouchka",
+                "enfants",
+                "histoire",
+                "oli",
+                "radiofrance"
+            ]
         },
         {
             "url": "https://proxycast.radiofrance.fr/89f1f8c3-14a6-4300-b537-46600ddb3e6b/19721-15.10.2019-ITEMA_22176330-2019F33264E0004-21.mp3",
-            "title": "\"Le monsieur qui avait une grosse voix\""
+            "title": "\"Le monsieur qui avait une grosse voix\"",
+            "tags": [
+                "avait",
+                "enfants",
+                "grosse",
+                "histoire",
+                "monsieur",
+                "oli",
+                "radiofrance",
+                "voix"
+            ]
         },
         {
             "url": "https://proxycast.radiofrance.fr/a7ab2837-1e7f-4dfa-97ff-7d1e13fa7db8/19721-15.10.2019-ITEMA_22176330-2019F33264E0003-21.mp3",
-            "title": "\"Rainette, la grenouille qui détestait se laver les cheveux\""
+            "title": "\"Rainette, la grenouille qui détestait se laver les cheveux\"",
+            "tags": [
+                "cheveux",
+                "détestait",
+                "enfants",
+                "grenouille",
+                "histoire",
+                "laver",
+                "oli",
+                "radiofrance",
+                "rainette"
+            ]
         },
         {
             "url": "https://proxycast.radiofrance.fr/66af16e8-fa2d-40c0-b751-65a81023fb73/19721-15.10.2019-ITEMA_22176330-2019F33264E0002-21.mp3",
-            "title": "\"L'otarie tarée\""
+            "title": "\"L'otarie tarée\"",
+            "tags": [
+                "enfants",
+                "histoire",
+                "oli",
+                "otarie",
+                "radiofrance",
+                "tarée"
+            ]
         },
         {
             "url": "https://proxycast.radiofrance.fr/0d145179-6616-43a9-b286-4d782779c058/19721-15.10.2019-ITEMA_22176330-2019F33264E0001-21.mp3",
-            "title": "\"La petite fille qui avait peur des chiens et du vent dans les arbres\""
+            "title": "\"La petite fille qui avait peur des chiens et du vent dans les arbres\"",
+            "tags": [
+                "animaux",
+                "arbres",
+                "avait",
+                "chiens",
+                "enfants",
+                "fille",
+                "histoire",
+                "nature",
+                "oli",
+                "petite",
+                "peur",
+                "radiofrance",
+                "vent"
+            ]
         },
         {
             "url": "https://proxycast.radiofrance.fr/546117ed-1c91-4f20-b455-0ac40a811b43/19721-10.07.2019-ITEMA_22107234-2019F35387E4175-21.mp3",
-            "title": "L’histoire du monstre du Loch Ness"
+            "title": "L’histoire du monstre du Loch Ness",
+            "tags": [
+                "enfants",
+                "histoire",
+                "oli",
+                "radiofrance"
+            ]
         },
         {
             "url": "https://proxycast.radiofrance.fr/309ef9d0-bc33-4d6c-a2da-ba2bb9ecdb52/19721-10.07.2019-ITEMA_22107234-2019F35387E9175-21.mp3",
-            "title": "Toutânkhamon, ou la découverte d’un tombeau royal"
+            "title": "Toutânkhamon, ou la découverte d’un tombeau royal",
+            "tags": [
+                "enfants",
+                "histoire",
+                "oli",
+                "radiofrance"
+            ]
         },
         {
             "url": "https://proxycast.radiofrance.fr/327f5db5-6b61-4d5e-8aac-a51760d909d2/19721-10.07.2019-ITEMA_22107234-2019F35387E0191-21.mp3",
-            "title": "Laure Grandbesançon présente \"Les Odyssées\" !"
+            "title": "Laure Grandbesançon présente \"Les Odyssées\" !",
+            "tags": [
+                "enfants",
+                "histoire",
+                "odyssées",
+                "oli",
+                "radiofrance"
+            ]
         },
         {
             "url": "https://proxycast.radiofrance.fr/4604a862-8ceb-4307-9d95-478b86f991d8/19721-17.06.2019-ITEMA_22090439-2019F33264S4168-21.mp3",
-            "title": "\"Le loup qui préférait les carottes\""
+            "title": "\"Le loup qui préférait les carottes\"",
+            "tags": [
+                "animaux",
+                "carottes",
+                "enfants",
+                "histoire",
+                "loup",
+                "oli",
+                "préférait",
+                "radiofrance"
+            ]
         },
         {
             "url": "https://proxycast.radiofrance.fr/ebfd54ea-c273-4c45-b836-cf7064ee3a67/19721-17.06.2019-ITEMA_22090439-2019F33264S3168-21.mp3",
-            "title": "\"La cabane\""
+            "title": "\"La cabane\"",
+            "tags": [
+                "cabane",
+                "enfants",
+                "histoire",
+                "oli",
+                "radiofrance"
+            ]
         },
         {
             "url": "https://proxycast.radiofrance.fr/810b3de6-59c2-405c-9bc2-a096929013fc/19721-17.06.2019-ITEMA_22090439-2019F33264S2168-21.mp3",
-            "title": "\"Le chat Pompelair et l'assiette magique\""
+            "title": "\"Le chat Pompelair et l'assiette magique\"",
+            "tags": [
+                "animaux",
+                "assiette",
+                "chat",
+                "enfants",
+                "histoire",
+                "magique",
+                "oli",
+                "pompelair",
+                "radiofrance"
+            ]
         },
         {
             "url": "https://proxycast.radiofrance.fr/dfbaa688-6cad-4ae3-a981-530375d18a25/19721-17.06.2019-ITEMA_22090439-2019F33264S1168-21.mp3",
-            "title": "\"Quand j’étais petit, je n’étais pas grand\""
+            "title": "\"Quand j’étais petit, je n’étais pas grand\"",
+            "tags": [
+                "enfants",
+                "famille",
+                "histoire",
+                "oli",
+                "radiofrance",
+                "étais"
+            ]
         },
         {
             "url": "https://proxycast.radiofrance.fr/d71bf54a-e23f-4f23-96b3-e38d956141ce/19721-17.06.2019-ITEMA_22090439-2019F33264S0168-21.mp3",
-            "title": "\"Le poisson d'argent\""
+            "title": "\"Le poisson d'argent\"",
+            "tags": [
+                "animaux",
+                "argent",
+                "enfants",
+                "histoire",
+                "oli",
+                "poisson",
+                "radiofrance"
+            ]
         },
         {
             "url": "https://proxycast.radiofrance.fr/4ae9c5a3-b55f-4a42-9cb9-5ccf856e09e5/19721-20.02.2019-ITEMA_21985925-2019F33264S0439-21.mp3",
-            "title": "\"Le petit Breton et le lama qui cherchait ses lunettes\""
+            "title": "\"Le petit Breton et le lama qui cherchait ses lunettes\"",
+            "tags": [
+                "breton",
+                "cherchait",
+                "enfants",
+                "histoire",
+                "lama",
+                "lunettes",
+                "nature",
+                "oli",
+                "radiofrance"
+            ]
         },
         {
             "url": "https://proxycast.radiofrance.fr/fb4371fa-0038-46cb-ac63-a5ffb27a283c/19721-20.02.2019-ITEMA_21985925-2019F33264S0339-21.mp3",
-            "title": "\"La petite souris de nuit\""
+            "title": "\"La petite souris de nuit\"",
+            "tags": [
+                "auteur:nuit\"",
+                "enfants",
+                "histoire",
+                "nuit",
+                "oli",
+                "petite",
+                "radiofrance",
+                "souris"
+            ]
         },
         {
             "url": "https://proxycast.radiofrance.fr/2cb001e6-1668-4384-9ca5-971e7490b10b/19721-20.02.2019-ITEMA_21985925-2019F33264S0239-21.mp3",
-            "title": "\"Orso, les 4 géants et la petite ours\""
+            "title": "\"Orso, les 4 géants et la petite ours\"",
+            "tags": [
+                "animaux",
+                "enfants",
+                "géants",
+                "histoire",
+                "oli",
+                "orso",
+                "ours",
+                "petite",
+                "radiofrance"
+            ]
         },
         {
             "url": "https://proxycast.radiofrance.fr/ee8a0171-08a3-4fab-bafb-cec4c16b0e12/19721-20.02.2019-ITEMA_21985925-2019F33264S0139-21.mp3",
-            "title": "\"Boule de Neige, Roi des Alakaloufs\""
+            "title": "\"Boule de Neige, Roi des Alakaloufs\"",
+            "tags": [
+                "alakaloufs",
+                "auteur:neige",
+                "boule",
+                "enfants",
+                "histoire",
+                "neige",
+                "oli",
+                "radiofrance"
+            ]
         },
         {
             "url": "https://proxycast.radiofrance.fr/e76f0e29-ae81-4026-b925-9ab8197a1f98/19721-20.02.2019-ITEMA_21985925-2019F33264S0039-21.mp3",
-            "title": "\"Reiko et l'Ourson\""
+            "title": "\"Reiko et l'Ourson\"",
+            "tags": [
+                "animaux",
+                "enfants",
+                "histoire",
+                "oli",
+                "ourson",
+                "radiofrance",
+                "reiko"
+            ]
         },
         {
             "url": "https://proxycast.radiofrance.fr/1c0fe572-f911-48da-82a1-7b70c8dc5989/19721-13.12.2018-ITEMA_21920513-2018F33264S4346-21.mp3",
-            "title": "\"Les bonnes résolutions du Père Noël\""
+            "title": "\"Les bonnes résolutions du Père Noël\"",
+            "tags": [
+                "bonnes",
+                "enfants",
+                "famille",
+                "histoire",
+                "noël",
+                "oli",
+                "père",
+                "radiofrance",
+                "résolutions"
+            ]
         },
         {
             "url": "https://proxycast.radiofrance.fr/eb9ac004-b36b-47af-9984-27e0a6d61f94/19721-13.12.2018-ITEMA_21920513-2018F33264S3346-21.mp3",
-            "title": "\"La part des ancêtres\""
+            "title": "\"La part des ancêtres\"",
+            "tags": [
+                "ancêtres",
+                "enfants",
+                "histoire",
+                "oli",
+                "part",
+                "radiofrance"
+            ]
         },
         {
             "url": "https://proxycast.radiofrance.fr/7b205f51-dbdd-4c65-89fd-ced2e3edfe52/19721-13.12.2018-ITEMA_21920513-2018F33264S2346-21.mp3",
-            "title": "\"La chouette blanche\""
+            "title": "\"La chouette blanche\"",
+            "tags": [
+                "blanche",
+                "chouette",
+                "enfants",
+                "histoire",
+                "oli",
+                "radiofrance"
+            ]
         },
         {
             "url": "https://proxycast.radiofrance.fr/5350e1ce-1d03-447f-b02d-f4b625f597b3/19721-13.12.2018-ITEMA_21920513-2018F33264S1346-21.mp3",
-            "title": "\"Ozalee et Blu\""
+            "title": "\"Ozalee et Blu\"",
+            "tags": [
+                "enfants",
+                "histoire",
+                "oli",
+                "ozalee",
+                "radiofrance"
+            ]
         },
         {
             "url": "https://proxycast.radiofrance.fr/ce1d37c9-6c18-4259-912a-d35fc1886925/19721-13.12.2018-ITEMA_21920513-2018F33264S0346-21.mp3",
-            "title": "\"Zelda et les abeilles\""
+            "title": "\"Zelda et les abeilles\"",
+            "tags": [
+                "abeilles",
+                "enfants",
+                "histoire",
+                "oli",
+                "radiofrance",
+                "zelda"
+            ]
         },
         {
             "url": "https://proxycast.radiofrance.fr/4847ba84-ff61-4c16-95a9-9f2d9fa09aaf/19721-18.10.2018-ITEMA_21857935-2018F33264S1291-21.mp3",
-            "title": "\"Opaque et Opaline\""
+            "title": "\"Opaque et Opaline\"",
+            "tags": [
+                "enfants",
+                "histoire",
+                "oli",
+                "opaline",
+                "opaque",
+                "radiofrance"
+            ]
         },
         {
             "url": "https://proxycast.radiofrance.fr/1ca50513-1577-4047-8210-de4f28c14582/19721-18.10.2018-ITEMA_21857935-2018F33264S0291-21.mp3",
-            "title": "\"L’invisible Max\""
+            "title": "\"L’invisible Max\"",
+            "tags": [
+                "enfants",
+                "histoire",
+                "invisible",
+                "oli",
+                "radiofrance"
+            ]
         },
         {
             "url": "https://proxycast.radiofrance.fr/36a4163c-9bdd-4b4e-be3d-0e346bcede6d/19721-15.10.2018-ITEMA_21853234-2018F33264S3282-21.mp3",
-            "title": "\"Les villages du Versant\""
+            "title": "\"Les villages du Versant\"",
+            "tags": [
+                "enfants",
+                "histoire",
+                "oli",
+                "radiofrance",
+                "versant",
+                "villages"
+            ]
         },
         {
             "url": "https://proxycast.radiofrance.fr/36611dbd-bbc6-4b69-a2f9-a7545775d938/19721-15.10.2018-ITEMA_21853234-2018F33264S1282-21.mp3",
-            "title": "\"Le lion qui se lamentait\""
+            "title": "\"Le lion qui se lamentait\"",
+            "tags": [
+                "enfants",
+                "histoire",
+                "lamentait",
+                "lion",
+                "oli",
+                "radiofrance"
+            ]
         },
         {
             "url": "https://proxycast.radiofrance.fr/62ebc944-8a5e-42d9-ace9-6a712d8e80d4/19721-15.10.2018-ITEMA_21853234-2018F33264S0282-21.mp3",
-            "title": "\"Héloïse, Artémis et le sort Premium\""
+            "title": "\"Héloïse, Artémis et le sort Premium\"",
+            "tags": [
+                "artémis",
+                "enfants",
+                "histoire",
+                "héloïse",
+                "oli",
+                "premium",
+                "radiofrance",
+                "sort"
+            ]
         },
         {
             "url": "https://proxycast.radiofrance.fr/15a1be20-e3dc-4e49-84e8-48fbe6df576a/19721-04.09.2018-ITEMA_21796903-2018F33264S4248-21.mp3",
-            "title": "\"Le renard et le poulailler\""
+            "title": "\"Le renard et le poulailler\"",
+            "tags": [
+                "animaux",
+                "enfants",
+                "histoire",
+                "oli",
+                "poulailler",
+                "radiofrance",
+                "renard"
+            ]
         },
         {
             "url": "https://proxycast.radiofrance.fr/7cb03e0d-42dd-4841-93d9-584e7adfd5cb/19721-04.09.2018-ITEMA_21796903-2018F33264S3248-21.mp3",
-            "title": "\"Olga, le canard, et le petit garçon battu\""
+            "title": "\"Olga, le canard, et le petit garçon battu\"",
+            "tags": [
+                "battu",
+                "canard",
+                "enfants",
+                "garçon",
+                "histoire",
+                "olga",
+                "oli",
+                "radiofrance"
+            ]
         },
         {
             "url": "https://proxycast.radiofrance.fr/c6a29018-633e-40ea-b7ee-ee226c983291/19721-04.09.2018-ITEMA_21796903-2018F33264S2248-21.mp3",
-            "title": "\"Lucia Petite Poète\""
+            "title": "\"Lucia Petite Poète\"",
+            "tags": [
+                "enfants",
+                "histoire",
+                "lucia",
+                "oli",
+                "petite",
+                "poète",
+                "radiofrance"
+            ]
         },
         {
             "url": "https://proxycast.radiofrance.fr/89e5d9ff-a078-4079-a3da-c91656f96356/19721-04.09.2018-ITEMA_21796903-2018F33264S1248-21.mp3",
-            "title": "\"Nadine et Robert les poissons rouges\""
+            "title": "\"Nadine et Robert les poissons rouges\"",
+            "tags": [
+                "animaux",
+                "enfants",
+                "histoire",
+                "nadine",
+                "oli",
+                "poissons",
+                "radiofrance",
+                "robert",
+                "rouges"
+            ]
         },
         {
             "url": "https://proxycast.radiofrance.fr/76111624-03e4-4808-bc07-4124f2379b68/19721-04.09.2018-ITEMA_21796903-2018F33264S0248-21.mp3",
-            "title": "\"Le coq solitaire\""
+            "title": "\"Le coq solitaire\"",
+            "tags": [
+                "enfants",
+                "histoire",
+                "oli",
+                "radiofrance",
+                "solitaire"
+            ]
         },
         {
             "url": "https://media.radiofrance-podcast.net/podcast09/22452-07.07.2021-ITEMA_22721876-2021X45038E0002.mp3",
-            "title": "Retrouvez tous les épisodes sur l’appli Radio France"
+            "title": "Retrouvez tous les épisodes sur l’appli Radio France",
+            "tags": [
+                "enfants",
+                "histoire",
+                "oli",
+                "radiofrance"
+            ]
         }
     ]
 }
