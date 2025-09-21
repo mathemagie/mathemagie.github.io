@@ -68,6 +68,13 @@ function applyFilters() {
     if (currentFilter !== 'all') {
         filtered = filtered.filter(track => {
             if (!track.tags) return false;
+
+            // Handle thematique filters specially
+            if (currentFilter.startsWith('thematique:')) {
+                return track.tags.includes(currentFilter);
+            }
+
+            // For other filters, check if tag is present
             return track.tags.includes(currentFilter);
         });
     }
