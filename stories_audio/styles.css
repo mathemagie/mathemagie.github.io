@@ -594,3 +594,123 @@ body {
         animation: none;
     }
 }
+
+/* ----------------------------- */
+/* Mobile app style overrides    */
+/* No layout changes, colors only*/
+/* ----------------------------- */
+
+:root {
+    --page-bg-start: #B8E6FF;
+    --page-bg-end: #F7FBFF;
+    --container-bg-top: #7B62E6;
+    --container-bg-bottom: #201B3A;
+    --container-bg: linear-gradient(180deg, var(--container-bg-top) 0%, var(--container-bg-bottom) 100%);
+    --surface: #2A2E4B;
+    --surface-elevated: #353A5E;
+    --border: rgba(255, 255, 255, 0.08);
+    --text-primary: #FFFFFF;
+    --text-secondary: #B7C0D8;
+    --accent: #FFC94A;
+    --accent-contrast: #1F223D;
+}
+
+body {
+    background: linear-gradient(180deg, var(--page-bg-start) 0%, var(--page-bg-end) 100%);
+    background-size: cover;
+}
+
+.player-container {
+    background: var(--container-bg);
+    border: 1px solid var(--border);
+    box-shadow: 0 15px 35px rgba(0, 0, 0, 0.25);
+}
+
+.player-container::before {
+    background: none;
+    animation: none;
+    display: none;
+}
+
+.main-title {
+    color: var(--text-primary);
+    text-shadow: none;
+}
+
+.main-title i {
+    color: var(--accent);
+    animation: none;
+}
+
+.subtitle {
+    color: var(--text-secondary);
+}
+
+.control-btn {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    color: var(--text-primary);
+    box-shadow: 0 6px 20px rgba(0, 0, 0, 0.25);
+}
+
+.control-btn:hover {
+    background: var(--surface-elevated);
+    box-shadow: 0 8px 26px rgba(0, 0, 0, 0.3);
+}
+
+.control-btn:active {
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.25);
+}
+
+.filter-btn {
+    background: transparent;
+    border: 1px solid var(--border);
+    color: var(--text-secondary);
+}
+
+.filter-btn:hover {
+    background: var(--surface);
+    border-color: var(--border);
+    color: var(--text-primary);
+}
+
+.filter-btn.active {
+    background: var(--accent);
+    border-color: var(--accent);
+    color: var(--accent-contrast);
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.25);
+}
+
+.track-display {
+    background: var(--surface);
+    border: 1px solid var(--border);
+}
+
+.track-icon {
+    color: var(--accent);
+}
+
+.track-title {
+    color: var(--text-primary);
+}
+
+.track-count {
+    color: var(--text-secondary);
+    background: rgba(255, 255, 255, 0.06);
+}
+
+.search-input {
+    border: 1px solid var(--border);
+    background: rgba(255, 255, 255, 0.06);
+    color: var(--text-primary);
+}
+
+.search-input:focus {
+    border-color: var(--accent);
+    box-shadow: 0 0 0 3px rgba(255, 201, 74, 0.2);
+}
+
+.search-input::placeholder {
+    color: var(--text-secondary);
+    opacity: 0.9;
+}
