@@ -25,6 +25,7 @@ function loadTracksFromJson(jsonFile) {
             // Initialize filtered tracks (start with all tracks)
             filteredTracks = [...tracks];
             updateTrackCount();
+            generateThematiqueButtons(); // Generate thematique buttons dynamically
             setupFilters();
             updateButtonStates(); // Update button visibility after loading tracks
             console.log('Tracks loaded and shuffled:', tracks.length, 'tracks');
@@ -35,6 +36,59 @@ function loadTracksFromJson(jsonFile) {
 }
 
 loadTracksFromJson('tracks.json?random=' + Math.random());
+
+// Thematique mapping for user-friendly names and emojis
+const thematiqueConfig = {
+    'thematique:oli': { name: 'Oli', emoji: '🦉' },
+    'thematique:les_explorateurs_de_l_univers': { name: 'Explorateurs', emoji: '🚀' },
+    'thematique:les_odyssées': { name: 'Odyssées', emoji: '⚓' }
+};
+
+// Extract unique thematiques from tracks
+function extractThematiques() {
+    const thematiques = new Set();
+
+    tracks.forEach(track => {
+        if (track.tags) {
+            track.tags.forEach(tag => {
+                if (tag.startsWith('thematique:')) {
+                    thematiques.add(tag);
+                }
+            });
+        }
+    });
+
+    return Array.from(thematiques).sort();
+}
+
+// Generate thematique filter buttons dynamically
+function generateThematiqueButtons() {
+    const thematiques = extractThematiques();
+    const filterButtonsContainer = document.querySelector('.filter-buttons');
+
+    // Remove existing thematique buttons (if any)
+    const existingThematiqueButtons = filterButtonsContainer.querySelectorAll('[data-filter^="thematique:"]');
+    existingThematiqueButtons.forEach(button => button.remove());
+
+    // Add new thematique buttons before the closing div
+    thematiques.forEach(thematique => {
+        const config = thematiqueConfig[thematique] || {
+            name: thematique.replace('thematique:', '').replace(/_/g, ' '),
+            emoji: '📚'
+        };
+
+        const button = document.createElement('button');
+        button.className = 'filter-btn';
+        button.setAttribute('data-filter', thematique);
+        button.innerHTML = `${config.emoji} ${config.name}`;
+
+        // Insert before the closing div tag
+        filterButtonsContainer.appendChild(button);
+    });
+
+    // Re-setup event listeners for all buttons including the new ones
+    setupFilters();
+}
 
 // Filter and search functions
 function setupFilters() {
