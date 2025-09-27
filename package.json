@@ -9,7 +9,10 @@
   },
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
-    "prepare": "husky"
+    "prepare": "husky",
+    "lint:html": "htmlhint **/*.html",
+    "lint:html:nebula": "htmlhint hack/nebuleuse/*.html",
+    "lint:html:fix": "htmlhint **/*.html --format checkstyle"
   },
   "repository": {
     "type": "git",
