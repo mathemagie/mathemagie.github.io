@@ -1,0 +1,285 @@
+/* Base page layout keeps the nebula centered on screen */
+body {
+  margin: 0;
+  height: 100vh;
+  background: black;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  font-family: Arial, sans-serif;
+}
+
+/* The animated nebula background image */
+.nebula {
+  width: 100vw;
+  height: 100vh;
+  background: url('../nebu.jpg') no-repeat center center/cover;
+  animation: pulse 4s cubic-bezier(0.37, 0, 0.63, 1) infinite;
+  transition: animation-duration 1.2s cubic-bezier(0.37, 0, 0.63, 1);
+  will-change: filter, transform;
+}
+
+/* Control panel container (hidden unless debug mode is active) */
+.controls {
+  position: fixed;
+  top: 20px;
+  left: 20px;
+  background: rgba(0, 0, 0, 0.8);
+  padding: 18px;
+  border-radius: 10px;
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  backdrop-filter: blur(10px);
+  z-index: 1000;
+  color: white;
+  min-width: 200px;
+  transition: opacity 0.8s cubic-bezier(0.25, 0.46, 0.45, 0.94), transform 0.8s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+  display: none;
+}
+
+.controls.debug-mode {
+  display: block;
+}
+
+.controls.hidden {
+  opacity: 0;
+  transform: translateX(-120%) scale(0.95);
+  pointer-events: none;
+}
+
+.toggle-controls {
+  position: fixed;
+  top: 20px;
+  left: 20px;
+  background: rgba(0, 0, 0, 0.8);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  border-radius: 6px;
+  color: white;
+  padding: 8px 12px;
+  font-size: 12px;
+  cursor: pointer;
+  backdrop-filter: blur(10px);
+  z-index: 1001;
+  transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+  display: none;
+}
+
+.toggle-controls.debug-mode {
+  display: block;
+}
+
+.toggle-controls:hover {
+  background: rgba(255, 255, 255, 0.1);
+  transform: scale(1.05) translateY(-1px);
+  box-shadow: 0 4px 12px rgba(255, 255, 255, 0.15);
+}
+
+.toggle-controls:active {
+  transform: scale(0.98) translateY(0px);
+  transition-duration: 0.1s;
+}
+
+.controls h3 {
+  margin: 0 0 12px 0;
+  font-size: 14px;
+  text-align: center;
+}
+
+.control-group {
+  margin-bottom: 12px;
+}
+
+.control-group:last-child {
+  margin-bottom: 0;
+}
+
+.control-group label {
+  display: block;
+  margin-bottom: 4px;
+  font-size: 11px;
+}
+
+.control-group input[type="range"] {
+  width: 100%;
+  -webkit-appearance: none;
+  appearance: none;
+  height: 6px;
+  background: rgba(255, 255, 255, 0.3);
+  border-radius: 3px;
+  outline: none;
+}
+
+.control-group input[type="range"]::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 18px;
+  height: 18px;
+  background: #ffffff;
+  border-radius: 50%;
+  cursor: pointer;
+  box-shadow: 0 0 10px rgba(255, 255, 255, 0.5);
+}
+
+.control-group input[type="range"]::-moz-range-thumb {
+  width: 18px;
+  height: 18px;
+  background: #ffffff;
+  border-radius: 50%;
+  cursor: pointer;
+  border: none;
+  box-shadow: 0 0 10px rgba(255, 255, 255, 0.5);
+}
+
+.value-display {
+  font-size: 11px;
+  color: rgba(255, 255, 255, 0.7);
+  text-align: right;
+  margin-top: 3px;
+}
+
+/* Floating button that toggles fullscreen mode */
+.fullscreen-button {
+  position: fixed;
+  bottom: 20px;
+  right: 20px;
+  width: 48px;
+  height: 48px;
+  background: rgba(0, 0, 0, 0.8);
+  border: 1px solid rgba(255, 255, 255, 0.25);
+  border-radius: 50%;
+  color: white;
+  font-size: 20px;
+  cursor: pointer;
+  backdrop-filter: blur(8px);
+  z-index: 1001;
+  transition: all 0.3s ease;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.fullscreen-button:hover {
+  background: rgba(255, 255, 255, 0.12);
+  transform: translateY(-2px) scale(1.04);
+  box-shadow: 0 6px 18px rgba(0, 0, 0, 0.35);
+}
+
+.fullscreen-button:active {
+  transform: translateY(0) scale(0.97);
+  transition-duration: 0.1s;
+}
+
+@keyframes pulse {
+  0% {
+    filter: brightness(var(--brightness-0)) saturate(var(--saturation-0)) hue-rotate(var(--hue-0));
+    transform: scale(var(--scale-0));
+  }
+  3% {
+    filter: brightness(var(--brightness-3)) saturate(var(--saturation-3)) hue-rotate(var(--hue-3));
+    transform: scale(var(--scale-3));
+  }
+  6% {
+    filter: brightness(var(--brightness-6)) saturate(var(--saturation-6)) hue-rotate(var(--hue-6));
+    transform: scale(var(--scale-6));
+  }
+  9% {
+    filter: brightness(var(--brightness-9)) saturate(var(--saturation-9)) hue-rotate(var(--hue-9));
+    transform: scale(var(--scale-9));
+  }
+  12% {
+    filter: brightness(var(--brightness-12)) saturate(var(--saturation-12)) hue-rotate(var(--hue-12));
+    transform: scale(var(--scale-12));
+  }
+  15% {
+    filter: brightness(var(--brightness-15)) saturate(var(--saturation-15)) hue-rotate(var(--hue-15));
+    transform: scale(var(--scale-15));
+  }
+  18% {
+    filter: brightness(var(--brightness-18)) saturate(var(--saturation-18)) hue-rotate(var(--hue-18));
+    transform: scale(var(--scale-18));
+  }
+  21% {
+    filter: brightness(var(--brightness-21)) saturate(var(--saturation-21)) hue-rotate(var(--hue-21));
+    transform: scale(var(--scale-21));
+  }
+  25% {
+    filter: brightness(var(--brightness-25)) saturate(var(--saturation-25)) hue-rotate(var(--hue-25));
+    transform: scale(var(--scale-25));
+  }
+  29% {
+    filter: brightness(var(--brightness-29)) saturate(var(--saturation-29)) hue-rotate(var(--hue-29));
+    transform: scale(var(--scale-29));
+  }
+  33% {
+    filter: brightness(var(--brightness-33)) saturate(var(--saturation-33)) hue-rotate(var(--hue-33));
+    transform: scale(var(--scale-33));
+  }
+  37% {
+    filter: brightness(var(--brightness-37)) saturate(var(--saturation-37)) hue-rotate(var(--hue-37));
+    transform: scale(var(--scale-37));
+  }
+  42% {
+    filter: brightness(var(--brightness-42)) saturate(var(--saturation-42)) hue-rotate(var(--hue-42));
+    transform: scale(var(--scale-42));
+  }
+  46% {
+    filter: brightness(var(--brightness-46)) saturate(var(--saturation-46)) hue-rotate(var(--hue-46));
+    transform: scale(var(--scale-46));
+  }
+  50% {
+    filter: brightness(var(--brightness-50)) saturate(var(--saturation-50)) hue-rotate(var(--hue-50));
+    transform: scale(var(--scale-50));
+  }
+  54% {
+    filter: brightness(var(--brightness-54)) saturate(var(--saturation-54)) hue-rotate(var(--hue-54));
+    transform: scale(var(--scale-54));
+  }
+  58% {
+    filter: brightness(var(--brightness-58)) saturate(var(--saturation-58)) hue-rotate(var(--hue-58));
+    transform: scale(var(--scale-58));
+  }
+  63% {
+    filter: brightness(var(--brightness-63)) saturate(var(--saturation-63)) hue-rotate(var(--hue-63));
+    transform: scale(var(--scale-63));
+  }
+  67% {
+    filter: brightness(var(--brightness-67)) saturate(var(--saturation-67)) hue-rotate(var(--hue-67));
+    transform: scale(var(--scale-67));
+  }
+  71% {
+    filter: brightness(var(--brightness-71)) saturate(var(--saturation-71)) hue-rotate(var(--hue-71));
+    transform: scale(var(--scale-71));
+  }
+  75% {
+    filter: brightness(var(--brightness-75)) saturate(var(--saturation-75)) hue-rotate(var(--hue-75));
+    transform: scale(var(--scale-75));
+  }
+  79% {
+    filter: brightness(var(--brightness-79)) saturate(var(--saturation-79)) hue-rotate(var(--hue-79));
+    transform: scale(var(--scale-79));
+  }
+  83% {
+    filter: brightness(var(--brightness-83)) saturate(var(--saturation-83)) hue-rotate(var(--hue-83));
+    transform: scale(var(--scale-83));
+  }
+  87% {
+    filter: brightness(var(--brightness-87)) saturate(var(--saturation-87)) hue-rotate(var(--hue-87));
+    transform: scale(var(--scale-87));
+  }
+  91% {
+    filter: brightness(var(--brightness-91)) saturate(var(--saturation-91)) hue-rotate(var(--hue-91));
+    transform: scale(var(--scale-91));
+  }
+  94% {
+    filter: brightness(var(--brightness-94)) saturate(var(--saturation-94)) hue-rotate(var(--hue-94));
+    transform: scale(var(--scale-94));
+  }
+  97% {
+    filter: brightness(var(--brightness-97)) saturate(var(--saturation-97)) hue-rotate(var(--hue-97));
+    transform: scale(var(--scale-97));
+  }
+  100% {
+    filter: brightness(var(--brightness-100)) saturate(var(--saturation-100)) hue-rotate(var(--hue-100));
+    transform: scale(var(--scale-100));
+  }
+}
+
