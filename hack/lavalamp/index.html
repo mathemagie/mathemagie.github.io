@@ -130,6 +130,19 @@
     </div>
 
     <script>
+        // Vérification du paramètre debug dans l'URL
+        function getUrlParameter(name) {
+            const urlParams = new URLSearchParams(window.location.search);
+            return urlParams.get(name);
+        }
+        
+        // Afficher les contrôles uniquement si debug=1 est dans l'URL
+        const isDebugMode = getUrlParameter('debug') === '1';
+        if (!isDebugMode) {
+            document.getElementById('controls').style.display = 'none';
+            document.getElementById('info').style.display = 'none';
+        }
+        
         // Configuration WebGL et contexte
         const canvas = document.getElementById('lavaCanvas');
         const gl = canvas.getContext('webgl2', {
@@ -408,7 +421,11 @@
             // Event listeners
             window.addEventListener('resize', resizeCanvas);
             canvas.addEventListener('mousemove', handleMouseMove);
-            canvas.addEventListener('click', toggleControls);
+            
+            // Ajouter le gestionnaire de clic uniquement en mode debug
+            if (isDebugMode) {
+                canvas.addEventListener('click', toggleControls);
+            }
             
             // Contrôles UI
             setupControls();
@@ -427,8 +444,9 @@
             mouseY = 1.0 - (e.clientY / canvas.height);
         }
         
-        // Toggle des contrôles
+        // Toggle des contrôles (uniquement en mode debug)
         function toggleControls() {
+            if (!isDebugMode) return;
             controlsVisible = !controlsVisible;
             document.getElementById('controls').style.opacity = controlsVisible ? '1' : '0.1';
         }
