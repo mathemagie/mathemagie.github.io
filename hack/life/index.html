@@ -81,11 +81,15 @@
 
         // Audio system variables for deep ambient sound
         let audioContext;
-        let deepDroneOsc; // Low frequency drone oscillator
-        let midDroneOsc; // Mid frequency texture oscillator
+        let oscillators = []; // Array of multiple detuned oscillators for organic texture
+        let noiseNode; // Pink noise for organic texture
+        let noiseGain; // Gain for noise
         let droneGain; // Master gain for drones
         let breathingGain; // Gain modulated by breathing rhythm
         let filter; // Low-pass filter for underwater effect
+        let filter2; // Second filter for more complex filtering
+        let lfoOsc1, lfoOsc2; // Low-frequency oscillators for modulation
+        let lfoGain1, lfoGain2; // LFO gain nodes
         let soundEnabled = false; // Track if sound is currently playing
 
         // Enhanced natural color palettes with higher contrast for better visibility
@@ -121,46 +125,144 @@
         };
 
         /**
-         * Initializes the Web Audio API for deep ambient sound
+         * Creates pink noise for organic texture
+         */
+        function createPinkNoise() {
+            const bufferSize = audioContext.sampleRate * 2;
+            const buffer = audioContext.createBuffer(1, bufferSize, audioContext.sampleRate);
+            const output = buffer.getChannelData(0);
+
+            // Generate pink noise using Paul Kellet's algorithm
+            let b0 = 0, b1 = 0, b2 = 0, b3 = 0, b4 = 0, b5 = 0, b6 = 0;
+            for (let i = 0; i < bufferSize; i++) {
+                const white = Math.random() * 2 - 1;
+                b0 = 0.99886 * b0 + white * 0.0555179;
+                b1 = 0.99332 * b1 + white * 0.0750759;
+                b2 = 0.96900 * b2 + white * 0.1538520;
+                b3 = 0.86650 * b3 + white * 0.3104856;
+                b4 = 0.55000 * b4 + white * 0.5329522;
+                b5 = -0.7616 * b5 - white * 0.0168980;
+                output[i] = (b0 + b1 + b2 + b3 + b4 + b5 + b6 + white * 0.5362) * 0.11;
+                b6 = white * 0.115926;
+            }
+            return buffer;
+        }
+
+        /**
+         * Initializes the Web Audio API for deep ambient sound with organic layering
          */
         function initAudio() {
             // Create audio context
             audioContext = new (window.AudioContext || window.webkitAudioContext)();
 
-            // Create deep bass drone oscillator (30-50 Hz range)
-            deepDroneOsc = audioContext.createOscillator();
-            deepDroneOsc.type = 'sine'; // Pure sine for deep bass
-            deepDroneOsc.frequency.setValueAtTime(40, audioContext.currentTime); // Very low frequency
+            // Create multiple detuned oscillators for organic chorus effect
+            // Layer 1: Deep bass drones (35-45 Hz) - creates rumbling foundation
+            const bassFreqs = [35, 38, 40, 42, 45];
+            bassFreqs.forEach((freq, i) => {
+                const osc = audioContext.createOscillator();
+                osc.type = 'sine';
+                osc.frequency.setValueAtTime(freq, audioContext.currentTime);
 
-            // Create mid-range texture oscillator (120 Hz)
-            midDroneOsc = audioContext.createOscillator();
-            midDroneOsc.type = 'triangle'; // Triangle wave for organic texture
-            midDroneOsc.frequency.setValueAtTime(120, audioContext.currentTime);
+                const oscGain = audioContext.createGain();
+                oscGain.gain.setValueAtTime(0.15 / bassFreqs.length, audioContext.currentTime);
 
-            // Create low-pass filter for underwater/muffled effect
+                osc.connect(oscGain);
+                oscillators.push({osc: osc, gain: oscGain, baseFreq: freq, type: 'bass'});
+            });
+
+            // Layer 2: Mid-range texture (100-130 Hz) - organic warmth
+            const midFreqs = [100, 108, 115, 122, 130];
+            midFreqs.forEach((freq, i) => {
+                const osc = audioContext.createOscillator();
+                osc.type = 'triangle';
+                osc.frequency.setValueAtTime(freq, audioContext.currentTime);
+
+                const oscGain = audioContext.createGain();
+                oscGain.gain.setValueAtTime(0.08 / midFreqs.length, audioContext.currentTime);
+
+                osc.connect(oscGain);
+                oscillators.push({osc: osc, gain: oscGain, baseFreq: freq, type: 'mid'});
+            });
+
+            // Layer 3: High texture (200-250 Hz) - shimmer
+            const highFreqs = [200, 215, 230];
+            highFreqs.forEach((freq, i) => {
+                const osc = audioContext.createOscillator();
+                osc.type = 'sawtooth';
+                osc.frequency.setValueAtTime(freq, audioContext.currentTime);
+
+                const oscGain = audioContext.createGain();
+                oscGain.gain.setValueAtTime(0.03 / highFreqs.length, audioContext.currentTime);
+
+                osc.connect(oscGain);
+                oscillators.push({osc: osc, gain: oscGain, baseFreq: freq, type: 'high'});
+            });
+
+            // Create pink noise for organic texture
+            const pinkNoiseBuffer = createPinkNoise();
+            noiseNode = audioContext.createBufferSource();
+            noiseNode.buffer = pinkNoiseBuffer;
+            noiseNode.loop = true;
+
+            noiseGain = audioContext.createGain();
+            noiseGain.gain.setValueAtTime(0.04, audioContext.currentTime);
+            noiseNode.connect(noiseGain);
+
+            // Create LFO oscillators for organic frequency modulation
+            lfoOsc1 = audioContext.createOscillator();
+            lfoOsc1.type = 'sine';
+            lfoOsc1.frequency.setValueAtTime(0.08, audioContext.currentTime); // Slow modulation
+
+            lfoGain1 = audioContext.createGain();
+            lfoGain1.gain.setValueAtTime(3, audioContext.currentTime); // Modulation depth
+            lfoOsc1.connect(lfoGain1);
+
+            lfoOsc2 = audioContext.createOscillator();
+            lfoOsc2.type = 'sine';
+            lfoOsc2.frequency.setValueAtTime(0.13, audioContext.currentTime); // Slightly faster
+
+            lfoGain2 = audioContext.createGain();
+            lfoGain2.gain.setValueAtTime(5, audioContext.currentTime);
+            lfoOsc2.connect(lfoGain2);
+
+            // Create dual filters for complex underwater effect
             filter = audioContext.createBiquadFilter();
             filter.type = 'lowpass';
-            filter.frequency.setValueAtTime(400, audioContext.currentTime); // Cuts high frequencies
-            filter.Q.setValueAtTime(2, audioContext.currentTime); // Gentle resonance
+            filter.frequency.setValueAtTime(450, audioContext.currentTime);
+            filter.Q.setValueAtTime(3, audioContext.currentTime);
+
+            filter2 = audioContext.createBiquadFilter();
+            filter2.type = 'lowpass';
+            filter2.frequency.setValueAtTime(800, audioContext.currentTime);
+            filter2.Q.setValueAtTime(1.5, audioContext.currentTime);
 
             // Create breathing-modulated gain (will pulse with animation)
             breathingGain = audioContext.createGain();
-            breathingGain.gain.setValueAtTime(0.3, audioContext.currentTime);
+            breathingGain.gain.setValueAtTime(0.4, audioContext.currentTime);
 
             // Create master gain for overall volume control
             droneGain = audioContext.createGain();
-            droneGain.gain.setValueAtTime(0.15, audioContext.currentTime); // Subtle volume
+            droneGain.gain.setValueAtTime(0.2, audioContext.currentTime);
 
-            // Connect audio graph: oscillators -> filter -> breathing gain -> master gain -> speakers
-            deepDroneOsc.connect(filter);
-            midDroneOsc.connect(filter);
-            filter.connect(breathingGain);
+            // Connect oscillators to filter chain
+            oscillators.forEach(oscData => {
+                oscData.gain.connect(filter);
+            });
+
+            // Connect noise to filter chain
+            noiseGain.connect(filter);
+
+            // Connect filter chain: filter -> filter2 -> breathing gain -> master gain -> speakers
+            filter.connect(filter2);
+            filter2.connect(breathingGain);
             breathingGain.connect(droneGain);
             droneGain.connect(audioContext.destination);
 
-            // Start oscillators
-            deepDroneOsc.start();
-            midDroneOsc.start();
+            // Start all oscillators and noise
+            oscillators.forEach(oscData => oscData.osc.start());
+            noiseNode.start();
+            lfoOsc1.start();
+            lfoOsc2.start();
 
             soundEnabled = true;
         }
@@ -176,13 +278,27 @@
                 button.textContent = '🔊';
                 button.classList.add('active');
             } else {
-                // Stop sound
+                // Stop sound with fade out
                 if (audioContext) {
                     droneGain.gain.exponentialRampToValueAtTime(0.001, audioContext.currentTime + 0.5);
                     setTimeout(() => {
-                        if (deepDroneOsc) deepDroneOsc.stop();
-                        if (midDroneOsc) midDroneOsc.stop();
+                        // Stop all oscillators
+                        oscillators.forEach(oscData => {
+                            try { oscData.osc.stop(); } catch(e) {}
+                        });
+                        if (noiseNode) {
+                            try { noiseNode.stop(); } catch(e) {}
+                        }
+                        if (lfoOsc1) {
+                            try { lfoOsc1.stop(); } catch(e) {}
+                        }
+                        if (lfoOsc2) {
+                            try { lfoOsc2.stop(); } catch(e) {}
+                        }
                         if (audioContext) audioContext.close();
+
+                        // Reset arrays
+                        oscillators = [];
                         soundEnabled = false;
                         button.textContent = '🔇';
                         button.classList.remove('active');
@@ -354,15 +470,47 @@
             // Update global breathing phase for synchronized organic pulsing
             breathingPhase += animationSpeed * 0.3;
 
-            // Sync audio breathing with visual breathing rhythm
+            // Sync audio with visual breathing rhythm and add organic modulation
             if (soundEnabled && audioContext && breathingGain) {
-                // Map breathing phase to gain (0.15 to 0.45 range for subtle pulsing)
-                let breathingAmount = map(sin(breathingPhase), -1, 1, 0.15, 0.45);
+                // Map breathing phase to gain (0.2 to 0.5 range for organic pulsing)
+                let breathingAmount = map(sin(breathingPhase), -1, 1, 0.2, 0.5);
                 breathingGain.gain.setValueAtTime(breathingAmount, audioContext.currentTime);
 
-                // Slightly modulate filter frequency for organic variation
-                let filterFreq = map(sin(breathingPhase * 0.7), -1, 1, 350, 450);
+                // Organically modulate filter frequencies with multiple layers
+                let filterFreq = map(sin(breathingPhase * 0.7), -1, 1, 400, 550);
+                let filterFreq2 = map(sin(breathingPhase * 1.3 + 1.5), -1, 1, 700, 900);
                 filter.frequency.setValueAtTime(filterFreq, audioContext.currentTime);
+                filter2.frequency.setValueAtTime(filterFreq2, audioContext.currentTime);
+
+                // Modulate filter resonance for organic evolution
+                let filterQ = map(sin(breathingPhase * 0.5), -1, 1, 2, 4);
+                filter.Q.setValueAtTime(filterQ, audioContext.currentTime);
+
+                // Organically modulate oscillator frequencies for evolving texture
+                oscillators.forEach((oscData, i) => {
+                    // Create unique modulation pattern for each oscillator
+                    let mod1 = sin(breathingPhase * (0.8 + i * 0.1) + i);
+                    let mod2 = sin(breathingPhase * (1.2 + i * 0.15) + i * 2);
+
+                    // Calculate frequency deviation based on oscillator type
+                    let deviation = 0;
+                    if (oscData.type === 'bass') {
+                        deviation = mod1 * 1.5 + mod2 * 0.8; // Subtle bass wobble
+                    } else if (oscData.type === 'mid') {
+                        deviation = mod1 * 3 + mod2 * 2; // More mid movement
+                    } else if (oscData.type === 'high') {
+                        deviation = mod1 * 5 + mod2 * 3; // Most high shimmer
+                    }
+
+                    let newFreq = oscData.baseFreq + deviation;
+                    oscData.osc.frequency.setValueAtTime(newFreq, audioContext.currentTime);
+                });
+
+                // Modulate noise level with breathing for organic texture variation
+                let noiseLevel = map(sin(breathingPhase * 0.9), -1, 1, 0.02, 0.06);
+                if (noiseGain) {
+                    noiseGain.gain.setValueAtTime(noiseLevel, audioContext.currentTime);
+                }
             }
 
             // Draw twinkling stars for Milky Way background effect
