@@ -40,6 +40,7 @@
         let nebulaClouds = []; // Array for subtle nebula effects.
         let nebulaCount = 8; // Number of nebula clouds.
         let backgroundColorHSB; // HSB color object for the canvas background.
+        let breathingPhase = 0; // Global breathing rhythm for the entire organism.
 
         // Enhanced natural color palettes with higher contrast for better visibility
         const naturalColorPalettes = {
@@ -214,12 +215,24 @@
         }
 
         /**
+         * The mousePressed() function is called once when the user clicks on the canvas.
+         * It sets a new target position for the blob to move towards.
+         */
+        function mousePressed() {
+            // Set the blob's target to the clicked position
+            blob.setTarget(mouseX, mouseY);
+        }
+
+        /**
          * The draw() function is called continuously after setup().
          * It updates the state of all animation elements and renders them frame by frame, creating the animation.
          * By default, this function automatically runs in a continuous loop.
          */
         function draw() {
             background(backgroundColorHSB); // Sets the canvas background to the deep muted blue-purple color.
+
+            // Update global breathing phase for synchronized organic pulsing
+            breathingPhase += animationSpeed * 0.3;
 
             // Draw twinkling stars for Milky Way background effect
             noStroke();
@@ -271,9 +284,22 @@
             // Updates and displays the small background particles with natural color variations.
             for (let i = 0; i < particles.length; i++) {
                 let p = particles[i];
-                // Simple speed-based particle movement
-                p.x += p.speedX;
-                p.y += p.speedY;
+
+                // Add organic flow field based on Perlin noise for fluid-like movement
+                let noiseX = noise(p.x * 0.003, p.y * 0.003, frameCount * 0.001);
+                let noiseY = noise(p.x * 0.003 + 500, p.y * 0.003 + 500, frameCount * 0.001);
+                let flowAngle = map(noiseX, 0, 1, 0, TWO_PI);
+                let flowStrength = map(noiseY, 0, 1, 0.1, 0.5);
+
+                // Very subtle attraction to the blob center for gentle organic clustering
+                let dx = blob.x - p.x;
+                let dy = blob.y - p.y;
+                let distance = sqrt(dx * dx + dy * dy);
+                let attractionForce = 0.0001; // Reduced for more distributed particles
+
+                // Combine original speed, flow field, and attraction
+                p.x += p.speedX + cos(flowAngle) * flowStrength + (dx * attractionForce);
+                p.y += p.speedY + sin(flowAngle) * flowStrength + (dy * attractionForce);
 
                 // Wraps particles around the screen edges, creating a continuous flow effect.
                 if (p.x < 0) p.x = width;
@@ -302,15 +328,44 @@
             // Updates and displays the internal pulsing circles with natural biological colors.
             for (let i = 0; i < internalCircles.length; i++) {
                 let c = internalCircles[i];
-                // Animates the position of each internal circle using Perlin noise,
-                // keeping them generally centered around the main blob's position but with organic drift.
-                // Simple noise-based movement for internal organelles
-                c.x = blob.x + (noise(c.noiseSeedX + frameCount * animationSpeed * 0.5) * 2 - 1) * 120;
-                c.y = blob.y + (noise(c.noiseSeedY + frameCount * animationSpeed * 0.5) * 2 - 1) * 90;
+
+                // Organic movement with Perlin noise
+                let noiseX = (noise(c.noiseSeedX + frameCount * animationSpeed * 0.5) * 2 - 1) * 120;
+                let noiseY = (noise(c.noiseSeedY + frameCount * animationSpeed * 0.5) * 2 - 1) * 90;
+
+                // Add gentle attraction/repulsion forces between internal circles for organic clustering
+                let forceX = 0;
+                let forceY = 0;
+                for (let j = 0; j < internalCircles.length; j++) {
+                    if (i !== j) {
+                        let other = internalCircles[j];
+                        let dx = other.x - c.x;
+                        let dy = other.y - c.y;
+                        let dist = sqrt(dx * dx + dy * dy);
+
+                        if (dist > 0 && dist < 100) {
+                            // Gentle repulsion when too close
+                            let repulsion = map(dist, 0, 100, -0.3, 0);
+                            forceX += (dx / dist) * repulsion;
+                            forceY += (dy / dist) * repulsion;
+                        } else if (dist > 150 && dist < 250) {
+                            // Subtle attraction to maintain clustering
+                            let attraction = map(dist, 150, 250, 0, 0.1);
+                            forceX += (dx / dist) * attraction;
+                            forceY += (dy / dist) * attraction;
+                        }
+                    }
+                }
+
+                // Combine noise-based movement with organic forces
+                c.x = blob.x + noiseX + forceX * 5;
+                c.y = blob.y + noiseY + forceY * 5;
 
                 // Animates the radius of each circle, creating a pulsing or breathing effect.
-                // Perlin noise and a sine wave are used to create smooth, organic size changes.
-                let currentRadius = c.initialRadius + sin(noise(c.noiseSeedR + frameCount * animationSpeed * 1.5)) * c.radiusOffset * 8;
+                // Perlin noise, sine wave, and gentle global breathing create smooth, organic size changes.
+                let breathingInfluence = sin(breathingPhase) * 0.08 + 1; // Gentle breathing to preserve form
+                let localPulse = sin(noise(c.noiseSeedR + frameCount * animationSpeed * 1.5));
+                let currentRadius = c.initialRadius * breathingInfluence + localPulse * c.radiusOffset * 8;
 
                 // Enhanced natural color variations based on cellular function
                 let baseHue = c.baseHue;
@@ -366,6 +421,8 @@
             constructor(x, y, r, colorPalette) {
                 this.x = x; // The X coordinate of the blob's center.
                 this.y = y; // The Y coordinate of the blob's center.
+                this.targetX = x; // Target X position for movement (initially same as starting position)
+                this.targetY = y; // Target Y position for movement (initially same as starting position)
                 this.baseRadius = r; // The average or base radius of the blob.
                 this.noiseScale = 0.008; // Determines the 'granularity' or frequency of the Perlin noise, affecting the smoothness of the shape.
                 this.timeOffset = random(1000); // A unique time offset for noise, ensuring independent animation from other blobs or elements.
@@ -394,9 +451,28 @@
              */
             update() {
                 this.timeOffset += animationSpeed * 0.5; // Increments the time offset, causing the blob's shape to continuously morph.
-                // Simple smooth movement around the canvas center
-                this.x = width / 2 + sin(this.timeOffset * 0.8) * 30;
-                this.y = height / 2 + cos(this.timeOffset * 0.6) * 25;
+
+                // Smooth organic movement towards target position with easing
+                let easing = 0.01; // Slower easing factor for leisurely organic movement
+
+                // Calculate distance to target
+                let dx = this.targetX - this.x;
+                let dy = this.targetY - this.y;
+                let distance = sqrt(dx * dx + dy * dy);
+
+                // Add subtle organic drift and wobble during movement
+                let drift1X = sin(this.timeOffset * 0.8) * 8; // Reduced drift while moving
+                let drift1Y = cos(this.timeOffset * 0.6) * 6;
+
+                let drift2X = sin(this.timeOffset * 0.5 + 3) * 5;
+                let drift2Y = cos(this.timeOffset * 0.4 + 2) * 5;
+
+                let noiseX = map(noise(this.timeOffset * 0.3, 0), 0, 1, -3, 3);
+                let noiseY = map(noise(this.timeOffset * 0.3, 100), 0, 1, -3, 3);
+
+                // Move towards target with organic easing and subtle drift
+                this.x += dx * easing + drift1X * 0.3 + drift2X * 0.3 + noiseX * 0.5;
+                this.y += dy * easing + drift1Y * 0.3 + drift2Y * 0.3 + noiseY * 0.5;
 
                 // Enhanced natural color variations for cellular membrane effect
                 let membraneFluidity = map(noise(this.timeOffset * 0.1), 0, 1, 0.8, 1.2); // Simulates membrane fluidity
@@ -412,14 +488,24 @@
             }
 
             /**
+             * Sets a new target position for the blob to move towards
+             */
+            setTarget(x, y) {
+                this.targetX = x;
+                this.targetY = y;
+            }
+
+            /**
              * Draws the blob and its hair-like projections on the canvas.
              */
             display() {
                 push(); // Saves the current drawing style settings and transformations.
                 translate(this.x, this.y); // Moves the drawing origin to the blob's current center, simplifying coordinate calculations.
 
-                // Calculates the blob's current pulsing radius.
-                let currentRadius = this.baseRadius + map(noise(this.timeOffset * 0.5), 0, 1, -10, 10);
+                // Calculates the blob's current pulsing radius with gentle breathing rhythm.
+                let breathingScale = sin(breathingPhase) * 0.05 + 1; // Gentle breathing to preserve shape
+                let localNoise = map(noise(this.timeOffset * 0.5), 0, 1, -10, 10);
+                let currentRadius = this.baseRadius * breathingScale + localNoise;
                 let outlineVertices = []; // An array to temporarily store the calculated vertices of the blob's outline.
 
                 // Create layered cellular membrane effect with translucency
@@ -429,14 +515,30 @@
                 stroke((this.currentHue + 15) % 360, this.currentSat * 0.8, this.currentBright * 1.3, 0.18);
                 strokeWeight(1.0);
 
-                // Generates the blob's organic, continuously morphing shape using Perlin noise.
+                // Generates the blob's organic, continuously morphing shape using multi-layered Perlin noise.
                 for (let i = 0; i < this.numPoints; i++) {
                     let angle = map(i, 0, this.numPoints, 0, TWO_PI); // Calculates an angle around the circle for each vertex.
-                    // Determines noise coordinates based on the angle, current radius, and time offset for a dynamic shape.
-                    let xoff = cos(angle) * currentRadius * this.noiseScale + this.timeOffset;
-                    let yoff = sin(angle) * currentRadius * this.noiseScale + this.timeOffset;
-                    // Perturbs the radius at each point based on Perlin noise, creating an uneven, organic edge.
-                    let distance = (currentRadius + map(noise(xoff, yoff), 0, 1, -this.amplitude, this.amplitude)) * 1.05; // Slightly larger for outer layer
+
+                    // Layer 1: Large-scale deformation (slow, broad movements) - reduced for cellular shape
+                    let xoff1 = cos(angle) * currentRadius * this.noiseScale * 0.5 + this.timeOffset;
+                    let yoff1 = sin(angle) * currentRadius * this.noiseScale * 0.5 + this.timeOffset;
+                    let deform1 = map(noise(xoff1, yoff1), 0, 1, -this.amplitude * 0.5, this.amplitude * 0.5);
+
+                    // Layer 2: Medium-scale detail (organic ripples) - subtle
+                    let xoff2 = cos(angle) * currentRadius * this.noiseScale * 2 + this.timeOffset * 1.5;
+                    let yoff2 = sin(angle) * currentRadius * this.noiseScale * 2 + this.timeOffset * 1.5;
+                    let deform2 = map(noise(xoff2, yoff2), 0, 1, -this.amplitude * 0.2, this.amplitude * 0.2);
+
+                    // Layer 3: Fine detail (cellular membrane texture) - very subtle
+                    let xoff3 = cos(angle) * currentRadius * this.noiseScale * 5 + this.timeOffset * 3;
+                    let yoff3 = sin(angle) * currentRadius * this.noiseScale * 5 + this.timeOffset * 3;
+                    let deform3 = map(noise(xoff3, yoff3), 0, 1, -this.amplitude * 0.1, this.amplitude * 0.1);
+
+                    // Combine all layers with gentle breathing rhythm (reduced for shape preservation)
+                    let breathingMod = sin(breathingPhase) * 0.08 + 1;
+                    let totalDeformation = (deform1 + deform2 + deform3) * breathingMod;
+                    let distance = (currentRadius + totalDeformation) * 1.05; // Slightly larger for outer layer
+
                     let x = cos(angle) * distance;
                     let y = sin(angle) * distance;
                     vertex(x, y); // Adds the calculated point as a vertex to the shape.
@@ -449,12 +551,27 @@
                 stroke((this.currentHue + 25) % 360, this.currentSat * 0.95, this.currentBright * 1.05, 0.25);
                 strokeWeight(1.5);
 
-                // Regenerate vertices for inner layer (slightly smaller)
+                // Regenerate vertices for inner layer using same multi-layered noise (slightly smaller)
                 for (let i = 0; i < this.numPoints; i++) {
                     let angle = map(i, 0, this.numPoints, 0, TWO_PI);
-                    let xoff = cos(angle) * currentRadius * this.noiseScale + this.timeOffset;
-                    let yoff = sin(angle) * currentRadius * this.noiseScale + this.timeOffset;
-                    let distance = currentRadius + map(noise(xoff, yoff), 0, 1, -this.amplitude, this.amplitude);
+
+                    // Multi-layered deformation for inner membrane (reduced to maintain cellular shape)
+                    let xoff1 = cos(angle) * currentRadius * this.noiseScale * 0.5 + this.timeOffset;
+                    let yoff1 = sin(angle) * currentRadius * this.noiseScale * 0.5 + this.timeOffset;
+                    let deform1 = map(noise(xoff1, yoff1), 0, 1, -this.amplitude * 0.5, this.amplitude * 0.5);
+
+                    let xoff2 = cos(angle) * currentRadius * this.noiseScale * 2 + this.timeOffset * 1.5;
+                    let yoff2 = sin(angle) * currentRadius * this.noiseScale * 2 + this.timeOffset * 1.5;
+                    let deform2 = map(noise(xoff2, yoff2), 0, 1, -this.amplitude * 0.2, this.amplitude * 0.2);
+
+                    let xoff3 = cos(angle) * currentRadius * this.noiseScale * 5 + this.timeOffset * 3;
+                    let yoff3 = sin(angle) * currentRadius * this.noiseScale * 5 + this.timeOffset * 3;
+                    let deform3 = map(noise(xoff3, yoff3), 0, 1, -this.amplitude * 0.1, this.amplitude * 0.1);
+
+                    let breathingMod = sin(breathingPhase) * 0.08 + 1;
+                    let totalDeformation = (deform1 + deform2 + deform3) * breathingMod;
+                    let distance = currentRadius + totalDeformation;
+
                     let x = cos(angle) * distance;
                     let y = sin(angle) * distance;
                     vertex(x, y);
@@ -463,14 +580,27 @@
                 endShape(CLOSE); // Closes the inner membrane layer.
 
                 // Draws the hair-like projections (cilia/pseudopods) along the blob's perimeter with natural colors.
-                // It iterates through the stored outline vertices, drawing hairs at intervals determined by `hairDensity`.
+                // Enhanced with wave-like motion that propagates around the cell membrane.
                 for (let i = 0; i < outlineVertices.length; i += this.hairDensity) {
                     let v = outlineVertices[i]; // Gets a specific vertex from the blob's outline.
                     let angle = v.angle; // The angle of this vertex relative to the blob's center.
 
-                    // Simple noise-based cilia movement
-                    let hair_len = this.hairLength * map(noise(v.x * 0.01 + this.timeOffset * 5, v.y * 0.01), 0, 1, 0.3, 1.2);
-                    let hair_angle_offset = map(noise(v.x * 0.05 + this.timeOffset * 10, v.y * 0.05), 0, 1, -0.3, 0.3);
+                    // Create wave-like propagation around the membrane
+                    let wavePhase = angle * 3 + this.timeOffset * 8; // Traveling wave around circumference
+                    let wavePulse = sin(wavePhase) * 0.5 + 0.5; // 0 to 1 range
+
+                    // Secondary wave for more complex motion
+                    let wave2Phase = angle * 5 - this.timeOffset * 6;
+                    let wave2Pulse = sin(wave2Phase) * 0.3 + 0.7;
+
+                    // Combine waves with Perlin noise for organic variability
+                    let noiseInfluence = noise(v.x * 0.01 + this.timeOffset * 5, v.y * 0.01);
+                    let hair_len = this.hairLength * wavePulse * wave2Pulse * map(noiseInfluence, 0, 1, 0.4, 1.3);
+
+                    // Wave-based angle offset creates coordinated swimming motion
+                    let baseAngleOffset = sin(angle * 2 + this.timeOffset * 7) * 0.4;
+                    let noiseAngleOffset = map(noise(v.x * 0.05 + this.timeOffset * 10, v.y * 0.05), 0, 1, -0.2, 0.2);
+                    let hair_angle_offset = baseAngleOffset + noiseAngleOffset;
 
                     // Enhanced cilia colors with higher contrast for better visibility
                     let ciliaHue = (this.currentHue + random(-12, 12)) % 360; // Controlled hue variation
