@@ -37,5 +37,8 @@
     "stylelint": "^14.x",
     "stylelint-config-prettier": "^9.x",
     "stylelint-config-standard": "^29.x"
+  },
+  "overrides": {
+    "js-yaml": "^4.1.1"
   }
 }
