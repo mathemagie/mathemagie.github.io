@@ -24,9 +24,46 @@
         canvas {
             display: block; /* Removes any default margins/padding from canvas */
         }
+
+        /* Sound toggle button styling */
+        #soundToggle {
+            position: fixed;
+            bottom: 30px;
+            right: 30px;
+            width: 60px;
+            height: 60px;
+            border-radius: 50%;
+            background: rgba(255, 255, 255, 0.08);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.15);
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.3s ease;
+            z-index: 1000;
+            font-size: 24px;
+            color: rgba(255, 255, 255, 0.7);
+            user-select: none;
+        }
+
+        #soundToggle:hover {
+            background: rgba(255, 255, 255, 0.12);
+            transform: scale(1.05);
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
+        }
+
+        #soundToggle.active {
+            background: rgba(100, 200, 255, 0.15);
+            border-color: rgba(100, 200, 255, 0.3);
+            color: rgba(100, 200, 255, 0.9);
+        }
     </style>
 </head>
 <body>
+    <!-- Sound toggle button -->
+    <div id="soundToggle" title="Toggle ambient sound">🔇</div>
+
     <script>
         // Global variables for animation control. These variables determine the characteristics and behavior of the animation elements.
         let blob; // Represents the main amorphous organism in the center.
@@ -41,6 +78,15 @@
         let nebulaCount = 8; // Number of nebula clouds.
         let backgroundColorHSB; // HSB color object for the canvas background.
         let breathingPhase = 0; // Global breathing rhythm for the entire organism.
+
+        // Audio system variables for deep ambient sound
+        let audioContext;
+        let deepDroneOsc; // Low frequency drone oscillator
+        let midDroneOsc; // Mid frequency texture oscillator
+        let droneGain; // Master gain for drones
+        let breathingGain; // Gain modulated by breathing rhythm
+        let filter; // Low-pass filter for underwater effect
+        let soundEnabled = false; // Track if sound is currently playing
 
         // Enhanced natural color palettes with higher contrast for better visibility
         const naturalColorPalettes = {
@@ -73,6 +119,77 @@
                 {hue: 330, sat: 55, bright: 55}  // Rose pink - more vivid
             ]
         };
+
+        /**
+         * Initializes the Web Audio API for deep ambient sound
+         */
+        function initAudio() {
+            // Create audio context
+            audioContext = new (window.AudioContext || window.webkitAudioContext)();
+
+            // Create deep bass drone oscillator (30-50 Hz range)
+            deepDroneOsc = audioContext.createOscillator();
+            deepDroneOsc.type = 'sine'; // Pure sine for deep bass
+            deepDroneOsc.frequency.setValueAtTime(40, audioContext.currentTime); // Very low frequency
+
+            // Create mid-range texture oscillator (120 Hz)
+            midDroneOsc = audioContext.createOscillator();
+            midDroneOsc.type = 'triangle'; // Triangle wave for organic texture
+            midDroneOsc.frequency.setValueAtTime(120, audioContext.currentTime);
+
+            // Create low-pass filter for underwater/muffled effect
+            filter = audioContext.createBiquadFilter();
+            filter.type = 'lowpass';
+            filter.frequency.setValueAtTime(400, audioContext.currentTime); // Cuts high frequencies
+            filter.Q.setValueAtTime(2, audioContext.currentTime); // Gentle resonance
+
+            // Create breathing-modulated gain (will pulse with animation)
+            breathingGain = audioContext.createGain();
+            breathingGain.gain.setValueAtTime(0.3, audioContext.currentTime);
+
+            // Create master gain for overall volume control
+            droneGain = audioContext.createGain();
+            droneGain.gain.setValueAtTime(0.15, audioContext.currentTime); // Subtle volume
+
+            // Connect audio graph: oscillators -> filter -> breathing gain -> master gain -> speakers
+            deepDroneOsc.connect(filter);
+            midDroneOsc.connect(filter);
+            filter.connect(breathingGain);
+            breathingGain.connect(droneGain);
+            droneGain.connect(audioContext.destination);
+
+            // Start oscillators
+            deepDroneOsc.start();
+            midDroneOsc.start();
+
+            soundEnabled = true;
+        }
+
+        /**
+         * Toggles sound on/off
+         */
+        function toggleSound() {
+            const button = document.getElementById('soundToggle');
+
+            if (!soundEnabled) {
+                initAudio();
+                button.textContent = '🔊';
+                button.classList.add('active');
+            } else {
+                // Stop sound
+                if (audioContext) {
+                    droneGain.gain.exponentialRampToValueAtTime(0.001, audioContext.currentTime + 0.5);
+                    setTimeout(() => {
+                        if (deepDroneOsc) deepDroneOsc.stop();
+                        if (midDroneOsc) midDroneOsc.stop();
+                        if (audioContext) audioContext.close();
+                        soundEnabled = false;
+                        button.textContent = '🔇';
+                        button.classList.remove('active');
+                    }, 500);
+                }
+            }
+        }
 
         /**
          * The setup() function is called once when the program starts.
@@ -203,6 +320,9 @@
             // Initializes the main Blob object with natural cellular colors, positioning it at the center.
             let blobPalette = naturalColorPalettes.aquatic[1]; // Use marine blue for the main cell membrane
             blob = new Blob(width / 2, height / 2, 200, blobPalette); // Increased size for bigger cell
+
+            // Add event listener for sound toggle button
+            document.getElementById('soundToggle').addEventListener('click', toggleSound);
         }
 
         /**
@@ -233,6 +353,17 @@
 
             // Update global breathing phase for synchronized organic pulsing
             breathingPhase += animationSpeed * 0.3;
+
+            // Sync audio breathing with visual breathing rhythm
+            if (soundEnabled && audioContext && breathingGain) {
+                // Map breathing phase to gain (0.15 to 0.45 range for subtle pulsing)
+                let breathingAmount = map(sin(breathingPhase), -1, 1, 0.15, 0.45);
+                breathingGain.gain.setValueAtTime(breathingAmount, audioContext.currentTime);
+
+                // Slightly modulate filter frequency for organic variation
+                let filterFreq = map(sin(breathingPhase * 0.7), -1, 1, 350, 450);
+                filter.frequency.setValueAtTime(filterFreq, audioContext.currentTime);
+            }
 
             // Draw twinkling stars for Milky Way background effect
             noStroke();
