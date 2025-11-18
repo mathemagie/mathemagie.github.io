@@ -1,5 +1,5 @@
 /* eslint-env browser */
-/* global setup, draw, windowResized, keyPressed, createCanvas, background, fill, noStroke, circle, text, textSize, key, keyIsPressed, width, height, random, constrain, lerp, dist, cos, sin, TWO_PI, rect, navigator */
+/* global setup, draw, windowResized, keyPressed, createCanvas, background, fill, noStroke, circle, text, textSize, key, keyIsPressed, width, height, random, constrain, lerp, dist, cos, sin, TWO_PI, rect, navigator, SunCalc */
 
 // Main application for ISS Radio
 // Global variables
@@ -171,8 +171,39 @@ function keyPressed() {
   }
 }
 
+function drawDayNightOverlay() {
+  const now = new Date();
+  const sunPosition = SunCalc.getPosition(now, 0, 0); // Sun's position relative to Earth's center
+  const solarLongitude = -sunPosition.azimuth * 180 / Math.PI; // Convert to degrees
+
+  noStroke();
+  for (let x = 0; x < width; x += 10) {
+    for (let y = 0; y < height; y += 10) {
+      const lon = (x / width) * 360 - 180;
+      const lat = 90 - (y / height) * 180;
+
+      const sunPosForCoords = SunCalc.getPosition(now, lat, lon);
+
+      if (sunPosForCoords.altitude < 0) {
+        fill(0, 0, 0, 50); // Night
+        rect(x, y, 10, 10);
+      }
+    }
+  }
+}
+
+function isDaylight(particle) {
+  if (!particle.isIss && particleGeoData[particles.indexOf(particle) -1]) {
+    const geo = particleGeoData[particles.indexOf(particle) -1];
+    const sunPosForCoords = SunCalc.getPosition(new Date(), geo.lat, geo.lon);
+    return sunPosForCoords.altitude > 0;
+  }
+  return true; // ISS is always bright
+}
+
 function draw() {
   background(0);
+  drawDayNightOverlay();
 
   // Draw continent outline points as tiny dots (press 'm' to toggle)
   if (showContinentOutlines && window.continentPoints) {
@@ -246,7 +277,8 @@ function draw() {
   // Update and show particles
   for (const particle of particles) {
     particle.update();
-    particle.show();
+    const daylight = isDaylight(particle);
+    particle.show(daylight);
   }
 
 }

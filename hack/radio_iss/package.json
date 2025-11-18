@@ -40,5 +40,8 @@
     "*.{js,html,css}": [
       "bash -c 'npm run test'"
     ]
+  },
+  "dependencies": {
+    "suncalc": "^1.9.0"
   }
 }
