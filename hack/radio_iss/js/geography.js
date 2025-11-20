@@ -4,6 +4,8 @@ class GeographyManager {
     this.issGeoData = { lat: 0, lon: 0 }; // Current ISS geographic coordinates
     this.simulateMode = false;
     this.simIndex = 0;
+    this.orbitalPath = []; // Predicted ISS orbital path points
+    this.showOrbitalPath = false; // Toggle for orbital path visibility
     this.simTrack = [
       // Ocean (mid-Pacific)
       { lat: 10, lon: -150 },
@@ -36,6 +38,85 @@ class GeographyManager {
     const lon = map(x, 0, width, -180, 180);
     const lat = map(y, 0, height, 90, -90);
     return {lat: lat, lon: lon};
+  }
+
+  // Calculate predicted ISS orbital path for the next 30-60 minutes
+  calculateOrbitalPath(currentLat, currentLon, minutes = 60) {
+    this.orbitalPath = [];
+
+    // ISS orbital parameters (simplified approximation)
+    const orbitalPeriod = 92.68; // ISS orbital period in minutes
+    const meanMotion = 360 / orbitalPeriod; // degrees per minute
+    const maxLatitude = 51.6; // ISS maximum latitude
+
+    // Calculate path points every 2 minutes
+    const timeSteps = Math.floor(minutes / 2);
+
+    for (let i = 0; i < timeSteps; i++) {
+      const timeOffset = i * 2; // minutes from now
+
+      // Simplified orbital calculation
+      // This approximates the ISS ground track using sinusoidal projection
+      const orbitProgress = (timeOffset * meanMotion) % 360;
+      const cyclePosition = (orbitProgress / 360) * 2 * Math.PI;
+
+      // Calculate latitude with sinusoidal oscillation
+      const lat = currentLat + Math.sin(cyclePosition) * (maxLatitude - Math.abs(currentLat)) * 0.8;
+
+      // Calculate longitude with eastward movement
+      const lonDelta = timeOffset * meanMotion * (360 / orbitalPeriod);
+      let lon = currentLon + lonDelta;
+
+      // Handle longitude wrapping
+      while (lon > 180) {lon -= 360;}
+      while (lon < -180) {lon += 360;}
+
+      // Constrain latitude to ISS limits
+      const constrainedLat = Math.max(-maxLatitude, Math.min(maxLatitude, lat));
+
+      // Convert to screen coordinates
+      const screenPos = this.latLonToXY(constrainedLat, lon);
+
+      // Store both geographic and screen coordinates
+      this.orbitalPath.push({
+        lat: constrainedLat,
+        lon: lon,
+        x: screenPos.x,
+        y: screenPos.y,
+        timeOffset: timeOffset,
+        region: this.getRegionForLatLon ? this.getRegionForLatLon(constrainedLat, lon) : 'Ocean'
+      });
+    }
+  }
+
+  // Get region for lat/lon coordinates (uses RadioManager's logic if available)
+  getRegionForLatLon(lat, lon) {
+    // Simplified region detection - use RadioManager if available
+    if (window.radioManager && window.radioManager.getRegion) {
+      return window.radioManager.getRegion(lat, lon);
+    }
+
+    // Fallback basic region detection
+    if (lat >= 30 && lat <= 50 && lon >= -125 && lon <= -60) {return 'North America';}
+    if (lat >= -30 && lat <= 15 && lon >= -80 && lon <= -30) {return 'South America';}
+    if (lat >= 35 && lat <= 70 && lon >= -10 && lon <= 40) {return 'Europe';}
+    if (lat >= -35 && lat <= 35 && lon >= -20 && lon <= 55) {return 'Africa';}
+    if (lat >= -10 && lat <= 70 && lon >= 60 && lon <= 180) {return 'Asia';}
+    if (lat >= -50 && lat <= -10 && lon >= 110 && lon <= 180) {return 'Oceania';}
+    return 'Ocean';
+  }
+
+  // Toggle orbital path visibility
+  toggleOrbitalPath() {
+    this.showOrbitalPath = !this.showOrbitalPath;
+    console.log('ISS Orbital path:', this.showOrbitalPath ? 'ON' : 'OFF');
+
+    // Recalculate path if turning on and we have ISS data
+    if (this.showOrbitalPath && this.issGeoData) {
+      this.calculateOrbitalPath(this.issGeoData.lat, this.issGeoData.lon);
+    }
+
+    return this.showOrbitalPath;
   }
 
   generateContinentPoints() {
@@ -365,6 +446,11 @@ class GeographyManager {
             issParticle.target.set(x, y);
           }
 
+          // Update orbital path if it's enabled
+          if (this.showOrbitalPath) {
+            this.calculateOrbitalPath(lat, lon);
+          }
+
           radioManager.updateRadioForLocation(lat, lon);
         })
         .catch(() => {
@@ -390,6 +476,11 @@ class GeographyManager {
       const issParticle = window.particles[window.particles.length - 1];
       if (issParticle && issParticle.isIss) {
         issParticle.target.set(x, y);
+      }
+
+      // Update orbital path if it's enabled
+      if (this.showOrbitalPath) {
+        this.calculateOrbitalPath(lat, lon);
       }
 
       radioManager.updateRadioForLocation(lat, lon);
