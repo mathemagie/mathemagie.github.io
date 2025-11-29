@@ -13,8 +13,8 @@
     <style>
         :root {
             /* Color System - Vintage NASA Warmth */
-            --amber-glow: #FFB84D;
-            --deep-teal: #0A4D4E;
+            --amber-glow: #FF4500;
+            --deep-teal: #2A0505;
             --warm-copper: #CC7A4A;
             --cream-white: #F5E6D3;
             --charcoal: #1A1A1A;
@@ -41,7 +41,7 @@
         body {
             overflow: hidden;
             background: radial-gradient(circle at 50% 80%,
-                rgba(10, 77, 78, 0.3) 0%,
+                rgba(42, 5, 5, 0.3) 0%,
                 rgba(26, 26, 26, 0.8) 50%,
                 var(--charcoal) 100%
             );
@@ -399,7 +399,7 @@
             <label>
                 Blob Spectrum:
                 <span class="color-input-wrapper">
-                    <input type="color" id="blobColor" class="color-input" value="#FFB84D">
+                    <input type="color" id="blobColor" class="color-input" value="#FF4500">
                 </span>
             </label>
         </div>
@@ -408,7 +408,7 @@
             <label>
                 Liquid Base:
                 <span class="color-input-wrapper">
-                    <input type="color" id="liquidColor" class="color-input" value="#0A4D4E">
+                    <input type="color" id="liquidColor" class="color-input" value="#2A0505">
                 </span>
             </label>
         </div>
@@ -466,8 +466,8 @@
             speed: 0.7,
             viscosity: 0.3,
             blobSize: 0.05,
-            blobColor: [1.0, 0.722, 0.302],  // Amber glow
-            liquidColor: [0.039, 0.302, 0.306],  // Deep teal
+            blobColor: [1.0, 0.27, 0.0],  // Red-Orange
+            liquidColor: [0.165, 0.02, 0.02],  // Dark Red
             lightIntensity: 2.0
         };
 
