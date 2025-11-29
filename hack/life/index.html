@@ -58,9 +58,215 @@
             border-color: rgba(100, 200, 255, 0.3);
             color: rgba(100, 200, 255, 0.9);
         }
+
+        /* Recording controls panel */
+        #recordingPanel {
+            position: fixed;
+            top: 20px;
+            left: 20px;
+            background: rgba(0, 0, 0, 0.85);
+            backdrop-filter: blur(15px);
+            border-radius: 12px;
+            padding: 20px;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            z-index: 1000;
+            color: white;
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+            min-width: 280px;
+        }
+
+        #recordingPanel h3 {
+            margin: 0 0 15px 0;
+            font-size: 16px;
+            font-weight: 600;
+            color: rgba(255, 255, 255, 0.95);
+        }
+
+        .format-selector {
+            display: flex;
+            gap: 8px;
+            margin-bottom: 15px;
+        }
+
+        .format-btn {
+            flex: 1;
+            padding: 8px 12px;
+            background: rgba(255, 255, 255, 0.08);
+            border: 1px solid rgba(255, 255, 255, 0.15);
+            border-radius: 6px;
+            color: rgba(255, 255, 255, 0.7);
+            cursor: pointer;
+            font-size: 12px;
+            transition: all 0.2s;
+            text-align: center;
+        }
+
+        .format-btn:hover {
+            background: rgba(255, 255, 255, 0.12);
+        }
+
+        .format-btn.active {
+            background: rgba(100, 200, 255, 0.2);
+            border-color: rgba(100, 200, 255, 0.4);
+            color: rgba(100, 200, 255, 1);
+        }
+
+        .format-btn .size {
+            display: block;
+            font-size: 10px;
+            opacity: 0.7;
+            margin-top: 2px;
+        }
+
+        .record-controls {
+            display: flex;
+            gap: 8px;
+            margin-bottom: 12px;
+        }
+
+        .record-btn {
+            flex: 1;
+            padding: 10px;
+            border-radius: 8px;
+            border: none;
+            cursor: pointer;
+            font-weight: 600;
+            font-size: 13px;
+            transition: all 0.2s;
+        }
+
+        #startRecording {
+            background: #ff3366;
+            color: white;
+        }
+
+        #startRecording:hover {
+            background: #ff1a4d;
+            transform: scale(1.02);
+        }
+
+        #stopRecording {
+            background: rgba(255, 255, 255, 0.15);
+            color: white;
+            display: none;
+        }
+
+        #stopRecording:hover {
+            background: rgba(255, 255, 255, 0.25);
+        }
+
+        #downloadVideo {
+            background: rgba(100, 200, 255, 0.2);
+            color: rgba(100, 200, 255, 1);
+            border: 1px solid rgba(100, 200, 255, 0.4);
+            display: none;
+        }
+
+        #downloadVideo:hover {
+            background: rgba(100, 200, 255, 0.3);
+        }
+
+        .recording-indicator {
+            display: none;
+            align-items: center;
+            gap: 8px;
+            padding: 8px 12px;
+            background: rgba(255, 51, 102, 0.15);
+            border-radius: 6px;
+            font-size: 12px;
+            margin-bottom: 12px;
+        }
+
+        .recording-indicator.active {
+            display: flex;
+        }
+
+        .rec-dot {
+            width: 8px;
+            height: 8px;
+            background: #ff3366;
+            border-radius: 50%;
+            animation: pulse 1.5s ease-in-out infinite;
+        }
+
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.4; }
+        }
+
+        .stats {
+            font-size: 11px;
+            color: rgba(255, 255, 255, 0.5);
+            line-height: 1.6;
+        }
+
+        .toggle-panel {
+            position: fixed;
+            top: 20px;
+            left: 20px;
+            width: 40px;
+            height: 40px;
+            background: rgba(0, 0, 0, 0.85);
+            backdrop-filter: blur(15px);
+            border-radius: 8px;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 20px;
+            z-index: 999;
+            transition: all 0.3s;
+        }
+
+        .toggle-panel:hover {
+            background: rgba(0, 0, 0, 0.95);
+            transform: scale(1.05);
+        }
+
+        #recordingPanel.hidden {
+            display: none;
+        }
     </style>
 </head>
 <body>
+    <!-- Toggle panel button -->
+    <div class="toggle-panel" id="togglePanelBtn" title="Toggle recording panel">🎬</div>
+
+    <!-- Recording control panel -->
+    <div id="recordingPanel">
+        <h3>📹 Instagram Recording</h3>
+
+        <div class="format-selector">
+            <div class="format-btn active" data-format="square">
+                Square
+                <span class="size">1080×1080</span>
+            </div>
+            <div class="format-btn" data-format="story">
+                Story
+                <span class="size">1080×1920</span>
+            </div>
+        </div>
+
+        <div class="recording-indicator">
+            <div class="rec-dot"></div>
+            <span id="recordingTime">00:00</span>
+        </div>
+
+        <div class="record-controls">
+            <button class="record-btn" id="startRecording">● Start Recording</button>
+            <button class="record-btn" id="stopRecording">■ Stop</button>
+        </div>
+
+        <button class="record-btn" id="downloadVideo">⬇ Download Video</button>
+
+        <div class="stats">
+            <div>Canvas: <span id="canvasSize">1080×1080</span></div>
+            <div>FPS: <span id="fpsDisplay">60</span></div>
+            <div>Duration: <span id="maxDuration">60s max</span></div>
+        </div>
+    </div>
+
     <!-- Sound toggle button -->
     <div id="soundToggle" title="Toggle ambient sound">🔇</div>
 
@@ -91,6 +297,16 @@
         let lfoOsc1, lfoOsc2; // Low-frequency oscillators for modulation
         let lfoGain1, lfoGain2; // LFO gain nodes
         let soundEnabled = false; // Track if sound is currently playing
+
+        // Recording variables
+        let mediaRecorder;
+        let recordedChunks = [];
+        let isRecording = false;
+        let recordingStartTime;
+        let recordingTimer;
+        let currentFormat = 'square'; // 'square' or 'story'
+        let fpsCounter = 0;
+        let lastFpsTime = 0;
 
         // Enhanced natural color palettes with higher contrast for better visibility
         const naturalColorPalettes = {
@@ -433,12 +649,15 @@
                 });
             }
 
-            // Initializes the main Blob object with natural cellular colors, positioning it at the center.
+            // Initializes the main CellOrganism object with natural cellular colors, positioning it at the center.
             let blobPalette = naturalColorPalettes.aquatic[1]; // Use marine blue for the main cell membrane
-            blob = new Blob(width / 2, height / 2, 200, blobPalette); // Increased size for bigger cell
+            blob = new CellOrganism(width / 2, height / 2, 200, blobPalette); // Increased size for bigger cell
 
             // Add event listener for sound toggle button
             document.getElementById('soundToggle').addEventListener('click', toggleSound);
+
+            // Setup recording panel event listeners
+            setupRecordingPanel();
         }
 
         /**
@@ -466,6 +685,14 @@
          */
         function draw() {
             background(backgroundColorHSB); // Sets the canvas background to the deep muted blue-purple color.
+
+            // Update FPS counter
+            fpsCounter++;
+            if (millis() - lastFpsTime > 1000) {
+                document.getElementById('fpsDisplay').textContent = fpsCounter;
+                fpsCounter = 0;
+                lastFpsTime = millis();
+            }
 
             // Update global breathing phase for synchronized organic pulsing
             breathingPhase += animationSpeed * 0.3;
@@ -694,9 +921,9 @@
         }
 
         /**
-         * Blob Class: Defines the properties and behavior of the main amorphous, pulsating organism.
+         * CellOrganism Class: Defines the properties and behavior of the main amorphous, pulsating organism.
          */
-        class Blob {
+        class CellOrganism {
             constructor(x, y, r, colorPalette) {
                 this.x = x; // The X coordinate of the blob's center.
                 this.y = y; // The Y coordinate of the blob's center.
@@ -893,6 +1120,252 @@
                 }
                 pop(); // Restores the previous drawing style settings and transformations, ensuring they don't affect other elements.
             }
+        }
+
+        /**
+         * Setup recording panel controls and event listeners
+         */
+        function setupRecordingPanel() {
+            console.log('Setting up recording panel...');
+
+            // Toggle panel visibility
+            const toggleBtn = document.getElementById('togglePanelBtn');
+            if (toggleBtn) {
+                toggleBtn.addEventListener('click', () => {
+                    console.log('Toggle panel clicked');
+                    const panel = document.getElementById('recordingPanel');
+                    panel.classList.toggle('hidden');
+                });
+                console.log('Toggle button listener added');
+            } else {
+                console.error('Toggle button not found');
+            }
+
+            // Format selector buttons
+            const formatBtns = document.querySelectorAll('.format-btn');
+            console.log('Found', formatBtns.length, 'format buttons');
+            formatBtns.forEach(btn => {
+                btn.addEventListener('click', () => {
+                    console.log('Format button clicked:', btn.getAttribute('data-format'));
+                    document.querySelectorAll('.format-btn').forEach(b => b.classList.remove('active'));
+                    btn.classList.add('active');
+                    currentFormat = btn.getAttribute('data-format');
+                    resizeForInstagram();
+                });
+            });
+
+            // Recording controls
+            const startBtn = document.getElementById('startRecording');
+            const stopBtn = document.getElementById('stopRecording');
+            const downloadBtn = document.getElementById('downloadVideo');
+
+            if (startBtn) {
+                startBtn.addEventListener('click', startRecording);
+                console.log('Start button listener added');
+            }
+            if (stopBtn) {
+                stopBtn.addEventListener('click', stopRecording);
+                console.log('Stop button listener added');
+            }
+            if (downloadBtn) {
+                downloadBtn.addEventListener('click', downloadVideo);
+                console.log('Download button listener added');
+            }
+
+            console.log('Recording panel setup complete');
+        }
+
+        /**
+         * Resize canvas for Instagram format
+         */
+        function resizeForInstagram() {
+            let w, h;
+            if (currentFormat === 'square') {
+                w = h = 1080; // Instagram square post
+            } else {
+                w = 1080;
+                h = 1920; // Instagram story
+            }
+
+            resizeCanvas(w, h);
+            document.getElementById('canvasSize').textContent = `${w}×${h}`;
+
+            // Reposition blob to center of new canvas
+            if (blob) {
+                blob.x = blob.targetX = w / 2;
+                blob.y = blob.targetY = h / 2;
+            }
+        }
+
+        /**
+         * Start recording the canvas
+         */
+        function startRecording() {
+            console.log('Start recording clicked');
+
+            if (isRecording) {
+                console.log('Already recording, ignoring');
+                return;
+            }
+
+            // Resize canvas to Instagram format
+            console.log('Resizing for Instagram format:', currentFormat);
+            resizeForInstagram();
+
+            try {
+                const canvas = document.querySelector('canvas');
+                console.log('Canvas found:', canvas);
+
+                if (!canvas) {
+                    console.error('Canvas not found!');
+                    alert('Canvas not found. Please wait for the animation to load.');
+                    return;
+                }
+
+                const stream = canvas.captureStream(60); // 60 FPS
+                console.log('Canvas stream created:', stream);
+
+                // Add audio if sound is enabled
+                if (soundEnabled && audioContext) {
+                    const audioDestination = audioContext.createMediaStreamDestination();
+                    droneGain.connect(audioDestination);
+                    const audioTrack = audioDestination.stream.getAudioTracks()[0];
+                    stream.addTrack(audioTrack);
+                }
+
+                recordedChunks = [];
+
+                // Check MediaRecorder support
+                if (!window.MediaRecorder) {
+                    console.error('MediaRecorder not supported');
+                    alert('Video recording is not supported in your browser. Please use Chrome, Firefox, or Edge.');
+                    return;
+                }
+
+                // Use high quality settings
+                const options = {
+                    mimeType: 'video/webm;codecs=vp9',
+                    videoBitsPerSecond: 10000000 // 10 Mbps for high quality
+                };
+
+                console.log('Checking codec support for vp9:', MediaRecorder.isTypeSupported(options.mimeType));
+
+                // Fallback to vp8 if vp9 not supported
+                if (!MediaRecorder.isTypeSupported(options.mimeType)) {
+                    options.mimeType = 'video/webm;codecs=vp8';
+                    console.log('Falling back to vp8');
+                }
+
+                if (!MediaRecorder.isTypeSupported(options.mimeType)) {
+                    options.mimeType = 'video/webm';
+                    console.log('Falling back to default webm');
+                }
+
+                console.log('Using mimeType:', options.mimeType);
+
+                mediaRecorder = new MediaRecorder(stream, options);
+                console.log('MediaRecorder created:', mediaRecorder);
+
+                mediaRecorder.ondataavailable = (event) => {
+                    if (event.data && event.data.size > 0) {
+                        console.log('Data chunk received:', event.data.size, 'bytes');
+                        recordedChunks.push(event.data);
+                    }
+                };
+
+                mediaRecorder.onstop = () => {
+                    console.log('Recording stopped. Total chunks:', recordedChunks.length);
+                    document.getElementById('downloadVideo').style.display = 'block';
+                };
+
+                console.log('Starting MediaRecorder...');
+                mediaRecorder.start(100); // Capture every 100ms
+                isRecording = true;
+                recordingStartTime = Date.now();
+
+                // Update UI
+                console.log('Updating UI...');
+                document.getElementById('startRecording').style.display = 'none';
+                document.getElementById('stopRecording').style.display = 'block';
+                document.querySelector('.recording-indicator').classList.add('active');
+
+                // Start recording timer
+                recordingTimer = setInterval(updateRecordingTime, 100);
+
+                // Auto-stop after 60 seconds
+                setTimeout(() => {
+                    if (isRecording) {
+                        console.log('Auto-stopping recording after 60s');
+                        stopRecording();
+                    }
+                }, 60000);
+
+                console.log('Recording started successfully!');
+
+            } catch (error) {
+                console.error('Recording error:', error);
+                alert('Recording failed: ' + error.message);
+            }
+        }
+
+        /**
+         * Stop recording
+         */
+        function stopRecording() {
+            console.log('Stop recording clicked');
+
+            if (!isRecording) {
+                console.log('Not recording, ignoring');
+                return;
+            }
+
+            console.log('Stopping MediaRecorder...');
+            mediaRecorder.stop();
+            isRecording = false;
+
+            // Update UI
+            document.getElementById('startRecording').style.display = 'block';
+            document.getElementById('stopRecording').style.display = 'none';
+            document.querySelector('.recording-indicator').classList.remove('active');
+
+            clearInterval(recordingTimer);
+            console.log('Recording stopped');
+        }
+
+        /**
+         * Update recording time display
+         */
+        function updateRecordingTime() {
+            const elapsed = Math.floor((Date.now() - recordingStartTime) / 1000);
+            const minutes = Math.floor(elapsed / 60);
+            const seconds = elapsed % 60;
+            document.getElementById('recordingTime').textContent =
+                `${String(minutes).padStart(2, '0')}:${String(seconds).padStart(2, '0')}`;
+        }
+
+        /**
+         * Download recorded video
+         */
+        function downloadVideo() {
+            if (recordedChunks.length === 0) {
+                console.log('No recorded chunks available');
+                return;
+            }
+
+            const videoBlob = new Blob(recordedChunks, { type: 'video/webm' });
+            const url = URL.createObjectURL(videoBlob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `cellular-life-${currentFormat}-${Date.now()}.webm`;
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+
+            URL.revokeObjectURL(url);
+
+            // Reset for next recording
+            recordedChunks = [];
+            document.getElementById('downloadVideo').style.display = 'none';
         }
     </script>
 </body>

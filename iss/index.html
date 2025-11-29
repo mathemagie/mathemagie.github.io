@@ -4,56 +4,99 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>ISS Tracker</title>
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;600&family=JetBrains+Mono:wght@400&display=swap" rel="stylesheet">
     <!-- CSS styles for layout and appearance -->
     <style>
         /* Remove default margins and center everything */
         body {
             margin: 0;
             display: flex;
-            justify-content: center;
+            flex-direction: column;
+            justify-content: flex-start;
             align-items: center;
             min-height: 100vh;
             background: #000;
             color: #DAA520; /* Changed to gold color */
-            font-family: Arial, sans-serif;
+            font-family: 'Space Grotesk', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+            -webkit-font-smoothing: antialiased;
+            -moz-osx-font-smoothing: grayscale;
             overflow: hidden; /* Prevent scrollbars from starfield */
+            padding-top: 80px; /* Space for info panel */
         }
         /* Add a subtle border to the canvas */
         canvas {
-            border: 1px solid #00FF00; /* Changed to neon green */
+            border: 2px solid #00FF00; /* Changed to neon green */
+            box-shadow:
+                0 0 20px rgba(0, 255, 0, 0.4),
+                0 0 40px rgba(0, 255, 0, 0.2),
+                inset 0 0 20px rgba(0, 255, 0, 0.1);
             max-width: 100%;
             height: auto;
+            border-radius: 4px;
         }
-        /* Position the info display in the top-left corner */
+        /* Info display panel */
         #info {
-            position: absolute;
-            top: 10px;
-            left: 10px;
-            background: rgba(0, 0, 0, 0.7);
-            padding: 10px 20px;
-            font-size: 2px;
-            white-space: nowrap;  /* Keep all text on one line */
+            position: fixed;
+            top: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: rgba(0, 0, 0, 0.85);
+            backdrop-filter: blur(10px);
+            padding: 12px 24px;
+            border-radius: 8px;
+            border: 1px solid rgba(0, 255, 0, 0.3);
+            box-shadow:
+                0 0 20px rgba(0, 255, 0, 0.1),
+                inset 0 0 20px rgba(0, 255, 0, 0.05);
+            z-index: 1000;
+            display: flex;
+            flex-direction: row;
+            flex-wrap: wrap;
+            align-items: center;
+            gap: 16px;
+            max-width: 95vw;
         }
-        .label {
-            color: #DAA520; /* Changed to gold */
-            margin-right: 5px;
+
+        #info .title {
+            font-size: 16px;
+            font-weight: 600;
+            color: #00FF00;
+            letter-spacing: 2px;
+            text-transform: uppercase;
+            margin-right: 8px;
+            white-space: nowrap;
         }
+
+        #info .data-row {
+            display: flex;
+            align-items: baseline;
+            gap: 8px;
+            font-size: 12px;
+            white-space: nowrap;
+        }
+
+        #info .label {
+            color: rgba(218, 165, 32, 0.8);
+            font-weight: 400;
+            letter-spacing: 0.5px;
+            text-transform: uppercase;
+            font-size: 10px;
+        }
+
+        #info .value {
+            font-family: 'JetBrains Mono', monospace;
+            color: #DAA520;
+            font-weight: 400;
+            font-size: 13px;
+            letter-spacing: 0.5px;
+        }
+
         .separator {
             color: #00FF00; /* Changed to neon green */
             margin: 0 10px;
-        }
-        /* Add style for the title */
-        #info {
-            position: absolute;
-            top: 15px;
-            left: 50%;
-            transform: translateX(-50%);
-            font-size: 15px;
-            color: #DAA520;
-            text-align: center;
-            background: rgba(0, 0, 0, 0.7);
-            padding: 10px 20px;
-            z-index: 1;
         }
         /* Add loading and error states */
         .loading {
@@ -73,12 +116,32 @@
         /* Add tooltip style */
         #tooltip {
             position: absolute;
-            background: rgba(0, 0, 0, 0.8);
+            background: rgba(0, 0, 0, 0.92);
+            backdrop-filter: blur(10px);
             color: #DAA520;
-            padding: 5px 10px;
-            border-radius: 4px;
+            padding: 12px 16px;
+            border-radius: 6px;
+            border: 1px solid rgba(0, 255, 0, 0.4);
+            box-shadow:
+                0 4px 12px rgba(0, 0, 0, 0.5),
+                0 0 20px rgba(0, 255, 0, 0.2);
             display: none;
-            z-index: 2;
+            z-index: 2000;
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 12px;
+            line-height: 1.6;
+            pointer-events: none;
+        }
+
+        .tooltip-label {
+            color: rgba(218, 165, 32, 0.7);
+            font-size: 10px;
+            text-transform: uppercase;
+        }
+
+        .tooltip-value {
+            color: #00FF00;
+            font-weight: 600;
         }
         /* Add starfield container */
         #starfield {
@@ -95,28 +158,119 @@
             background: #FFF;
             border-radius: 50%;
             animation: twinkle var(--duration) infinite;
+            box-shadow: 0 0 2px rgba(255, 255, 255, 0.8);
         }
+
         @keyframes twinkle {
-            0%, 100% { opacity: 0.3; }
-            50% { opacity: 1; }
+            0%, 100% {
+                opacity: 0.2;
+                transform: scale(1);
+            }
+            50% {
+                opacity: 1;
+                transform: scale(1.2);
+            }
+        }
+
+        .star.blue {
+            background: #64C8FF;
+            box-shadow: 0 0 3px rgba(100, 200, 255, 0.8);
+        }
+
+        .star.gold {
+            background: #DAA520;
+            box-shadow: 0 0 3px rgba(218, 165, 32, 0.8);
+        }
+
+        /* Responsive breakpoints */
+        @media (max-width: 768px) {
+            #info {
+                padding: 10px 16px;
+                gap: 12px;
+            }
+            #info .title { font-size: 14px; letter-spacing: 1.5px; }
+            #info .data-row { font-size: 11px; }
+            #info .label { font-size: 9px; }
+            #info .value { font-size: 12px; }
+
+            canvas {
+                border-width: 1px;
+                box-shadow:
+                    0 0 10px rgba(0, 255, 0, 0.3),
+                    0 0 20px rgba(0, 255, 0, 0.1);
+            }
+        }
+
+        @media (max-width: 480px) {
+            body {
+                padding-top: 120px;
+            }
+
+            #info {
+                padding: 8px 12px;
+                gap: 8px;
+                flex-direction: column;
+                align-items: flex-start;
+            }
+            #info .title {
+                font-size: 13px;
+                margin-right: 0;
+                margin-bottom: 4px;
+            }
+            #info .data-row {
+                font-size: 10px;
+            }
+            #info .label { font-size: 8px; }
+            #info .value { font-size: 11px; }
+        }
+
+        @media (max-width: 768px) and (orientation: landscape) {
+            #info {
+                top: 10px;
+                left: 10px;
+                transform: none;
+                padding: 8px 12px;
+                min-width: auto;
+            }
+        }
+
+        /* Accessibility */
+        @media (prefers-reduced-motion: reduce) {
+            .star {
+                animation: none !important;
+                opacity: 0.6;
+            }
+
+            .loading {
+                animation: none !important;
+            }
+        }
+
+        @media (prefers-contrast: high) {
+            #info {
+                border: 2px solid #00FF00;
+                background: rgba(0, 0, 0, 0.95);
+            }
+            canvas { border-width: 3px; }
+            .value { color: #FFD700; }
         }
     </style>
 </head>
 <body>
-    <div id="tooltip"></div>
+    <div id="tooltip" role="tooltip" aria-hidden="true"></div>
     <!-- Add starfield container -->
     <div id="starfield"></div>
     <!-- Add title div -->
-    
+
     <!-- Display area for ISS coordinates -->
-    <div id="info">ISS Position: Loading...</div>
+    <div id="info" role="region" aria-label="ISS Position Information" aria-live="polite">ISS Position: Loading...</div>
     
     <!-- Include p5.js library -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/p5.js/1.4.2/p5.min.js"></script>
     
     <script>
         // Remove star-related global variables
-        let issData = { latitude: 0, longitude: 0 };
+        let issData = { latitude: 0, longitude: 0, altitude: 0, velocity: 0 };
         let particle;
         let lastFetchTime = 0;
         const FETCH_INTERVAL = 10000; // 10 seconds in milliseconds
@@ -125,11 +279,12 @@
         let worldMap;
         let audioContext;
         let stars = []; // Add stars array for background
-        
+
         // Add new global variables
         let loading = true;
         let error = null;
         let lastUpdate = null;
+        const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
         
         // Function to create ping sound
         function createPingSound() {
@@ -227,7 +382,7 @@
                 this.acceleration = createVector(0, 0);
                 this.maxSpeed = 2; // Reduced max speed
                 this.trail = [];
-                this.maxTrailLength = 100; // Longer trail for smoother appearance
+                this.maxTrailLength = isMobile ? 50 : 100; // Reduced trail on mobile
                 this.hovered = false;
             }
 
@@ -277,30 +432,41 @@
 
             // Draw the particle on the canvas
             display() {
-                // Draw trail
-                noFill();
-                beginShape();
-                for (let i = 0; i < this.trail.length; i++) {
-                    const alpha = map(i, 0, this.trail.length, 0, 200);
-                    stroke(...this.color, alpha);
-                    strokeWeight(map(i, 0, this.trail.length, 1, 3));
-                    vertex(this.trail[i].x, this.trail[i].y);
+                // Enhanced trail with gradient
+                for (let i = 1; i < this.trail.length; i++) {
+                    const alpha = map(i, 0, this.trail.length, 0, 180);
+                    const weight = map(i, 0, this.trail.length, 0.5, 4);
+
+                    stroke(...this.color, alpha * 0.6);
+                    strokeWeight(weight);
+
+                    // Add glow to recent trail segments
+                    if (i > this.trail.length * 0.7) {
+                        drawingContext.shadowBlur = 8;
+                        drawingContext.shadowColor = `rgba(${this.color[0]}, ${this.color[1]}, ${this.color[2]}, 0.6)`;
+                    } else {
+                        drawingContext.shadowBlur = 0;
+                    }
+
+                    line(this.trail[i-1].x, this.trail[i-1].y, this.trail[i].x, this.trail[i].y);
                 }
-                endShape();
-                
-                // Draw particle
+
+                drawingContext.shadowBlur = 0;
                 noStroke();
-                // Outer glow
-                fill(...this.color, 30);
+
+                // Multi-layer glow
+                fill(...this.color, 15);
+                ellipse(this.x, this.y, this.size * 3);
+                fill(...this.color, 40);
                 ellipse(this.x, this.y, this.size * 2);
-                fill(...this.color, 50);
-                ellipse(this.x, this.y, this.size * 1.5);
-                // Main particle
-                fill(...this.color, 200);
+                fill(...this.color, 80);
+                ellipse(this.x, this.y, this.size * 1.4);
+                fill(...this.color, 220);
                 ellipse(this.x, this.y, this.size);
-                // Inner highlight
-                fill(255, 255, 255, 100);
-                ellipse(this.x, this.y, this.size * 0.5);
+                fill(255, 255, 255, 180);
+                ellipse(this.x, this.y, this.size * 0.4);
+                fill(0, 255, 0, 60);
+                ellipse(this.x, this.y, this.size * 0.8);
             }
 
             // Add hover detection
@@ -321,13 +487,16 @@
             const canvasHeight = (canvasWidth * 0.75);
             createCanvas(canvasWidth, canvasHeight);
             particle = new Particle();
-            
+
+            // Limit frame rate for performance
+            frameRate(30);
+
             // Create starfield
             createStarfield();
-            
+
             // Initial fetch
             fetchISSData();
-            
+
             // Set up interval for regular fetching
             setInterval(fetchISSData, FETCH_INTERVAL);
         }
@@ -335,50 +504,74 @@
         // Function to create starfield
         function createStarfield() {
             const starfield = document.getElementById('starfield');
-            const numberOfStars = 200;
-            
+            const numberOfStars = 300; // Increased from 200
+
             for (let i = 0; i < numberOfStars; i++) {
                 const star = document.createElement('div');
                 star.className = 'star';
-                
-                // Random position
-                const x = Math.random() * 100;
-                const y = Math.random() * 100;
-                
-                // Random size
-                const size = Math.random() * 3;
-                
-                // Random twinkle duration
-                const duration = 2 + Math.random() * 4;
-                
+
+                // Add color variation (10% chance for colored stars)
+                const rand = Math.random();
+                if (rand < 0.05) {
+                    star.classList.add('blue');
+                } else if (rand < 0.10) {
+                    star.classList.add('gold');
+                }
+
+                // Variable sizes - more small stars
+                const sizeRand = Math.random();
+                let size;
+                if (sizeRand < 0.7) size = 1 + Math.random() * 1.5; // Small
+                else if (sizeRand < 0.9) size = 2 + Math.random() * 2; // Medium
+                else size = 3 + Math.random() * 2; // Large
+
+                // Random twinkle duration and delay
+                const duration = 2 + Math.random() * 6;
+                const delay = Math.random() * 4;
+
                 star.style.cssText = `
-                    left: ${x}%;
-                    top: ${y}%;
+                    left: ${Math.random() * 100}%;
+                    top: ${Math.random() * 100}%;
                     width: ${size}px;
                     height: ${size}px;
                     --duration: ${duration}s;
+                    animation-delay: ${delay}s;
                 `;
-                
+
                 starfield.appendChild(star);
             }
         }
 
         // p5.js draw function - runs continuously
         function draw() {
-            background(0, 90);  // Increased transparency for better star visibility
-            
+            background(0, 60);  // Reduced from 90 for smoother trails
+
             // Draw world map with reduced opacity
             drawWorldMap();
-            
+
             // Draw pulse effect when new data is received
             if (isPulsing) {
-                noFill();
-                stroke(0, 255, 0, 255 - pulseSize); // Changed to neon green
-                strokeWeight(2);
-                ellipse(particle.x, particle.y, pulseSize);
-                pulseSize += 5;
-                
-                if (pulseSize > 200) {
+                // Multiple concentric rings
+                for (let i = 0; i < 3; i++) {
+                    const offset = i * 30;
+                    const adjustedSize = pulseSize - offset;
+
+                    if (adjustedSize > 0) {
+                        const alpha = map(adjustedSize, 0, 220, 0, 200) * (1 - i * 0.3);
+                        noFill();
+                        stroke(0, 255, 0, alpha);
+                        strokeWeight(3 - i);
+                        ellipse(particle.x, particle.y, adjustedSize);
+
+                        if (i === 0 && adjustedSize < 40) {
+                            fill(0, 255, 0, alpha * 0.2);
+                            ellipse(particle.x, particle.y, adjustedSize);
+                        }
+                    }
+                }
+
+                pulseSize += 4;
+                if (pulseSize > 220) {
                     isPulsing = false;
                     pulseSize = 0;
                 }
@@ -411,27 +604,37 @@
                 // Update stored position data
                 issData.latitude = parseFloat(data.latitude);
                 issData.longitude = parseFloat(data.longitude);
-                
+                issData.altitude = parseFloat(data.altitude);
+                issData.velocity = parseFloat(data.velocity);
+
                 // Trigger pulse effect
                 isPulsing = true;
                 pulseSize = 0;
-                
+
                 // Play ping sound
                 createPingSound();
-                
+
                 // Add timezone calculation
                 const timezone = await getTimezone(issData.latitude, issData.longitude);
                 lastUpdate = new Date().toLocaleTimeString();
-                
+
                 // Update display with more information
-                document.getElementById('info').innerHTML = 
-                    `<span class="label">ISS Position:</span>` +
-                    `Lat ${issData.latitude.toFixed(2)}°, Lon ${issData.longitude.toFixed(2)}° ` +
-                    `<span class="separator">|</span>` +
-                    `<span class="label">Altitude:</span>${data.altitude.toFixed(2)} km ` +
-                    `<span class="separator">|</span>` +
-                    `<span class="label">Velocity:</span>${(data.velocity/1000).toFixed(2)} km/s`;
-                
+                document.getElementById('info').innerHTML = `
+                    <div class="title">ISS TRACKER</div>
+                    <div class="data-row">
+                        <span class="label">Latitude</span>
+                        <span class="value">${issData.latitude.toFixed(4)}°</span>
+                    </div>
+                    <div class="data-row">
+                        <span class="label">Longitude</span>
+                        <span class="value">${issData.longitude.toFixed(4)}°</span>
+                    </div>
+                    <div class="data-row">
+                        <span class="label">Altitude</span>
+                        <span class="value">${issData.altitude.toFixed(2)} km</span>
+                    </div>
+                `;
+
                 lastFetchTime = millis();
                 loading = false;
             } catch (error) {
@@ -444,105 +647,150 @@
 
         // Add this new function to draw the world map
         function drawWorldMap() {
-            stroke(0, 255, 0, 60);  // Changed to neon green
+            push();
+
+            stroke(0, 255, 0, 50);
             noFill();
             strokeWeight(1.5);
-            
-            // Draw simplified line-art continents
+            strokeCap(ROUND);
+            strokeJoin(ROUND);
+
+            const scaleX = width / 800;
+            const scaleY = height / 600;
+
+            // More refined continent shapes using curveVertex for smoother lines
             // North America
             beginShape();
-            vertex(100, 100);
-            vertex(200, 80);
-            vertex(250, 120);
-            vertex(200, 180);
-            vertex(150, 200);
+            curveVertex(100 * scaleX, 100 * scaleY);
+            curveVertex(100 * scaleX, 100 * scaleY);
+            curveVertex(200 * scaleX, 80 * scaleY);
+            curveVertex(250 * scaleX, 120 * scaleY);
+            curveVertex(200 * scaleX, 180 * scaleY);
+            curveVertex(150 * scaleX, 200 * scaleY);
+            curveVertex(100 * scaleX, 100 * scaleY);
+            curveVertex(100 * scaleX, 100 * scaleY);
             endShape(CLOSE);
-            
+
             // South America
             beginShape();
-            vertex(180, 250);
-            vertex(220, 280);
-            vertex(200, 400);
-            vertex(180, 450);
-            vertex(160, 350);
+            curveVertex(180 * scaleX, 250 * scaleY);
+            curveVertex(180 * scaleX, 250 * scaleY);
+            curveVertex(220 * scaleX, 280 * scaleY);
+            curveVertex(200 * scaleX, 400 * scaleY);
+            curveVertex(180 * scaleX, 450 * scaleY);
+            curveVertex(160 * scaleX, 350 * scaleY);
+            curveVertex(180 * scaleX, 250 * scaleY);
+            curveVertex(180 * scaleX, 250 * scaleY);
             endShape(CLOSE);
-            
+
             // Europe
             beginShape();
-            vertex(350, 80);
-            vertex(400, 100);
-            vertex(450, 120);
-            vertex(400, 150);
-            vertex(380, 130);
+            curveVertex(350 * scaleX, 80 * scaleY);
+            curveVertex(350 * scaleX, 80 * scaleY);
+            curveVertex(400 * scaleX, 100 * scaleY);
+            curveVertex(450 * scaleX, 120 * scaleY);
+            curveVertex(400 * scaleX, 150 * scaleY);
+            curveVertex(380 * scaleX, 130 * scaleY);
+            curveVertex(350 * scaleX, 80 * scaleY);
+            curveVertex(350 * scaleX, 80 * scaleY);
             endShape(CLOSE);
-            
+
             // Africa
             beginShape();
-            vertex(350, 180);
-            vertex(420, 200);
-            vertex(450, 300);
-            vertex(400, 400);
-            vertex(350, 350);
+            curveVertex(350 * scaleX, 180 * scaleY);
+            curveVertex(350 * scaleX, 180 * scaleY);
+            curveVertex(420 * scaleX, 200 * scaleY);
+            curveVertex(450 * scaleX, 300 * scaleY);
+            curveVertex(400 * scaleX, 400 * scaleY);
+            curveVertex(350 * scaleX, 350 * scaleY);
+            curveVertex(350 * scaleX, 180 * scaleY);
+            curveVertex(350 * scaleX, 180 * scaleY);
             endShape(CLOSE);
-            
+
             // Asia
             beginShape();
-            vertex(450, 80);
-            vertex(600, 100);
-            vertex(650, 150);
-            vertex(700, 200);
-            vertex(600, 250);
-            vertex(500, 200);
+            curveVertex(450 * scaleX, 80 * scaleY);
+            curveVertex(450 * scaleX, 80 * scaleY);
+            curveVertex(600 * scaleX, 100 * scaleY);
+            curveVertex(650 * scaleX, 150 * scaleY);
+            curveVertex(700 * scaleX, 200 * scaleY);
+            curveVertex(600 * scaleX, 250 * scaleY);
+            curveVertex(500 * scaleX, 200 * scaleY);
+            curveVertex(450 * scaleX, 80 * scaleY);
+            curveVertex(450 * scaleX, 80 * scaleY);
             endShape(CLOSE);
-            
+
             // Australia
             beginShape();
-            vertex(600, 300);
-            vertex(700, 320);
-            vertex(680, 380);
-            vertex(600, 370);
+            curveVertex(600 * scaleX, 300 * scaleY);
+            curveVertex(600 * scaleX, 300 * scaleY);
+            curveVertex(700 * scaleX, 320 * scaleY);
+            curveVertex(680 * scaleX, 380 * scaleY);
+            curveVertex(600 * scaleX, 370 * scaleY);
+            curveVertex(600 * scaleX, 300 * scaleY);
+            curveVertex(600 * scaleX, 300 * scaleY);
             endShape(CLOSE);
-            
+
             // Antarctica
             beginShape();
-            vertex(200, 500);
-            vertex(300, 520);
-            vertex(400, 520);
-            vertex(500, 510);
-            vertex(600, 500);
-            vertex(400, 480);
+            curveVertex(200 * scaleX, 500 * scaleY);
+            curveVertex(200 * scaleX, 500 * scaleY);
+            curveVertex(300 * scaleX, 520 * scaleY);
+            curveVertex(400 * scaleX, 520 * scaleY);
+            curveVertex(500 * scaleX, 510 * scaleY);
+            curveVertex(600 * scaleX, 500 * scaleY);
+            curveVertex(400 * scaleX, 480 * scaleY);
+            curveVertex(200 * scaleX, 500 * scaleY);
+            curveVertex(200 * scaleX, 500 * scaleY);
             endShape(CLOSE);
-            
+
             // Greenland
             beginShape();
-            vertex(280, 50);
-            vertex(350, 40);
-            vertex(320, 80);
-            vertex(280, 70);
+            curveVertex(280 * scaleX, 50 * scaleY);
+            curveVertex(280 * scaleX, 50 * scaleY);
+            curveVertex(350 * scaleX, 40 * scaleY);
+            curveVertex(320 * scaleX, 80 * scaleY);
+            curveVertex(280 * scaleX, 70 * scaleY);
+            curveVertex(280 * scaleX, 50 * scaleY);
+            curveVertex(280 * scaleX, 50 * scaleY);
             endShape(CLOSE);
 
             // Draw oceans labels
-            fill(0, 255, 0, 30);  // Changed opacity to 30 (was 80)
+            fill(0, 255, 0, 30);
             noStroke();
-            textSize(12);  // Reduced text size from 16 to 12
-            textStyle(NORMAL);  // Changed from BOLD to NORMAL
-            text("Pacific Ocean", 650, 200);
-            text("Atlantic Ocean", 250, 200);
-            text("Indian Ocean", 450, 250);
-            text("Southern Ocean", 400, 450);
+            textSize(12);
+            textStyle(NORMAL);
+            text("Pacific Ocean", 650 * scaleX, 200 * scaleY);
+            text("Atlantic Ocean", 250 * scaleX, 200 * scaleY);
+            text("Indian Ocean", 450 * scaleX, 250 * scaleY);
+            text("Southern Ocean", 400 * scaleX, 450 * scaleY);
 
-            // Draw latitude/longitude grid
-            stroke(0, 255, 0, 25);  // Changed to neon green
-            strokeWeight(0.7);  // Slightly thicker lines
-            
-            // Draw fewer, more spaced out grid lines
-            for (let y = 0; y < height; y += height/6) {
+            // Enhanced grid with emphasis on equator and prime meridian
+            strokeWeight(0.5);
+
+            for (let y = 0; y <= height; y += height / 12) {
+                if (abs(y - height/2) < 2) {
+                    stroke(0, 255, 0, 60);
+                    strokeWeight(1.5);
+                } else {
+                    stroke(0, 255, 0, 20);
+                    strokeWeight(0.5);
+                }
                 line(0, y, width, y);
             }
-            
-            for (let x = 0; x < width; x += width/8) {
+
+            for (let x = 0; x <= width; x += width / 16) {
+                if (abs(x - width/2) < 2) {
+                    stroke(0, 255, 0, 60);
+                    strokeWeight(1.5);
+                } else {
+                    stroke(0, 255, 0, 20);
+                    strokeWeight(0.5);
+                }
                 line(x, 0, x, height);
             }
+
+            pop();
         }
 
         // Add new helper functions
@@ -564,9 +812,21 @@
         function showTooltip(x, y) {
             const tooltip = document.getElementById('tooltip');
             tooltip.style.display = 'block';
-            tooltip.style.left = `${x + 10}px`;
-            tooltip.style.top = `${y + 10}px`;
-            tooltip.innerHTML = `Latitude: ${issData.latitude.toFixed(4)}°<br>Longitude: ${issData.longitude.toFixed(4)}°`;
+
+            // Smart positioning to avoid edges
+            let left = x + 15;
+            let top = y + 15;
+
+            if (left + 200 > windowWidth) left = x - 215;
+            if (top + 80 > windowHeight) top = y - 95;
+
+            tooltip.style.left = `${left}px`;
+            tooltip.style.top = `${top}px`;
+            tooltip.innerHTML = `
+                <div><span class="tooltip-label">Latitude:</span> <span class="tooltip-value">${issData.latitude.toFixed(6)}°</span></div>
+                <div><span class="tooltip-label">Longitude:</span> <span class="tooltip-value">${issData.longitude.toFixed(6)}°</span></div>
+                <div><span class="tooltip-label">Altitude:</span> <span class="tooltip-value">${issData.altitude ? issData.altitude.toFixed(2) : 'N/A'} km</span></div>
+            `;
         }
         
         function hideTooltip() {
@@ -575,14 +835,31 @@
         
         // Add window resize handler
         function windowResized() {
-            const canvasWidth = min(windowWidth * 0.9, 800);
-            const canvasHeight = (canvasWidth * 0.75);
+            const canvasWidth = min(windowWidth * 0.95, 1000);
+            const canvasHeight = canvasWidth * 0.6;
             resizeCanvas(canvasWidth, canvasHeight);
+
+            // Recreate starfield
+            document.getElementById('starfield').innerHTML = '';
+            createStarfield();
         }
-        
+
         // Add mouseMoved function
         function mouseMoved() {
             particle.checkHover(mouseX, mouseY);
+        }
+
+        // Add touch support
+        function touchMoved() {
+            if (touches.length > 0) {
+                particle.checkHover(touches[0].x, touches[0].y);
+            }
+            return false;
+        }
+
+        function touchEnded() {
+            hideTooltip();
+            return false;
         }
     </script>
 </body>
