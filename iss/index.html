@@ -182,55 +182,330 @@
             box-shadow: 0 0 3px rgba(218, 165, 32, 0.8);
         }
 
+        /* Mobile-specific enhancements */
+        @media (max-width: 768px) {
+            /* CRT scanline effect overlay */
+            body::before {
+                content: '';
+                position: fixed;
+                top: 0;
+                left: 0;
+                width: 100%;
+                height: 100%;
+                background: repeating-linear-gradient(
+                    0deg,
+                    rgba(0, 0, 0, 0.1),
+                    rgba(0, 0, 0, 0.1) 1px,
+                    transparent 1px,
+                    transparent 2px
+                );
+                pointer-events: none;
+                z-index: 9999;
+                opacity: 0.2;
+            }
+
+            /* Subtle vignette for depth */
+            body::after {
+                content: '';
+                position: fixed;
+                top: 0;
+                left: 0;
+                width: 100%;
+                height: 100%;
+                background: radial-gradient(
+                    ellipse at center,
+                    transparent 0%,
+                    transparent 60%,
+                    rgba(0, 0, 0, 0.3) 100%
+                );
+                pointer-events: none;
+                z-index: 9998;
+            }
+
+            /* Audio indicator pulse */
+            #info::before {
+                content: '●';
+                position: absolute;
+                top: 14px;
+                right: 16px;
+                color: #00FF00;
+                font-size: 8px;
+                animation: audioPulse 2s ease-in-out infinite;
+                text-shadow: 0 0 8px rgba(0, 255, 0, 0.8);
+            }
+
+            @keyframes audioPulse {
+                0%, 100% {
+                    opacity: 0.4;
+                    transform: scale(1);
+                }
+                50% {
+                    opacity: 1;
+                    transform: scale(1.2);
+                }
+            }
+
+            /* Enhanced touch feedback for canvas */
+            canvas {
+                -webkit-tap-highlight-color: rgba(0, 255, 0, 0.1);
+                touch-action: pan-y;
+            }
+
+            /* Improve tooltip for mobile */
+            #tooltip {
+                font-size: 11px;
+                padding: 10px 14px;
+                backdrop-filter: blur(15px);
+                border-width: 2px;
+            }
+
+            /* Mobile status footer */
+            #mobile-status {
+                display: flex;
+                position: fixed;
+                bottom: 0;
+                left: 0;
+                right: 0;
+                background: linear-gradient(0deg, rgba(0, 0, 0, 0.95) 0%, rgba(0, 0, 0, 0.88) 100%);
+                backdrop-filter: blur(10px);
+                padding: 10px 16px;
+                justify-content: space-between;
+                align-items: center;
+                border-top: 1px solid rgba(0, 255, 0, 0.2);
+                box-shadow: 0 -4px 20px rgba(0, 255, 0, 0.1);
+                z-index: 1000;
+            }
+
+            .status-item {
+                display: flex;
+                align-items: center;
+                gap: 6px;
+                font-size: 9px;
+                letter-spacing: 1.5px;
+                font-weight: 600;
+                color: #DAA520;
+            }
+
+            .status-dot {
+                width: 6px;
+                height: 6px;
+                border-radius: 50%;
+                background: #00FF00;
+                box-shadow: 0 0 8px rgba(0, 255, 0, 0.8);
+                animation: statusBlink 2s ease-in-out infinite;
+            }
+
+            .status-icon {
+                font-size: 12px;
+                filter: grayscale(0.3);
+                opacity: 0.9;
+            }
+
+            .status-label {
+                text-transform: uppercase;
+                color: rgba(218, 165, 32, 0.7);
+            }
+
+            @keyframes statusBlink {
+                0%, 100% {
+                    opacity: 1;
+                }
+                50% {
+                    opacity: 0.3;
+                }
+            }
+        }
+
+        /* Hide mobile status on desktop */
+        #mobile-status {
+            display: none;
+        }
+
         /* Responsive breakpoints */
         @media (max-width: 768px) {
-            #info {
-                padding: 10px 16px;
-                gap: 12px;
+            body {
+                padding-top: 0;
+                padding-bottom: 50px;
             }
-            #info .title { font-size: 14px; letter-spacing: 1.5px; }
-            #info .data-row { font-size: 11px; }
-            #info .label { font-size: 9px; }
-            #info .value { font-size: 12px; }
+
+            #info {
+                top: 0;
+                left: 0;
+                right: 0;
+                transform: none;
+                max-width: 100%;
+                border-radius: 0 0 16px 16px;
+                border-top: none;
+                border-left: none;
+                border-right: none;
+                padding: 12px 16px 10px;
+                gap: 6px;
+                background: linear-gradient(180deg, rgba(0, 0, 0, 0.96) 0%, rgba(0, 0, 0, 0.90) 100%);
+                box-shadow:
+                    0 6px 24px rgba(0, 255, 0, 0.18),
+                    inset 0 -1px 0 rgba(0, 255, 0, 0.35);
+                flex-direction: column;
+            }
+
+            #info .title {
+                font-size: 9px;
+                letter-spacing: 3.5px;
+                font-weight: 700;
+                color: #00FF00;
+                width: 100%;
+                padding-bottom: 6px;
+                border-bottom: 1px solid rgba(0, 255, 0, 0.25);
+                margin: 0 0 6px 0;
+                text-shadow: 0 0 12px rgba(0, 255, 0, 0.6);
+                display: flex;
+                justify-content: space-between;
+                align-items: center;
+            }
+
+            #info .data-row {
+                font-size: 10px;
+                display: grid;
+                grid-template-columns: 80px 1fr;
+                gap: 12px;
+                align-items: baseline;
+                padding: 3px 0;
+            }
+
+            #info .label {
+                font-size: 8px;
+                letter-spacing: 1.2px;
+                color: rgba(218, 165, 32, 0.55);
+                font-weight: 600;
+                text-transform: uppercase;
+            }
+
+            #info .value {
+                font-size: 14px;
+                letter-spacing: 0.3px;
+                font-weight: 600;
+                color: #DAA520;
+                text-shadow: 0 0 10px rgba(218, 165, 32, 0.5);
+                font-variant-numeric: tabular-nums;
+                text-align: right;
+            }
 
             canvas {
-                border-width: 1px;
+                border-width: 2px;
+                border-radius: 8px;
                 box-shadow:
-                    0 0 10px rgba(0, 255, 0, 0.3),
-                    0 0 20px rgba(0, 255, 0, 0.1);
+                    0 0 15px rgba(0, 255, 0, 0.35),
+                    0 0 30px rgba(0, 255, 0, 0.15),
+                    inset 0 0 30px rgba(0, 255, 0, 0.08);
+                margin-top: 140px;
+                width: 95vw !important;
+                height: auto !important;
+                max-height: calc(100vh - 240px);
             }
         }
 
         @media (max-width: 480px) {
             body {
-                padding-top: 120px;
+                padding-top: 0;
+                padding-bottom: 46px;
             }
 
             #info {
-                padding: 8px 12px;
-                gap: 8px;
-                flex-direction: column;
-                align-items: flex-start;
+                padding: 10px 14px 8px;
+                gap: 5px;
             }
+
             #info .title {
-                font-size: 13px;
-                margin-right: 0;
-                margin-bottom: 4px;
+                font-size: 8px;
+                letter-spacing: 3px;
+                padding-bottom: 5px;
+                margin-bottom: 5px;
             }
+
             #info .data-row {
-                font-size: 10px;
+                font-size: 9px;
+                grid-template-columns: 70px 1fr;
+                gap: 10px;
+                padding: 2px 0;
             }
-            #info .label { font-size: 8px; }
-            #info .value { font-size: 11px; }
+
+            #info .label {
+                font-size: 7px;
+                letter-spacing: 1px;
+            }
+
+            #info .value {
+                font-size: 13px;
+                letter-spacing: 0.2px;
+            }
+
+            canvas {
+                margin-top: 106px;
+                width: 94vw !important;
+                max-height: calc(100vh - 200px);
+            }
         }
 
         @media (max-width: 768px) and (orientation: landscape) {
+            body {
+                padding-top: 0;
+                padding-left: 0;
+                padding-bottom: 10px;
+            }
+
             #info {
-                top: 10px;
-                left: 10px;
+                top: 0;
+                left: 0;
+                right: auto;
                 transform: none;
-                padding: 8px 12px;
+                padding: 10px 14px 8px;
                 min-width: auto;
+                max-width: 42vw;
+                border-radius: 0 0 14px 0;
+                flex-direction: column;
+                gap: 4px;
+            }
+
+            #info .title {
+                font-size: 8px;
+                letter-spacing: 2.5px;
+                padding-bottom: 4px;
+                margin-bottom: 4px;
+            }
+
+            #info .data-row {
+                grid-template-columns: 65px 1fr;
+                gap: 8px;
+                font-size: 9px;
+                padding: 2px 0;
+            }
+
+            #info .label {
+                font-size: 7px;
+                letter-spacing: 0.8px;
+            }
+
+            #info .value {
+                font-size: 11px;
+                letter-spacing: 0.2px;
+            }
+
+            canvas {
+                margin-top: 16px;
+                margin-left: calc(42vw + 16px);
+                max-width: calc(58vw - 32px);
+                width: calc(58vw - 32px) !important;
+                height: auto !important;
+                max-height: calc(100vh - 32px);
+            }
+
+            /* Hide status footer in landscape */
+            #mobile-status {
+                display: none;
+            }
+
+            /* Reduce scanlines in landscape */
+            body::before {
+                opacity: 0.1;
             }
         }
 
@@ -264,7 +539,19 @@
 
     <!-- Display area for ISS coordinates -->
     <div id="info" role="region" aria-label="ISS Position Information" aria-live="polite">ISS Position: Loading...</div>
-    
+
+    <!-- Mobile status footer -->
+    <div id="mobile-status" role="status" aria-live="polite">
+        <span class="status-item">
+            <span class="status-dot"></span>
+            <span class="status-label">TRACKING</span>
+        </span>
+        <span class="status-item audio-status">
+            <span class="status-icon">🎧</span>
+            <span class="status-label">3D AUDIO</span>
+        </span>
+    </div>
+
     <!-- Include p5.js library -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/p5.js/1.4.2/p5.min.js"></script>
     
