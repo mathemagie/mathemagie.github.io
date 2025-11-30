@@ -279,6 +279,9 @@
         let worldMap;
         let audioContext;
         let stars = []; // Add stars array for background
+        let audioListener;  // Web Audio API listener for 3D audio
+        let activePanner;   // Current active PannerNode for spatial positioning
+        let audioScale;     // Coordinate conversion scale factor for 3D audio space
 
         // Add new global variables
         let loading = true;
@@ -286,8 +289,8 @@
         let lastUpdate = null;
         const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
         
-        // Function to create ping sound
-        function createPingSound() {
+        // Function to create ping sound with 3D spatial positioning
+        function createPingSound(particleX, particleY) {
             // Create new audio context if it doesn't exist
             if (!audioContext) {
                 audioContext = new (window.AudioContext || window.webkitAudioContext)();
@@ -359,14 +362,87 @@
                 feedbackGains[i].connect(delay);
                 delay.connect(gainNode);
             });
-            
-            gainNode.connect(audioContext.destination);
-            
+
+            // Create and configure 3D panner node for spatial audio
+            const pannerNode = audioContext.createPanner();
+            pannerNode.panningModel = 'HRTF';              // Head-Related Transfer Function for realistic 3D
+            pannerNode.distanceModel = 'inverse';          // Natural volume attenuation with distance
+            pannerNode.refDistance = 1;                    // Reference distance for attenuation
+            pannerNode.maxDistance = 100;                  // Maximum distance before silence
+            pannerNode.rolloffFactor = 1;                  // Attenuation curve steepness
+            pannerNode.coneInnerAngle = 360;               // Omnidirectional sound
+            pannerNode.coneOuterAngle = 0;
+            pannerNode.coneOuterGain = 0;
+
+            // Calculate 3D position from screen coordinates
+            // Center of screen = listener position (0, 0, 0)
+            const audioX = (particleX - width / 2) * audioScale;
+            const audioY = -(particleY - height / 2) * audioScale;  // Invert Y (screen Y+ is down, audio Y+ is up)
+            const audioZ = -10;  // Fixed depth into screen (in front of listener)
+
+            // Set panner position in 3D space
+            pannerNode.positionX.setValueAtTime(audioX, audioContext.currentTime);
+            pannerNode.positionY.setValueAtTime(audioY, audioContext.currentTime);
+            pannerNode.positionZ.setValueAtTime(audioZ, audioContext.currentTime);
+
+            // Connect audio graph: gainNode → pannerNode → destination
+            gainNode.connect(pannerNode);
+            pannerNode.connect(audioContext.destination);
+
+            // Store reference to active panner for position updates
+            activePanner = pannerNode;
+
             // Start and stop the sound
             oscillator1.start();
             oscillator2.start();
             oscillator1.stop(audioContext.currentTime + 2.0);
             oscillator2.stop(audioContext.currentTime + 2.0);
+        }
+
+        // Function to initialize 3D spatial audio
+        function initializeSpatialAudio() {
+            // Create audio context if it doesn't exist
+            if (!audioContext) {
+                audioContext = new (window.AudioContext || window.webkitAudioContext)();
+            }
+
+            // Set up audio listener at screen center
+            audioListener = audioContext.listener;
+
+            // Position listener at origin (screen center)
+            audioListener.positionX.value = 0;
+            audioListener.positionY.value = 0;
+            audioListener.positionZ.value = 0;
+
+            // Set listener orientation (forward into screen, up is positive Y)
+            audioListener.forwardX.value = 0;
+            audioListener.forwardY.value = 0;
+            audioListener.forwardZ.value = -1;  // facing into screen (away from user)
+            audioListener.upX.value = 0;
+            audioListener.upY.value = 1;        // up direction
+            audioListener.upZ.value = 0;
+
+            // Calculate audio scale based on screen size
+            // This normalizes screen coordinates to audio 3D space
+            audioScale = 100 / (width / 2);
+        }
+
+        // Function to update panner position based on particle location
+        function updatePannerPosition() {
+            // Only update if we have an active panner and particle
+            if (!activePanner || !particle) return;
+
+            // Convert 2D screen coordinates to 3D audio space
+            // Center of screen (width/2, height/2) = audio origin (0, 0, 0)
+            const audioX = (particle.x - width / 2) * audioScale;
+            const audioY = -(particle.y - height / 2) * audioScale;  // Invert Y (screen Y+ is down, audio Y+ is up)
+            const audioZ = -10;  // Fixed depth into screen (in front of listener)
+
+            // Update panner position
+            const currentTime = audioContext.currentTime;
+            activePanner.positionX.setValueAtTime(audioX, currentTime);
+            activePanner.positionY.setValueAtTime(audioY, currentTime);
+            activePanner.positionZ.setValueAtTime(audioZ, currentTime);
         }
 
         // Particle class to handle visualization
@@ -494,6 +570,9 @@
             // Create starfield
             createStarfield();
 
+            // Initialize 3D spatial audio system
+            initializeSpatialAudio();
+
             // Initial fetch
             fetchISSData();
 
@@ -580,6 +659,9 @@
             // Update and display particle
             particle.update(issData.latitude, issData.longitude);
             particle.display();
+
+            // Update 3D audio panner position to match particle
+            updatePannerPosition();
         }
 
         // Function to fetch ISS position data
@@ -611,8 +693,8 @@
                 isPulsing = true;
                 pulseSize = 0;
 
-                // Play ping sound
-                createPingSound();
+                // Play ping sound with spatial positioning
+                createPingSound(particle.x, particle.y);
 
                 // Add timezone calculation
                 const timezone = await getTimezone(issData.latitude, issData.longitude);
@@ -838,6 +920,11 @@
             const canvasWidth = min(windowWidth * 0.95, 1000);
             const canvasHeight = canvasWidth * 0.6;
             resizeCanvas(canvasWidth, canvasHeight);
+
+            // Recalculate audio scale for new screen dimensions
+            if (audioContext && audioListener) {
+                audioScale = 100 / (width / 2);
+            }
 
             // Recreate starfield
             document.getElementById('starfield').innerHTML = '';
