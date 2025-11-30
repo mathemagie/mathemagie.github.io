@@ -1,0 +1,584 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    
+    <!-- ========================================
+         iOS WEB APP META TAGS
+         Allows full-screen mode when added to home screen
+         Based on: https://gist.github.com/carlosasin/ad6e1db124aef580053a
+         ======================================== -->
+    
+    <!-- Run in full-screen mode (no Safari UI) -->
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    
+    <!-- Make the status bar black with white text -->
+    <meta name="apple-mobile-web-app-status-bar-style" content="black">
+    
+    <!-- Customize home screen title -->
+    <meta name="apple-mobile-web-app-title" content="Starfield">
+    
+    <!-- Disable phone number detection -->
+    <meta name="format-detection" content="telephone=no">
+    
+    <!-- Set viewport -->
+    <meta name="viewport" content="initial-scale=1, viewport-fit=cover, user-scalable=no">
+    
+    <!-- Theme color for browser chrome -->
+    <meta name="theme-color" content="#000000">
+    
+    <title>Starfield Background Effect</title>
+    <style>
+        /* ========================================
+           STARFIELD BACKGROUND EFFECT
+           A beautiful animated space background
+           ======================================== */
+        
+        /* Remove default margins and set up the base */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        /* Prevent text size adjustment on orientation change (iOS) */
+        html {
+            -webkit-text-size-adjust: 100%;
+        }
+
+        body {
+            min-height: 100vh;
+            background: #000;  /* Pure black background for space */
+            overflow: hidden;  /* Prevent scrollbars */
+            position: relative;
+        }
+
+        /* ========================================
+           STARFIELD CONTAINER
+           Fixed positioning covers entire viewport
+           ======================================== */
+        #starfield {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: 0;  /* Behind all content */
+            pointer-events: none;  /* Allow clicks to pass through */
+        }
+
+        /* ========================================
+           STAR BASE STYLES
+           Each star is a small circular element
+           ======================================== */
+        .star {
+            position: absolute;
+            background: #FFF;  /* White color for default stars */
+            border-radius: 50%;  /* Makes it circular */
+            animation: twinkle var(--duration) infinite;  /* Twinkle animation */
+            box-shadow: 0 0 2px rgba(255, 255, 255, 0.8);  /* Subtle glow */
+        }
+
+        /* ========================================
+           TWINKLE ANIMATION
+           Stars fade in/out and slightly grow/shrink
+           ======================================== */
+        @keyframes twinkle {
+            0%, 100% {
+                opacity: 0.2;          /* Dim at start/end */
+                transform: scale(1);   /* Normal size */
+            }
+            50% {
+                opacity: 1;            /* Bright at middle */
+                transform: scale(1.2); /* Slightly larger */
+            }
+        }
+
+        /* ========================================
+           COLORED STAR VARIATIONS
+           Some stars have blue or gold tints
+           ======================================== */
+        .star.blue {
+            background: #64C8FF;  /* Light blue color */
+            box-shadow: 0 0 3px rgba(100, 200, 255, 0.8);  /* Blue glow */
+        }
+
+        .star.gold {
+            background: #DAA520;  /* Gold color */
+            box-shadow: 0 0 3px rgba(218, 165, 32, 0.8);  /* Gold glow */
+        }
+
+        /* ========================================
+           SHOOTING STAR (Étoile filante)
+           A streak of light crossing the sky
+           ======================================== */
+        .shooting-star {
+            position: absolute;
+            width: 4px;
+            height: 4px;
+            background: #FFF;
+            border-radius: 50%;
+            /* Long glowing trail effect */
+            box-shadow: 
+                0 0 6px 2px rgba(255, 255, 255, 0.9),
+                0 0 12px 4px rgba(255, 255, 255, 0.6),
+                /* Trail behind the star */
+                10px 10px 6px rgba(255, 255, 255, 0.4),
+                20px 20px 8px rgba(255, 255, 255, 0.3),
+                30px 30px 10px rgba(255, 255, 255, 0.2),
+                40px 40px 12px rgba(255, 255, 255, 0.1),
+                50px 50px 14px rgba(255, 255, 255, 0.05);
+            animation: shooting var(--shoot-duration) linear forwards;
+            opacity: 0;
+        }
+
+        /* Shooting star animation - diagonal streak across screen */
+        @keyframes shooting {
+            0% {
+                opacity: 0;
+                transform: translate(0, 0) scale(0.5);
+            }
+            10% {
+                opacity: 1;
+                transform: translate(-20px, 20px) scale(1);
+            }
+            70% {
+                opacity: 1;
+            }
+            100% {
+                opacity: 0;
+                transform: translate(var(--shoot-distance), var(--shoot-distance)) scale(0.3);
+            }
+        }
+
+        /* Color variations for shooting stars */
+        .shooting-star.blue-trail {
+            background: #64C8FF;
+            box-shadow: 
+                0 0 6px 2px rgba(100, 200, 255, 0.9),
+                0 0 12px 4px rgba(100, 200, 255, 0.6),
+                10px 10px 6px rgba(100, 200, 255, 0.4),
+                20px 20px 8px rgba(100, 200, 255, 0.3),
+                30px 30px 10px rgba(100, 200, 255, 0.2),
+                40px 40px 12px rgba(100, 200, 255, 0.1),
+                50px 50px 14px rgba(100, 200, 255, 0.05);
+        }
+
+        .shooting-star.gold-trail {
+            background: #FFD700;
+            box-shadow: 
+                0 0 6px 2px rgba(255, 215, 0, 0.9),
+                0 0 12px 4px rgba(255, 215, 0, 0.6),
+                10px 10px 6px rgba(255, 215, 0, 0.4),
+                20px 20px 8px rgba(255, 215, 0, 0.3),
+                30px 30px 10px rgba(255, 215, 0, 0.2),
+                40px 40px 12px rgba(255, 215, 0, 0.1),
+                50px 50px 14px rgba(255, 215, 0, 0.05);
+        }
+
+        /* ========================================
+           CRT SCANLINE EFFECT (Retro aesthetic)
+           Creates horizontal lines across screen
+           ======================================== */
+        body::before {
+            content: '';
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            /* Repeating horizontal lines */
+            background: repeating-linear-gradient(
+                0deg,
+                rgba(0, 0, 0, 0.1),       /* Dark line */
+                rgba(0, 0, 0, 0.1) 1px,
+                transparent 1px,           /* Transparent gap */
+                transparent 2px
+            );
+            pointer-events: none;  /* Allow clicks through */
+            z-index: 9999;         /* On top of everything */
+            opacity: 0.2;          /* Subtle effect */
+        }
+
+        /* ========================================
+           VIGNETTE EFFECT
+           Darkens edges for depth and focus
+           ======================================== */
+        body::after {
+            content: '';
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            /* Radial gradient: transparent center, dark edges */
+            background: radial-gradient(
+                ellipse at center,
+                transparent 0%,
+                transparent 60%,
+                rgba(0, 0, 0, 0.3) 100%
+            );
+            pointer-events: none;
+            z-index: 9998;
+        }
+
+        /* ========================================
+           ACCESSIBILITY
+           Respect user's motion preferences
+           ======================================== */
+        @media (prefers-reduced-motion: reduce) {
+            .star {
+                animation: none !important;  /* Disable animations */
+                opacity: 0.6;                /* Fixed opacity */
+            }
+        }
+
+        /* ========================================
+           DEMO CONTENT (Optional - shows the effect)
+           ======================================== */
+        .demo-content {
+            position: relative;
+            z-index: 1;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            color: #DAA520;  /* Gold text */
+            font-family: 'Courier New', monospace;
+            text-align: center;
+            padding: 20px;
+        }
+
+        .demo-content h1 {
+            font-size: clamp(2rem, 5vw, 4rem);
+            letter-spacing: 0.2em;
+            text-transform: uppercase;
+            margin-bottom: 1rem;
+            text-shadow: 
+                0 0 20px rgba(218, 165, 32, 0.5),
+                0 0 40px rgba(218, 165, 32, 0.3);
+        }
+
+        .demo-content p {
+            font-size: clamp(0.9rem, 2vw, 1.2rem);
+            opacity: 0.7;
+            max-width: 600px;
+            line-height: 1.6;
+        }
+
+        .demo-content .highlight {
+            color: #00FF00;  /* Neon green accent */
+            text-shadow: 0 0 10px rgba(0, 255, 0, 0.5);
+        }
+        /* ========================================
+           FULLSCREEN BUTTON
+           ======================================== */
+        #fullscreen-btn {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            z-index: 10000;
+            background: rgba(0, 0, 0, 0.5);
+            border: 1px solid rgba(255, 255, 255, 0.3);
+            border-radius: 8px;
+            padding: 10px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            backdrop-filter: blur(4px);
+        }
+
+        #fullscreen-btn:hover {
+            background: rgba(255, 255, 255, 0.1);
+            border-color: rgba(255, 255, 255, 0.8);
+            transform: scale(1.1);
+        }
+
+        #fullscreen-btn svg {
+            width: 24px;
+            height: 24px;
+            fill: #DAA520; /* Gold color */
+            filter: drop-shadow(0 0 2px rgba(218, 165, 32, 0.5));
+        }
+
+        /* Hide button on mobile if desired, or keep it */
+        @media (max-width: 768px) {
+            #fullscreen-btn {
+                bottom: 15px;
+                right: 15px;
+                padding: 8px;
+            }
+            #fullscreen-btn svg {
+                width: 20px;
+                height: 20px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- Starfield container - stars will be added here by JavaScript -->
+    <div id="starfield"></div>
+
+    <!-- Starfield background only - no content -->
+
+    <!-- Fullscreen Toggle Button -->
+    <button id="fullscreen-btn" aria-label="Toggle Fullscreen">
+        <svg id="icon-maximize" viewBox="0 0 24 24">
+            <path d="M7 14H5v5h5v-2H7v-3zm-2-4h2V7h3V5H5v5zm12 7h-3v2h5v-5h-2v3zM14 5v2h3v3h2V5h-5z"/>
+        </svg>
+        <svg id="icon-minimize" viewBox="0 0 24 24" style="display: none;">
+            <path d="M5 16h3v3h2v-5H5v2zm3-8H5v2h5V5H8v3zm6 11h2v-3h3v-2h-5v5zm2-11V5h-2v5h5V8h-3z"/>
+        </svg>
+    </button>
+
+    <script>
+        // ========================================
+        // STARFIELD GENERATOR
+        // Creates animated stars in the background
+        // ========================================
+        
+        /**
+         * Creates the starfield effect by adding star elements
+         * to the #starfield container
+         */
+        function createStarfield() {
+            // Get the starfield container element
+            const starfield = document.getElementById('starfield');
+            
+            // Number of stars to create (more stars = denser field)
+            const numberOfStars = 300;
+
+            // Loop to create each star
+            for (let i = 0; i < numberOfStars; i++) {
+                // Create a new div element for the star
+                const star = document.createElement('div');
+                star.className = 'star';
+
+                // ================================
+                // ADD COLOR VARIATION
+                // 5% chance for blue, 5% for gold
+                // ================================
+                const rand = Math.random();
+                if (rand < 0.05) {
+                    star.classList.add('blue');  // Blue star
+                } else if (rand < 0.10) {
+                    star.classList.add('gold');  // Gold star
+                }
+                // Remaining 90% stay white (default)
+
+                // ================================
+                // VARIABLE STAR SIZES
+                // Most stars are small, few are large
+                // ================================
+                const sizeRand = Math.random();
+                let size;
+                if (sizeRand < 0.7) {
+                    // 70% chance: small stars (1-2.5px)
+                    size = 1 + Math.random() * 1.5;
+                } else if (sizeRand < 0.9) {
+                    // 20% chance: medium stars (2-4px)
+                    size = 2 + Math.random() * 2;
+                } else {
+                    // 10% chance: large stars (3-5px)
+                    size = 3 + Math.random() * 2;
+                }
+
+                // ================================
+                // RANDOM ANIMATION TIMING
+                // Each star twinkles at different speed
+                // ================================
+                const duration = 2 + Math.random() * 6;  // 2-8 seconds
+                const delay = Math.random() * 4;          // 0-4 seconds delay
+
+                // ================================
+                // APPLY STYLES TO THE STAR
+                // ================================
+                star.style.cssText = `
+                    left: ${Math.random() * 100}%;
+                    top: ${Math.random() * 100}%;
+                    width: ${size}px;
+                    height: ${size}px;
+                    --duration: ${duration}s;
+                    animation-delay: ${delay}s;
+                `;
+
+                // Add the star to the starfield container
+                starfield.appendChild(star);
+            }
+        }
+
+        /**
+         * Recreates the starfield (useful for window resize)
+         */
+        function recreateStarfield() {
+            const starfield = document.getElementById('starfield');
+            starfield.innerHTML = '';  // Clear existing stars
+            createStarfield();         // Create new ones
+        }
+
+        // ========================================
+        // SHOOTING STAR GENERATOR
+        // Creates random shooting stars (étoiles filantes)
+        // ========================================
+
+        /**
+         * Creates a single shooting star with random properties
+         */
+        function createShootingStar() {
+            const starfield = document.getElementById('starfield');
+            
+            // Create the shooting star element
+            const shootingStar = document.createElement('div');
+            shootingStar.className = 'shooting-star';
+            
+            // ================================
+            // RANDOM COLOR (10% blue, 10% gold, 80% white)
+            // ================================
+            const colorRand = Math.random();
+            if (colorRand < 0.1) {
+                shootingStar.classList.add('blue-trail');
+            } else if (colorRand < 0.2) {
+                shootingStar.classList.add('gold-trail');
+            }
+            
+            // ================================
+            // RANDOM STARTING POSITION
+            // Start from top-right area of screen
+            // ================================
+            const startX = 20 + Math.random() * 60;  // 20% to 80% from left
+            const startY = Math.random() * 40;       // Top 40% of screen
+            
+            // ================================
+            // RANDOM TRAVEL DISTANCE AND DURATION
+            // ================================
+            const distance = 200 + Math.random() * 300;  // 200-500px travel
+            const duration = 0.8 + Math.random() * 1.2;  // 0.8-2 seconds
+            
+            // Apply styles with CSS custom properties
+            shootingStar.style.cssText = `
+                left: ${startX}%;
+                top: ${startY}%;
+                --shoot-distance: ${distance}px;
+                --shoot-duration: ${duration}s;
+            `;
+            
+            // Add to starfield
+            starfield.appendChild(shootingStar);
+            
+            // Remove after animation completes (clean up DOM)
+            setTimeout(() => {
+                shootingStar.remove();
+            }, duration * 1000 + 100);
+        }
+
+        /**
+         * Schedules the next shooting star at a random interval
+         */
+        function scheduleNextShootingStar() {
+            // Random delay between 2-8 seconds
+            const delay = 2000 + Math.random() * 6000;
+            
+            setTimeout(() => {
+                createShootingStar();
+                scheduleNextShootingStar();  // Schedule the next one
+            }, delay);
+        }
+
+        /**
+         * Creates a burst of shooting stars (for initial effect)
+         */
+        function createShootingStarBurst(count) {
+            for (let i = 0; i < count; i++) {
+                setTimeout(() => {
+                    createShootingStar();
+                }, i * 500);  // Stagger by 500ms each
+            }
+        }
+
+        // ================================
+        // FULLSCREEN API HANDLING
+        // ================================
+        const fullscreenBtn = document.getElementById('fullscreen-btn');
+        const iconMaximize = document.getElementById('icon-maximize');
+        const iconMinimize = document.getElementById('icon-minimize');
+
+        function toggleFullscreen() {
+            if (!document.fullscreenElement &&    // standard
+                !document.webkitFullscreenElement && // safari/chrome
+                !document.mozFullScreenElement &&    // firefox
+                !document.msFullscreenElement) {     // ie/edge
+
+                // Enter fullscreen
+                const docEl = document.documentElement;
+                if (docEl.requestFullscreen) {
+                    docEl.requestFullscreen();
+                } else if (docEl.webkitRequestFullscreen) {
+                    docEl.webkitRequestFullscreen();
+                } else if (docEl.mozRequestFullScreen) {
+                    docEl.mozRequestFullScreen();
+                } else if (docEl.msRequestFullscreen) {
+                    docEl.msRequestFullscreen();
+                }
+            } else {
+                // Exit fullscreen
+                if (document.exitFullscreen) {
+                    document.exitFullscreen();
+                } else if (document.webkitExitFullscreen) {
+                    document.webkitExitFullscreen();
+                } else if (document.mozCancelFullScreen) {
+                    document.mozCancelFullScreen();
+                } else if (document.msExitFullscreen) {
+                    document.msExitFullscreen();
+                }
+            }
+        }
+
+        function updateFullscreenIcon() {
+            const isFullscreen = document.fullscreenElement || 
+                               document.webkitFullscreenElement || 
+                               document.mozFullScreenElement || 
+                               document.msFullscreenElement;
+
+            if (isFullscreen) {
+                iconMaximize.style.display = 'none';
+                iconMinimize.style.display = 'block';
+            } else {
+                iconMaximize.style.display = 'block';
+                iconMinimize.style.display = 'none';
+            }
+        }
+
+        fullscreenBtn.addEventListener('click', toggleFullscreen);
+
+        // Listen for fullscreen change events
+        document.addEventListener('fullscreenchange', updateFullscreenIcon);
+        document.addEventListener('webkitfullscreenchange', updateFullscreenIcon);
+        document.addEventListener('mozfullscreenchange', updateFullscreenIcon);
+        document.addEventListener('MSFullscreenChange', updateFullscreenIcon);
+
+        // ================================
+        // INITIALIZE ON PAGE LOAD
+        // ================================
+        document.addEventListener('DOMContentLoaded', () => {
+            // Create the static starfield
+            createStarfield();
+            
+            // Start shooting star generator after 2 seconds
+            setTimeout(() => {
+                createShootingStarBurst(2);  // Initial burst of 2 shooting stars
+                scheduleNextShootingStar();  // Start random generation
+            }, 2000);
+        });
+
+        // ================================
+        // HANDLE WINDOW RESIZE
+        // Recreate stars for new dimensions
+        // ================================
+        window.addEventListener('resize', recreateStarfield);
+    </script>
+</body>
+</html>
+
