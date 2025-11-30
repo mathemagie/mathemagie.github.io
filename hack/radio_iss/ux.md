@@ -75,9 +75,10 @@ Below is a numbered, actionable list of UX improvements. Each item is scoped to 
     - Optional comet trails for moving particles that fade over time.
     - Configurable trail length and opacity; disable with reduced motion preference.
 
-19. [ ] Day/night Earth visualization
+19. [x] Day/night Earth visualization
     - Subtle shading to show current day/night terminator line based on real solar position.
     - Dimmer particles in nighttime regions, brighter in daylight areas.
+    - ✅ Implemented: Day/night cycle visualization with particle brightness adjustment.
 
 20. [ ] ISS orbital path preview
     - Show faint dotted line of upcoming ISS trajectory (next 30-60 minutes).

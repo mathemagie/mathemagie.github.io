@@ -191,7 +191,7 @@ class Particle {
     return closest;
   }
 
-  show() {
+  show(isDaylight) {
     noStroke();
 
     if (this.isResetting) {
@@ -243,7 +243,8 @@ class Particle {
       ellipse(this.pos.x, this.pos.y, drawR * 2);
     } else {
       // Normal particle rendering
-      fill(this.color);
+      const c = isDaylight ? this.color : color(red(this.color) * 0.5, green(this.color) * 0.5, blue(this.color) * 0.5);
+      fill(c);
       ellipse(this.pos.x, this.pos.y, this.r * 2);
     }
   }
