@@ -24,7 +24,8 @@
             -webkit-font-smoothing: antialiased;
             -moz-osx-font-smoothing: grayscale;
             overflow: hidden; /* Prevent scrollbars from starfield */
-            padding-top: 80px; /* Space for info panel */
+            padding-top: 0; /* Space for info panel */
+            position: relative;
         }
         /* Add a subtle border to the canvas */
         canvas {
@@ -36,6 +37,7 @@
             max-width: 100%;
             height: auto;
             border-radius: 4px;
+            margin-top: 80px;
         }
         /* Info display panel */
         #info {
@@ -274,6 +276,11 @@
                 border-top: 1px solid rgba(0, 255, 0, 0.2);
                 box-shadow: 0 -4px 20px rgba(0, 255, 0, 0.1);
                 z-index: 1000;
+                pointer-events: none;
+            }
+
+            #mobile-status .status-item {
+                pointer-events: auto;
             }
 
             .status-item {
@@ -326,36 +333,39 @@
             body {
                 padding-top: 0;
                 padding-bottom: 50px;
+                justify-content: center;
             }
 
             #info {
+                position: fixed;
                 top: 0;
-                left: 0;
-                right: 0;
-                transform: none;
-                max-width: 100%;
-                border-radius: 0 0 16px 16px;
+                left: 50%;
+                transform: translateX(-50%);
+                max-width: 80%;
+                width: 80%;
+                border-radius: 0 0 12px 12px;
                 border-top: none;
-                border-left: none;
-                border-right: none;
-                padding: 12px 16px 10px;
-                gap: 6px;
+                padding: 8px 14px 8px;
+                gap: 4px;
                 background: linear-gradient(180deg, rgba(0, 0, 0, 0.96) 0%, rgba(0, 0, 0, 0.90) 100%);
                 box-shadow:
                     0 6px 24px rgba(0, 255, 0, 0.18),
                     inset 0 -1px 0 rgba(0, 255, 0, 0.35);
                 flex-direction: column;
+                z-index: 1000;
+                border: 1px solid rgba(0, 255, 0, 0.3);
+                border-top: none;
             }
 
             #info .title {
-                font-size: 9px;
-                letter-spacing: 3.5px;
+                font-size: 8px;
+                letter-spacing: 3px;
                 font-weight: 700;
                 color: #00FF00;
                 width: 100%;
-                padding-bottom: 6px;
+                padding-bottom: 4px;
                 border-bottom: 1px solid rgba(0, 255, 0, 0.25);
-                margin: 0 0 6px 0;
+                margin: 0 0 4px 0;
                 text-shadow: 0 0 12px rgba(0, 255, 0, 0.6);
                 display: flex;
                 justify-content: space-between;
@@ -363,24 +373,24 @@
             }
 
             #info .data-row {
-                font-size: 10px;
+                font-size: 9px;
                 display: grid;
-                grid-template-columns: 80px 1fr;
-                gap: 12px;
+                grid-template-columns: 70px 1fr;
+                gap: 10px;
                 align-items: baseline;
-                padding: 3px 0;
+                padding: 2px 0;
             }
 
             #info .label {
-                font-size: 8px;
-                letter-spacing: 1.2px;
+                font-size: 7px;
+                letter-spacing: 1px;
                 color: rgba(218, 165, 32, 0.55);
                 font-weight: 600;
                 text-transform: uppercase;
             }
 
             #info .value {
-                font-size: 14px;
+                font-size: 13px;
                 letter-spacing: 0.3px;
                 font-weight: 600;
                 color: #DAA520;
@@ -396,10 +406,11 @@
                     0 0 15px rgba(0, 255, 0, 0.35),
                     0 0 30px rgba(0, 255, 0, 0.15),
                     inset 0 0 30px rgba(0, 255, 0, 0.08);
-                margin-top: 140px;
+                margin-top: 0;
+                margin-bottom: 0;
                 width: 95vw !important;
                 height: auto !important;
-                max-height: calc(100vh - 240px);
+                max-height: 60vh;
             }
         }
 
@@ -407,41 +418,45 @@
             body {
                 padding-top: 0;
                 padding-bottom: 46px;
+                justify-content: center;
             }
 
             #info {
-                padding: 10px 14px 8px;
-                gap: 5px;
+                padding: 6px 12px 6px;
+                gap: 3px;
+                width: 80%;
+                max-width: 80%;
             }
 
             #info .title {
-                font-size: 8px;
-                letter-spacing: 3px;
-                padding-bottom: 5px;
-                margin-bottom: 5px;
+                font-size: 7px;
+                letter-spacing: 2.5px;
+                padding-bottom: 3px;
+                margin-bottom: 3px;
             }
 
             #info .data-row {
                 font-size: 9px;
-                grid-template-columns: 70px 1fr;
-                gap: 10px;
-                padding: 2px 0;
+                grid-template-columns: 65px 1fr;
+                gap: 8px;
+                padding: 1px 0;
             }
 
             #info .label {
                 font-size: 7px;
-                letter-spacing: 1px;
+                letter-spacing: 0.8px;
             }
 
             #info .value {
-                font-size: 13px;
+                font-size: 12px;
                 letter-spacing: 0.2px;
             }
 
             canvas {
-                margin-top: 106px;
+                margin-top: 0;
+                margin-bottom: 0;
                 width: 94vw !important;
-                max-height: calc(100vh - 200px);
+                max-height: 60vh;
             }
         }
 
@@ -457,45 +472,45 @@
                 left: 0;
                 right: auto;
                 transform: none;
-                padding: 10px 14px 8px;
+                padding: 6px 10px 6px;
                 min-width: auto;
-                max-width: 42vw;
-                border-radius: 0 0 14px 0;
+                max-width: 35vw;
+                border-radius: 0 0 12px 0;
                 flex-direction: column;
-                gap: 4px;
+                gap: 3px;
             }
 
             #info .title {
-                font-size: 8px;
-                letter-spacing: 2.5px;
-                padding-bottom: 4px;
-                margin-bottom: 4px;
+                font-size: 7px;
+                letter-spacing: 2px;
+                padding-bottom: 3px;
+                margin-bottom: 3px;
             }
 
             #info .data-row {
-                grid-template-columns: 65px 1fr;
-                gap: 8px;
-                font-size: 9px;
-                padding: 2px 0;
+                grid-template-columns: 60px 1fr;
+                gap: 6px;
+                font-size: 8px;
+                padding: 1px 0;
             }
 
             #info .label {
-                font-size: 7px;
+                font-size: 6px;
                 letter-spacing: 0.8px;
             }
 
             #info .value {
-                font-size: 11px;
+                font-size: 10px;
                 letter-spacing: 0.2px;
             }
 
             canvas {
-                margin-top: 16px;
-                margin-left: calc(42vw + 16px);
-                max-width: calc(58vw - 32px);
-                width: calc(58vw - 32px) !important;
+                margin-top: 8px;
+                margin-left: calc(35vw + 12px);
+                max-width: calc(65vw - 24px);
+                width: calc(65vw - 24px) !important;
                 height: auto !important;
-                max-height: calc(100vh - 32px);
+                max-height: calc(100vh - 24px);
             }
 
             /* Hide status footer in landscape */
@@ -846,8 +861,14 @@
         // p5.js setup function - runs once at start
         function setup() {
             // Make canvas responsive
-            const canvasWidth = min(windowWidth * 0.9, 800);
-            const canvasHeight = (canvasWidth * 0.75);
+            let canvasWidth, canvasHeight;
+            if (isMobile) {
+                canvasWidth = windowWidth * 0.95;
+                canvasHeight = min(canvasWidth * 0.75, windowHeight * 0.6);
+            } else {
+                canvasWidth = min(windowWidth * 0.9, 800);
+                canvasHeight = canvasWidth * 0.75;
+            }
             createCanvas(canvasWidth, canvasHeight);
             particle = new Particle();
 
@@ -1204,8 +1225,14 @@
         
         // Add window resize handler
         function windowResized() {
-            const canvasWidth = min(windowWidth * 0.95, 1000);
-            const canvasHeight = canvasWidth * 0.6;
+            let canvasWidth, canvasHeight;
+            if (isMobile) {
+                canvasWidth = windowWidth * 0.95;
+                canvasHeight = min(canvasWidth * 0.75, windowHeight * 0.6);
+            } else {
+                canvasWidth = min(windowWidth * 0.95, 1000);
+                canvasHeight = canvasWidth * 0.6;
+            }
             resizeCanvas(canvasWidth, canvasHeight);
 
             // Recalculate audio scale for new screen dimensions
