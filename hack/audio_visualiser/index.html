@@ -125,6 +125,12 @@
                 <option value="hybrid">Hybrid Layered</option>
                 <option value="matrix">Matrix Streams</option>
                 <option value="ripple">Ripple Waves</option>
+                <option value="spiral">Spiral Vortex</option>
+                <option value="spectrum">Spectrum Bars</option>
+                <option value="starfield">Starfield</option>
+                <option value="waveform">Waveform</option>
+                <option value="kaleidoscope">Kaleidoscope</option>
+                <option value="particles">Particle Explosion</option>
             </select>
         </div>
     </div>
@@ -152,26 +158,69 @@
         var audioBuffer = null; // Store buffer for looping
         var shouldLoop = true; // Loop flag
 
+        // Configuration constants
+        var CONFIG = {
+            // Grid settings
+            MIN_WIDTH: 20,
+            MIN_HEIGHT: 15,
+            CHAR_ASPECT_RATIO: 0.6,
+            ESTIMATED_CHAR_HEIGHT: 10,
+            
+            // Audio analysis
+            FFT_SIZE: 256,
+            BASS_RANGE: 0.15,
+            MID_RANGE: 0.5,
+            FREQ_NORMALIZE: 255,
+            
+            // Animation timing
+            TIME_INCREMENT: 0.1,
+            
+            // Controls
+            CONTROLS_HIDE_DELAY: 5000,
+            CONTROLS_AUTO_HIDE_DELAY: 3000,
+            
+            // Fullscreen
+            FULLSCREEN_DELAY: 500,
+            
+            // Audio looping
+            LOOP_DELAY: 50
+        };
+        
         var WIDTH = 0;
         var HEIGHT = 0;
         var grid = [];
         var time = 0; // Animation time counter
         var particles = []; // For floating particle effects
         
-        // Calculate grid dimensions based on viewport size
+        // Cached values for performance
+        var cachedValues = {
+            centerX: 0,
+            centerY: 0,
+            maxDist: 0,
+            canvas: null
+        };
+        
+        /**
+         * Calculates optimal grid dimensions based on viewport size.
+         * Dynamically adjusts font size to perfectly fill the screen with characters.
+         * Takes into account monospace font aspect ratio (0.6x wider than tall).
+         * 
+         * @function calculateGridSize
+         * @description Calculates WIDTH and HEIGHT grid dimensions and sets optimal font size
+         * @modifies {number} WIDTH - Grid width in characters
+         * @modifies {number} HEIGHT - Grid height in characters
+         * @modifies {HTMLElement} canvas.style.fontSize - Font size in pixels
+         */
         function calculateGridSize() {
             // Get viewport dimensions
             var vw = window.innerWidth;
             var vh = window.innerHeight;
             
             // Character aspect ratio for monospace fonts
-            // Monospace characters are typically about 0.6x wider than tall
-            var charAspectRatio = 0.6;
+            var charAspectRatio = CONFIG.CHAR_ASPECT_RATIO;
             
             // Calculate grid to fill 100% of the window
-            // We want to maximize the number of characters while filling the screen
-            // Start with a reasonable character size estimate
-            var estimatedCharHeight = 10; // pixels per character height
+            var estimatedCharHeight = CONFIG.ESTIMATED_CHAR_HEIGHT;
             var estimatedCharWidth = estimatedCharHeight * charAspectRatio;
             
             // Calculate maximum grid dimensions that fit in viewport
@@ -179,35 +228,54 @@
             HEIGHT = Math.floor(vh / estimatedCharHeight);
             
             // Ensure minimum size
-            if (WIDTH < 20) WIDTH = 20;
-            if (HEIGHT < 15) HEIGHT = 15;
+            if (WIDTH < CONFIG.MIN_WIDTH) WIDTH = CONFIG.MIN_WIDTH;
+            if (HEIGHT < CONFIG.MIN_HEIGHT) HEIGHT = CONFIG.MIN_HEIGHT;
             
             // Calculate exact font size to fill the window perfectly
-            // Font size determines character height, so we calculate based on HEIGHT
             var optimalFontSizeH = vh / HEIGHT;
-            // And ensure width also fits
             var optimalFontSizeW = (vw / WIDTH) / charAspectRatio;
-            // Use the smaller to ensure everything fits
             var optimalFontSize = Math.min(optimalFontSizeH, optimalFontSizeW);
             
             // Update font size
-            var canvas = document.getElementById('canvas');
-            canvas.style.fontSize = optimalFontSize + 'px';
+            if (!cachedValues.canvas) {
+                cachedValues.canvas = document.getElementById('canvas');
+            }
+            cachedValues.canvas.style.fontSize = optimalFontSize + 'px';
             
             // Recalculate grid with exact font size to ensure perfect fit
             var actualCharHeight = optimalFontSize;
             var actualCharWidth = optimalFontSize * charAspectRatio;
             WIDTH = Math.floor(vw / actualCharWidth);
             HEIGHT = Math.floor(vh / actualCharHeight);
+            
+            // Update cached values
+            cachedValues.centerX = WIDTH / 2;
+            cachedValues.centerY = HEIGHT / 2;
+            cachedValues.maxDist = Math.sqrt(cachedValues.centerX * cachedValues.centerX + 
+                                            cachedValues.centerY * cachedValues.centerY);
         }
         
         // Initialize grid size on load and resize
         calculateGridSize();
+        
+        // Throttle resize events for better performance
+        var resizeTimeout;
         window.addEventListener('resize', function() {
-            calculateGridSize();
-            initGrid();
+            clearTimeout(resizeTimeout);
+            resizeTimeout = setTimeout(function() {
+                calculateGridSize();
+                initGrid();
+            }, 100); // Throttle to 100ms
         });
 
+        /**
+         * Initializes the grid array with empty spaces.
+         * Creates a 2D array (HEIGHT x WIDTH) filled with space characters.
+         * 
+         * @function initGrid
+         * @description Creates and initializes the visualization grid
+         * @modifies {Array<Array<string>>} grid - 2D array representing the character grid
+         */
         function initGrid() {
             grid = [];
             for (var y = 0; y < HEIGHT; y++) {
@@ -219,24 +287,41 @@
             }
         }
 
+        /**
+         * Renders the grid array as text and displays it on the canvas.
+         * Converts the 2D grid array into a single string with newlines.
+         * Optimized using array.join() for better performance.
+         * 
+         * @function render
+         * @description Converts grid array to text and displays on canvas
+         * @modifies {HTMLElement} canvas.textContent - The displayed text content
+         */
         function render() {
-            var text = '';
+            var lines = [];
             for (var y = 0; y < HEIGHT; y++) {
-                for (var x = 0; x < WIDTH; x++) {
-                    text = text + grid[y][x];
-                }
-                // Add newline except for the last row
-                if (y < HEIGHT - 1) {
-                    text = text + '\n';
-                }
+                lines.push(grid[y].join(''));
             }
-            canvas.textContent = text;
+            canvas.textContent = lines.join('\n');
             // Ensure canvas is positioned at top-left
             canvas.style.textAlign = 'left';
             canvas.style.textIndent = '0';
         }
 
-        // Get audio data and normalize
+        /**
+         * Analyzes audio frequency data and extracts normalized values.
+         * Separates audio into bass, mid, and treble frequency bands.
+         * 
+         * @function getAudioData
+         * @description Extracts and normalizes audio frequency data from analyser
+         * @returns {Object} Audio data object containing:
+         *   @returns {number} bass - Normalized bass frequency (0-1)
+         *   @returns {number} mid - Normalized mid frequency (0-1)
+         *   @returns {number} treble - Normalized treble frequency (0-1)
+         *   @returns {number} overall - Normalized overall volume (0-1)
+         *   @returns {number} peakFreq - Normalized peak frequency value (0-1)
+         *   @returns {number} peakIndex - Index of peak frequency bin
+         *   @returns {Array<number>} freqBands - Array of normalized frequency band values (0-1)
+         */
         function getAudioData() {
             var bass = 0;
             var mid = 0;
@@ -249,31 +334,33 @@
             if (analyser && frequencyData && isPlaying) {
                 analyser.getByteFrequencyData(frequencyData);
                 
-                var bassEnd = Math.floor(frequencyData.length * 0.15);
-                var midEnd = Math.floor(frequencyData.length * 0.5);
+                var bassEnd = Math.floor(frequencyData.length * CONFIG.BASS_RANGE);
+                var midEnd = Math.floor(frequencyData.length * CONFIG.MID_RANGE);
+                var freqNormalize = CONFIG.FREQ_NORMALIZE;
                 
                 for (var i = 0; i < frequencyData.length; i++) {
+                    var freqValue = frequencyData[i];
                     if (i < bassEnd) {
-                        bass = bass + frequencyData[i];
+                        bass += freqValue;
                     } else if (i < midEnd) {
-                        mid = mid + frequencyData[i];
+                        mid += freqValue;
                     } else {
-                        treble = treble + frequencyData[i];
+                        treble += freqValue;
                     }
-                    overall = overall + frequencyData[i];
-                    freqBands.push(frequencyData[i] / 255);
+                    overall += freqValue;
+                    freqBands.push(freqValue / freqNormalize);
                     
                     // Find peak frequency
-                    if (frequencyData[i] > peakFreq) {
-                        peakFreq = frequencyData[i];
+                    if (freqValue > peakFreq) {
+                        peakFreq = freqValue;
                         peakIndex = i;
                     }
                 }
                 
-                bass = bass / bassEnd / 255;
-                mid = mid / (midEnd - bassEnd) / 255;
-                treble = treble / (frequencyData.length - midEnd) / 255;
-                overall = overall / frequencyData.length / 255;
+                bass = bass / bassEnd / freqNormalize;
+                mid = mid / (midEnd - bassEnd) / freqNormalize;
+                treble = treble / (frequencyData.length - midEnd) / freqNormalize;
+                overall = overall / frequencyData.length / freqNormalize;
             }
             
             return {
@@ -287,27 +374,69 @@
             };
         }
 
-        function update() {
-            initGrid();
-            time += 0.1; // Increment animation time
-            
-            var audio = getAudioData();
-            var bass = audio.bass;
-            var mid = audio.mid;
-            var treble = audio.treble;
-            var overall = audio.overall;
-            
-            // Call the selected animation style
-            if (currentAnimationStyle === 'matrix') {
-                animateMatrix(audio);
-            } else if (currentAnimationStyle === 'ripple') {
-                animateRipple(audio);
-            } else {
-                animateHybrid(audio);
-            }
+        /**
+         * Main update function called every animation frame.
+         * Clears the grid, increments time, gets audio data, and calls the selected animation style.
+         * 
+         * @function update
+         * @description Updates the visualization grid based on current audio and animation style
+         * @modifies {number} time - Animation time counter (incremented by 0.1)
+         * @modifies {Array<Array<string>>} grid - Grid array populated by animation functions
+         */
+        // Animation registry for better maintainability
+        var animationRegistry = {
+            'hybrid': animateHybrid,
+            'matrix': animateMatrix,
+            'ripple': animateRipple,
+            'spiral': animateSpiral,
+            'spectrum': animateSpectrum,
+            'starfield': animateStarfield,
+            'waveform': animateWaveform,
+            'kaleidoscope': animateKaleidoscope,
+            'particles': animateParticles
+        };
+        
+        /**
+         * Helper function to calculate distance squared (avoids Math.sqrt when possible)
+         * @param {number} dx - X difference
+         * @param {number} dy - Y difference
+         * @returns {number} Distance squared
+         */
+        function distSquared(dx, dy) {
+            return dx * dx + dy * dy;
         }
         
-        // Animation Style 1: Hybrid Layered (original)
+        /**
+         * Helper function to calculate distance
+         * @param {number} dx - X difference
+         * @param {number} dy - Y difference
+         * @returns {number} Distance
+         */
+        function distance(dx, dy) {
+            return Math.sqrt(dx * dx + dy * dy);
+        }
+        
+        function update() {
+            initGrid();
+            time += CONFIG.TIME_INCREMENT;
+            
+            var audio = getAudioData();
+            
+            // Call the selected animation style using registry
+            var animationFn = animationRegistry[currentAnimationStyle] || animationRegistry['hybrid'];
+            animationFn(audio);
+        }
+        
+        /**
+         * Animation Style 1: Hybrid Layered (original).
+         * Complex radial patterns with concentric rings, swirling segments, and spiral effects.
+         * Combines multiple visualization techniques for a rich, layered experience.
+         * 
+         * @function animateHybrid
+         * @param {Object} audio - Audio data object from getAudioData()
+         * @description Creates hybrid layered visualization with radial and spiral patterns
+         * @modifies {Array<Array<string>>} grid - Populates grid with hybrid pattern characters
+         */
         function animateHybrid(audio) {
             var bass = audio.bass;
             var mid = audio.mid;
@@ -315,13 +444,15 @@
             var overall = audio.overall;
 
             var chars = ['#', '+', '*', '.', ':', ';', '=', '-', '_', '|', '/', '\\', '<', '>', '^', 'v', 'o', 'O', '@', '~', '`'];
-            var maxDist = Math.sqrt((WIDTH/2) * (WIDTH/2) + (HEIGHT/2) * (HEIGHT/2));
+            var maxDist = cachedValues.maxDist;
+            var centerX = cachedValues.centerX;
+            var centerY = cachedValues.centerY;
             
             for (var y = 0; y < HEIGHT; y++) {
                 for (var x = 0; x < WIDTH; x++) {
-                    var dx = x - WIDTH / 2;
-                    var dy = y - HEIGHT / 2;
-                    var dist = Math.sqrt(dx * dx + dy * dy);
+                    var dx = x - centerX;
+                    var dy = y - centerY;
+                    var dist = distance(dx, dy);
                     var angle = Math.atan2(dy, dx);
                     var normalizedDist = dist / maxDist;
                     
@@ -398,7 +529,16 @@
             }
         }
         
-        // Animation Style 2: Matrix-style vertical streams
+        /**
+         * Animation Style 2: Matrix-style vertical streams.
+         * Vertical falling streams of characters that respond to frequency bands.
+         * Each column represents a different frequency range.
+         * 
+         * @function animateMatrix
+         * @param {Object} audio - Audio data object from getAudioData()
+         * @description Creates Matrix-inspired falling character streams
+         * @modifies {Array<Array<string>>} grid - Populates grid with falling stream characters
+         */
         function animateMatrix(audio) {
             var bass = audio.bass;
             var mid = audio.mid;
@@ -461,7 +601,16 @@
             }
         }
         
-        // Animation Style 3: Ripple/wave patterns
+        /**
+         * Animation Style 3: Ripple/wave patterns.
+         * Expanding circular ripples from multiple moving sources.
+         * Creates a water-like effect that pulses with the music.
+         * 
+         * @function animateRipple
+         * @param {Object} audio - Audio data object from getAudioData()
+         * @description Creates expanding ripple wave patterns
+         * @modifies {Array<Array<string>>} grid - Populates grid with ripple pattern characters
+         */
         function animateRipple(audio) {
             var bass = audio.bass;
             var mid = audio.mid;
@@ -470,15 +619,16 @@
             var peakFreq = audio.peakFreq;
             
             var chars = ['o', 'O', '●', '○', '.', ':', '·', '~', '≈', '≋'];
-            var maxDist = Math.sqrt((WIDTH/2) * (WIDTH/2) + (HEIGHT/2) * (HEIGHT/2));
+            var centerX = cachedValues.centerX;
+            var centerY = cachedValues.centerY;
             
             // Multiple ripple sources
             var numSources = 3 + Math.floor(bass * 3);
             var sources = [];
             for (var s = 0; s < numSources; s++) {
                 sources.push({
-                    x: WIDTH / 2 + Math.sin(time * 0.5 + s) * (WIDTH * 0.3),
-                    y: HEIGHT / 2 + Math.cos(time * 0.5 + s) * (HEIGHT * 0.3),
+                    x: centerX + Math.sin(time * 0.5 + s) * (WIDTH * 0.3),
+                    y: centerY + Math.cos(time * 0.5 + s) * (HEIGHT * 0.3),
                     phase: time * 2 + s * Math.PI / numSources,
                     intensity: 0.5 + (s % 2) * 0.5
                 });
@@ -494,7 +644,7 @@
                         var source = sources[s];
                         var dx = x - source.x;
                         var dy = y - source.y;
-                        var dist = Math.sqrt(dx * dx + dy * dy);
+                        var dist = distance(dx, dy);
                         
                         // Ripple wave calculation
                         var rippleRadius = dist - source.phase * 10;
@@ -523,9 +673,9 @@
                     
                     // Add expanding circles from bass hits
                     if (bass > 0.4) {
-                        var centerX = WIDTH / 2;
-                        var centerY = HEIGHT / 2;
-                        var distFromCenter = Math.sqrt((x - centerX) * (x - centerX) + (y - centerY) * (y - centerY));
+                        var dxCenter = x - centerX;
+                        var dyCenter = y - centerY;
+                        var distFromCenter = distance(dxCenter, dyCenter);
                         var bassRing = Math.abs(distFromCenter - (bass * 30 + time * 5 % 40)) < 2;
                         if (bassRing) {
                             grid[y][x] = '#';
@@ -534,14 +684,476 @@
                 }
             }
         }
+        
+        /**
+         * Animation Style 4: Spiral Vortex.
+         * Rotating spiral patterns that create a vortex effect.
+         * Multiple spiral arms respond to different frequency ranges.
+         * 
+         * @function animateSpiral
+         * @param {Object} audio - Audio data object from getAudioData()
+         * @description Creates rotating spiral vortex patterns
+         * @modifies {Array<Array<string>>} grid - Populates grid with spiral pattern characters
+         */
+        function animateSpiral(audio) {
+            var bass = audio.bass;
+            var mid = audio.mid;
+            var treble = audio.treble;
+            var overall = audio.overall;
+            
+            var chars = ['/', '\\', '|', '-', '=', '+', '*', '#', '@'];
+            var centerX = cachedValues.centerX;
+            var centerY = cachedValues.centerY;
+            
+            for (var y = 0; y < HEIGHT; y++) {
+                for (var x = 0; x < WIDTH; x++) {
+                    var dx = x - centerX;
+                    var dy = y - centerY;
+                    var dist = distance(dx, dy);
+                    var angle = Math.atan2(dy, dx);
+                    
+                    // Create spiral pattern
+                    var spiralAngle = angle + dist * 0.2 - time * 2 - overall * 3;
+                    var spiralWave = Math.sin(spiralAngle * 3);
+                    
+                    // Multiple spiral arms
+                    var arm1 = Math.sin(spiralAngle * 2 + bass * 5);
+                    var arm2 = Math.sin(spiralAngle * 3 + mid * 4);
+                    var arm3 = Math.sin(spiralAngle * 4 + treble * 3);
+                    
+                    // Rotating vortex effect
+                    var vortexSpeed = 1 + overall * 2;
+                    var vortexAngle = angle + time * vortexSpeed;
+                    var vortexDist = dist - (time * 0.5) % 50;
+                    var vortexWave = Math.sin(vortexDist * 0.1 + vortexAngle * 2);
+                    
+                    var threshold = 0.3 + overall * 0.5;
+                    var random = Math.random();
+                    
+                    // Character selection based on spiral position
+                    var charIndex = Math.floor((spiralWave + 1) / 2 * chars.length);
+                    charIndex = Math.max(0, Math.min(chars.length - 1, charIndex));
+                    
+                    if (spiralWave > threshold && dist < WIDTH * 0.6) {
+                        grid[y][x] = chars[charIndex];
+                    } else if (arm1 > 0.5 && bass > 0.2 && dist < WIDTH * 0.5) {
+                        grid[y][x] = '#';
+                    } else if (arm2 > 0.5 && mid > 0.2 && dist < WIDTH * 0.5) {
+                        grid[y][x] = '+';
+                    } else if (arm3 > 0.5 && treble > 0.2 && dist < WIDTH * 0.5) {
+                        grid[y][x] = '*';
+                    } else if (vortexWave > 0.4 && overall > 0.25) {
+                        grid[y][x] = '.';
+                    } else if (random > 0.92 && overall > 0.15) {
+                        grid[y][x] = ':';
+                    }
+                }
+            }
+        }
+        
+        /**
+         * Animation Style 5: Spectrum Bars (horizontal frequency bars).
+         * Horizontal frequency bars showing the audio spectrum.
+         * Classic equalizer-style visualization with peak indicators.
+         * 
+         * @function animateSpectrum
+         * @param {Object} audio - Audio data object from getAudioData()
+         * @description Creates horizontal frequency spectrum bars
+         * @modifies {Array<Array<string>>} grid - Populates grid with spectrum bar characters
+         */
+        function animateSpectrum(audio) {
+            var freqBands = audio.freqBands;
+            var overall = audio.overall;
+            
+            var chars = ['█', '▓', '▒', '░', '▄', '▀', '▌', '▐'];
+            var numBars = Math.min(WIDTH, freqBands.length || 64);
+            var barWidth = WIDTH / numBars;
+            
+            for (var y = 0; y < HEIGHT; y++) {
+                for (var x = 0; x < WIDTH; x++) {
+                    var barIndex = Math.floor(x / barWidth);
+                    var freqValue = freqBands[barIndex] || 0;
+                    
+                    // Calculate bar height based on frequency
+                    var barHeight = Math.floor(freqValue * HEIGHT * 0.8);
+                    var barY = HEIGHT - barHeight;
+                    
+                    // Position within the bar
+                    var posInBar = (x % barWidth) / barWidth;
+                    var yPos = HEIGHT - y - 1;
+                    
+                    if (yPos >= barY && yPos < HEIGHT) {
+                        // Different characters for different parts of the bar
+                        var charIndex;
+                        var distFromTop = yPos - barY;
+                        var barLength = HEIGHT - barY;
+                        
+                        if (barLength > 0) {
+                            var normalizedPos = distFromTop / barLength;
+                            if (normalizedPos < 0.1) {
+                                charIndex = 0; // Top: solid
+                            } else if (normalizedPos < 0.3) {
+                                charIndex = 1; // Upper: heavy
+                            } else if (normalizedPos < 0.6) {
+                                charIndex = 2; // Middle: medium
+                            } else {
+                                charIndex = 3; // Lower: light
+                            }
+                        } else {
+                            charIndex = 0;
+                        }
+                        
+                        grid[y][x] = chars[charIndex];
+                    } else if (Math.random() > 0.98 && freqValue > 0.3) {
+                        // Sparkles above bars
+                        grid[y][x] = '.';
+                    }
+                    
+                    // Add peak indicators
+                    if (freqValue > 0.8 && yPos === barY - 1 && yPos >= 0) {
+                        grid[y][x] = '^';
+                    }
+                }
+            }
+        }
+        
+        /**
+         * Animation Style 6: Starfield.
+         * Moving stars and particles that create a 3D starfield effect.
+         * Particles move toward the viewer, creating depth perception.
+         * 
+         * @function animateStarfield
+         * @param {Object} audio - Audio data object from getAudioData()
+         * @description Creates 3D starfield particle effect
+         * @modifies {Array} particles - Updates particle positions and properties
+         * @modifies {Array<Array<string>>} grid - Populates grid with starfield characters
+         */
+        function animateStarfield(audio) {
+            var bass = audio.bass;
+            var mid = audio.mid;
+            var treble = audio.treble;
+            var overall = audio.overall;
+            
+            var chars = ['.', '·', '*', '+', 'o', 'O', '●'];
+            
+            // Initialize or update star positions
+            if (!particles || particles.length === 0) {
+                particles = [];
+                for (var i = 0; i < 200; i++) {
+                    particles.push({
+                        x: Math.random() * WIDTH,
+                        y: Math.random() * HEIGHT,
+                        z: Math.random() * 100,
+                        speed: 0.5 + Math.random() * 1.5
+                    });
+                }
+            }
+            
+            // Update particle positions
+            for (var i = 0; i < particles.length; i++) {
+                var p = particles[i];
+                p.z -= p.speed * (1 + overall * 2);
+                
+                if (p.z <= 0) {
+                    p.x = Math.random() * WIDTH;
+                    p.y = Math.random() * HEIGHT;
+                    p.z = 100;
+                }
+            }
+            
+            // Render particles
+            for (var y = 0; y < HEIGHT; y++) {
+                for (var x = 0; x < WIDTH; x++) {
+                    var closestDist = Infinity;
+                    var closestChar = ' ';
+                    
+                    for (var i = 0; i < particles.length; i++) {
+                        var p = particles[i];
+                        var scale = 200 / (p.z + 1);
+                        var screenX = p.x * scale;
+                        var screenY = p.y * scale;
+                        
+                        var dx = x - screenX;
+                        var dy = y - screenY;
+                        var distSq = distSquared(dx, dy);
+                        
+                        // Use squared distance for comparison (avoid sqrt)
+                        if (distSq < 1 && p.z < closestDist) {
+                            closestDist = p.z;
+                            var brightness = 1 - (p.z / 100);
+                            var charIndex = Math.floor(brightness * chars.length);
+                            charIndex = Math.max(0, Math.min(chars.length - 1, charIndex));
+                            closestChar = chars[charIndex];
+                        }
+                    }
+                    
+                    grid[y][x] = closestChar;
+                    
+                    // Add audio-reactive trails
+                    if (overall > 0.3 && Math.random() > 0.95) {
+                        grid[y][x] = '*';
+                    }
+                }
+            }
+        }
+        
+        /**
+         * Animation Style 7: Waveform (oscilloscope style).
+         * Oscilloscope-style waveform visualization.
+         * Shows the audio signal as a continuous wave across the screen.
+         * 
+         * @function animateWaveform
+         * @param {Object} audio - Audio data object from getAudioData()
+         * @description Creates oscilloscope-style waveform visualization
+         * @modifies {Array<Array<string>>} grid - Populates grid with waveform characters
+         */
+        function animateWaveform(audio) {
+            var freqBands = audio.freqBands;
+            var overall = audio.overall;
+            var bass = audio.bass;
+            var mid = audio.mid;
+            var treble = audio.treble;
+            
+            var chars = ['_', '-', '=', '~', '^', 'v', '/', '\\', '|'];
+            var centerY = HEIGHT / 2;
+            
+            // Create waveform from frequency data
+            var waveform = [];
+            var numSamples = WIDTH;
+            for (var i = 0; i < numSamples; i++) {
+                var freqIndex = Math.floor((i / numSamples) * freqBands.length);
+                var amplitude = freqBands[freqIndex] || 0;
+                waveform.push(amplitude);
+            }
+            
+            // Add time-based wave modulation
+            for (var x = 0; x < WIDTH; x++) {
+                var wavePhase = (x * 0.1) + (time * 2);
+                var waveMod = Math.sin(wavePhase) * overall * 0.3;
+                waveform[x] = waveform[x] + waveMod;
+            }
+            
+            for (var y = 0; y < HEIGHT; y++) {
+                for (var x = 0; x < WIDTH; x++) {
+                    var amplitude = waveform[x];
+                    var waveY = centerY - (amplitude * HEIGHT * 0.4);
+                    var dist = Math.abs(y - waveY);
+                    
+                    // Draw waveform line
+                    if (dist < 0.5) {
+                        grid[y][x] = '_';
+                    } else if (dist < 1) {
+                        grid[y][x] = '-';
+                    } else if (dist < 2 && amplitude > 0.5) {
+                        grid[y][x] = '.';
+                    }
+                    
+                    // Add frequency bands visualization
+                    var bandIndex = Math.floor((x / WIDTH) * freqBands.length);
+                    var bandValue = freqBands[bandIndex] || 0;
+                    
+                    if (bandValue > 0.6 && Math.abs(y - (centerY - bandValue * HEIGHT * 0.3)) < 1) {
+                        grid[y][x] = '#';
+                    } else if (bandValue > 0.4 && Math.abs(y - (centerY - bandValue * HEIGHT * 0.3)) < 1) {
+                        grid[y][x] = '+';
+                    }
+                    
+                    // Center line
+                    if (Math.abs(y - centerY) < 0.5) {
+                        grid[y][x] = '-';
+                    }
+                }
+            }
+        }
+        
+        /**
+         * Animation Style 8: Kaleidoscope (symmetric patterns).
+         * Symmetric, mirrored patterns that create kaleidoscope effects.
+         * Multiple segments rotate and reflect to create mesmerizing patterns.
+         * 
+         * @function animateKaleidoscope
+         * @param {Object} audio - Audio data object from getAudioData()
+         * @description Creates symmetric kaleidoscope patterns
+         * @modifies {Array<Array<string>>} grid - Populates grid with kaleidoscope pattern characters
+         */
+        function animateKaleidoscope(audio) {
+            var bass = audio.bass;
+            var mid = audio.mid;
+            var treble = audio.treble;
+            var overall = audio.overall;
+            
+            var chars = ['#', '+', '*', '.', ':', 'o', 'O', '@', '~'];
+            var centerX = cachedValues.centerX;
+            var centerY = cachedValues.centerY;
+            var numSegments = 8 + Math.floor(bass * 4); // 8-12 segments
+            
+            for (var y = 0; y < HEIGHT; y++) {
+                for (var x = 0; x < WIDTH; x++) {
+                    var dx = x - centerX;
+                    var dy = y - centerY;
+                    var dist = distance(dx, dy);
+                    var angle = Math.atan2(dy, dx);
+                    
+                    // Create symmetric segments
+                    var segmentAngle = (2 * Math.PI) / numSegments;
+                    var normalizedAngle = (angle + Math.PI) % segmentAngle;
+                    var mirroredAngle = normalizedAngle < segmentAngle / 2 
+                        ? normalizedAngle 
+                        : segmentAngle - normalizedAngle;
+                    
+                    // Radial patterns
+                    var radialWave = Math.sin(dist * 0.2 - time * 2 - overall * 3);
+                    var radialPattern = radialWave * Math.cos(mirroredAngle * numSegments);
+                    
+                    // Angular patterns
+                    var angularWave = Math.sin(mirroredAngle * numSegments * 2 + time * 1.5);
+                    
+                    // Distance-based patterns
+                    var distWave = Math.sin(dist * 0.15 - time * 1.8);
+                    
+                    // Combine patterns
+                    var pattern = (radialPattern + angularWave + distWave) / 3;
+                    var threshold = 0.2 + overall * 0.6;
+                    var random = Math.random();
+                    
+                    if (pattern > threshold && dist < WIDTH * 0.6) {
+                        var charIndex = Math.floor((pattern + 1) / 2 * chars.length);
+                        charIndex = Math.max(0, Math.min(chars.length - 1, charIndex));
+                        grid[y][x] = chars[charIndex];
+                    } else if (radialPattern > 0.5 && bass > 0.2) {
+                        grid[y][x] = '#';
+                    } else if (angularWave > 0.5 && mid > 0.2) {
+                        grid[y][x] = '+';
+                    } else if (distWave > 0.5 && treble > 0.2) {
+                        grid[y][x] = '*';
+                    } else if (random > 0.94 && overall > 0.15) {
+                        grid[y][x] = '.';
+                    }
+                }
+            }
+        }
+        
+        /**
+         * Animation Style 9: Particle Explosion.
+         * Exploding particles from the center that respond to bass hits.
+         * Particles are attracted back to the center, creating dynamic explosions.
+         * 
+         * @function animateParticles
+         * @param {Object} audio - Audio data object from getAudioData()
+         * @description Creates particle explosion effects
+         * @modifies {Array} particles - Updates particle positions, velocities, and life
+         * @modifies {Array<Array<string>>} grid - Populates grid with particle characters
+         */
+        function animateParticles(audio) {
+            var bass = audio.bass;
+            var mid = audio.mid;
+            var treble = audio.treble;
+            var overall = audio.overall;
+            
+            var chars = ['*', '+', 'o', 'O', '●', '.', ':', '·'];
+            var centerX = cachedValues.centerX;
+            var centerY = cachedValues.centerY;
+            
+            // Initialize particles if needed
+            if (!particles || particles.length === 0 || bass > 0.5) {
+                particles = [];
+                var numParticles = 50 + Math.floor(bass * 100);
+                for (var i = 0; i < numParticles; i++) {
+                    var angle = (i / numParticles) * Math.PI * 2;
+                    var speed = 0.5 + Math.random() * 2;
+                    particles.push({
+                        x: centerX,
+                        y: centerY,
+                        vx: Math.cos(angle) * speed,
+                        vy: Math.sin(angle) * speed,
+                        life: 1.0,
+                        decay: 0.01 + Math.random() * 0.02,
+                        size: Math.random() * 2 + 1
+                    });
+                }
+            }
+            
+            // Update particles
+            for (var i = particles.length - 1; i >= 0; i--) {
+                var p = particles[i];
+                p.x += p.vx * (1 + overall);
+                p.y += p.vy * (1 + overall);
+                p.life -= p.decay;
+                
+                // Apply gravity/attraction
+                var dx = centerX - p.x;
+                var dy = centerY - p.y;
+                var distSq = distSquared(dx, dy);
+                if (distSq > 0) {
+                    var dist = Math.sqrt(distSq);
+                    p.vx += (dx / dist) * 0.01 * mid;
+                    p.vy += (dy / dist) * 0.01 * mid;
+                }
+                
+                // Remove dead particles
+                if (p.life <= 0 || p.x < 0 || p.x >= WIDTH || p.y < 0 || p.y >= HEIGHT) {
+                    particles.splice(i, 1);
+                }
+            }
+            
+            // Render particles
+            for (var y = 0; y < HEIGHT; y++) {
+                for (var x = 0; x < WIDTH; x++) {
+                    var closestDist = Infinity;
+                    var closestChar = ' ';
+                    
+                    for (var i = 0; i < particles.length; i++) {
+                        var p = particles[i];
+                        var dx = x - p.x;
+                        var dy = y - p.y;
+                        var distSq = distSquared(dx, dy);
+                        var pSizeSq = p.size * p.size;
+                        
+                        // Use squared distance for comparison (avoid sqrt)
+                        if (distSq < pSizeSq && p.life > closestDist) {
+                            closestDist = p.life;
+                            var charIndex = Math.floor(p.life * chars.length);
+                            charIndex = Math.max(0, Math.min(chars.length - 1, charIndex));
+                            closestChar = chars[charIndex];
+                        }
+                    }
+                    
+                    grid[y][x] = closestChar;
+                    
+                    // Add trails
+                    if (overall > 0.3 && Math.random() > 0.97) {
+                        grid[y][x] = '.';
+                    }
+                }
+            }
+        }
 
+        /**
+         * Main animation loop.
+         * Continuously updates and renders the visualization at ~60 FPS.
+         * Uses requestAnimationFrame for smooth, browser-optimized animations.
+         * 
+         * @function animate
+         * @description Main animation loop that updates and renders each frame
+         */
         function animate() {
             update();
             render();
             requestAnimationFrame(animate);
         }
 
-        // Function to load audio file from URL
+        /**
+         * Loads an audio file from a URL.
+         * Fetches the audio file, converts it to a File object, and auto-plays.
+         * 
+         * @function loadAudioFromURL
+         * @param {string} url - URL path to the audio file
+         * @param {string} displayName - Display name for the audio file
+         * @description Fetches and loads audio file from URL, then starts playback
+         * @modifies {File} audioFile - Sets the loaded audio file
+         * @modifies {HTMLElement} filename.textContent - Updates displayed filename
+         * @modifies {boolean} shouldLoop - Enables looping for auto-loaded files
+         */
         function loadAudioFromURL(url, displayName) {
             fetch(url)
                 .then(function(response) {
@@ -567,7 +1179,14 @@
                 });
         }
 
-        // Try to auto-load MP3 file from current directory
+        /**
+         * Attempts to auto-load an MP3 file from the current directory.
+         * First checks for a file specified in URL parameters, then tries common filenames.
+         * 
+         * @function autoLoadMP3
+         * @description Auto-detects and loads MP3 files from directory or URL parameter
+         * @see loadAudioFromURL - Called when a file is found
+         */
         function autoLoadMP3() {
             // First, check if there's a file specified in URL parameter
             var urlParams = new URLSearchParams(window.location.search);
@@ -617,7 +1236,17 @@
             tryNextFile(0);
         }
 
-        // Function to play the loaded audio file
+        /**
+         * Plays the loaded audio file with Web Audio API.
+         * Creates or reuses AudioContext, sets up analyser, and handles looping.
+         * 
+         * @function playAudio
+         * @description Starts audio playback with Web Audio API analysis
+         * @modifies {AudioContext} audioContext - Creates or reuses audio context
+         * @modifies {AnalyserNode} analyser - Sets up frequency analyser
+         * @modifies {boolean} isPlaying - Sets playback state
+         * @modifies {HTMLElement} controls - Hides controls during playback
+         */
         function playAudio() {
             if (!audioFile && !audioBuffer) return;
 
@@ -630,7 +1259,7 @@
                 var AC = window.AudioContext || window.webkitAudioContext;
                 audioContext = new AC();
                 analyser = audioContext.createAnalyser();
-                analyser.fftSize = 256;
+                analyser.fftSize = CONFIG.FFT_SIZE;
                 frequencyData = new Uint8Array(analyser.frequencyBinCount);
             }
 
@@ -658,7 +1287,7 @@
                             if (isPlaying) { // Only restart if still supposed to be playing
                                 startPlayback(audioBuffer);
                             }
-                        }, 50);
+                        }, CONFIG.LOOP_DELAY);
                     } else {
                         isPlaying = false;
                         playBtn.disabled = false;
@@ -716,6 +1345,10 @@
         // Animation style selector
         animationSelect.addEventListener('change', function(e) {
             currentAnimationStyle = e.target.value;
+            // Reset particles when switching to animations that use them
+            if (currentAnimationStyle === 'starfield' || currentAnimationStyle === 'particles') {
+                particles = [];
+            }
         });
         
         // Show controls on hover or when pressing 'C' key
@@ -735,11 +1368,17 @@
                     if (isPlaying) {
                         controls.classList.add('hidden');
                     }
-                }, 3000); // Hide after 3 seconds of no movement
+                }, CONFIG.CONTROLS_AUTO_HIDE_DELAY);
             }
         });
 
-        // Fullscreen functionality
+        /**
+         * Enters fullscreen mode for the entire page.
+         * Uses browser-specific fullscreen APIs for cross-browser compatibility.
+         * 
+         * @function enterFullscreen
+         * @description Requests fullscreen mode for the document
+         */
         function enterFullscreen() {
             var element = document.documentElement; // Full screen the entire page
             
@@ -755,6 +1394,13 @@
             }
         }
 
+        /**
+         * Exits fullscreen mode.
+         * Uses browser-specific exit fullscreen APIs.
+         * 
+         * @function exitFullscreen
+         * @description Exits fullscreen mode
+         */
         function exitFullscreen() {
             if (document.exitFullscreen) {
                 document.exitFullscreen();
@@ -767,6 +1413,12 @@
             }
         }
 
+        /**
+         * Checks if the page is currently in fullscreen mode.
+         * 
+         * @function isFullscreen
+         * @returns {boolean} True if page is in fullscreen, false otherwise
+         */
         function isFullscreen() {
             return !!(document.fullscreenElement || 
                      document.webkitFullscreenElement || 
@@ -774,6 +1426,12 @@
                      document.msFullscreenElement);
         }
 
+        /**
+         * Updates the fullscreen button text based on current fullscreen state.
+         * 
+         * @function updateFullscreenButton
+         * @modifies {HTMLElement} fullscreenBtn.textContent - Updates button label
+         */
         function updateFullscreenButton() {
             if (isFullscreen()) {
                 fullscreenBtn.textContent = 'Exit Fullscreen';
@@ -883,7 +1541,7 @@
             if (isPlaying) {
                 controls.classList.add('hidden');
             }
-        }, 5000); // Hide after 5 seconds if playing
+        }, CONFIG.CONTROLS_HIDE_DELAY);
         
         // Auto-enter fullscreen on page load
         // Note: Browsers may require user interaction, so we try after a short delay
@@ -897,7 +1555,7 @@
         
         // Try fullscreen after page loads (may be blocked by browser)
         window.addEventListener('load', function() {
-            setTimeout(tryAutoFullscreen, 500);
+            setTimeout(tryAutoFullscreen, CONFIG.FULLSCREEN_DELAY);
         });
         
         // Also try fullscreen on first user interaction (click, touch, keypress)
