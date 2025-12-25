@@ -16,7 +16,7 @@ const map = L.map('map', {
     tapTolerance: 15, // Increase tap tolerance for better mobile UX
     zoomDelta: 0.25, // Smaller zoom steps for smoother zooming
     zoomSnap: 0.25 // Allow fractional zoom levels
-}).setView([0, 0], 2); // Start with world view, will update to ISS location
+}).setView([0, 0], 2); // Start with full world view, will update to ISS location
 
 // Expose map instance globally for resize handler
 window.mapInstance = map;
@@ -26,7 +26,7 @@ window.mapInstance = map;
 L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
     // This attribution is important for giving credit to OpenStreetMap.
     attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors',
-    maxZoom: 19,
+    maxZoom: 20, // Maximum zoom level for detailed street-level view
     minZoom: 2
 }).addTo(map);
 
@@ -76,14 +76,14 @@ async function updateIssPosition() {
         const newLatLng = L.latLng(latitude, longitude);
         issMarker.setLatLng(newLatLng);
 
-        // Center map on ISS location
+        // Center map on ISS location with full world view
         if (isFirstLoad) {
-            // Initial load: Set view with zoom level 3 (wider view showing more continents)
-            map.setView(newLatLng, 3, { animate: false });
-            console.log('ISS position loaded:', latitude.toFixed(4), longitude.toFixed(4));
+            // Initial load: Set view at zoom level 2 to show full world view
+            map.setView(newLatLng, 2, { animate: false });
+            console.log('ISS position loaded:', latitude.toFixed(4), longitude.toFixed(4), 'Zoom level: 2 (full world view)');
             isFirstLoad = false;
         } else {
-            // Keep ISS centered as it moves (smooth panning)
+            // Keep ISS centered as it moves, maintaining full world view
             map.panTo(newLatLng, { animate: true, duration: 1 });
         }
 
