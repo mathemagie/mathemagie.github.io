@@ -4,9 +4,10 @@ const issApiUrl = 'https://api.wheretheiss.at/v1/satellites/25544';
 // Get a reference to the HTML element where we'll display the coordinates.
 const issInfo = document.getElementById('iss-info');
 
-// Initialize the map and set its view to France's coordinates.
+// Initialize the map with a temporary view (will be updated when ISS position loads).
 // The first parameter is an array with latitude and longitude.
 // The second parameter is the zoom level. A higher number means more zoomed in.
+// We start with a world view (zoom 2) and will zoom to ISS location once data loads.
 const map = L.map('map', {
     zoomControl: true,
     attributionControl: true,
@@ -14,7 +15,7 @@ const map = L.map('map', {
     tapTolerance: 15, // Increase tap tolerance for better mobile UX
     zoomDelta: 0.25, // Smaller zoom steps for smoother zooming
     zoomSnap: 0.25 // Allow fractional zoom levels
-}).setView([46.2, 2.2], 3);
+}).setView([0, 0], 2); // Start with world view, will update to ISS location
 
 // Expose map instance globally for resize handler
 window.mapInstance = map;
@@ -39,7 +40,8 @@ const issIcon = L.icon({
 // We give it a starting position, but our script will update it quickly.
 const issMarker = L.marker([0, 0], {
     icon: issIcon,
-    title: 'International Space Station'
+    title: 'International Space Station',
+    riseOnHover: true // Marker rises when hovered for better visibility
 }).addTo(map);
 
 // Track fetch errors to prevent spam
@@ -63,15 +65,24 @@ async function updateIssPosition() {
         // Destructure latitude and longitude from the API response data.
         const { latitude, longitude } = data;
 
+        // Validate coordinates
+        if (typeof latitude !== 'number' || typeof longitude !== 'number' || 
+            isNaN(latitude) || isNaN(longitude)) {
+            throw new Error('Invalid coordinates received from API');
+        }
+
         // Update the marker's position on the map.
         const newLatLng = L.latLng(latitude, longitude);
         issMarker.setLatLng(newLatLng);
 
-        // Always center the map on the ISS
+        // Center map on ISS location
         if (isFirstLoad) {
+            // Initial load: Set view with zoom level 3 (wider view showing more continents)
             map.setView(newLatLng, 3, { animate: false });
+            console.log('ISS position loaded:', latitude.toFixed(4), longitude.toFixed(4));
             isFirstLoad = false;
         } else {
+            // Keep ISS centered as it moves (smooth panning)
             map.panTo(newLatLng, { animate: true, duration: 1 });
         }
 
@@ -95,13 +106,37 @@ async function updateIssPosition() {
         // Stop fetching after too many consecutive errors to prevent unnecessary requests
         if (consecutiveErrors >= MAX_ERRORS) {
             console.warn('Too many consecutive errors. Stopping ISS position updates.');
-            clearInterval(updateInterval);
+            if (window.updateInterval) {
+                clearInterval(window.updateInterval);
+            }
         }
     }
 }
 
-// Call the function once to get the position immediately when the page loads.
-updateIssPosition();
+// Wait for DOM and map to be ready before fetching ISS position
+// This ensures tiles are loaded and map is fully initialized
+function initializeIssTracking() {
+    // Call the function once to get the position immediately when the page loads.
+    updateIssPosition();
+    
+    // And then set it to run every 5 seconds (5000 milliseconds) to get real-time updates.
+    window.updateInterval = setInterval(updateIssPosition, 5000);
+}
 
-// And then set it to run every 5 seconds (5000 milliseconds) to get real-time updates.
-const updateInterval = setInterval(updateIssPosition, 5000);
+// Try multiple initialization methods to ensure it runs
+if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', function() {
+        map.whenReady(initializeIssTracking);
+    });
+} else {
+    // DOM already loaded
+    map.whenReady(initializeIssTracking);
+}
+
+// Fallback: also try after a short delay in case whenReady doesn't fire
+setTimeout(function() {
+    if (isFirstLoad) {
+        console.log('Fallback: Initializing ISS tracking');
+        initializeIssTracking();
+    }
+}, 1000);
