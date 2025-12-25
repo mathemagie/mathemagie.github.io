@@ -29,6 +29,9 @@ const issInfo = document.getElementById('iss-info');
  * @property {boolean} zoomControl - Enable zoom controls (+/- buttons)
  * @property {boolean} attributionControl - Show map attribution
  * @property {boolean} scrollWheelZoom - Disabled to prevent accidental zooming
+ * @property {boolean} touchZoom - Disabled to prevent pinch-to-zoom on mobile
+ * @property {boolean} doubleClickZoom - Disabled to prevent double-click zoom
+ * @property {boolean} boxZoom - Disabled to prevent box zoom (shift+drag)
  * @property {boolean} tap - Enable tap interactions on mobile devices
  * @property {number} tapTolerance - Increased tap area for better mobile UX
  * @property {number} zoomDelta - Smaller zoom increments (0.25) for smoother control
@@ -38,6 +41,9 @@ const map = L.map('map', {
     zoomControl: true,
     attributionControl: true,
     scrollWheelZoom: false, // Disable mouse wheel zoom
+    touchZoom: false, // Disable pinch-to-zoom on mobile devices
+    doubleClickZoom: false, // Disable double-click zoom
+    boxZoom: false, // Disable box zoom (shift+drag)
     tap: true, // Enable tap interaction on mobile
     tapTolerance: 15, // Increase tap tolerance for better mobile UX
     zoomDelta: 0.25, // Smaller zoom steps for smoother zooming
