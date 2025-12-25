@@ -5,9 +5,14 @@ A real-time audio visualizer that transforms music into stunning ASCII art anima
 ## 🎵 Features
 
 - **9 Unique Animation Styles**: Choose from hybrid layered patterns, matrix streams, ripples, spirals, spectrum bars, starfields, waveforms, kaleidoscopes, and particle explosions
+- **Smooth Animation Blending**: Seamless 1-second transitions when switching between animation styles
+- **Custom Color Themes**: 4 built-in themes (Default, Dark, Neon, Warm) with theme selector
+- **Mobile Touch Gestures**: Swipe navigation, tap controls, and long-press menus for mobile devices
+- **Web Workers**: Offloads grid calculations to background threads for better performance
+- **WebGL GPU Acceleration**: Hardware-accelerated rendering for particle systems (1000+ particles at 60 FPS)
 - **Real-time Audio Analysis**: Uses Web Audio API to analyze bass, mid, and treble frequencies
 - **Fullscreen Mode**: Immersive viewing experience with automatic fullscreen support
-- **Screenshot Capture**: Save your favorite visualizations as PNG images
+- **Screenshot Capture**: Save your favorite visualizations as PNG images (includes WebGL rendering)
 - **Auto-load Audio**: Automatically detects and loads MP3 files in the directory
 - **Responsive Design**: Adapts to any screen size with dynamic grid calculation
 - **Keyboard Shortcuts**: Quick controls for common actions
@@ -26,11 +31,17 @@ A real-time audio visualizer that transforms music into stunning ASCII art anima
 
 3. **Choose Animation Style**
    - Use the dropdown menu to select from 9 different visualization styles
-   - Switch styles anytime during playback
+   - Switch styles anytime during playback (smooth blending transitions)
+   - On mobile: Swipe left/right to change styles
 
-4. **Enjoy the Show**
+4. **Customize Theme**
+   - Select a theme from the dropdown (Default, Dark, Neon, Warm)
+   - Theme preference is saved automatically
+
+5. **Enjoy the Show**
    - Controls automatically hide during playback for an immersive experience
    - Move your mouse or press 'C' to show controls again
+   - On mobile: Swipe down to toggle controls, tap to play/pause
 
 ## 🎨 Animation Styles
 
@@ -71,11 +82,12 @@ Horizontal frequency bars showing the audio spectrum. Classic equalizer-style vi
 - **Peak Indicators**: Shows frequencies above 80% intensity
 
 ### 6. Starfield
-Moving stars and particles that create a 3D starfield effect. Particles move toward the viewer, creating depth.
+Moving stars and particles that create a 3D starfield effect. Particles move toward the viewer, creating depth. **Uses WebGL GPU acceleration** for enhanced performance (1000+ particles).
 
 - **Overall Volume**: Controls particle speed and density
 - **Bass**: Triggers new particle bursts
 - **Particle Trails**: Audio-reactive sparkles
+- **WebGL Mode**: Automatically enabled if supported, falls back to ASCII rendering
 
 ### 7. Waveform
 Oscilloscope-style waveform visualization. Shows the audio signal as a continuous wave across the screen.
@@ -93,18 +105,27 @@ Symmetric, mirrored patterns that create kaleidoscope effects. Multiple segments
 - **Symmetry**: Creates mirrored patterns across segments
 
 ### 9. Particle Explosion
-Exploding particles from the center that respond to bass hits. Particles are attracted back to the center, creating dynamic explosions.
+Exploding particles from the center that respond to bass hits. Particles are attracted back to the center, creating dynamic explosions. **Uses WebGL GPU acceleration** for enhanced performance (500+ particles).
 
 - **Bass**: Triggers new particle explosions
 - **Mid**: Controls particle attraction/gravity
 - **Particle Life**: Particles fade over time
 - **Trails**: Audio-reactive background particles
+- **WebGL Mode**: Automatically enabled if supported, falls back to ASCII rendering
 
 ## ⌨️ Keyboard Shortcuts
 
 - **`C`** - Toggle controls visibility
 - **`F`** or **`F11`** - Toggle fullscreen mode
 - **`Escape`** - Exit fullscreen mode
+
+## 📱 Mobile Touch Gestures
+
+- **Swipe Left/Right** - Change animation style (with visual feedback)
+- **Swipe Up** - Toggle fullscreen mode
+- **Swipe Down** - Show/hide controls
+- **Tap** - Toggle play/pause
+- **Long Press** - Show/hide controls menu
 
 ## 🎛️ Controls
 
@@ -115,8 +136,9 @@ Exploding particles from the center that respond to bass hits. Particles are att
 
 ### Display Controls
 - **Fullscreen**: Enter/exit fullscreen mode
-- **Screenshot**: Capture current visualization as PNG
-- **Animation Style**: Dropdown to select visualization style
+- **Screenshot**: Capture current visualization as PNG (includes WebGL rendering)
+- **Animation Style**: Dropdown to select visualization style (with smooth blending transitions)
+- **Theme**: Dropdown to select color theme (Default, Dark, Neon, Warm)
 
 ### Auto-hide Behavior
 - Controls automatically hide 5 seconds after playback starts
@@ -138,13 +160,23 @@ Exploding particles from the center that respond to bass hits. Particles are att
 - **Dynamic Sizing**: Grid dimensions calculated based on viewport size
 - **Character Aspect Ratio**: 0.6 (monospace fonts are wider than tall)
 - **Font Scaling**: Automatically adjusts to fill screen perfectly
-- **Responsive**: Recalculates on window resize
+- **Responsive**: Recalculates on window resize (throttled to 100ms)
+
+### Performance Optimizations
+- **Web Workers**: Grid calculations offloaded to background threads for better frame rate stability
+- **WebGL GPU Acceleration**: Hardware-accelerated rendering for particle systems (Starfield, Particle Explosion)
+- **Cached Values**: Frequently calculated values (center points, distances) are cached
+- **Optimized Rendering**: Uses `array.join()` instead of string concatenation for faster text rendering
+- **Distance Calculations**: Uses squared distance comparisons to avoid expensive `Math.sqrt()` calls
 
 ### Browser Compatibility
-- **Chrome/Edge**: Full support
-- **Firefox**: Full support
-- **Safari**: Full support (may require user interaction for audio)
-- **Mobile Browsers**: Supported (touch controls available)
+- **Chrome/Edge**: Full support (Web Workers, WebGL, Themes, Touch Gestures)
+- **Firefox**: Full support (Web Workers, WebGL, Themes, Touch Gestures)
+- **Safari**: Full support (may require user interaction for audio, WebGL supported)
+- **Mobile Browsers**: Full support with touch gesture controls
+- **Web Workers**: All modern browsers (IE10+)
+- **WebGL**: Chrome 9+, Firefox 4+, Safari 5.1+, Edge (falls back to ASCII if unavailable)
+- **CSS Custom Properties**: All modern browsers (IE11+)
 
 ### File Loading
 The visualizer attempts to auto-load MP3 files in this order:
@@ -160,6 +192,11 @@ The visualizer attempts to auto-load MP3 files in this order:
 ```
 audio_visualiser/
 ├── index.html          # Main application file (single-page app)
+├── worker.js           # Web Worker for offloading grid calculations
+├── webgl-renderer.js   # WebGL renderer for GPU-accelerated particle systems
+├── shaders/
+│   ├── particle.vert  # Vertex shader for particle rendering
+│   └── particle.frag  # Fragment shader for particle rendering
 ├── README.md           # This documentation
 └── *.mp3               # Audio files (auto-detected)
 ```
@@ -209,16 +246,43 @@ index.html?file=path/to/your/audio.mp3
 
 ## 🎨 Customization
 
-### Changing Colors
-Edit the CSS in `index.html`:
-- Background: `background: #f5f5f0;` (line ~17)
-- Text Color: `color: #2a2a2a;` (line ~19)
-- Control Background: `background: rgba(245, 245, 240, 0.9);` (line ~31)
+### Changing Themes
+The visualizer includes 4 built-in themes accessible via the theme selector:
+- **Default**: Light beige background with dark text
+- **Dark**: Dark background with light text
+- **Neon**: Black background with cyan text
+- **Warm**: Dark brown background with orange text
+
+Theme preference is automatically saved to localStorage and restored on page load.
+
+### Custom Color Schemes
+To add custom themes, edit the `themes` object in `index.html`:
+```javascript
+var themes = {
+    'your-theme': {
+        bg: '#your-bg-color',
+        text: '#your-text-color',
+        controlBg: 'rgba(...)',
+        border: '#your-border-color',
+        buttonBg: '#your-button-bg',
+        buttonDisabledBg: '#your-disabled-bg',
+        textShadow: 'rgba(...)'
+    }
+};
+```
+
+Then add an option to the theme selector dropdown.
 
 ### Adjusting Animation Speed
-Modify the `time` increment in the `update()` function:
+Modify `TIME_INCREMENT` in the `CONFIG` object:
 ```javascript
-time += 0.1; // Increase for faster animations, decrease for slower
+TIME_INCREMENT: 0.1, // Increase for faster animations, decrease for slower
+```
+
+### Animation Blending Duration
+Adjust the blending transition duration:
+```javascript
+blending.duration = 1000; // Duration in milliseconds (default: 1000ms)
 ```
 
 ### Changing Grid Density
@@ -239,19 +303,33 @@ The application is a single-file HTML application with:
 - `getAudioData()`: Extracts and normalizes audio frequency data
 - `animate[Style]()`: Individual animation style functions
 - `playAudio()`: Handles audio playback and looping
-- `render()`: Converts grid to text and displays
+- `render()`: Converts grid to text and displays (handles WebGL overlay)
+- `interpolateChar()`: Blends characters for smooth animation transitions
+- `applyTheme()`: Applies color theme to the application
+- `WebGLRenderer`: GPU-accelerated particle rendering system
+
+### Architecture Components
+- **Main Thread**: UI, audio playback, rendering coordination
+- **Web Worker**: Background grid calculations (when available)
+- **WebGL Renderer**: GPU-accelerated particle systems (Starfield, Particles)
+- **Animation Registry**: Object map for animation style routing
+- **Theme System**: CSS custom properties with JavaScript theme switching
 
 ## 🔮 Future Enhancements
 
 Potential improvements:
-- [ ] Custom color schemes
-- [ ] Animation speed controls
+- [x] Custom color schemes (themes)
+- [ ] Animation speed controls (UI slider)
 - [ ] Multiple audio sources (microphone input)
 - [ ] Export animations as video
 - [ ] Preset configurations
-- [ ] Animation blending/transitions
+- [x] Animation blending/transitions
 - [ ] Custom character sets
-- [ ] 3D visualizations
+- [ ] WebGL for all animations (not just particles)
+- [ ] Custom theme editor
+- [ ] Gesture customization
+- [ ] Performance metrics display
+- [ ] Animation presets/saved configurations
 
 ## 📄 License
 

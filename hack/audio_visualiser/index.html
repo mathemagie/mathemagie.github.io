@@ -5,18 +5,29 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Audio Binary Flow</title>
     <style>
+        :root {
+            --bg-color: #f5f5f0;
+            --text-color: #2a2a2a;
+            --control-bg: rgba(245, 245, 240, 0.9);
+            --control-border: #2a2a2a;
+            --button-bg: #e8e8e0;
+            --button-disabled-bg: #d0d0c8;
+            --text-shadow-color: rgba(42, 42, 42, 0.3);
+        }
+        
         html, body {
             margin: 0;
             padding: 0;
             width: 100%;
             height: 100%;
             overflow: hidden;
+            touch-action: none; /* Prevent default browser gestures */
         }
         
         body {
-            background: #f5f5f0;
+            background: var(--bg-color);
             font-family: monospace;
-            color: #2a2a2a;
+            color: var(--text-color);
             position: relative;
         }
         
@@ -28,10 +39,10 @@
             flex-direction: column;
             gap: 15px;
             align-items: center;
-            background: rgba(245, 245, 240, 0.9);
+            background: var(--control-bg);
             padding: 20px;
             border-radius: 8px;
-            border: 1px solid #2a2a2a;
+            border: 1px solid var(--control-border);
             transition: opacity 0.3s ease, visibility 0.3s ease;
         }
         
@@ -44,10 +55,10 @@
         .file-label {
             cursor: pointer;
             padding: 10px 20px;
-            background: #e8e8e0;
-            border: 1px solid #2a2a2a;
+            background: var(--button-bg);
+            border: 1px solid var(--control-border);
             border-radius: 4px;
-            color: #2a2a2a;
+            color: var(--text-color);
         }
         
         input[type="file"] {
@@ -56,26 +67,26 @@
         
         button {
             padding: 10px 20px;
-            background: #e8e8e0;
-            border: 1px solid #2a2a2a;
+            background: var(--button-bg);
+            border: 1px solid var(--control-border);
             border-radius: 4px;
-            color: #2a2a2a;
+            color: var(--text-color);
             cursor: pointer;
             font-family: monospace;
         }
         
         button:disabled {
-            background: #d0d0c8;
+            background: var(--button-disabled-bg);
             opacity: 0.5;
             cursor: not-allowed;
         }
         
         select {
             padding: 8px 15px;
-            background: #e8e8e0;
-            border: 1px solid #2a2a2a;
+            background: var(--button-bg);
+            border: 1px solid var(--control-border);
             border-radius: 4px;
-            color: #2a2a2a;
+            color: var(--text-color);
             font-family: monospace;
             cursor: pointer;
             font-size: 14px;
@@ -83,14 +94,14 @@
         
         select:focus {
             outline: none;
-            border-color: #2a2a2a;
+            border-color: var(--control-border);
         }
         
         #canvas {
             line-height: 1;
             letter-spacing: 0;
-            color: #2a2a2a;
-            text-shadow: 0 0 2px rgba(42, 42, 42, 0.3);
+            color: var(--text-color);
+            text-shadow: 0 0 2px var(--text-shadow-color);
             white-space: pre;
             position: fixed;
             top: 0;
@@ -103,6 +114,27 @@
             overflow: hidden;
             font-family: monospace;
             box-sizing: border-box;
+        }
+        
+        .gesture-feedback {
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background: var(--control-bg);
+            padding: 20px 40px;
+            border-radius: 8px;
+            border: 2px solid var(--control-border);
+            color: var(--text-color);
+            font-size: 24px;
+            z-index: 1000;
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity 0.2s ease;
+        }
+        
+        .gesture-feedback.show {
+            opacity: 1;
         }
     </style>
 </head>
@@ -120,7 +152,7 @@
         <button id="fullscreenBtn">Fullscreen</button>
         <button id="screenshotBtn">Screenshot</button>
         <div>
-            <label for="animationSelect" style="color: #2a2a2a; font-size: 12px; margin-bottom: 5px; display: block;">Animation Style:</label>
+            <label for="animationSelect" style="color: var(--text-color); font-size: 12px; margin-bottom: 5px; display: block;">Animation Style:</label>
             <select id="animationSelect">
                 <option value="hybrid">Hybrid Layered</option>
                 <option value="matrix">Matrix Streams</option>
@@ -133,8 +165,21 @@
                 <option value="particles">Particle Explosion</option>
             </select>
         </div>
+        <div>
+            <label for="themeSelect" style="color: var(--text-color); font-size: 12px; margin-bottom: 5px; display: block;">Theme:</label>
+            <select id="themeSelect">
+                <option value="default">Default</option>
+                <option value="dark">Dark</option>
+                <option value="neon">Neon</option>
+                <option value="warm">Warm</option>
+            </select>
+        </div>
     </div>
     <div id="canvas"></div>
+    <canvas id="webglCanvas" style="position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; pointer-events: none; z-index: 1;"></canvas>
+    <div id="gestureFeedback" class="gesture-feedback"></div>
+    
+    <script src="webgl-renderer.js"></script>
 
     <script>
         var fileInput = document.getElementById('fileInput');
@@ -144,10 +189,146 @@
         var fullscreenBtn = document.getElementById('fullscreenBtn');
         var screenshotBtn = document.getElementById('screenshotBtn');
         var animationSelect = document.getElementById('animationSelect');
+        var themeSelect = document.getElementById('themeSelect');
         var canvas = document.getElementById('canvas');
+        var webglCanvas = document.getElementById('webglCanvas');
         var controls = document.querySelector('.controls');
+        var gestureFeedback = document.getElementById('gestureFeedback');
         
         var currentAnimationStyle = 'hybrid'; // Default animation style
+        var currentTheme = 'default'; // Default theme
+        
+        // WebGL renderer for particle systems
+        var webglRenderer = null;
+        var useWebGL = false;
+        
+        // Initialize WebGL renderer
+        if (webglCanvas && typeof WebGLRenderer !== 'undefined') {
+            try {
+                webglRenderer = new WebGLRenderer(webglCanvas);
+                useWebGL = webglRenderer.isAvailable();
+                if (!useWebGL) {
+                    webglCanvas.style.display = 'none';
+                } else {
+                    // Set initial canvas size
+                    webglCanvas.width = WIDTH;
+                    webglCanvas.height = HEIGHT;
+                }
+            } catch (e) {
+                console.warn('WebGL renderer initialization failed:', e);
+                useWebGL = false;
+                if (webglCanvas) {
+                    webglCanvas.style.display = 'none';
+                }
+            }
+        } else {
+            useWebGL = false;
+            if (webglCanvas) {
+                webglCanvas.style.display = 'none';
+            }
+        }
+        
+        // Animation blending state
+        var blending = {
+            active: false,
+            from: null,
+            to: null,
+            progress: 0,
+            duration: 1000 // 1 second transition
+        };
+        
+        // Character intensity mapping for blending
+        var charIntensityMap = {
+            ' ': 0, '.': 0.1, ':': 0.2, '·': 0.25, "'": 0.3, '`': 0.35,
+            '-': 0.4, '_': 0.45, '=': 0.5, '~': 0.55, '≈': 0.6, '≋': 0.65,
+            '/': 0.7, '\\': 0.72, '|': 0.74, '+': 0.76, '*': 0.78, 'o': 0.8,
+            'O': 0.82, '○': 0.84, '●': 0.86, '@': 0.88, '#': 0.9, '█': 0.92,
+            '▓': 0.94, '▒': 0.96, '░': 0.98, '^': 0.85, 'v': 0.85, '<': 0.7,
+            '>': 0.7, '▄': 0.93, '▀': 0.93, '▌': 0.95, '▐': 0.95
+        };
+        
+        // Reverse mapping: intensity to character
+        var intensityCharMap = Object.keys(charIntensityMap).sort(function(a, b) {
+            return charIntensityMap[a] - charIntensityMap[b];
+        });
+        
+        // Theme definitions
+        var themes = {
+            'default': {
+                bg: '#f5f5f0',
+                text: '#2a2a2a',
+                controlBg: 'rgba(245, 245, 240, 0.9)',
+                border: '#2a2a2a',
+                buttonBg: '#e8e8e0',
+                buttonDisabledBg: '#d0d0c8',
+                textShadow: 'rgba(42, 42, 42, 0.3)'
+            },
+            'dark': {
+                bg: '#1a1a1a',
+                text: '#e0e0e0',
+                controlBg: 'rgba(26, 26, 26, 0.9)',
+                border: '#e0e0e0',
+                buttonBg: '#2a2a2a',
+                buttonDisabledBg: '#1a1a1a',
+                textShadow: 'rgba(224, 224, 224, 0.5)'
+            },
+            'neon': {
+                bg: '#000000',
+                text: '#00ffff',
+                controlBg: 'rgba(0, 0, 0, 0.9)',
+                border: '#00ffff',
+                buttonBg: '#001122',
+                buttonDisabledBg: '#000011',
+                textShadow: 'rgba(0, 255, 255, 0.8)'
+            },
+            'warm': {
+                bg: '#2a1810',
+                text: '#ffaa55',
+                controlBg: 'rgba(42, 24, 16, 0.9)',
+                border: '#ffaa55',
+                buttonBg: '#3a2818',
+                buttonDisabledBg: '#2a1810',
+                textShadow: 'rgba(255, 170, 85, 0.6)'
+            }
+        };
+        
+        // Apply theme function
+        function applyTheme(themeName) {
+            var theme = themes[themeName] || themes['default'];
+            currentTheme = themeName;
+            
+            document.documentElement.style.setProperty('--bg-color', theme.bg);
+            document.documentElement.style.setProperty('--text-color', theme.text);
+            document.documentElement.style.setProperty('--control-bg', theme.controlBg);
+            document.documentElement.style.setProperty('--control-border', theme.border);
+            document.documentElement.style.setProperty('--button-bg', theme.buttonBg);
+            document.documentElement.style.setProperty('--button-disabled-bg', theme.buttonDisabledBg);
+            document.documentElement.style.setProperty('--text-shadow-color', theme.textShadow);
+            
+            // Store theme preference
+            try {
+                localStorage.setItem('audioVisualizerTheme', themeName);
+            } catch (e) {
+                // localStorage not available
+            }
+        }
+        
+        // Load saved theme
+        try {
+            var savedTheme = localStorage.getItem('audioVisualizerTheme');
+            if (savedTheme && themes[savedTheme]) {
+                currentTheme = savedTheme;
+                themeSelect.value = savedTheme;
+                applyTheme(savedTheme);
+            }
+        } catch (e) {
+            // localStorage not available
+        }
+        
+        // Theme selector handler
+        themeSelect.addEventListener('change', function(e) {
+            applyTheme(e.target.value);
+        });
 
         var audioFile = null;
         var audioContext = null;
@@ -199,6 +380,34 @@
             maxDist: 0,
             canvas: null
         };
+        
+        // Web Worker for offloading calculations
+        var worker = null;
+        var useWorker = false;
+        var workerReady = false;
+        
+        // Initialize Web Worker if available
+        if (typeof Worker !== 'undefined') {
+            try {
+                worker = new Worker('worker.js');
+                worker.onmessage = function(e) {
+                    if (e.data.type === 'grid') {
+                        grid = e.data.grid;
+                        render();
+                    } else if (e.data.type === 'fallback') {
+                        useWorker = false; // Fallback to main thread
+                    }
+                };
+                worker.onerror = function(e) {
+                    console.warn('Web Worker error, falling back to main thread:', e);
+                    useWorker = false;
+                };
+                useWorker = true;
+            } catch (e) {
+                console.warn('Web Worker not available, using main thread:', e);
+                useWorker = false;
+            }
+        }
         
         /**
          * Calculates optimal grid dimensions based on viewport size.
@@ -253,10 +462,26 @@
             cachedValues.centerY = HEIGHT / 2;
             cachedValues.maxDist = Math.sqrt(cachedValues.centerX * cachedValues.centerX + 
                                             cachedValues.centerY * cachedValues.centerY);
+            
+            // Update WebGL canvas size
+            if (webglCanvas) {
+                webglCanvas.width = WIDTH;
+                webglCanvas.height = HEIGHT;
+            }
         }
         
         // Initialize grid size on load and resize
         calculateGridSize();
+        
+        // Initialize worker with grid dimensions
+        if (worker && useWorker) {
+            worker.postMessage({
+                type: 'init',
+                WIDTH: WIDTH,
+                HEIGHT: HEIGHT,
+                time: time
+            });
+        }
         
         // Throttle resize events for better performance
         var resizeTimeout;
@@ -265,6 +490,15 @@
             resizeTimeout = setTimeout(function() {
                 calculateGridSize();
                 initGrid();
+                // Update worker with new dimensions
+                if (worker && useWorker) {
+                    worker.postMessage({
+                        type: 'init',
+                        WIDTH: WIDTH,
+                        HEIGHT: HEIGHT,
+                        time: time
+                    });
+                }
             }, 100); // Throttle to 100ms
         });
 
@@ -291,17 +525,35 @@
          * Renders the grid array as text and displays it on the canvas.
          * Converts the 2D grid array into a single string with newlines.
          * Optimized using array.join() for better performance.
+         * Also handles WebGL rendering for particle systems.
          * 
          * @function render
          * @description Converts grid array to text and displays on canvas
          * @modifies {HTMLElement} canvas.textContent - The displayed text content
          */
         function render() {
-            var lines = [];
-            for (var y = 0; y < HEIGHT; y++) {
-                lines.push(grid[y].join(''));
+            // Render WebGL particles if using particle animations
+            if (useWebGL && webglRenderer && (currentAnimationStyle === 'starfield' || currentAnimationStyle === 'particles')) {
+                webglRenderer.render(time);
+                // Still render ASCII background
+                var lines = [];
+                for (var y = 0; y < HEIGHT; y++) {
+                    lines.push(grid[y].join(''));
+                }
+                canvas.textContent = lines.join('\n');
+            } else {
+                // Hide WebGL canvas for non-particle animations
+                if (webglCanvas) {
+                    webglCanvas.style.display = 'none';
+                }
+                // Render ASCII grid
+                var lines = [];
+                for (var y = 0; y < HEIGHT; y++) {
+                    lines.push(grid[y].join(''));
+                }
+                canvas.textContent = lines.join('\n');
             }
-            canvas.textContent = lines.join('\n');
+            
             // Ensure canvas is positioned at top-left
             canvas.style.textAlign = 'left';
             canvas.style.textIndent = '0';
@@ -416,15 +668,93 @@
             return Math.sqrt(dx * dx + dy * dy);
         }
         
+        /**
+         * Interpolates between two characters based on blending progress
+         * @param {string} charFrom - Source character
+         * @param {string} charTo - Target character
+         * @param {number} progress - Blending progress (0-1)
+         * @returns {string} Blended character
+         */
+        function interpolateChar(charFrom, charTo, progress) {
+            var intensityFrom = charIntensityMap[charFrom] || 0;
+            var intensityTo = charIntensityMap[charTo] || 0;
+            var blendedIntensity = intensityFrom * (1 - progress) + intensityTo * progress;
+            
+            // Find closest character to blended intensity
+            var closestChar = ' ';
+            var minDiff = Infinity;
+            for (var i = 0; i < intensityCharMap.length; i++) {
+                var char = intensityCharMap[i];
+                var diff = Math.abs(charIntensityMap[char] - blendedIntensity);
+                if (diff < minDiff) {
+                    minDiff = diff;
+                    closestChar = char;
+                }
+            }
+            
+            // Prefer target character if progress > 0.5
+            if (progress > 0.5) {
+                return charTo !== ' ' ? charTo : closestChar;
+            }
+            return charFrom !== ' ' ? charFrom : closestChar;
+        }
+        
         function update() {
-            initGrid();
             time += CONFIG.TIME_INCREMENT;
             
             var audio = getAudioData();
             
-            // Call the selected animation style using registry
-            var animationFn = animationRegistry[currentAnimationStyle] || animationRegistry['hybrid'];
-            animationFn(audio);
+            // Use Web Worker if available and not blending
+            if (useWorker && worker && !blending.active && currentAnimationStyle === 'hybrid') {
+                // Only send serializable values to worker (exclude DOM elements)
+                worker.postMessage({
+                    type: 'update',
+                    WIDTH: WIDTH,
+                    HEIGHT: HEIGHT,
+                    time: time,
+                    audio: audio,
+                    style: currentAnimationStyle,
+                    cachedValues: {
+                        centerX: cachedValues.centerX,
+                        centerY: cachedValues.centerY,
+                        maxDist: cachedValues.maxDist
+                        // Exclude canvas element - it can't be cloned
+                    }
+                });
+                return; // Worker will call render() via onmessage
+            }
+            
+            // Handle animation blending
+            if (blending.active) {
+                blending.progress += (1000 / 60) / blending.duration; // Assume 60 FPS
+                
+                if (blending.progress >= 1.0) {
+                    blending.active = false;
+                    blending.progress = 1.0;
+                }
+                
+                // Calculate both animations
+                initGrid();
+                var fromFn = animationRegistry[blending.from] || animationRegistry['hybrid'];
+                fromFn(audio);
+                var blendFrom = JSON.parse(JSON.stringify(grid)); // Deep copy
+                
+                initGrid();
+                var toFn = animationRegistry[currentAnimationStyle] || animationRegistry['hybrid'];
+                toFn(audio);
+                var blendTo = grid;
+                
+                // Blend grids
+                for (var y = 0; y < HEIGHT; y++) {
+                    for (var x = 0; x < WIDTH; x++) {
+                        grid[y][x] = interpolateChar(blendFrom[y][x], blendTo[y][x], blending.progress);
+                    }
+                }
+            } else {
+                initGrid();
+                var animationFn = animationRegistry[currentAnimationStyle] || animationRegistry['hybrid'];
+                animationFn(audio);
+            }
         }
         
         /**
@@ -839,12 +1169,15 @@
             // Initialize or update star positions
             if (!particles || particles.length === 0) {
                 particles = [];
-                for (var i = 0; i < 200; i++) {
+                var numParticles = useWebGL ? 1000 : 200; // More particles with WebGL
+                for (var i = 0; i < numParticles; i++) {
                     particles.push({
                         x: Math.random() * WIDTH,
                         y: Math.random() * HEIGHT,
                         z: Math.random() * 100,
-                        speed: 0.5 + Math.random() * 1.5
+                        speed: 0.5 + Math.random() * 1.5,
+                        life: 1.0,
+                        size: 1.0 + Math.random()
                     });
                 }
             }
@@ -853,15 +1186,30 @@
             for (var i = 0; i < particles.length; i++) {
                 var p = particles[i];
                 p.z -= p.speed * (1 + overall * 2);
+                p.life = Math.max(0, Math.min(1, 1 - (p.z / 100)));
                 
                 if (p.z <= 0) {
                     p.x = Math.random() * WIDTH;
                     p.y = Math.random() * HEIGHT;
                     p.z = 100;
+                    p.life = 1.0;
                 }
             }
             
-            // Render particles
+            // Use WebGL if available
+            if (useWebGL && webglRenderer) {
+                webglCanvas.style.display = 'block';
+                webglRenderer.updateParticles(particles, audio, WIDTH, HEIGHT);
+                // Still populate grid for background/fallback
+                for (var y = 0; y < HEIGHT; y++) {
+                    for (var x = 0; x < WIDTH; x++) {
+                        grid[y][x] = ' ';
+                    }
+                }
+                return;
+            }
+            
+            // Fallback to ASCII rendering
             for (var y = 0; y < HEIGHT; y++) {
                 for (var x = 0; x < WIDTH; x++) {
                     var closestDist = Infinity;
@@ -1057,7 +1405,7 @@
             // Initialize particles if needed
             if (!particles || particles.length === 0 || bass > 0.5) {
                 particles = [];
-                var numParticles = 50 + Math.floor(bass * 100);
+                var numParticles = useWebGL ? 500 : (50 + Math.floor(bass * 100));
                 for (var i = 0; i < numParticles; i++) {
                     var angle = (i / numParticles) * Math.PI * 2;
                     var speed = 0.5 + Math.random() * 2;
@@ -1096,7 +1444,20 @@
                 }
             }
             
-            // Render particles
+            // Use WebGL if available
+            if (useWebGL && webglRenderer) {
+                webglCanvas.style.display = 'block';
+                webglRenderer.updateParticles(particles, audio, WIDTH, HEIGHT);
+                // Still populate grid for background/fallback
+                for (var y = 0; y < HEIGHT; y++) {
+                    for (var x = 0; x < WIDTH; x++) {
+                        grid[y][x] = ' ';
+                    }
+                }
+                return;
+            }
+            
+            // Fallback to ASCII rendering
             for (var y = 0; y < HEIGHT; y++) {
                 for (var x = 0; x < WIDTH; x++) {
                     var closestDist = Infinity;
@@ -1342,14 +1703,153 @@
             }
         });
 
-        // Animation style selector
+        // Animation style selector with blending
         animationSelect.addEventListener('change', function(e) {
-            currentAnimationStyle = e.target.value;
-            // Reset particles when switching to animations that use them
-            if (currentAnimationStyle === 'starfield' || currentAnimationStyle === 'particles') {
-                particles = [];
+            var newStyle = e.target.value;
+            if (newStyle !== currentAnimationStyle) {
+                // Start blending transition
+                blending.from = currentAnimationStyle;
+                blending.to = newStyle;
+                blending.active = true;
+                blending.progress = 0;
+                
+                currentAnimationStyle = newStyle;
+                
+                // Reset particles when switching to animations that use them
+                if (currentAnimationStyle === 'starfield' || currentAnimationStyle === 'particles') {
+                    particles = [];
+                }
+                
+                // Hide WebGL canvas for non-particle animations
+                if (currentAnimationStyle !== 'starfield' && currentAnimationStyle !== 'particles') {
+                    if (webglCanvas) {
+                        webglCanvas.style.display = 'none';
+                    }
+                }
             }
         });
+        
+        // Touch gesture handling
+        var touchState = {
+            startX: 0,
+            startY: 0,
+            startTime: 0,
+            isLongPress: false,
+            longPressTimer: null
+        };
+        
+        function showGestureFeedback(text) {
+            gestureFeedback.textContent = text;
+            gestureFeedback.classList.add('show');
+            setTimeout(function() {
+                gestureFeedback.classList.remove('show');
+            }, 500);
+        }
+        
+        function getSwipeDirection(dx, dy) {
+            var absX = Math.abs(dx);
+            var absY = Math.abs(dy);
+            var minSwipeDistance = 50;
+            
+            if (absX < minSwipeDistance && absY < minSwipeDistance) {
+                return null;
+            }
+            
+            if (absX > absY) {
+                return dx > 0 ? 'right' : 'left';
+            } else {
+                return dy > 0 ? 'down' : 'up';
+            }
+        }
+        
+        function changeAnimationStyle(direction) {
+            var styles = Object.keys(animationRegistry);
+            var currentIndex = styles.indexOf(currentAnimationStyle);
+            var newIndex;
+            
+            if (direction === 'left') {
+                newIndex = (currentIndex - 1 + styles.length) % styles.length;
+            } else {
+                newIndex = (currentIndex + 1) % styles.length;
+            }
+            
+            var newStyle = styles[newIndex];
+            animationSelect.value = newStyle;
+            animationSelect.dispatchEvent(new Event('change'));
+            showGestureFeedback(animationSelect.options[animationSelect.selectedIndex].text);
+        }
+        
+        document.addEventListener('touchstart', function(e) {
+            if (e.touches.length === 1) {
+                var touch = e.touches[0];
+                touchState.startX = touch.clientX;
+                touchState.startY = touch.clientY;
+                touchState.startTime = Date.now();
+                touchState.isLongPress = false;
+                
+                // Long press detection
+                touchState.longPressTimer = setTimeout(function() {
+                    touchState.isLongPress = true;
+                    showGestureFeedback('Long Press');
+                    controls.classList.toggle('hidden');
+                }, 500);
+            }
+        }, { passive: true });
+        
+        document.addEventListener('touchmove', function(e) {
+            if (touchState.longPressTimer) {
+                clearTimeout(touchState.longPressTimer);
+                touchState.longPressTimer = null;
+            }
+        }, { passive: true });
+        
+        document.addEventListener('touchend', function(e) {
+            if (touchState.longPressTimer) {
+                clearTimeout(touchState.longPressTimer);
+                touchState.longPressTimer = null;
+            }
+            
+            if (e.changedTouches.length === 1 && !touchState.isLongPress) {
+                var touch = e.changedTouches[0];
+                var dx = touch.clientX - touchState.startX;
+                var dy = touch.clientY - touchState.startY;
+                var dt = Date.now() - touchState.startTime;
+                
+                // Tap detection (quick touch with minimal movement)
+                if (dt < 300 && Math.abs(dx) < 10 && Math.abs(dy) < 10) {
+                    // Toggle play/pause
+                    if (isPlaying) {
+                        stopBtn.click();
+                    } else {
+                        playBtn.click();
+                    }
+                    return;
+                }
+                
+                // Swipe detection
+                var direction = getSwipeDirection(dx, dy);
+                if (direction) {
+                    switch (direction) {
+                        case 'left':
+                        case 'right':
+                            changeAnimationStyle(direction);
+                            break;
+                        case 'up':
+                            if (!isFullscreen()) {
+                                enterFullscreen();
+                                showGestureFeedback('Fullscreen');
+                            }
+                            break;
+                        case 'down':
+                            controls.classList.toggle('hidden');
+                            showGestureFeedback(controls.classList.contains('hidden') ? 'Controls Hidden' : 'Controls Shown');
+                            break;
+                    }
+                }
+            }
+            
+            touchState.isLongPress = false;
+        }, { passive: true });
         
         // Show controls on hover or when pressing 'C' key
         document.addEventListener('keydown', function(e) {
@@ -1480,9 +1980,15 @@
             canvasElement.height = window.innerHeight;
             var ctx = canvasElement.getContext('2d');
             
-            // Set canvas background (matching the page background)
-            ctx.fillStyle = '#f5f5f0';
+            // Set canvas background (matching the page background from theme)
+            var bgColor = window.getComputedStyle(document.documentElement).getPropertyValue('--bg-color').trim() || '#f5f5f0';
+            ctx.fillStyle = bgColor;
             ctx.fillRect(0, 0, canvasElement.width, canvasElement.height);
+            
+            // Draw WebGL canvas if visible
+            if (useWebGL && webglCanvas && webglCanvas.style.display !== 'none') {
+                ctx.drawImage(webglCanvas, 0, 0);
+            }
             
             // Get computed styles from the canvas element
             var computedStyle = window.getComputedStyle(canvas);
