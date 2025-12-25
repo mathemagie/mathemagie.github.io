@@ -392,10 +392,20 @@
                 worker = new Worker('worker.js');
                 worker.onmessage = function(e) {
                     if (e.data.type === 'grid') {
-                        grid = e.data.grid;
-                        render();
+                        // Verify grid structure before using
+                        if (e.data.grid && Array.isArray(e.data.grid) && e.data.grid.length === HEIGHT) {
+                            grid = e.data.grid;
+                            render();
+                        } else {
+                            // Grid structure invalid, disable worker and recalculate
+                            useWorker = false;
+                            update();
+                            render();
+                        }
                     } else if (e.data.type === 'fallback') {
                         useWorker = false; // Fallback to main thread
+                        update();
+                        render();
                     }
                 };
                 worker.onerror = function(e) {
@@ -532,13 +542,23 @@
          * @modifies {HTMLElement} canvas.textContent - The displayed text content
          */
         function render() {
+            // Safety check: ensure grid is initialized and dimensions match
+            if (!grid || grid.length !== HEIGHT) {
+                initGrid();
+            }
+            
             // Render WebGL particles if using particle animations
             if (useWebGL && webglRenderer && (currentAnimationStyle === 'starfield' || currentAnimationStyle === 'particles')) {
                 webglRenderer.render(time);
                 // Still render ASCII background
                 var lines = [];
                 for (var y = 0; y < HEIGHT; y++) {
-                    lines.push(grid[y].join(''));
+                    if (grid[y] && Array.isArray(grid[y])) {
+                        lines.push(grid[y].join(''));
+                    } else {
+                        // Fallback: create empty row if missing
+                        lines.push(' '.repeat(WIDTH));
+                    }
                 }
                 canvas.textContent = lines.join('\n');
             } else {
@@ -549,7 +569,12 @@
                 // Render ASCII grid
                 var lines = [];
                 for (var y = 0; y < HEIGHT; y++) {
-                    lines.push(grid[y].join(''));
+                    if (grid[y] && Array.isArray(grid[y])) {
+                        lines.push(grid[y].join(''));
+                    } else {
+                        // Fallback: create empty row if missing
+                        lines.push(' '.repeat(WIDTH));
+                    }
                 }
                 canvas.textContent = lines.join('\n');
             }
