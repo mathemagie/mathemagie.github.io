@@ -11,6 +11,7 @@ const issInfo = document.getElementById('iss-info');
 const map = L.map('map', {
     zoomControl: true,
     attributionControl: true,
+    scrollWheelZoom: false, // Disable mouse wheel zoom
     tap: true, // Enable tap interaction on mobile
     tapTolerance: 15, // Increase tap tolerance for better mobile UX
     zoomDelta: 0.25, // Smaller zoom steps for smoother zooming

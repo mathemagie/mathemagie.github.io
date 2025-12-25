@@ -1,0 +1,22 @@
+# Python Dependencies for Nabaztag ISS Tracker
+# Install with: pip install -r requirements.txt
+
+# HTTP requests for API calls and Nabaztag communication
+requests>=2.31.0
+
+# Optional: For better JSON handling and error messages
+# (requests already includes JSON support, but these can be helpful)
+# json5>=0.9.0  # Uncomment if needed for advanced JSON parsing
+
+# Optional: For running as a service or daemon
+# python-daemon>=3.0.0  # Uncomment if using daemon mode
+
+# Optional: For configuration file management
+# pyyaml>=6.0.0  # Uncomment if using YAML config files
+
+# Note: Python 3.6+ is required
+# The script uses standard library modules:
+# - time (for sleep/delays)
+# - json (for JSON parsing)
+# - urllib (for URL handling, though requests is preferred)
+
