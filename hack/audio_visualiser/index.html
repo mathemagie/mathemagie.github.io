@@ -70,6 +70,22 @@
             cursor: not-allowed;
         }
         
+        select {
+            padding: 8px 15px;
+            background: #e8e8e0;
+            border: 1px solid #2a2a2a;
+            border-radius: 4px;
+            color: #2a2a2a;
+            font-family: monospace;
+            cursor: pointer;
+            font-size: 14px;
+        }
+        
+        select:focus {
+            outline: none;
+            border-color: #2a2a2a;
+        }
+        
         #canvas {
             line-height: 1;
             letter-spacing: 0;
@@ -103,6 +119,14 @@
         </div>
         <button id="fullscreenBtn">Fullscreen</button>
         <button id="screenshotBtn">Screenshot</button>
+        <div>
+            <label for="animationSelect" style="color: #2a2a2a; font-size: 12px; margin-bottom: 5px; display: block;">Animation Style:</label>
+            <select id="animationSelect">
+                <option value="hybrid">Hybrid Layered</option>
+                <option value="matrix">Matrix Streams</option>
+                <option value="ripple">Ripple Waves</option>
+            </select>
+        </div>
     </div>
     <div id="canvas"></div>
 
@@ -113,8 +137,11 @@
         var stopBtn = document.getElementById('stopBtn');
         var fullscreenBtn = document.getElementById('fullscreenBtn');
         var screenshotBtn = document.getElementById('screenshotBtn');
+        var animationSelect = document.getElementById('animationSelect');
         var canvas = document.getElementById('canvas');
         var controls = document.querySelector('.controls');
+        
+        var currentAnimationStyle = 'hybrid'; // Default animation style
 
         var audioFile = null;
         var audioContext = null;
@@ -209,16 +236,15 @@
             canvas.style.textIndent = '0';
         }
 
-        function update() {
-            initGrid();
-            time += 0.1; // Increment animation time
-
+        // Get audio data and normalize
+        function getAudioData() {
             var bass = 0;
             var mid = 0;
             var treble = 0;
             var overall = 0;
             var peakFreq = 0;
             var peakIndex = 0;
+            var freqBands = [];
             
             if (analyser && frequencyData && isPlaying) {
                 analyser.getByteFrequencyData(frequencyData);
@@ -235,6 +261,7 @@
                         treble = treble + frequencyData[i];
                     }
                     overall = overall + frequencyData[i];
+                    freqBands.push(frequencyData[i] / 255);
                     
                     // Find peak frequency
                     if (frequencyData[i] > peakFreq) {
@@ -248,11 +275,46 @@
                 treble = treble / (frequencyData.length - midEnd) / 255;
                 overall = overall / frequencyData.length / 255;
             }
-
-            // Character set for more variety - inspired by radial patterns
-            var chars = ['#', '+', '*', '.', ':', ';', '=', '-', '_', '|', '/', '\\', '<', '>', '^', 'v', 'o', 'O', '@', '~', '`'];
             
-            // Maximum distance from center for normalization
+            return {
+                bass: bass,
+                mid: mid,
+                treble: treble,
+                overall: overall,
+                peakFreq: peakFreq / 255,
+                peakIndex: peakIndex,
+                freqBands: freqBands
+            };
+        }
+
+        function update() {
+            initGrid();
+            time += 0.1; // Increment animation time
+            
+            var audio = getAudioData();
+            var bass = audio.bass;
+            var mid = audio.mid;
+            var treble = audio.treble;
+            var overall = audio.overall;
+            
+            // Call the selected animation style
+            if (currentAnimationStyle === 'matrix') {
+                animateMatrix(audio);
+            } else if (currentAnimationStyle === 'ripple') {
+                animateRipple(audio);
+            } else {
+                animateHybrid(audio);
+            }
+        }
+        
+        // Animation Style 1: Hybrid Layered (original)
+        function animateHybrid(audio) {
+            var bass = audio.bass;
+            var mid = audio.mid;
+            var treble = audio.treble;
+            var overall = audio.overall;
+
+            var chars = ['#', '+', '*', '.', ':', ';', '=', '-', '_', '|', '/', '\\', '<', '>', '^', 'v', 'o', 'O', '@', '~', '`'];
             var maxDist = Math.sqrt((WIDTH/2) * (WIDTH/2) + (HEIGHT/2) * (HEIGHT/2));
             
             for (var y = 0; y < HEIGHT; y++) {
@@ -261,15 +323,12 @@
                     var dy = y - HEIGHT / 2;
                     var dist = Math.sqrt(dx * dx + dy * dy);
                     var angle = Math.atan2(dy, dx);
-                    var normalizedDist = dist / maxDist; // 0 to 1
+                    var normalizedDist = dist / maxDist;
                     
-                    // INSPIRED BY RADIAL PATTERNS: Concentric expanding/contracting waves
-                    // Multiple wave layers for depth
                     var radialWave1 = Math.sin(dist * 0.15 - time * 2.5 - bass * 6);
                     var radialWave2 = Math.sin(dist * 0.25 - time * 1.8 - mid * 4);
                     var radialWave3 = Math.sin(dist * 0.35 - time * 1.2 - treble * 3);
                     
-                    // Pulsating concentric rings (inspired by the radial graphic)
                     var ringRadius1 = (bass * 40 + time * 3) % 60;
                     var ringRadius2 = (mid * 35 + time * 2.5) % 55;
                     var ringRadius3 = (treble * 30 + time * 2) % 50;
@@ -277,84 +336,199 @@
                     var ring2 = Math.abs(dist - ringRadius2) < 2;
                     var ring3 = Math.abs(dist - ringRadius3) < 1.5;
                     
-                    // INSPIRED BY SWIRLING PINWHEEL: Rotating segments
-                    // Create wedge segments (like the pinwheel)
-                    var numSegments = 6 + Math.floor(bass * 4); // 6-10 segments
+                    var numSegments = 6 + Math.floor(bass * 4);
                     var segmentAngle = (2 * Math.PI) / numSegments;
                     var segmentIndex = Math.floor((angle + Math.PI) / segmentAngle);
                     var segmentAngleCenter = segmentIndex * segmentAngle - Math.PI;
                     var angleOffset = angle - segmentAngleCenter;
                     
-                    // Swirling motion within segments
                     var swirl = Math.sin(dist * 0.2 - angle * 3 + time * 2 + overall * 5);
                     var segmentSwirl = Math.abs(angleOffset) < segmentAngle / 2 && swirl > 0.3;
                     
-                    // INSPIRED BY GRAINY TEXTURE: Organic, smoky patterns
                     var grain = Math.sin(dist * 0.3 + angle * 2 + time * 1.5) * 
                                 Math.cos(dist * 0.2 - angle * 1.5 + time * 1.8);
                     var grainyPattern = grain > (0.4 - overall * 0.5);
                     
-                    // Radial expansion/contraction (pulsing effect)
                     var pulsePhase = Math.sin(time * 1.5 + overall * 3);
                     var pulseDist = dist - (pulsePhase * 15 * overall);
                     var pulseWave = Math.sin(pulseDist * 0.2) > 0.5;
                     
-                    // Enhanced angular patterns (spiral effects)
                     var spiral1 = Math.sin(dist * 0.1 - angle * 4 + time * 2 + bass * 4);
                     var spiral2 = Math.sin(dist * 0.15 - angle * 6 + time * 1.5 + mid * 3);
                     var spiral3 = Math.sin(dist * 0.2 - angle * 8 + time * 1.2 + treble * 2);
                     
-                    // Layered radial waves (concentric circles)
                     var radialPattern1 = radialWave1 > (0.2 - bass * 0.4);
                     var radialPattern2 = radialWave2 > (0.1 - mid * 0.3);
                     var radialPattern3 = radialWave3 > (0.0 - treble * 0.2);
                     
-                    // Dynamic threshold based on audio
                     var threshold = 0.3 + overall * 0.5;
                     var random = Math.random();
                     var charIndex = Math.floor((normalizedDist + random) * chars.length) % chars.length;
                     
-                    // PRIORITY-BASED RENDERING (inspired by radial design)
-                    // 1. Pulsing rings (highest priority - most visible)
                     if (ring1 && bass > 0.15) {
                         grid[y][x] = chars[Math.floor(bass * chars.length)];
                     } else if (ring2 && mid > 0.15) {
                         grid[y][x] = chars[Math.floor(mid * chars.length)];
                     } else if (ring3 && treble > 0.15) {
                         grid[y][x] = chars[Math.floor(treble * chars.length)];
-                    }
-                    // 2. Swirling segment patterns
-                    else if (segmentSwirl && overall > 0.2 && random > threshold * 0.6) {
+                    } else if (segmentSwirl && overall > 0.2 && random > threshold * 0.6) {
                         grid[y][x] = chars[charIndex];
-                    }
-                    // 3. Radial wave patterns (concentric circles)
-                    else if (radialPattern1 && bass > 0.2 && random > threshold * 0.7) {
+                    } else if (radialPattern1 && bass > 0.2 && random > threshold * 0.7) {
                         grid[y][x] = '#';
                     } else if (radialPattern2 && mid > 0.2 && random > threshold * 0.75) {
                         grid[y][x] = '+';
                     } else if (radialPattern3 && treble > 0.2 && random > threshold * 0.8) {
                         grid[y][x] = '.';
-                    }
-                    // 4. Spiral effects
-                    else if (spiral1 > 0.5 && bass > 0.15) {
+                    } else if (spiral1 > 0.5 && bass > 0.15) {
                         grid[y][x] = '/';
                     } else if (spiral2 > 0.5 && mid > 0.15) {
                         grid[y][x] = '\\';
                     } else if (spiral3 > 0.5 && treble > 0.15) {
                         grid[y][x] = '|';
-                    }
-                    // 5. Pulsing waves
-                    else if (pulseWave && overall > 0.25 && random > threshold * 0.65) {
+                    } else if (pulseWave && overall > 0.25 && random > threshold * 0.65) {
                         grid[y][x] = chars[charIndex];
-                    }
-                    // 6. Grainy texture (background)
-                    else if (grainyPattern && overall > 0.15 && random > threshold * 0.9) {
+                    } else if (grainyPattern && overall > 0.15 && random > threshold * 0.9) {
                         grid[y][x] = ':';
-                    }
-                    // 7. Subtle background particles
-                    else if (random > 0.88 + overall * 0.12) {
+                    } else if (random > 0.88 + overall * 0.12) {
                         if (dist < 25 + overall * 20) {
                             grid[y][x] = '.';
+                        }
+                    }
+                }
+            }
+        }
+        
+        // Animation Style 2: Matrix-style vertical streams
+        function animateMatrix(audio) {
+            var bass = audio.bass;
+            var mid = audio.mid;
+            var treble = audio.treble;
+            var overall = audio.overall;
+            var freqBands = audio.freqBands;
+            
+            // Character sets by density
+            var heavyChars = ['#', '@', '█', '▓', '▒'];
+            var mediumChars = ['+', '*', '░', '·', 'o'];
+            var lightChars = ['.', ':', '·', "'", '`'];
+            var allChars = heavyChars.concat(mediumChars).concat(lightChars);
+            
+            // Create vertical columns that respond to frequency bands
+            var numColumns = Math.min(WIDTH, freqBands.length || 64);
+            var columnWidth = WIDTH / numColumns;
+            
+            for (var y = 0; y < HEIGHT; y++) {
+                for (var x = 0; x < WIDTH; x++) {
+                    var columnIndex = Math.floor(x / columnWidth);
+                    var freqValue = freqBands[columnIndex] || 0;
+                    
+                    // Vertical position affects character selection
+                    var verticalPos = y / HEIGHT;
+                    var speed = 0.5 + overall * 0.5;
+                    var streamPos = (y + time * speed * 20) % (HEIGHT + 20);
+                    
+                    // Create falling stream effect
+                    var streamLength = 5 + Math.floor(freqValue * 15);
+                    var inStream = streamPos < streamLength;
+                    var streamIndex = Math.floor(streamPos / streamLength * streamLength);
+                    
+                    // Character selection based on position in stream
+                    var charDensity = 1 - (streamIndex / streamLength);
+                    var threshold = 0.3 + freqValue * 0.7;
+                    
+                    if (inStream && charDensity > threshold) {
+                        // Select character based on density and frequency
+                        var charSet;
+                        if (freqValue > 0.6) {
+                            charSet = heavyChars;
+                        } else if (freqValue > 0.3) {
+                            charSet = mediumChars;
+                        } else {
+                            charSet = lightChars;
+                        }
+                        var charIndex = Math.floor(charDensity * charSet.length);
+                        grid[y][x] = charSet[charIndex];
+                    } else if (Math.random() > 0.95 && freqValue > 0.2) {
+                        // Random sparkles
+                        grid[y][x] = lightChars[Math.floor(Math.random() * lightChars.length)];
+                    }
+                    
+                    // Add horizontal wave effect based on mid frequencies
+                    var waveX = x + Math.sin(y * 0.1 + time * 2 + mid * 3) * 2;
+                    if (Math.abs(waveX - x) < 1 && mid > 0.3) {
+                        grid[y][x] = mediumChars[Math.floor(mid * mediumChars.length)];
+                    }
+                }
+            }
+        }
+        
+        // Animation Style 3: Ripple/wave patterns
+        function animateRipple(audio) {
+            var bass = audio.bass;
+            var mid = audio.mid;
+            var treble = audio.treble;
+            var overall = audio.overall;
+            var peakFreq = audio.peakFreq;
+            
+            var chars = ['o', 'O', '●', '○', '.', ':', '·', '~', '≈', '≋'];
+            var maxDist = Math.sqrt((WIDTH/2) * (WIDTH/2) + (HEIGHT/2) * (HEIGHT/2));
+            
+            // Multiple ripple sources
+            var numSources = 3 + Math.floor(bass * 3);
+            var sources = [];
+            for (var s = 0; s < numSources; s++) {
+                sources.push({
+                    x: WIDTH / 2 + Math.sin(time * 0.5 + s) * (WIDTH * 0.3),
+                    y: HEIGHT / 2 + Math.cos(time * 0.5 + s) * (HEIGHT * 0.3),
+                    phase: time * 2 + s * Math.PI / numSources,
+                    intensity: 0.5 + (s % 2) * 0.5
+                });
+            }
+            
+            for (var y = 0; y < HEIGHT; y++) {
+                for (var x = 0; x < WIDTH; x++) {
+                    var maxRipple = 0;
+                    var rippleChar = ' ';
+                    
+                    // Calculate ripples from all sources
+                    for (var s = 0; s < sources.length; s++) {
+                        var source = sources[s];
+                        var dx = x - source.x;
+                        var dy = y - source.y;
+                        var dist = Math.sqrt(dx * dx + dy * dy);
+                        
+                        // Ripple wave calculation
+                        var rippleRadius = dist - source.phase * 10;
+                        var rippleWave = Math.sin(rippleRadius * 0.3);
+                        var rippleIntensity = rippleWave * source.intensity;
+                        
+                        // Character selection based on ripple intensity
+                        if (rippleIntensity > maxRipple) {
+                            maxRipple = rippleIntensity;
+                            var charIndex = Math.floor((rippleIntensity + 1) / 2 * chars.length);
+                            charIndex = Math.max(0, Math.min(chars.length - 1, charIndex));
+                            rippleChar = chars[charIndex];
+                        }
+                    }
+                    
+                    // Apply audio responsiveness
+                    var audioBoost = 0.3 + overall * 0.7;
+                    var threshold = 0.4;
+                    
+                    if (maxRipple * audioBoost > threshold) {
+                        grid[y][x] = rippleChar;
+                    } else if (Math.random() > 0.92 && overall > 0.2) {
+                        // Background particles
+                        grid[y][x] = '.';
+                    }
+                    
+                    // Add expanding circles from bass hits
+                    if (bass > 0.4) {
+                        var centerX = WIDTH / 2;
+                        var centerY = HEIGHT / 2;
+                        var distFromCenter = Math.sqrt((x - centerX) * (x - centerX) + (y - centerY) * (y - centerY));
+                        var bassRing = Math.abs(distFromCenter - (bass * 30 + time * 5 % 40)) < 2;
+                        if (bassRing) {
+                            grid[y][x] = '#';
                         }
                     }
                 }
@@ -539,6 +713,32 @@
             }
         });
 
+        // Animation style selector
+        animationSelect.addEventListener('change', function(e) {
+            currentAnimationStyle = e.target.value;
+        });
+        
+        // Show controls on hover or when pressing 'C' key
+        document.addEventListener('keydown', function(e) {
+            if (e.key === 'c' || e.key === 'C') {
+                controls.classList.toggle('hidden');
+            }
+        });
+        
+        // Show controls on mouse move (temporary)
+        var controlsTimeout;
+        document.addEventListener('mousemove', function() {
+            if (controls.classList.contains('hidden')) {
+                controls.classList.remove('hidden');
+                clearTimeout(controlsTimeout);
+                controlsTimeout = setTimeout(function() {
+                    if (isPlaying) {
+                        controls.classList.add('hidden');
+                    }
+                }, 3000); // Hide after 3 seconds of no movement
+            }
+        });
+
         // Fullscreen functionality
         function enterFullscreen() {
             var element = document.documentElement; // Full screen the entire page
@@ -675,11 +875,15 @@
         initGrid();
         animate();
         
-        // Hide controls on page load
-        controls.classList.add('hidden');
-        
         // Auto-load MP3 file on page load
         autoLoadMP3();
+        
+        // Hide controls after a delay (to allow animation selection)
+        setTimeout(function() {
+            if (isPlaying) {
+                controls.classList.add('hidden');
+            }
+        }, 5000); // Hide after 5 seconds if playing
         
         // Auto-enter fullscreen on page load
         // Note: Browsers may require user interaction, so we try after a short delay
