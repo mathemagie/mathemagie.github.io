@@ -1,0 +1,713 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Audio Binary Flow</title>
+    <style>
+        html, body {
+            margin: 0;
+            padding: 0;
+            width: 100%;
+            height: 100%;
+            overflow: hidden;
+        }
+        
+        body {
+            background: #f5f5f0;
+            font-family: monospace;
+            color: #2a2a2a;
+            position: relative;
+        }
+        
+        .controls {
+            position: absolute;
+            top: 20px;
+            z-index: 10;
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+            align-items: center;
+            background: rgba(245, 245, 240, 0.9);
+            padding: 20px;
+            border-radius: 8px;
+            border: 1px solid #2a2a2a;
+            transition: opacity 0.3s ease, visibility 0.3s ease;
+        }
+        
+        .controls.hidden {
+            opacity: 0;
+            visibility: hidden;
+            pointer-events: none;
+        }
+        
+        .file-label {
+            cursor: pointer;
+            padding: 10px 20px;
+            background: #e8e8e0;
+            border: 1px solid #2a2a2a;
+            border-radius: 4px;
+            color: #2a2a2a;
+        }
+        
+        input[type="file"] {
+            display: none;
+        }
+        
+        button {
+            padding: 10px 20px;
+            background: #e8e8e0;
+            border: 1px solid #2a2a2a;
+            border-radius: 4px;
+            color: #2a2a2a;
+            cursor: pointer;
+            font-family: monospace;
+        }
+        
+        button:disabled {
+            background: #d0d0c8;
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+        
+        #canvas {
+            line-height: 1;
+            letter-spacing: 0;
+            color: #2a2a2a;
+            text-shadow: 0 0 2px rgba(42, 42, 42, 0.3);
+            white-space: pre;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100vw;
+            height: 100vh;
+            margin: 0;
+            padding: 0;
+            border: 0;
+            overflow: hidden;
+            font-family: monospace;
+            box-sizing: border-box;
+        }
+    </style>
+</head>
+<body>
+    <div class="controls">
+        <label class="file-label">
+            Choisir un fichier MP3
+            <input type="file" id="fileInput" accept="audio/*">
+        </label>
+        <div id="filename"></div>
+        <div>
+            <button id="playBtn" disabled>Play</button>
+            <button id="stopBtn" disabled>Stop</button>
+        </div>
+        <button id="fullscreenBtn">Fullscreen</button>
+        <button id="screenshotBtn">Screenshot</button>
+    </div>
+    <div id="canvas"></div>
+
+    <script>
+        var fileInput = document.getElementById('fileInput');
+        var filename = document.getElementById('filename');
+        var playBtn = document.getElementById('playBtn');
+        var stopBtn = document.getElementById('stopBtn');
+        var fullscreenBtn = document.getElementById('fullscreenBtn');
+        var screenshotBtn = document.getElementById('screenshotBtn');
+        var canvas = document.getElementById('canvas');
+        var controls = document.querySelector('.controls');
+
+        var audioFile = null;
+        var audioContext = null;
+        var analyser = null;
+        var source = null;
+        var frequencyData = null;
+        var isPlaying = false;
+        var audioBuffer = null; // Store buffer for looping
+        var shouldLoop = true; // Loop flag
+
+        var WIDTH = 0;
+        var HEIGHT = 0;
+        var grid = [];
+        var time = 0; // Animation time counter
+        var particles = []; // For floating particle effects
+        
+        // Calculate grid dimensions based on viewport size
+        function calculateGridSize() {
+            // Get viewport dimensions
+            var vw = window.innerWidth;
+            var vh = window.innerHeight;
+            
+            // Character aspect ratio for monospace fonts
+            // Monospace characters are typically about 0.6x wider than tall
+            var charAspectRatio = 0.6;
+            
+            // Calculate grid to fill 100% of the window
+            // We want to maximize the number of characters while filling the screen
+            // Start with a reasonable character size estimate
+            var estimatedCharHeight = 10; // pixels per character height
+            var estimatedCharWidth = estimatedCharHeight * charAspectRatio;
+            
+            // Calculate maximum grid dimensions that fit in viewport
+            WIDTH = Math.floor(vw / estimatedCharWidth);
+            HEIGHT = Math.floor(vh / estimatedCharHeight);
+            
+            // Ensure minimum size
+            if (WIDTH < 20) WIDTH = 20;
+            if (HEIGHT < 15) HEIGHT = 15;
+            
+            // Calculate exact font size to fill the window perfectly
+            // Font size determines character height, so we calculate based on HEIGHT
+            var optimalFontSizeH = vh / HEIGHT;
+            // And ensure width also fits
+            var optimalFontSizeW = (vw / WIDTH) / charAspectRatio;
+            // Use the smaller to ensure everything fits
+            var optimalFontSize = Math.min(optimalFontSizeH, optimalFontSizeW);
+            
+            // Update font size
+            var canvas = document.getElementById('canvas');
+            canvas.style.fontSize = optimalFontSize + 'px';
+            
+            // Recalculate grid with exact font size to ensure perfect fit
+            var actualCharHeight = optimalFontSize;
+            var actualCharWidth = optimalFontSize * charAspectRatio;
+            WIDTH = Math.floor(vw / actualCharWidth);
+            HEIGHT = Math.floor(vh / actualCharHeight);
+        }
+        
+        // Initialize grid size on load and resize
+        calculateGridSize();
+        window.addEventListener('resize', function() {
+            calculateGridSize();
+            initGrid();
+        });
+
+        function initGrid() {
+            grid = [];
+            for (var y = 0; y < HEIGHT; y++) {
+                var row = [];
+                for (var x = 0; x < WIDTH; x++) {
+                    row.push(' ');
+                }
+                grid.push(row);
+            }
+        }
+
+        function render() {
+            var text = '';
+            for (var y = 0; y < HEIGHT; y++) {
+                for (var x = 0; x < WIDTH; x++) {
+                    text = text + grid[y][x];
+                }
+                // Add newline except for the last row
+                if (y < HEIGHT - 1) {
+                    text = text + '\n';
+                }
+            }
+            canvas.textContent = text;
+            // Ensure canvas is positioned at top-left
+            canvas.style.textAlign = 'left';
+            canvas.style.textIndent = '0';
+        }
+
+        function update() {
+            initGrid();
+            time += 0.1; // Increment animation time
+
+            var bass = 0;
+            var mid = 0;
+            var treble = 0;
+            var overall = 0;
+            var peakFreq = 0;
+            var peakIndex = 0;
+            
+            if (analyser && frequencyData && isPlaying) {
+                analyser.getByteFrequencyData(frequencyData);
+                
+                var bassEnd = Math.floor(frequencyData.length * 0.15);
+                var midEnd = Math.floor(frequencyData.length * 0.5);
+                
+                for (var i = 0; i < frequencyData.length; i++) {
+                    if (i < bassEnd) {
+                        bass = bass + frequencyData[i];
+                    } else if (i < midEnd) {
+                        mid = mid + frequencyData[i];
+                    } else {
+                        treble = treble + frequencyData[i];
+                    }
+                    overall = overall + frequencyData[i];
+                    
+                    // Find peak frequency
+                    if (frequencyData[i] > peakFreq) {
+                        peakFreq = frequencyData[i];
+                        peakIndex = i;
+                    }
+                }
+                
+                bass = bass / bassEnd / 255;
+                mid = mid / (midEnd - bassEnd) / 255;
+                treble = treble / (frequencyData.length - midEnd) / 255;
+                overall = overall / frequencyData.length / 255;
+            }
+
+            // Character set for more variety - inspired by radial patterns
+            var chars = ['#', '+', '*', '.', ':', ';', '=', '-', '_', '|', '/', '\\', '<', '>', '^', 'v', 'o', 'O', '@', '~', '`'];
+            
+            // Maximum distance from center for normalization
+            var maxDist = Math.sqrt((WIDTH/2) * (WIDTH/2) + (HEIGHT/2) * (HEIGHT/2));
+            
+            for (var y = 0; y < HEIGHT; y++) {
+                for (var x = 0; x < WIDTH; x++) {
+                    var dx = x - WIDTH / 2;
+                    var dy = y - HEIGHT / 2;
+                    var dist = Math.sqrt(dx * dx + dy * dy);
+                    var angle = Math.atan2(dy, dx);
+                    var normalizedDist = dist / maxDist; // 0 to 1
+                    
+                    // INSPIRED BY RADIAL PATTERNS: Concentric expanding/contracting waves
+                    // Multiple wave layers for depth
+                    var radialWave1 = Math.sin(dist * 0.15 - time * 2.5 - bass * 6);
+                    var radialWave2 = Math.sin(dist * 0.25 - time * 1.8 - mid * 4);
+                    var radialWave3 = Math.sin(dist * 0.35 - time * 1.2 - treble * 3);
+                    
+                    // Pulsating concentric rings (inspired by the radial graphic)
+                    var ringRadius1 = (bass * 40 + time * 3) % 60;
+                    var ringRadius2 = (mid * 35 + time * 2.5) % 55;
+                    var ringRadius3 = (treble * 30 + time * 2) % 50;
+                    var ring1 = Math.abs(dist - ringRadius1) < 2.5;
+                    var ring2 = Math.abs(dist - ringRadius2) < 2;
+                    var ring3 = Math.abs(dist - ringRadius3) < 1.5;
+                    
+                    // INSPIRED BY SWIRLING PINWHEEL: Rotating segments
+                    // Create wedge segments (like the pinwheel)
+                    var numSegments = 6 + Math.floor(bass * 4); // 6-10 segments
+                    var segmentAngle = (2 * Math.PI) / numSegments;
+                    var segmentIndex = Math.floor((angle + Math.PI) / segmentAngle);
+                    var segmentAngleCenter = segmentIndex * segmentAngle - Math.PI;
+                    var angleOffset = angle - segmentAngleCenter;
+                    
+                    // Swirling motion within segments
+                    var swirl = Math.sin(dist * 0.2 - angle * 3 + time * 2 + overall * 5);
+                    var segmentSwirl = Math.abs(angleOffset) < segmentAngle / 2 && swirl > 0.3;
+                    
+                    // INSPIRED BY GRAINY TEXTURE: Organic, smoky patterns
+                    var grain = Math.sin(dist * 0.3 + angle * 2 + time * 1.5) * 
+                                Math.cos(dist * 0.2 - angle * 1.5 + time * 1.8);
+                    var grainyPattern = grain > (0.4 - overall * 0.5);
+                    
+                    // Radial expansion/contraction (pulsing effect)
+                    var pulsePhase = Math.sin(time * 1.5 + overall * 3);
+                    var pulseDist = dist - (pulsePhase * 15 * overall);
+                    var pulseWave = Math.sin(pulseDist * 0.2) > 0.5;
+                    
+                    // Enhanced angular patterns (spiral effects)
+                    var spiral1 = Math.sin(dist * 0.1 - angle * 4 + time * 2 + bass * 4);
+                    var spiral2 = Math.sin(dist * 0.15 - angle * 6 + time * 1.5 + mid * 3);
+                    var spiral3 = Math.sin(dist * 0.2 - angle * 8 + time * 1.2 + treble * 2);
+                    
+                    // Layered radial waves (concentric circles)
+                    var radialPattern1 = radialWave1 > (0.2 - bass * 0.4);
+                    var radialPattern2 = radialWave2 > (0.1 - mid * 0.3);
+                    var radialPattern3 = radialWave3 > (0.0 - treble * 0.2);
+                    
+                    // Dynamic threshold based on audio
+                    var threshold = 0.3 + overall * 0.5;
+                    var random = Math.random();
+                    var charIndex = Math.floor((normalizedDist + random) * chars.length) % chars.length;
+                    
+                    // PRIORITY-BASED RENDERING (inspired by radial design)
+                    // 1. Pulsing rings (highest priority - most visible)
+                    if (ring1 && bass > 0.15) {
+                        grid[y][x] = chars[Math.floor(bass * chars.length)];
+                    } else if (ring2 && mid > 0.15) {
+                        grid[y][x] = chars[Math.floor(mid * chars.length)];
+                    } else if (ring3 && treble > 0.15) {
+                        grid[y][x] = chars[Math.floor(treble * chars.length)];
+                    }
+                    // 2. Swirling segment patterns
+                    else if (segmentSwirl && overall > 0.2 && random > threshold * 0.6) {
+                        grid[y][x] = chars[charIndex];
+                    }
+                    // 3. Radial wave patterns (concentric circles)
+                    else if (radialPattern1 && bass > 0.2 && random > threshold * 0.7) {
+                        grid[y][x] = '#';
+                    } else if (radialPattern2 && mid > 0.2 && random > threshold * 0.75) {
+                        grid[y][x] = '+';
+                    } else if (radialPattern3 && treble > 0.2 && random > threshold * 0.8) {
+                        grid[y][x] = '.';
+                    }
+                    // 4. Spiral effects
+                    else if (spiral1 > 0.5 && bass > 0.15) {
+                        grid[y][x] = '/';
+                    } else if (spiral2 > 0.5 && mid > 0.15) {
+                        grid[y][x] = '\\';
+                    } else if (spiral3 > 0.5 && treble > 0.15) {
+                        grid[y][x] = '|';
+                    }
+                    // 5. Pulsing waves
+                    else if (pulseWave && overall > 0.25 && random > threshold * 0.65) {
+                        grid[y][x] = chars[charIndex];
+                    }
+                    // 6. Grainy texture (background)
+                    else if (grainyPattern && overall > 0.15 && random > threshold * 0.9) {
+                        grid[y][x] = ':';
+                    }
+                    // 7. Subtle background particles
+                    else if (random > 0.88 + overall * 0.12) {
+                        if (dist < 25 + overall * 20) {
+                            grid[y][x] = '.';
+                        }
+                    }
+                }
+            }
+        }
+
+        function animate() {
+            update();
+            render();
+            requestAnimationFrame(animate);
+        }
+
+        // Function to load audio file from URL
+        function loadAudioFromURL(url, displayName) {
+            fetch(url)
+                .then(function(response) {
+                    if (!response.ok) {
+                        throw new Error('File not found: ' + url);
+                    }
+                    return response.arrayBuffer();
+                })
+                .then(function(arrayBuffer) {
+                    // Create a File-like object from the array buffer
+                    var blob = new Blob([arrayBuffer], { type: 'audio/mpeg' });
+                    audioFile = new File([blob], displayName || url.split('/').pop(), { type: 'audio/mpeg' });
+                    filename.textContent = audioFile.name;
+                    playBtn.disabled = false;
+                    shouldLoop = true; // Enable looping for auto-loaded file
+                    console.log('Audio file loaded:', audioFile.name);
+                    // Auto-play after loading
+                    playAudio();
+                })
+                .catch(function(error) {
+                    console.error('Error loading audio file:', error);
+                    filename.textContent = 'Error: Could not load ' + (displayName || url);
+                });
+        }
+
+        // Try to auto-load MP3 file from current directory
+        function autoLoadMP3() {
+            // First, check if there's a file specified in URL parameter
+            var urlParams = new URLSearchParams(window.location.search);
+            var fileParam = urlParams.get('file');
+            
+            if (fileParam) {
+                // Load file specified in URL parameter
+                loadAudioFromURL(fileParam, fileParam);
+                return;
+            }
+            
+            // Try to find and load MP3 files in current directory
+            // List of potential MP3 filenames to try
+            var mp3Files = [
+                'ElevenLabs_2025-11-10T15_48_49_Daniel_pre_sp100_s50_sb75_se0_b_m2.mp3',
+                'audio.mp3',
+                'music.mp3',
+                'song.mp3',
+                'sound.mp3'
+            ];
+            
+            // Try loading each file until one succeeds
+            var tryNextFile = function(index) {
+                if (index >= mp3Files.length) {
+                    console.log('No MP3 files found in current directory');
+                    return;
+                }
+                
+                var fileName = mp3Files[index];
+                fetch(fileName)
+                    .then(function(response) {
+                        if (response.ok) {
+                            // File exists, load it
+                            loadAudioFromURL(fileName, fileName);
+                        } else {
+                            // Try next file
+                            tryNextFile(index + 1);
+                        }
+                    })
+                    .catch(function() {
+                        // Try next file
+                        tryNextFile(index + 1);
+                    });
+            };
+            
+            // Start trying files
+            tryNextFile(0);
+        }
+
+        // Function to play the loaded audio file
+        function playAudio() {
+            if (!audioFile && !audioBuffer) return;
+
+            if (source) {
+                source.stop();
+            }
+
+            // Create or reuse AudioContext
+            if (!audioContext) {
+                var AC = window.AudioContext || window.webkitAudioContext;
+                audioContext = new AC();
+                analyser = audioContext.createAnalyser();
+                analyser.fftSize = 256;
+                frequencyData = new Uint8Array(analyser.frequencyBinCount);
+            }
+
+            // Function to start playback with the buffer
+            function startPlayback(buffer) {
+                audioBuffer = buffer; // Store buffer for looping
+                
+                source = audioContext.createBufferSource();
+                source.buffer = buffer;
+                source.connect(analyser);
+                analyser.connect(audioContext.destination);
+                source.start(0);
+                
+                isPlaying = true;
+                playBtn.disabled = true;
+                stopBtn.disabled = false;
+                // Hide controls when playing
+                controls.classList.add('hidden');
+
+                source.onended = function() {
+                    // If looping is enabled, restart playback
+                    if (shouldLoop && audioBuffer) {
+                        // Small delay before restarting for smooth loop
+                        setTimeout(function() {
+                            if (isPlaying) { // Only restart if still supposed to be playing
+                                startPlayback(audioBuffer);
+                            }
+                        }, 50);
+                    } else {
+                        isPlaying = false;
+                        playBtn.disabled = false;
+                        stopBtn.disabled = true;
+                        // Show controls when audio ends (only if not looping)
+                        controls.classList.remove('hidden');
+                    }
+                };
+            }
+
+            // If we already have the buffer, use it directly
+            if (audioBuffer) {
+                startPlayback(audioBuffer);
+            } else {
+                // Otherwise, load the file
+                var reader = new FileReader();
+                reader.onload = function(evt) {
+                    audioContext.decodeAudioData(evt.target.result, function(buffer) {
+                        startPlayback(buffer);
+                    });
+                };
+                reader.readAsArrayBuffer(audioFile);
+            }
+        }
+
+        fileInput.addEventListener('change', function(e) {
+            var file = e.target.files[0];
+            if (file) {
+                audioFile = file;
+                audioBuffer = null; // Reset buffer when new file is selected
+                filename.textContent = file.name;
+                playBtn.disabled = false;
+                shouldLoop = true; // Enable looping for new file
+                // Auto-play when file is manually selected
+                playAudio();
+            }
+        });
+
+        playBtn.addEventListener('click', function() {
+            playAudio();
+        });
+
+        stopBtn.addEventListener('click', function() {
+            if (source) {
+                shouldLoop = false; // Disable looping when manually stopped
+                source.stop();
+                isPlaying = false;
+                playBtn.disabled = false;
+                stopBtn.disabled = true;
+                // Show controls when stopped
+                controls.classList.remove('hidden');
+            }
+        });
+
+        // Fullscreen functionality
+        function enterFullscreen() {
+            var element = document.documentElement; // Full screen the entire page
+            
+            // Check for different browser implementations
+            if (element.requestFullscreen) {
+                element.requestFullscreen();
+            } else if (element.webkitRequestFullscreen) { // Safari
+                element.webkitRequestFullscreen();
+            } else if (element.mozRequestFullScreen) { // Firefox
+                element.mozRequestFullScreen();
+            } else if (element.msRequestFullscreen) { // IE/Edge
+                element.msRequestFullscreen();
+            }
+        }
+
+        function exitFullscreen() {
+            if (document.exitFullscreen) {
+                document.exitFullscreen();
+            } else if (document.webkitExitFullscreen) { // Safari
+                document.webkitExitFullscreen();
+            } else if (document.mozCancelFullScreen) { // Firefox
+                document.mozCancelFullScreen();
+            } else if (document.msExitFullscreen) { // IE/Edge
+                document.msExitFullscreen();
+            }
+        }
+
+        function isFullscreen() {
+            return !!(document.fullscreenElement || 
+                     document.webkitFullscreenElement || 
+                     document.mozFullScreenElement || 
+                     document.msFullscreenElement);
+        }
+
+        function updateFullscreenButton() {
+            if (isFullscreen()) {
+                fullscreenBtn.textContent = 'Exit Fullscreen';
+            } else {
+                fullscreenBtn.textContent = 'Fullscreen';
+            }
+        }
+
+        // Toggle fullscreen on button click
+        fullscreenBtn.addEventListener('click', function() {
+            if (isFullscreen()) {
+                exitFullscreen();
+            } else {
+                enterFullscreen();
+            }
+        });
+
+        // Listen for fullscreen changes to update button text
+        document.addEventListener('fullscreenchange', updateFullscreenButton);
+        document.addEventListener('webkitfullscreenchange', updateFullscreenButton);
+        document.addEventListener('mozfullscreenchange', updateFullscreenButton);
+        document.addEventListener('msfullscreenchange', updateFullscreenButton);
+
+        // Also support F11 key for fullscreen (common shortcut)
+        document.addEventListener('keydown', function(e) {
+            // F11 key or F key
+            if (e.key === 'F11' || (e.key === 'f' && !e.ctrlKey && !e.metaKey && !e.altKey)) {
+                e.preventDefault();
+                if (isFullscreen()) {
+                    exitFullscreen();
+                } else {
+                    enterFullscreen();
+                }
+            }
+            // Escape key to exit fullscreen
+            if (e.key === 'Escape' && isFullscreen()) {
+                exitFullscreen();
+            }
+        });
+
+        // Screenshot functionality
+        screenshotBtn.addEventListener('click', function() {
+            // Create a canvas element to draw the text
+            var canvasElement = document.createElement('canvas');
+            canvasElement.width = window.innerWidth;
+            canvasElement.height = window.innerHeight;
+            var ctx = canvasElement.getContext('2d');
+            
+            // Set canvas background (matching the page background)
+            ctx.fillStyle = '#f5f5f0';
+            ctx.fillRect(0, 0, canvasElement.width, canvasElement.height);
+            
+            // Get computed styles from the canvas element
+            var computedStyle = window.getComputedStyle(canvas);
+            var fontSize = computedStyle.fontSize;
+            var fontFamily = computedStyle.fontFamily;
+            var color = computedStyle.color;
+            var textShadow = computedStyle.textShadow;
+            
+            // Set font properties
+            ctx.font = fontSize + ' ' + fontFamily;
+            ctx.fillStyle = color;
+            ctx.textBaseline = 'top';
+            ctx.textAlign = 'left';
+            
+            // Parse text shadow for glow effect
+            if (textShadow && textShadow !== 'none') {
+                var shadowParts = textShadow.split(' ');
+                if (shadowParts.length >= 3) {
+                    ctx.shadowBlur = parseFloat(shadowParts[2]) || 5;
+                    ctx.shadowColor = color;
+                }
+            }
+            
+            // Draw the text
+            var lines = canvas.textContent.split('\n');
+            var lineHeight = parseFloat(fontSize) * 1; // line-height is 1
+            var y = 0;
+            
+            for (var i = 0; i < lines.length; i++) {
+                ctx.fillText(lines[i], 0, y);
+                y += lineHeight;
+            }
+            
+            // Convert canvas to image and download
+            canvasElement.toBlob(function(blob) {
+                var url = URL.createObjectURL(blob);
+                var a = document.createElement('a');
+                a.href = url;
+                a.download = 'audio-visualizer-' + new Date().getTime() + '.png';
+                document.body.appendChild(a);
+                a.click();
+                document.body.removeChild(a);
+                URL.revokeObjectURL(url);
+            }, 'image/png');
+        });
+
+        // Initialize grid after calculating size
+        initGrid();
+        animate();
+        
+        // Hide controls on page load
+        controls.classList.add('hidden');
+        
+        // Auto-load MP3 file on page load
+        autoLoadMP3();
+        
+        // Auto-enter fullscreen on page load
+        // Note: Browsers may require user interaction, so we try after a short delay
+        // and also on first user interaction
+        function tryAutoFullscreen() {
+            // Try to enter fullscreen
+            if (!isFullscreen()) {
+                enterFullscreen();
+            }
+        }
+        
+        // Try fullscreen after page loads (may be blocked by browser)
+        window.addEventListener('load', function() {
+            setTimeout(tryAutoFullscreen, 500);
+        });
+        
+        // Also try fullscreen on first user interaction (click, touch, keypress)
+        var hasInteracted = false;
+        function tryFullscreenOnInteraction() {
+            if (!hasInteracted && !isFullscreen()) {
+                hasInteracted = true;
+                tryAutoFullscreen();
+            }
+        }
+        
+        document.addEventListener('click', tryFullscreenOnInteraction, { once: true });
+        document.addEventListener('touchstart', tryFullscreenOnInteraction, { once: true });
+        document.addEventListener('keydown', tryFullscreenOnInteraction, { once: true });
+    </script>
+</body>
+</html>
