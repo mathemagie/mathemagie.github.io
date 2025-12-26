@@ -346,26 +346,49 @@ function checkRectangleCollision(raindrop, rectangle) {
     const dropX = dropRect.left + dropRect.width / 2;
     const dropY = dropRect.bottom;
 
-    const dx = dropX - rectangle.x;
-    const dy = dropY - rectangle.y;
+    // Get previous position from dropData (for continuous collision detection)
+    const dropData = activeRaindrops.get(raindrop);
+    const prevX = dropData.prevX;
+    const prevY = dropData.prevY;
 
-    const angleRad = -rectangle.rotation * (Math.PI / 180);
-    const localX = dx * Math.cos(angleRad) - dy * Math.sin(angleRad);
-    const localY = dx * Math.sin(angleRad) + dy * Math.cos(angleRad);
+    // Get rectangle's actual center position (rectangle.x/y should already be screen coordinates)
+    const rectX = rectangle.x;
+    const rectY = rectangle.y;
 
-    const halfWidth = rectangle.width / 2 + 5;
-    const halfHeight = rectangle.height / 2 + 10;
+    // Continuous collision detection: check if path from previous to current position intersects rectangle
+    // Test multiple points along the path (sample every 0.5 pixels to catch thin rectangles)
+    const distance = Math.sqrt((dropX - prevX) ** 2 + (dropY - prevY) ** 2);
+    const steps = Math.max(10, Math.ceil(distance * 2)); // Sample every 0.5 pixels
+    
+    for (let i = 0; i <= steps; i++) {
+        const t = i / steps;
+        const testX = prevX + (dropX - prevX) * t;
+        const testY = prevY + (dropY - prevY) * t;
 
-    const hit = Math.abs(localX) <= halfWidth &&
-                Math.abs(localY) <= halfHeight;
+        const dx = testX - rectX;
+        const dy = testY - rectY;
 
-    if (hit) {
-        const normalAngle = rectangle.rotation * (Math.PI / 180);
-        return {
-            hit: true,
-            normalX: -Math.sin(normalAngle),
-            normalY: Math.cos(normalAngle)
-        };
+        const angleRad = -rectangle.rotation * (Math.PI / 180);
+        const cosAngle = Math.cos(angleRad);
+        const sinAngle = Math.sin(angleRad);
+        const localX = dx * cosAngle - dy * sinAngle;
+        const localY = dx * sinAngle + dy * cosAngle;
+
+        // Add margin to catch edge cases (halfWidth and halfHeight already have margins)
+        const halfWidth = rectangle.width / 2 + 5;
+        const halfHeight = rectangle.height / 2 + 10;
+
+        const hit = Math.abs(localX) <= halfWidth &&
+                    Math.abs(localY) <= halfHeight;
+
+        if (hit) {
+            const normalAngle = rectangle.rotation * (Math.PI / 180);
+            return {
+                hit: true,
+                normalX: -Math.sin(normalAngle),
+                normalY: Math.cos(normalAngle)
+            };
+        }
     }
 
     return { hit: false };
@@ -374,43 +397,57 @@ function checkRectangleCollision(raindrop, rectangle) {
 function checkRectangleCollisionPhysics(drop, rectangle) {
     const currentX = drop.x;
     const currentY = drop.y;
+    const prevX = drop.prevX;
+    const prevY = drop.prevY;
 
-    const dx = currentX - rectangle.x;
-    const dy = currentY - rectangle.y;
-
+    // Continuous collision detection: check if path from previous to current position intersects rectangle
+    // Test multiple points along the path to prevent tunneling (at least every 1 pixel)
+    const distance = Math.sqrt((currentX - prevX) ** 2 + (currentY - prevY) ** 2);
+    const steps = Math.max(10, Math.ceil(distance));
+    
     const angleRad = -rectangle.rotation * (Math.PI / 180);
     const cosAngle = Math.cos(angleRad);
     const sinAngle = Math.sin(angleRad);
-
-    const localX = dx * cosAngle - dy * sinAngle;
-    const localY = dx * sinAngle + dy * cosAngle;
-
     const halfWidth = rectangle.width / 2 + 5;
     const halfHeight = rectangle.height / 2 + 10;
+    const normalAngle = rectangle.rotation * (Math.PI / 180);
+    const normalX = -Math.sin(normalAngle);
+    const normalY = Math.cos(normalAngle);
 
-    const isInside = Math.abs(localX) <= halfWidth && Math.abs(localY) <= halfHeight;
+    for (let i = 0; i <= steps; i++) {
+        const t = i / steps;
+        const testX = prevX + (currentX - prevX) * t;
+        const testY = prevY + (currentY - prevY) * t;
 
-    if (isInside) {
-        const normalAngle = rectangle.rotation * (Math.PI / 180);
-        const normalX = -Math.sin(normalAngle);
-        const normalY = Math.cos(normalAngle);
+        const dx = testX - rectangle.x;
+        const dy = testY - rectangle.y;
 
-        const vx = drop.velocityX;
-        const vy = drop.velocityY;
-        const dotProduct = vx * normalX + vy * normalY;
+        const localX = dx * cosAngle - dy * sinAngle;
+        const localY = dx * sinAngle + dy * cosAngle;
 
-        if (dotProduct < 0) {
-            const separationDepth = 15;
-            const separationX = normalX * separationDepth;
-            const separationY = normalY * separationDepth;
+        const isInside = Math.abs(localX) <= halfWidth && Math.abs(localY) <= halfHeight;
 
-            return {
-                hit: true,
-                normalX: normalX,
-                normalY: normalY,
-                separationX: separationX,
-                separationY: separationY
-            };
+        if (isInside) {
+            const vx = drop.velocityX;
+            const vy = drop.velocityY;
+            const dotProduct = vx * normalX + vy * normalY;
+
+            if (dotProduct < 0) {
+                const separationDepth = 15;
+                const separationX = normalX * separationDepth;
+                const separationY = normalY * separationDepth;
+
+                // Return intersection point so updatePhysics can position the drop correctly
+                return {
+                    hit: true,
+                    normalX: normalX,
+                    normalY: normalY,
+                    separationX: separationX,
+                    separationY: separationY,
+                    intersectionX: testX,
+                    intersectionY: testY
+                };
+            }
         }
     }
 
@@ -509,6 +546,9 @@ function updatePhysics(currentTime) {
                     drop.lastBounceTime = currentTime;
                     drop.lastBouncedRectId = rect.id;
 
+                    // Move to intersection point, then apply separation to push out
+                    drop.x = collision.intersectionX;
+                    drop.y = collision.intersectionY;
                     drop.x += collision.separationX;
                     drop.y += collision.separationY;
                     drop.prevX = drop.x;
@@ -569,9 +609,12 @@ function createRaindrop() {
 
     rainContainer.appendChild(raindrop);
 
+    const dropRect = raindrop.getBoundingClientRect();
     const dropData = {
         duration: duration,
-        velocityY: (window.innerHeight + 20) / duration
+        velocityY: (window.innerHeight + 20) / duration,
+        prevX: dropRect.left + dropRect.width / 2,
+        prevY: dropRect.bottom
     };
     activeRaindrops.set(raindrop, dropData);
 
@@ -582,6 +625,20 @@ function createRaindrop() {
             clearInterval(checkInterval);
             return;
         }
+
+        // Get current position
+        const currentRect = raindrop.getBoundingClientRect();
+        const currentX = currentRect.left + currentRect.width / 2;
+        const currentY = currentRect.bottom;
+
+        // Use lastChecked position as previous (or current if first check)
+        // This ensures we check the path from last position to current position
+        const prevX = dropData.lastCheckedX !== undefined ? dropData.lastCheckedX : dropData.prevX;
+        const prevY = dropData.lastCheckedY !== undefined ? dropData.lastCheckedY : dropData.prevY;
+
+        // Update dropData for collision check function
+        dropData.prevX = prevX;
+        dropData.prevY = prevY;
 
         for (let rect of rectangles) {
             const collision = checkRectangleCollision(raindrop, rect);
@@ -619,6 +676,10 @@ function createRaindrop() {
                 return;
             }
         }
+
+        // Update last checked position AFTER collision check (for next iteration)
+        dropData.lastCheckedX = currentX;
+        dropData.lastCheckedY = currentY;
 
         for (let key of keys) {
             if (checkCollision(raindrop, key)) {
