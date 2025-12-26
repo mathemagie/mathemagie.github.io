@@ -22,10 +22,11 @@ This is a "Radio ISS" application - an immersive ISS (International Space Statio
 
 ### Radio System (`js/radio.js`)
 - **RadioManager Class**: Handles all radio functionality and UI management
-- **Regional Radio Mapping**: 7 regions (Ocean, North America, South America, Europe, Africa, Asia, Oceania) each mapped to specific internet radio stations
-- **Auto-switching Logic**: `getRegion(lat, lon)` method determines current region based on ISS coordinates
-- **Station Management**: `setStationForRegion()` handles seamless audio transitions
-- **UI Elements**: Fixed position radio UI with station display and audio controls
+- **Regional Radio Mapping**: Granular geographic regions (20+ specific areas like US West, US East, Western Europe, Northern Europe, East Asia, Southeast Asia, etc.) mapped to internet radio stations
+- **Auto-switching Logic**: `getRegion(lat, lon)` method uses precise lat/lon bounds to determine current region based on ISS coordinates
+- **Station Management**: `setStationForRegion()` handles seamless audio transitions with dual audio players for crossfading
+- **UI Elements**: Fixed position radio UI with station display, playback controls, and helpful hints
+- **Context Overlay**: ISS position, current region, and next pass ETA (accessible via 'i' key)
 
 ### Particle Physics Engine (`js/particles.js`)
 - **Particle Class**: Advanced physics with multiple states (stationary, moving, resetting)
@@ -50,16 +51,24 @@ This is a "Radio ISS" application - an immersive ISS (International Space Statio
 ## Key Features
 
 **Radio Streaming**:
-- SomaFM Mission Control (Ocean), KEXP Seattle (North America), Radio Paradise World (South America)
-- Radio Swiss Pop (Europe), RFI Monde (Africa), SomaFM Groove Salad (Asia), SomaFM Space Station Soma (Oceania)
-- Automatic region detection and station switching as ISS orbits
-- Persistent playback state across station changes
+- 20+ regional radio stations covering all continents with granular geographic coverage
+- Examples: KEXP (US West), WFMU (US East), Radio Swiss Pop (Western Europe), NTS Radio (Northern Europe), Radio Paradise (Southeast Asia), and many more
+- Automatic region detection using precise lat/lon boundaries (respects ISS ±51.6° orbital limit)
+- Seamless station switching with dual audio player crossfading as ISS orbits
+- Persistent playback state and volume across station changes
 
 **Visual Effects**:
 - ISS heartbeat pulse animation with double-beat pattern
 - Soap bubble reset effect when ISS collides with continent particles
 - Continent outline visualization (press 'm' key to toggle)
+- Path trace visualization showing ISS trajectory (toggle via 'i' key overlay)
 - Particle attraction to nearest continent points to maintain geographic clustering
+
+**UI Features**:
+- Fixed position radio UI with station display and playback controls
+- ISS context overlay (press 'i') showing current position, region, and next pass ETA
+- Fullscreen mode (press 'f' or use button)
+- Responsive design for mobile and desktop
 
 **Physics Simulation**:
 - Realistic elastic collisions between particles
@@ -118,25 +127,36 @@ npm run lint:fix   # Auto-fix JavaScript issues
 - Unit tests execution
 - All checks must pass before commit is allowed
 
-**IMPORTANT - Cache-Busting Rule**: **ALWAYS** automatically update cache-busting timestamps in `index.html` after making any changes to CSS or JS files:
+**IMPORTANT - Cache-Busting System**:
+- **Development (localhost)**: Cache-busting is automatic - random IDs are generated on each page load
+- **Production**: Cache-busting uses timestamps that MUST be updated after modifying CSS or JS files
+
+To update production cache-busting timestamps:
 ```bash
 # Get current timestamp
-date +%s
+TIMESTAMP=$(date +%s)
 
-# Update index.html with new timestamp for ALL CSS/JS files:
-# <link rel="stylesheet" href="css/styles.css?v=NEW_TIMESTAMP">
-# <script src="js/particles.js?v=NEW_TIMESTAMP"></script>
-# <script src="js/radio.js?v=NEW_TIMESTAMP"></script>
-# <script src="js/geography.js?v=NEW_TIMESTAMP"></script>
-# <script src="js/main.js?v=NEW_TIMESTAMP"></script>
+# Update index.html manually with new timestamp for ALL CSS/JS files:
+# For CSS: <link rel="stylesheet" href="css/styles.css?v=TIMESTAMP">
+# For JS: <script src="js/particles.js?v=TIMESTAMP"></script> (repeat for radio.js, geography.js, main.js)
+
+# Or use find/replace to update all occurrences of the old timestamp
 ```
-**CRITICAL**: This MUST be done on every iteration when CSS or JS files are modified. This forces browsers to reload updated files instead of using cached versions, which is essential for testing changes during development. Never skip this step!
+**CRITICAL**: When modifying CSS or JS files, update the production timestamps in `index.html` to force browsers to reload the updated files. This is essential for deployed versions.
+
+**Utility Scripts**:
+```bash
+./update-version.sh        # Update version comment with latest git commit hash
+./verify-deployment.sh     # Verify deployment integrity (production)
+```
 
 **Debug Features**:
 - Add `?debug=1` to URL for simulation mode (cycles through all regions)
-- Press 'm' key to visualize continent outline points  
+- Press 'm' key to visualize continent outline points
 - Press 'f' key to toggle fullscreen
+- Press 'i' key to toggle ISS context overlay (shows position, region, next ETA)
 - Radio UI shows current station and region information
+- Path trace feature can be toggled from ISS context overlay (persisted in localStorage)
 
 **External dependencies**: 
 - p5.js 1.4.0 (CDN)
