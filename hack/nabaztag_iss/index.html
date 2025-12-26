@@ -31,9 +31,13 @@
     <link rel="preconnect" href="https://unpkg.com">
     <link rel="preconnect" href="https://api.wheretheiss.at">
 
+    <!-- Preload critical resources for faster rendering -->
+    <link rel="preload" as="image" href="https://upload.wikimedia.org/wikipedia/commons/d/d0/International_Space_Station.svg">
+
     <!-- CSS Dependencies -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" crossorigin="" integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=">
+    <link href='https://api.mapbox.com/mapbox.js/plugins/leaflet-fullscreen/v1.0.1/leaflet.fullscreen.css' rel='stylesheet' />
     <link rel="stylesheet" href="styles.css?2">
 </head>
 <body>
@@ -75,7 +79,15 @@
                         Your browser does not support the video tag.
                     </video>
                 </article>
-                <div id="iss-info" class="iss-info" aria-live="polite">Loading ISS position...</div>
+                <div id="iss-info" class="iss-info iss-info--loading" aria-live="polite">
+                    <div class="iss-info__skeleton">
+                        <div class="skeleton-text skeleton-text--lg"></div>
+                        <div class="skeleton-text skeleton-text--sm"></div>
+                    </div>
+                </div>
+                <div id="france-pass-info" class="france-pass-info" aria-live="polite">
+                    <div class="france-pass-info__status">Calculating next pass over France...</div>
+                </div>
                 <div id="map" class="iss-map"></div>
             </section>
         </section>
@@ -85,6 +97,9 @@
     </main>
     <!-- Leaflet JS -->
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" crossorigin="" integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo="></script>
+    <script src="https://unpkg.com/@joergdietrich/leaflet.terminator@1.0.0/L.Terminator.js"></script>
+    <script src='https://api.mapbox.com/mapbox.js/plugins/leaflet-fullscreen/v1.0.1/Leaflet.fullscreen.min.js'></script>
+    <script src="https://unpkg.com/satellite.js@5.0.0/dist/satellite.min.js"></script>
     <script src="map.js?2" defer></script>
     <script defer>
         // Wait for DOM to be ready

@@ -324,6 +324,183 @@ body::before {
     text-shadow: 0 0 10px rgba(0, 212, 255, 0.3);
 }
 
+/* Metadata display layout */
+.iss-info__primary {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 12px;
+    font-size: 1.1rem;
+    margin-bottom: 12px;
+}
+
+.iss-info__separator {
+    color: var(--accent);
+    opacity: 0.5;
+}
+
+.iss-info__metadata {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 12px;
+    font-size: 0.9rem;
+}
+
+.iss-info__meta-item {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    justify-content: center;
+}
+
+.iss-info__meta-item i {
+    color: var(--accent);
+    font-size: 1rem;
+}
+
+/* France Pass Prediction */
+.france-pass-info {
+    max-width: 680px;
+    width: 100%;
+    background: linear-gradient(135deg, rgba(26, 31, 58, 0.6) 0%, rgba(26, 31, 58, 0.4) 100%);
+    backdrop-filter: blur(10px);
+    border-radius: var(--border-radius);
+    border: 1px solid var(--card-border);
+    padding: 16px 20px;
+    margin-bottom: 16px;
+    font-family: 'Space Mono', monospace;
+    transition: all 0.3s ease;
+    animation: fadeInUp 0.8s ease-out 0.65s both;
+}
+
+.france-pass-info--active {
+    background: linear-gradient(135deg, rgba(0, 212, 255, 0.2) 0%, rgba(0, 149, 255, 0.1) 100%);
+    border-color: var(--accent);
+    box-shadow: 0 0 30px rgba(0, 212, 255, 0.4);
+    animation: pulse 2s ease-in-out infinite;
+}
+
+.france-pass-info__current {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    font-size: 1.2rem;
+    color: var(--accent);
+    text-align: center;
+    justify-content: center;
+}
+
+.france-pass-info__current i {
+    font-size: 1.5rem;
+    animation: wiggle 1s ease-in-out infinite;
+}
+
+.france-pass-info__next {
+    text-align: center;
+}
+
+.france-pass-info__label {
+    font-size: 0.9rem;
+    color: var(--primary-color);
+    margin-bottom: 8px;
+}
+
+.france-pass-info__countdown {
+    font-family: 'Orbitron', sans-serif;
+    font-size: 1.8rem;
+    font-weight: 700;
+    color: var(--accent);
+    margin-bottom: 8px;
+}
+
+.france-pass-info__details {
+    font-size: 0.85rem;
+    color: var(--footer);
+}
+
+.france-pass-info__none {
+    text-align: center;
+    color: var(--footer);
+    font-size: 0.9rem;
+}
+
+.france-pass-info__history {
+    margin-top: 16px;
+    padding-top: 16px;
+    border-top: 1px solid var(--card-border);
+}
+
+.france-pass-info__history summary {
+    cursor: pointer;
+    color: var(--link);
+    font-weight: 700;
+    user-select: none;
+    transition: color 0.2s ease;
+}
+
+.france-pass-info__history summary:hover {
+    color: var(--link-hover);
+}
+
+.france-pass-info__history ul {
+    list-style: none;
+    padding: 12px 0 0 0;
+    margin: 0;
+}
+
+.france-pass-info__history li {
+    padding: 6px 0;
+    font-size: 0.85rem;
+    color: var(--primary-color);
+    border-bottom: 1px solid rgba(0, 212, 255, 0.1);
+}
+
+.france-pass-info__history li:last-child {
+    border-bottom: none;
+}
+
+/* Loading skeleton */
+.iss-info--loading {
+    min-height: 80px;
+}
+
+.iss-info__skeleton {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    align-items: center;
+}
+
+.skeleton-text {
+    background: linear-gradient(90deg,
+        rgba(0, 212, 255, 0.1) 25%,
+        rgba(0, 212, 255, 0.2) 50%,
+        rgba(0, 212, 255, 0.1) 75%
+    );
+    background-size: 200% 100%;
+    animation: shimmer 1.5s infinite;
+    border-radius: 4px;
+}
+
+.skeleton-text--lg {
+    width: 300px;
+    height: 20px;
+}
+
+.skeleton-text--sm {
+    width: 400px;
+    height: 16px;
+}
+
+@keyframes shimmer {
+    0% { background-position: 200% 0; }
+    100% { background-position: -200% 0; }
+}
+
+.iss-info:not(.iss-info--loading) .iss-info__skeleton {
+    display: none;
+}
+
 .site-footer {
     color: var(--footer);
     margin-top: 3rem;
@@ -438,6 +615,20 @@ body::before {
         padding: 10px 16px;
     }
 
+    .iss-info__metadata {
+        grid-template-columns: repeat(2, 1fr);
+        gap: 8px;
+    }
+
+    /* Hide scale bar on mobile to save space */
+    .leaflet-control-scale {
+        display: none;
+    }
+
+    .france-pass-info__countdown {
+        font-size: 1.4rem;
+    }
+
     .site-footer {
         font-size: 0.85rem;
         margin-top: 2rem;
@@ -488,6 +679,10 @@ body::before {
         font-size: 0.9rem;
         padding: 10px 14px;
         letter-spacing: 0.03em;
+    }
+
+    .iss-info__metadata {
+        grid-template-columns: 1fr;
     }
 
     .content-block__media video {
@@ -578,6 +773,21 @@ body::before {
     .iss-map {
         break-inside: avoid;
     }
+}
+
+/* Zoom to ISS custom control styling */
+.leaflet-control-custom a {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: var(--accent) !important;
+    text-decoration: none;
+    font-size: 16px;
+}
+
+.leaflet-control-custom a:hover {
+    background: var(--accent) !important;
+    color: var(--primary-bg) !important;
 }
 
 /* Leaflet Map Custom Theme - Space Style */

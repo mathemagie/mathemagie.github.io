@@ -74,6 +74,72 @@ L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
 }).addTo(map);
 
 /**
+ * Day/night terminator overlay showing sunlight and shadow areas on Earth.
+ * @type {L.Terminator}
+ */
+let terminator = L.terminator({
+    fillColor: '#000000',
+    fillOpacity: 0.3,
+    weight: 2,
+    color: '#ffffff',
+    opacity: 0.5
+}).addTo(map);
+
+// Update terminator every minute to reflect Earth's rotation
+setInterval(() => {
+    terminator.setTime();
+}, 60000); // 60 seconds
+
+/**
+ * Add fullscreen control to the map.
+ * Allows users to view the map in fullscreen mode for better visibility.
+ */
+map.addControl(new L.Control.Fullscreen({
+    position: 'topleft',
+    title: 'Toggle fullscreen',
+    titleCancel: 'Exit fullscreen'
+}));
+
+/**
+ * Add scale bar to the map showing metric units (kilometers).
+ * Provides visual reference for distances on the map.
+ */
+L.control.scale({
+    position: 'bottomleft',
+    imperial: false, // Only show metric (km)
+    maxWidth: 150
+}).addTo(map);
+
+/**
+ * Custom control to center the map on the ISS location.
+ * Provides quick navigation back to the ISS if user pans away.
+ */
+L.Control.ZoomToISS = L.Control.extend({
+    onAdd: function(map) {
+        const container = L.DomUtil.create('div', 'leaflet-bar leaflet-control leaflet-control-custom');
+        container.innerHTML = '<a href="#" title="Center on ISS" role="button" aria-label="Center map on ISS"><i class="fas fa-satellite"></i></a>';
+        container.style.backgroundColor = 'rgba(26, 31, 58, 0.95)';
+        container.style.width = '30px';
+        container.style.height = '30px';
+
+        container.onclick = function(e) {
+            e.preventDefault();
+            if (issMarker) {
+                map.setView(issMarker.getLatLng(), 3, { animate: true, duration: 1 });
+            }
+        };
+
+        return container;
+    }
+});
+
+L.control.zoomToISS = function(opts) {
+    return new L.Control.ZoomToISS(opts);
+};
+
+L.control.zoomToISS({ position: 'topleft' }).addTo(map);
+
+/**
  * Custom icon configuration for the ISS marker.
  * Uses SVG icon from Wikipedia Commons showing the International Space Station.
  * @type {L.Icon}
@@ -103,6 +169,12 @@ const issMarker = L.marker([0, 0], {
 }).addTo(map);
 
 /**
+ * Leaflet circle instance representing ISS visibility footprint.
+ * @type {L.Circle}
+ */
+let footprintCircle = null;
+
+/**
  * Counter for tracking consecutive API fetch errors.
  * Used to prevent infinite retry loops and stop updates after repeated failures.
  * @type {number}
@@ -123,6 +195,76 @@ const MAX_ERRORS = 3;
  * @type {boolean}
  */
 let isFirstLoad = true;
+
+/**
+ * Updates the ISS footprint circle on the map.
+ * The footprint represents the area from which the ISS is visible above the horizon.
+ *
+ * @param {number} latitude - ISS latitude
+ * @param {number} longitude - ISS longitude
+ * @param {number} footprintKm - Footprint diameter in kilometers
+ */
+function updateFootprintCircle(latitude, longitude, footprintKm) {
+    const footprintRadiusMeters = (footprintKm / 2) * 1000; // Convert km diameter to meters radius
+
+    if (!footprintCircle) {
+        // Create circle on first load
+        footprintCircle = L.circle([latitude, longitude], {
+            radius: footprintRadiusMeters,
+            color: '#00d4ff',
+            fillColor: '#00d4ff',
+            fillOpacity: 0.1,
+            weight: 2,
+            opacity: 0.4
+        }).addTo(map);
+    } else {
+        // Update existing circle
+        footprintCircle.setLatLng([latitude, longitude]);
+        footprintCircle.setRadius(footprintRadiusMeters);
+    }
+}
+
+/**
+ * Updates the metadata display with ISS telemetry data.
+ *
+ * @param {Object} data - ISS data from the API
+ * @param {number} data.latitude - Latitude coordinate
+ * @param {number} data.longitude - Longitude coordinate
+ * @param {number} data.altitude - Altitude in km
+ * @param {number} data.velocity - Velocity in km/h
+ * @param {string} data.visibility - Visibility status (daylight or eclipsed)
+ * @param {number} data.footprint - Footprint diameter in km
+ */
+function updateMetadataDisplay(data) {
+    const { latitude, longitude, altitude, velocity, visibility, footprint } = data;
+
+    issInfo.innerHTML = `
+        <div class="iss-info__primary">
+            <span class="iss-info__coord">Lat: ${latitude.toFixed(4)}°</span>
+            <span class="iss-info__separator">|</span>
+            <span class="iss-info__coord">Lon: ${longitude.toFixed(4)}°</span>
+        </div>
+        <div class="iss-info__metadata">
+            <span class="iss-info__meta-item">
+                <i class="fas fa-arrows-alt-v" aria-hidden="true"></i>
+                ${altitude.toFixed(2)} km
+            </span>
+            <span class="iss-info__meta-item">
+                <i class="fas fa-rocket" aria-hidden="true"></i>
+                ${velocity.toFixed(0)} km/h
+            </span>
+            <span class="iss-info__meta-item">
+                <i class="fas fa-${visibility === 'daylight' ? 'sun' : 'moon'}" aria-hidden="true"></i>
+                ${visibility}
+            </span>
+            <span class="iss-info__meta-item" title="Visibility footprint diameter">
+                <i class="fas fa-circle" aria-hidden="true"></i>
+                ${footprint.toFixed(0)} km
+            </span>
+        </div>
+    `;
+    issInfo.setAttribute('aria-label', `ISS location: Latitude ${latitude.toFixed(4)}, Longitude ${longitude.toFixed(4)}, Altitude ${altitude.toFixed(2)} km, Velocity ${velocity.toFixed(0)} km/h`);
+}
 
 /**
  * Fetches the current ISS position from the API and updates the map marker and info display.
@@ -153,8 +295,11 @@ async function updateIssPosition() {
         // 'await' pauses the function until the response is converted to JSON.
         const data = await response.json();
 
-        // Destructure latitude and longitude from the API response data.
-        const { latitude, longitude } = data;
+        // Destructure latitude, longitude, and metadata from the API response data.
+        const { latitude, longitude, altitude, velocity, visibility, footprint } = data;
+
+        // Store current ISS data globally for France pass detection
+        window.currentIssData = data;
 
         // Validate coordinates
         if (typeof latitude !== 'number' || typeof longitude !== 'number' || 
@@ -166,21 +311,27 @@ async function updateIssPosition() {
         const newLatLng = L.latLng(latitude, longitude);
         issMarker.setLatLng(newLatLng);
 
+        // Update the footprint circle
+        updateFootprintCircle(latitude, longitude, footprint);
+
         // Center map on ISS location with full world view
         if (isFirstLoad) {
             // Initial load: Set view at zoom level 2 to show full world view
             map.setView(newLatLng, 2, { animate: false });
             console.log('ISS position loaded:', latitude.toFixed(4), longitude.toFixed(4), 'Zoom level: 2 (full world view)');
+            // Remove loading skeleton after first successful load
+            issInfo.classList.remove('iss-info--loading');
             isFirstLoad = false;
         } else {
             // Keep ISS centered as it moves, maintaining full world view
             map.panTo(newLatLng, { animate: true, duration: 1 });
         }
 
-        // Update the content of the 'iss-info' div with the new coordinates.
-        // We use .toFixed(4) to show the coordinates with 4 decimal places for more precision.
-        issInfo.innerHTML = `Latitude: ${latitude.toFixed(4)} &nbsp;|&nbsp; Longitude: ${longitude.toFixed(4)}`;
-        issInfo.setAttribute('aria-label', `ISS location: Latitude ${latitude.toFixed(4)}, Longitude ${longitude.toFixed(4)}`);
+        // Update the metadata display with coordinates and telemetry data
+        updateMetadataDisplay(data);
+
+        // Update France pass prediction display
+        updateFrancePassDisplay();
 
         // Reset error counter on success
         consecutiveErrors = 0;
@@ -222,9 +373,213 @@ async function updateIssPosition() {
 function initializeIssTracking() {
     // Call the function once to get the position immediately when the page loads.
     updateIssPosition();
-    
-    // And then set it to run every 5 seconds (5000 milliseconds) to get real-time updates.
-    window.updateInterval = setInterval(updateIssPosition, 5000);
+
+    // And then set it to run every 10 seconds (10000 milliseconds) to get real-time updates.
+    // Optimized from 5s to reduce API calls while maintaining smooth tracking.
+    window.updateInterval = setInterval(updateIssPosition, 10000);
+}
+
+// ========================================
+// FRANCE PASS PREDICTION MODULE
+// ========================================
+
+/**
+ * France geographic boundaries (from Python code).
+ * @type {Object}
+ */
+const FRANCE_BOUNDS = {
+    minLat: 41.3,
+    maxLat: 51.1,
+    minLon: -5.1,
+    maxLon: 8.2
+};
+
+let tleData = null;
+let nextPass = null;
+let currentPass = null;
+let passHistory = [];
+
+/**
+ * Fetches TLE (Two-Line Element) data for orbital calculations.
+ * @async
+ * @returns {Promise<Object|null>} TLE data or null on error
+ */
+async function fetchTLEData() {
+    try {
+        const response = await fetch('https://api.wheretheiss.at/v1/satellites/25544/tles?format=json');
+        if (!response.ok) throw new Error('Failed to fetch TLE data');
+        const data = await response.json();
+        tleData = data[0];
+        tleData.fetchedAt = Date.now();
+        console.log('TLE data loaded:', tleData.date);
+        return tleData;
+    } catch (error) {
+        console.error('Error fetching TLE data:', error);
+        return null;
+    }
+}
+
+/**
+ * Checks if coordinates are within France boundaries.
+ * @param {number} lat - Latitude
+ * @param {number} lon - Longitude
+ * @returns {boolean} True if over France
+ */
+function isOverFrance(lat, lon) {
+    return lat >= FRANCE_BOUNDS.minLat &&
+           lat <= FRANCE_BOUNDS.maxLat &&
+           lon >= FRANCE_BOUNDS.minLon &&
+           lon <= FRANCE_BOUNDS.maxLon;
+}
+
+/**
+ * Calculates the next ISS pass over France using TLE data.
+ * @returns {Object|null} Pass data with start/end times and duration
+ */
+function calculateNextPass() {
+    if (!tleData || !window.satellite) return null;
+
+    const satrec = satellite.twoline2satrec(tleData.line1, tleData.line2);
+    const now = new Date();
+    let checkTime = new Date(now);
+
+    const maxLookAhead = 24 * 60 * 60 * 1000; // 24 hours
+    const checkInterval = 30 * 1000; // 30 seconds
+    const MIN_PASS_DURATION = 10; // seconds
+
+    let passStart = null;
+    let inPass = false;
+
+    for (let elapsed = 0; elapsed < maxLookAhead; elapsed += checkInterval) {
+        checkTime = new Date(now.getTime() + elapsed);
+        const positionAndVelocity = satellite.propagate(satrec, checkTime);
+
+        if (positionAndVelocity.position && typeof positionAndVelocity.position === 'object') {
+            const gmst = satellite.gstime(checkTime);
+            const geodeticCoords = satellite.eciToGeodetic(positionAndVelocity.position, gmst);
+
+            const lat = satellite.degreesLat(geodeticCoords.latitude);
+            const lon = satellite.degreesLong(geodeticCoords.longitude);
+
+            const overFrance = isOverFrance(lat, lon);
+
+            if (overFrance && !inPass) {
+                passStart = checkTime;
+                inPass = true;
+            } else if (!overFrance && inPass) {
+                const duration = (checkTime - passStart) / 1000;
+                if (duration >= MIN_PASS_DURATION) {
+                    return {
+                        startTime: passStart,
+                        endTime: checkTime,
+                        duration: duration
+                    };
+                }
+                inPass = false;
+                passStart = null;
+            }
+        }
+    }
+
+    return null;
+}
+
+/**
+ * Updates the France pass display with current status and predictions.
+ */
+function updateFrancePassDisplay() {
+    const francePassInfo = document.getElementById('france-pass-info');
+    if (!francePassInfo) return;
+
+    const currentData = window.currentIssData;
+    if (!currentData) return;
+
+    const currentlyOverFrance = isOverFrance(currentData.latitude, currentData.longitude);
+
+    // Detect pass start/end
+    if (currentlyOverFrance && !currentPass) {
+        currentPass = { startTime: new Date() };
+        francePassInfo.classList.add('france-pass-info--active');
+    } else if (!currentlyOverFrance && currentPass) {
+        currentPass.endTime = new Date();
+        currentPass.duration = (currentPass.endTime - currentPass.startTime) / 1000;
+        passHistory.unshift(currentPass);
+        if (passHistory.length > 5) passHistory.pop();
+        currentPass = null;
+        francePassInfo.classList.remove('france-pass-info--active');
+        nextPass = calculateNextPass();
+    }
+
+    // Build display HTML
+    let html = '';
+
+    if (currentlyOverFrance) {
+        html = `
+            <div class="france-pass-info__current">
+                <i class="fas fa-satellite-dish"></i>
+                <strong>ISS is over France NOW!</strong>
+            </div>
+        `;
+    } else if (nextPass) {
+        const timeUntil = nextPass.startTime - new Date();
+        const hours = Math.floor(timeUntil / (1000 * 60 * 60));
+        const minutes = Math.floor((timeUntil % (1000 * 60 * 60)) / (1000 * 60));
+
+        html = `
+            <div class="france-pass-info__next">
+                <div class="france-pass-info__label">Next pass over France:</div>
+                <div class="france-pass-info__countdown">
+                    ${hours}h ${minutes}m
+                </div>
+                <div class="france-pass-info__details">
+                    ${nextPass.startTime.toLocaleTimeString()} - ${nextPass.endTime.toLocaleTimeString()}
+                    (${Math.round(nextPass.duration)}s duration)
+                </div>
+            </div>
+        `;
+    } else {
+        html = `<div class="france-pass-info__none">No pass over France in next 24 hours</div>`;
+    }
+
+    // Add history
+    if (passHistory.length > 0) {
+        html += `
+            <details class="france-pass-info__history">
+                <summary>Recent passes (${passHistory.length})</summary>
+                <ul>
+                    ${passHistory.map(pass => `
+                        <li>
+                            ${pass.startTime.toLocaleString()} -
+                            ${Math.round(pass.duration)}s duration
+                        </li>
+                    `).join('')}
+                </ul>
+            </details>
+        `;
+    }
+
+    francePassInfo.innerHTML = html;
+}
+
+/**
+ * Initializes the France pass prediction system.
+ * @async
+ */
+async function initializeFrancePassPrediction() {
+    await fetchTLEData();
+    if (tleData) {
+        nextPass = calculateNextPass();
+        updateFrancePassDisplay();
+
+        // Update every minute
+        setInterval(() => {
+            nextPass = calculateNextPass();
+            updateFrancePassDisplay();
+        }, 60000);
+
+        // Refresh TLE data every 6 hours
+        setInterval(fetchTLEData, 6 * 60 * 60 * 1000);
+    }
 }
 
 /**
@@ -250,12 +605,12 @@ if (document.readyState === 'loading') {
 
 /**
  * Fallback initialization after 1 second delay.
- * 
+ *
  * This ensures ISS tracking starts even if:
  * - map.whenReady() doesn't fire
  * - DOMContentLoaded event is missed
  * - There are timing issues with map tile loading
- * 
+ *
  * Only runs if isFirstLoad is still true (tracking hasn't started yet).
  */
 setTimeout(function() {
@@ -264,3 +619,6 @@ setTimeout(function() {
         initializeIssTracking();
     }
 }, 1000);
+
+// Initialize France pass prediction system
+initializeFrancePassPrediction();

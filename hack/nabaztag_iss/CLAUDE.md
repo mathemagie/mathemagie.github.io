@@ -17,10 +17,16 @@ This is a **vanilla JavaScript static site** with no build process or package ma
 
 ### Key External Dependencies (CDN-loaded)
 
+**Core Dependencies:**
 - Leaflet 1.9.4 for map rendering
 - Bootstrap 5.3.3 for layout
 - Font Awesome 6.5.1 for icons
 - Google Fonts (Orbitron, Space Mono)
+
+**Enhanced Features (Added):**
+- Leaflet.Terminator 1.0.0 for day/night overlay (~5KB)
+- Leaflet.Fullscreen 1.0.1 for fullscreen control (~3KB)
+- satellite.js 5.0.0 for orbital calculations and pass prediction (~50KB)
 
 ## Development Workflow
 
@@ -42,10 +48,24 @@ Then navigate to `http://localhost:8000`
 
 ### ISS Position Updates (map.js)
 
-- Fetches ISS coordinates from `https://api.wheretheiss.at/v1/satellites/25544`
-- Updates every 5 seconds via `setInterval(updateIssPosition, 5000)`
+**Primary API Endpoint:**
+- Fetches ISS data from `https://api.wheretheiss.at/v1/satellites/25544`
+- Updates every 10 seconds via `setInterval(updateIssPosition, 10000)` (optimized from 5s)
 - Uses async/await pattern for API calls
-- Marker position updated via `issMarker.setLatLng([latitude, longitude])`
+- Returns: latitude, longitude, altitude, velocity, visibility, footprint
+
+**TLE Data for Pass Prediction:**
+- Fetches orbital data from `https://api.wheretheiss.at/v1/satellites/25544/tles`
+- Loaded once on page load, refreshed every 6 hours
+- Used by satellite.js for calculating France pass predictions
+
+**Features:**
+- **Metadata Display**: Shows altitude (km), velocity (km/h), visibility status, and footprint diameter
+- **Footprint Circle**: Visualizes ISS visibility range as a ~4400km diameter circle on map
+- **Day/Night Overlay**: Terminator line showing Earth's sunlit and shadow regions (updates every minute)
+- **Map Controls**: Fullscreen button, scale bar (metric), and "Zoom to ISS" button
+- **France Pass Prediction**: Calculates next ISS pass over France with countdown timer and historical tracking
+- **Loading States**: Shimmer skeleton during initial data load
 
 ### Styling Approach (styles.css)
 
@@ -55,10 +75,35 @@ Then navigate to `http://localhost:8000`
 - Fully responsive with breakpoints at 1024px, 768px, 480px
 - Touch device optimizations using `@media (hover: none) and (pointer: coarse)`
 
+### France Pass Prediction Module (map.js)
+
+**Location:** Lines 373-574 in map.js
+
+**Functionality:**
+- Uses Two-Line Element (TLE) orbital data from Where The ISS At API
+- Calculates ISS position using satellite.js propagation
+- Detects when ISS enters/exits France boundaries (41.3°N-51.1°N, 5.1°W-8.2°E)
+- Displays countdown to next pass over France
+- Tracks historical passes (last 5)
+- Visual alert when ISS is currently over France (pulsing animation)
+
+**Technical Details:**
+- Look-ahead window: 24 hours
+- Calculation interval: 30 seconds
+- Minimum pass duration: 10 seconds (filters brief edge clips)
+- Display updates: Every 60 seconds
+- TLE refresh: Every 6 hours
+
+**UI States:**
+- **Active Pass**: "ISS is over France NOW!" with pulsing animation
+- **Next Pass**: Countdown timer with start/end times and duration
+- **No Pass**: Message if no passes in next 24 hours
+- **History**: Collapsible details showing recent passes
+
 ### Video Interaction (index.html)
 
-- Clicking the word "wiggles" triggers `playVideo()` function
-- Video auto-plays on page load with controls visible
+- Clicking the word "wiggles" triggers `scrollToVideo()` function
+- Video auto-plays on page load (desktop only) with controls visible
 
 ## Important Notes
 
