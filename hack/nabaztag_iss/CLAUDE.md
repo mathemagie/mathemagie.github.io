@@ -13,7 +13,7 @@ This is a **vanilla JavaScript static site** with no build process or package ma
 - **index.html**: Main HTML structure with Bootstrap 5.3.3 layout
 - **map.js**: ISS tracking logic using the wheretheiss.at API and Leaflet for map rendering
 - **styles.css**: Custom CSS with space-themed design (Orbitron/Space Mono fonts, radial gradients, glow effects)
-- **nabaztag_ISS_scaled_x2.mp4**: Demo video of the Nabaztag robot
+- **nabaztag.mp4**: Demo video of the Nabaztag robot
 
 ### Key External Dependencies (CDN-loaded)
 
