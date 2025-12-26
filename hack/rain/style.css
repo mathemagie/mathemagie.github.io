@@ -94,6 +94,12 @@ body {
     cursor: grabbing;
 }
 
+.deflector.resizing {
+    box-shadow: 0 0 20px rgba(255, 193, 7, 0.8),
+                inset 0 0 10px rgba(255, 255, 255, 0.6);
+    cursor: ew-resize !important;
+}
+
 .deflector.hit {
     animation: deflector-flash 0.2s ease;
 }

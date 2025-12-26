@@ -8,6 +8,8 @@ const audioContext = new (window.AudioContext || window.webkitAudioContext)();
 const rectangles = [];
 let rectangleIdCounter = 0;
 let draggedRectangle = null;
+let resizingRectangle = null;
+let resizeEdge = null; // 'left' or 'right'
 
 const activeRaindrops = new Map();
 const physicsRaindrops = [];
@@ -82,6 +84,45 @@ function activateKey(key) {
     }, 200);
 }
 
+function updateRectangleSize(rect) {
+    rect.element.style.width = rect.width + 'px';
+}
+
+function isNearEdge(mouseX, mouseY, rect) {
+    const rectElement = rect.element;
+    const rectBounds = rectElement.getBoundingClientRect();
+    
+    // Convert mouse position to local coordinates (accounting for rotation)
+    const centerX = rectBounds.left + rectBounds.width / 2;
+    const centerY = rectBounds.top + rectBounds.height / 2;
+    
+    const dx = mouseX - centerX;
+    const dy = mouseY - centerY;
+    
+    const angleRad = -rect.rotation * (Math.PI / 180);
+    const cosAngle = Math.cos(angleRad);
+    const sinAngle = Math.sin(angleRad);
+    
+    // Transform to local coordinates (aligned with rectangle)
+    const localX = dx * cosAngle - dy * sinAngle;
+    const localY = dx * sinAngle + dy * cosAngle;
+    
+    const halfWidth = rect.width / 2;
+    const edgeThreshold = 15; // Distance from edge to trigger resize
+    
+    // Check if mouse is near left edge
+    if (Math.abs(localX + halfWidth) < edgeThreshold && Math.abs(localY) < rect.height / 2 + 10) {
+        return 'left';
+    }
+    
+    // Check if mouse is near right edge
+    if (Math.abs(localX - halfWidth) < edgeThreshold && Math.abs(localY) < rect.height / 2 + 10) {
+        return 'right';
+    }
+    
+    return null;
+}
+
 function createRectangle(x, y) {
     const rect = {
         id: rectangleIdCounter++,
@@ -91,20 +132,55 @@ function createRectangle(x, y) {
         width: 150,
         height: 10,
         rotation: 0,
-        isDragging: false
+        isDragging: false,
+        isResizing: false
     };
 
     rect.element.className = 'deflector';
     rect.element.style.left = x + 'px';
     rect.element.style.top = y + 'px';
+    rect.element.style.width = rect.width + 'px';
     rect.element.style.transform = 'translate(-50%, -50%) rotate(0deg)';
 
     rect.element.addEventListener('mousedown', (e) => {
         if (e.button === 0) {
             e.preventDefault();
-            draggedRectangle = rect;
-            rect.isDragging = true;
-            rect.element.classList.add('dragging');
+            e.stopPropagation();
+            
+            const edge = isNearEdge(e.clientX, e.clientY, rect);
+            
+            if (edge) {
+                // Start resizing
+                resizingRectangle = rect;
+                resizeEdge = edge;
+                rect.isResizing = true;
+                rect.element.classList.add('resizing');
+                rect.startMouseX = e.clientX;
+                rect.startMouseY = e.clientY;
+                rect.startWidth = rect.width;
+            } else {
+                // Start dragging (rotation)
+                draggedRectangle = rect;
+                rect.isDragging = true;
+                rect.element.classList.add('dragging');
+            }
+        }
+    });
+
+    rect.element.addEventListener('mousemove', (e) => {
+        if (!rect.isResizing && !rect.isDragging) {
+            const edge = isNearEdge(e.clientX, e.clientY, rect);
+            if (edge) {
+                rect.element.style.cursor = 'ew-resize';
+            } else {
+                rect.element.style.cursor = 'move';
+            }
+        }
+    });
+
+    rect.element.addEventListener('mouseleave', () => {
+        if (!rect.isResizing && !rect.isDragging) {
+            rect.element.style.cursor = 'move';
         }
     });
 
@@ -126,7 +202,36 @@ function removeRectangle(rect) {
 }
 
 document.addEventListener('mousemove', (e) => {
-    if (draggedRectangle && draggedRectangle.isDragging) {
+    if (resizingRectangle && resizingRectangle.isResizing) {
+        // Calculate distance moved along the rectangle's width direction
+        const rect = resizingRectangle;
+        const angleRad = rect.rotation * (Math.PI / 180);
+        const cosAngle = Math.cos(angleRad);
+        const sinAngle = Math.sin(angleRad);
+        
+        // Calculate mouse movement in screen coordinates
+        const deltaX = e.clientX - rect.startMouseX;
+        const deltaY = e.clientY - rect.startMouseY;
+        
+        // Project movement onto rectangle's local X axis (width direction)
+        // The rectangle's width axis is rotated by rect.rotation degrees
+        // cos(angle) for X component, sin(angle) for Y component
+        const localDelta = deltaX * cosAngle + deltaY * sinAngle;
+        
+        // Calculate new width based on which edge is being dragged
+        let newWidth = rect.startWidth;
+        if (resizeEdge === 'right') {
+            newWidth = rect.startWidth + localDelta * 2;
+        } else if (resizeEdge === 'left') {
+            newWidth = rect.startWidth - localDelta * 2;
+        }
+        
+        // Constrain minimum width
+        newWidth = Math.max(50, newWidth);
+        
+        rect.width = newWidth;
+        updateRectangleSize(rect);
+    } else if (draggedRectangle && draggedRectangle.isDragging) {
         const dx = e.clientX - draggedRectangle.x;
         const dy = e.clientY - draggedRectangle.y;
 
@@ -139,6 +244,13 @@ document.addEventListener('mousemove', (e) => {
 });
 
 document.addEventListener('mouseup', () => {
+    if (resizingRectangle) {
+        resizingRectangle.isResizing = false;
+        resizingRectangle.element.classList.remove('resizing');
+        resizingRectangle.element.style.cursor = 'move';
+        resizingRectangle = null;
+        resizeEdge = null;
+    }
     if (draggedRectangle) {
         draggedRectangle.isDragging = false;
         draggedRectangle.element.classList.remove('dragging');
