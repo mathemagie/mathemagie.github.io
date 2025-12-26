@@ -100,6 +100,12 @@ body {
     cursor: ew-resize !important;
 }
 
+.deflector.moving {
+    box-shadow: 0 0 20px rgba(76, 175, 80, 0.8),
+                inset 0 0 10px rgba(255, 255, 255, 0.6);
+    cursor: grabbing !important;
+}
+
 .deflector.hit {
     animation: deflector-flash 0.2s ease;
 }
@@ -107,6 +113,36 @@ body {
 @keyframes deflector-flash {
     0%, 100% { opacity: 1; }
     50% { opacity: 0.5; }
+}
+
+.context-menu {
+    position: fixed;
+    background: rgba(30, 30, 50, 0.95);
+    border: 1px solid rgba(77, 208, 225, 0.5);
+    border-radius: 4px;
+    padding: 4px 0;
+    display: none;
+    z-index: 1000;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.5);
+    min-width: 120px;
+    backdrop-filter: blur(10px);
+}
+
+.context-menu-item {
+    padding: 8px 16px;
+    color: #ffffff;
+    cursor: pointer;
+    font-size: 14px;
+    transition: background-color 0.2s ease;
+    user-select: none;
+}
+
+.context-menu-item:hover {
+    background-color: rgba(77, 208, 225, 0.3);
+}
+
+.context-menu-item:active {
+    background-color: rgba(77, 208, 225, 0.5);
 }
 
 .raindrop.physics {

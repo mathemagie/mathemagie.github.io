@@ -10,6 +10,7 @@ let rectangleIdCounter = 0;
 let draggedRectangle = null;
 let resizingRectangle = null;
 let resizeEdge = null; // 'left' or 'right'
+let contextMenuRectangle = null; // Rectangle for context menu
 
 const activeRaindrops = new Map();
 const physicsRaindrops = [];
@@ -133,7 +134,8 @@ function createRectangle(x, y) {
         height: 10,
         rotation: 0,
         isDragging: false,
-        isResizing: false
+        isResizing: false,
+        isMoving: false
     };
 
     rect.element.className = 'deflector';
@@ -159,10 +161,18 @@ function createRectangle(x, y) {
                 rect.startMouseY = e.clientY;
                 rect.startWidth = rect.width;
             } else {
-                // Start dragging (rotation)
+                // Start dragging (rotation or movement based on Shift key)
                 draggedRectangle = rect;
                 rect.isDragging = true;
+                rect.isMoving = e.shiftKey; // If Shift is held, move instead of rotate
+                rect.startMouseX = e.clientX;
+                rect.startMouseY = e.clientY;
+                rect.startX = rect.x;
+                rect.startY = rect.y;
                 rect.element.classList.add('dragging');
+                if (rect.isMoving) {
+                    rect.element.classList.add('moving');
+                }
             }
         }
     });
@@ -186,7 +196,8 @@ function createRectangle(x, y) {
 
     rect.element.addEventListener('contextmenu', (e) => {
         e.preventDefault();
-        removeRectangle(rect);
+        e.stopPropagation();
+        showContextMenu(e.clientX, e.clientY, rect);
     });
 
     rectangles.push(rect);
@@ -199,7 +210,48 @@ function removeRectangle(rect) {
         rectangles.splice(index, 1);
     }
     rect.element.remove();
+    hideContextMenu();
 }
+
+function showContextMenu(x, y, rect) {
+    const contextMenu = document.getElementById('context-menu');
+    contextMenuRectangle = rect;
+    
+    contextMenu.style.left = x + 'px';
+    contextMenu.style.top = y + 'px';
+    contextMenu.style.display = 'block';
+}
+
+function hideContextMenu() {
+    const contextMenu = document.getElementById('context-menu');
+    contextMenu.style.display = 'none';
+    contextMenuRectangle = null;
+}
+
+// Initialize context menu handlers
+function initContextMenu() {
+    const removeMenuItem = document.getElementById('remove-rectangle');
+    if (removeMenuItem) {
+        removeMenuItem.addEventListener('click', (e) => {
+            e.stopPropagation();
+            if (contextMenuRectangle) {
+                removeRectangle(contextMenuRectangle);
+            }
+        });
+    }
+}
+
+// Hide context menu when clicking elsewhere
+document.addEventListener('click', (e) => {
+    const contextMenu = document.getElementById('context-menu');
+    // Don't hide if clicking on the context menu itself
+    if (contextMenu && contextMenu.style.display === 'block' && !contextMenu.contains(e.target)) {
+        hideContextMenu();
+    }
+});
+
+// Hide context menu on scroll
+document.addEventListener('scroll', hideContextMenu);
 
 document.addEventListener('mousemove', (e) => {
     if (resizingRectangle && resizingRectangle.isResizing) {
@@ -232,14 +284,30 @@ document.addEventListener('mousemove', (e) => {
         rect.width = newWidth;
         updateRectangleSize(rect);
     } else if (draggedRectangle && draggedRectangle.isDragging) {
-        const dx = e.clientX - draggedRectangle.x;
-        const dy = e.clientY - draggedRectangle.y;
+        if (draggedRectangle.isMoving) {
+            // Move the rectangle
+            const deltaX = e.clientX - draggedRectangle.startMouseX;
+            const deltaY = e.clientY - draggedRectangle.startMouseY;
+            
+            draggedRectangle.x = draggedRectangle.startX + deltaX;
+            draggedRectangle.y = draggedRectangle.startY + deltaY;
+            
+            draggedRectangle.element.style.left = draggedRectangle.x + 'px';
+            draggedRectangle.element.style.top = draggedRectangle.y + 'px';
+            // Keep the rotation when moving
+            draggedRectangle.element.style.transform =
+                `translate(-50%, -50%) rotate(${draggedRectangle.rotation}deg)`;
+        } else {
+            // Rotate the rectangle
+            const dx = e.clientX - draggedRectangle.x;
+            const dy = e.clientY - draggedRectangle.y;
 
-        const angle = Math.atan2(dy, dx) * (180 / Math.PI);
-        draggedRectangle.rotation = angle;
+            const angle = Math.atan2(dy, dx) * (180 / Math.PI);
+            draggedRectangle.rotation = angle;
 
-        draggedRectangle.element.style.transform =
-            `translate(-50%, -50%) rotate(${angle}deg)`;
+            draggedRectangle.element.style.transform =
+                `translate(-50%, -50%) rotate(${angle}deg)`;
+        }
     }
 });
 
@@ -253,7 +321,9 @@ document.addEventListener('mouseup', () => {
     }
     if (draggedRectangle) {
         draggedRectangle.isDragging = false;
+        draggedRectangle.isMoving = false;
         draggedRectangle.element.classList.remove('dragging');
+        draggedRectangle.element.classList.remove('moving');
         draggedRectangle = null;
     }
 });
@@ -580,7 +650,7 @@ function createRaindrop() {
     }, duration * 1000);
 }
 
-setInterval(createRaindrop, 200);
+setInterval(createRaindrop, 50);
 
 keys.forEach(key => {
     key.addEventListener('click', () => {
@@ -590,3 +660,6 @@ keys.forEach(key => {
         activateKey(key);
     });
 });
+
+// Initialize context menu
+initContextMenu();
