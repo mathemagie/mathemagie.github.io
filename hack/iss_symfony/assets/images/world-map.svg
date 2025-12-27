@@ -1,0 +1,47 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1000 500" width="1000" height="500">
+  <defs>
+    <style>
+      .continent { fill: #2a4d6e; stroke: #4682b4; stroke-width: 1; }
+      .ocean { fill: #1a1a2e; }
+    </style>
+  </defs>
+  
+  <!-- Ocean background -->
+  <rect width="1000" height="500" class="ocean"/>
+  
+  <!-- North America -->
+  <path class="continent" d="M150,120 Q200,100 250,120 L280,140 Q300,160 280,200 L260,250 Q240,280 200,270 L150,250 Q120,200 150,120"/>
+  
+  <!-- South America -->
+  <path class="continent" d="M220,280 Q240,300 230,350 L220,400 Q200,420 180,400 L170,350 Q160,320 180,300 Q200,280 220,280"/>
+  
+  <!-- Europe -->
+  <path class="continent" d="M450,140 Q480,130 500,150 L520,180 Q510,200 480,190 L450,180 Q430,160 450,140"/>
+  
+  <!-- Africa -->
+  <path class="continent" d="M480,200 Q520,220 530,260 L520,320 Q500,350 480,340 L460,300 Q450,250 480,200"/>
+  
+  <!-- Asia -->
+  <path class="continent" d="M550,120 Q650,100 750,120 L800,150 Q820,180 800,200 L750,180 Q650,160 550,120"/>
+  
+  <!-- Australia -->
+  <path class="continent" d="M700,320 Q750,310 780,330 L790,350 Q780,370 750,360 L700,350 Q680,340 700,320"/>
+  
+  <!-- Antarctica -->
+  <rect x="0" y="420" width="1000" height="80" class="continent"/>
+  
+  <!-- Greenland -->
+  <ellipse cx="320" cy="80" rx="30" ry="20" class="continent"/>
+  
+  <!-- Japan -->
+  <ellipse cx="780" cy="200" rx="15" ry="30" class="continent"/>
+  
+  <!-- UK -->
+  <circle cx="430" cy="150" r="8" class="continent"/>
+  
+  <!-- Madagascar -->
+  <ellipse cx="550" cy="320" rx="8" ry="20" class="continent"/>
+  
+  <!-- New Zealand -->
+  <ellipse cx="820" cy="380" rx="10" ry="25" class="continent"/>
+</svg>

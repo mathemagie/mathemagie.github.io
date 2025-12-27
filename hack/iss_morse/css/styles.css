@@ -1,0 +1,555 @@
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #0c0c0c 0%, #1a1a2e 50%, #16213e 100%);
+            color: #ffffff;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 800px;
+            width: 100%;
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 20px;
+            padding: 30px;
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.3);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+
+
+        .country-info {
+            text-align: center;
+            padding: 15px;
+            background: rgba(255, 255, 255, 0.08);
+            border-radius: 15px;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            margin-bottom: 30px;
+        }
+
+        .country-name {
+            font-size: 1.4rem;
+            color: #00d4ff;
+            font-weight: bold;
+            margin-bottom: 5px;
+        }
+
+        .country-flag {
+            font-size: 2rem;
+            margin-bottom: 10px;
+        }
+
+        .over-ocean {
+            color: #b0b0b0;
+            font-style: italic;
+        }
+
+        .info-card {
+            background: rgba(255, 255, 255, 0.08);
+            padding: 20px;
+            border-radius: 15px;
+            text-align: center;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            transition: transform 0.3s ease;
+        }
+
+        .info-card:hover {
+            transform: translateY(-5px);
+        }
+
+        .info-label {
+            font-size: 0.9rem;
+            color: #b0b0b0;
+            margin-bottom: 5px;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        .info-value {
+            font-size: 1.8rem;
+            font-weight: bold;
+            color: #00d4ff;
+        }
+
+
+        .status {
+            text-align: center;
+            padding: 15px;
+            border-radius: 10px;
+            margin-bottom: 20px;
+            font-weight: bold;
+        }
+
+        .status.loading {
+            background: rgba(255, 193, 7, 0.2);
+            color: #ffc107;
+            border: 1px solid rgba(255, 193, 7, 0.3);
+        }
+
+        .status.success {
+            background: rgba(40, 167, 69, 0.2);
+            color: #28a745;
+            border: 1px solid rgba(40, 167, 69, 0.3);
+        }
+
+        .status.error {
+            background: rgba(220, 53, 69, 0.2);
+            color: #dc3545;
+            border: 1px solid rgba(220, 53, 69, 0.3);
+        }
+
+
+
+        .coordinates-display {
+            text-align: center;
+            font-size: 0.9rem;
+            color: #b0b0b0;
+            margin-bottom: 20px;
+        }
+
+        .last-updated {
+            text-align: center;
+            color: #888;
+            font-size: 0.9rem;
+            margin-top: 15px;
+        }
+
+        .loading-spinner {
+            display: inline-block;
+            width: 20px;
+            height: 20px;
+            border: 3px solid rgba(255, 255, 255, 0.3);
+            border-radius: 50%;
+            border-top-color: #00d4ff;
+            animation: spin 1s ease-in-out infinite;
+            margin-right: 10px;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+
+        /* Morse Code Visual Styles */
+        .morse-section {
+            margin-top: 30px;
+            padding: 20px;
+            background: rgba(255, 255, 255, 0.08);
+            border-radius: 15px;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            text-align: center;
+        }
+
+        .morse-title {
+            color: #00d4ff;
+            font-size: 1.5rem;
+            margin-bottom: 15px;
+            text-align: center;
+        }
+
+        .morse-display {
+            background: rgba(0, 0, 0, 0.3);
+            padding: 15px;
+            border-radius: 10px;
+            margin-top: 15px;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .morse-row {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 15px;
+            margin-bottom: 10px;
+        }
+
+        .morse-row:last-child {
+            margin-bottom: 0;
+        }
+
+        .morse-label {
+            color: #b0b0b0;
+            font-weight: bold;
+            min-width: 80px;
+            text-align: right;
+        }
+
+        .morse-code {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-wrap: wrap;
+            gap: 2px;
+            min-height: 30px;
+            font-family: 'Courier New', monospace;
+        }
+
+        /* Visual Morse Code Elements */
+        .morse-dot {
+            width: 8px;
+            height: 8px;
+            background: #00d4ff;
+            border-radius: 50%;
+            display: inline-block;
+            animation: morse-pulse 1.5s ease-in-out infinite;
+            margin: 0 1px;
+        }
+
+        .morse-dash {
+            width: 20px;
+            height: 8px;
+            background: #00d4ff;
+            border-radius: 4px;
+            display: inline-block;
+            animation: morse-pulse 1.5s ease-in-out infinite;
+            margin: 0 1px;
+        }
+
+        .morse-space {
+            width: 12px;
+            height: 8px;
+            display: inline-block;
+        }
+
+        .morse-letter-space {
+            width: 24px;
+            height: 8px;
+            display: inline-block;
+            border-bottom: 1px dashed rgba(255, 255, 255, 0.3);
+            margin: 0 4px;
+        }
+
+        @keyframes morse-pulse {
+            0%, 100% { opacity: 0.7; transform: scale(1); }
+            50% { opacity: 1; transform: scale(1.1); }
+        }
+
+        /* Text Mode Morse Code */
+        .morse-text {
+            color: #00d4ff;
+            font-family: 'Courier New', monospace;
+            font-size: 1.2rem;
+            letter-spacing: 2px;
+            font-weight: bold;
+            text-align: center;
+            padding: 10px;
+            background: rgba(0, 212, 255, 0.1);
+            border-radius: 5px;
+            border: 1px solid rgba(0, 212, 255, 0.3);
+        }
+
+        /* Mode Toggle */
+        .morse-mode-toggle {
+            display: flex;
+            justify-content: center;
+            gap: 10px;
+            margin-bottom: 15px;
+        }
+
+        .mode-button {
+            background: rgba(255, 255, 255, 0.1);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            color: #b0b0b0;
+            padding: 8px 16px;
+            border-radius: 20px;
+            cursor: pointer;
+            font-size: 0.9rem;
+            transition: all 0.3s ease;
+        }
+
+        .mode-button:hover {
+            background: rgba(255, 255, 255, 0.15);
+            border-color: rgba(255, 255, 255, 0.3);
+        }
+
+        .mode-button.active {
+            background: rgba(0, 212, 255, 0.2);
+            border-color: #00d4ff;
+            color: #00d4ff;
+            font-weight: bold;
+        }
+
+        /* Morse Code Transmission Effect */
+        .morse-transmission {
+            position: relative;
+            overflow: hidden;
+        }
+
+        .morse-transmission::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(0, 212, 255, 0.1), transparent);
+            animation: morse-scan 3s linear infinite;
+        }
+
+        @keyframes morse-scan {
+            0% { left: -100%; }
+            100% { left: 100%; }
+        }
+
+        @media (max-width: 600px) {
+            .container {
+                padding: 20px;
+            }
+
+
+
+            .morse-row {
+                flex-direction: column;
+                gap: 10px;
+                align-items: center;
+            }
+
+            .morse-label {
+                text-align: center;
+                min-width: auto;
+            }
+
+            .morse-code {
+                justify-content: center;
+            }
+
+            .morse-dot, .morse-dash {
+                margin: 2px;
+            }
+
+            .morse-space {
+                width: 8px;
+            }
+
+            .morse-letter-space {
+                width: 16px;
+                margin: 0 2px;
+            }
+        }
+
+        /* Full Screen Morse Code Styles */
+        .fullscreen-morse-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100vw;
+            height: 100vh;
+            background: linear-gradient(135deg, #000000 0%, #1a1a2e 50%, #16213e 100%);
+            z-index: 9999;
+            display: none;
+            flex-direction: column;
+            justify-content: space-between;
+            align-items: center;
+            padding: 30px;
+            box-sizing: border-box;
+        }
+
+        .fullscreen-morse-overlay.active {
+            display: flex;
+        }
+
+        .fullscreen-morse-header {
+            width: 100%;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 50px;
+        }
+
+        .fullscreen-close-btn {
+            background: rgba(255, 255, 255, 0.1);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            color: #ffffff;
+            font-size: 24px;
+            width: 50px;
+            height: 50px;
+            border-radius: 50%;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.3s ease;
+        }
+
+        .fullscreen-close-btn:hover {
+            background: rgba(255, 255, 255, 0.2);
+            transform: scale(1.1);
+        }
+
+        .fullscreen-info {
+            text-align: right;
+            color: #b0b0b0;
+        }
+
+        .fullscreen-location {
+            font-size: 1.2rem;
+            font-weight: bold;
+            color: #00d4ff;
+            margin-bottom: 5px;
+        }
+
+        .fullscreen-signal {
+            font-size: 0.9rem;
+        }
+
+        .fullscreen-morse-display {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            position: relative;
+        }
+
+        .morse-light {
+            width: 200px;
+            height: 200px;
+            background: radial-gradient(circle, #00d4ff 0%, #090979 50%, #000000 100%);
+            border-radius: 50%;
+            border: 5px solid #00d4ff;
+            box-shadow:
+                0 0 50px rgba(0, 212, 255, 0.8),
+                0 0 100px rgba(0, 212, 255, 0.6),
+                0 0 150px rgba(0, 212, 255, 0.4),
+                inset 0 0 50px rgba(0, 212, 255, 0.3);
+            transition: all 0.1s ease;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .morse-light::before {
+            content: '';
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            width: 20px;
+            height: 20px;
+            background: #ffffff;
+            border-radius: 50%;
+            box-shadow: 0 0 20px #ffffff;
+            opacity: 0;
+            transition: opacity 0.1s ease;
+        }
+
+        .morse-light.active::before {
+            opacity: 1;
+        }
+
+        .morse-light.active {
+            background: radial-gradient(circle, #ffffff 0%, #00d4ff 30%, #090979 70%, #000000 100%);
+            box-shadow:
+                0 0 100px rgba(255, 255, 255, 0.9),
+                0 0 200px rgba(0, 212, 255, 0.8),
+                0 0 300px rgba(0, 212, 255, 0.6),
+                inset 0 0 100px rgba(255, 255, 255, 0.5);
+            animation: morse-blink 0.5s ease-in-out;
+        }
+
+        @keyframes morse-blink {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.05); }
+        }
+
+        .morse-signal-wave {
+            margin-top: 50px;
+            width: 400px;
+            height: 4px;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 2px;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .wave-bar {
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, #00d4ff, transparent);
+            animation: wave-scan 2s linear infinite;
+        }
+
+        @keyframes wave-scan {
+            0% { left: -100%; }
+            100% { left: 100%; }
+        }
+
+        .fullscreen-morse-info {
+            width: 100%;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-top: 50px;
+            padding: 0 50px;
+        }
+
+        .transmission-status {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            font-weight: bold;
+            color: #00d4ff;
+            font-size: 1.1rem;
+        }
+
+        .status-light {
+            width: 20px;
+            height: 20px;
+            background: #28a745;
+            border-radius: 50%;
+            border: 2px solid #ffffff;
+            animation: status-pulse 2s ease-in-out infinite;
+        }
+
+        @keyframes status-pulse {
+            0%, 100% { opacity: 0.7; transform: scale(1); }
+            50% { opacity: 1; transform: scale(1.2); }
+        }
+
+        .morse-sequence {
+            font-family: 'Courier New', monospace;
+            font-size: 1.5rem;
+            color: #00d4ff;
+            letter-spacing: 5px;
+            font-weight: bold;
+            text-shadow: 0 0 10px rgba(0, 212, 255, 0.5);
+        }
+
+        .fullscreen-btn {
+            background: linear-gradient(45deg, #ff6b35, #f7931e);
+        }
+
+        .fullscreen-btn:hover {
+            background: linear-gradient(45deg, #ff8559, #ffb84d);
+        }
+
+        /* Morse Code Blinking Sequences */
+        .morse-blink-dot {
+            animation: morse-dot-blink 0.2s ease-in-out;
+        }
+
+        .morse-blink-dash {
+            animation: morse-dash-blink 0.6s ease-in-out;
+        }
+
+        @keyframes morse-dot-blink {
+            0%, 100% { opacity: 0.3; }
+            50% { opacity: 1; }
+        }
+
+        @keyframes morse-dash-blink {
+            0%, 100% { opacity: 0.3; }
+            50% { opacity: 1; }
+        }

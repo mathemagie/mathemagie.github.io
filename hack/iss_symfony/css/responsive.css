@@ -1,0 +1,827 @@
+/* ===================================
+   ISS Tracker - Responsive Styles
+   Mobile and Tablet Optimizations
+   =================================== */
+
+/* ===================================
+   LARGE DESKTOP (1440px+)
+   =================================== */
+@media (min-width: 1440px) {
+    .app-container {
+        grid-template-columns: 1fr 360px;
+    }
+    
+    .controls-panel {
+        padding: 2rem;
+    }
+    
+    .header {
+        padding: 0 3rem;
+    }
+    
+    .footer {
+        padding: 0 3rem;
+    }
+    
+    .map-overlay {
+        top: 1.5rem;
+        left: 1.5rem;
+    }
+    
+    .coordinates-display,
+    .iss-info-panel {
+        padding: 1.5rem;
+    }
+}
+
+/* ===================================
+   STANDARD DESKTOP (1024px - 1439px)
+   =================================== */
+@media (min-width: 1024px) and (max-width: 1439px) {
+    .app-container {
+        grid-template-columns: 1fr 300px;
+    }
+    
+    .header {
+        padding: 0 1.5rem;
+    }
+    
+    .footer {
+        padding: 0 1.5rem;
+    }
+    
+    .app-title {
+        font-size: var(--font-size-lg);
+    }
+    
+    .header-icon {
+        width: 28px;
+        height: 28px;
+    }
+}
+
+/* ===================================
+   TABLET LANDSCAPE (768px - 1023px)
+   =================================== */
+@media (min-width: 768px) and (max-width: 1023px) {
+    .app-container {
+        grid-template-areas:
+            "header header"
+            "map map"
+            "controls controls"
+            "footer footer";
+        grid-template-rows: 60px 1fr 280px 40px;
+        grid-template-columns: 1fr;
+    }
+    
+    .controls-panel {
+        border-left: none;
+        border-top: 2px solid var(--color-cosmic-blue);
+        padding: 1rem;
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+        gap: 1.5rem;
+        overflow-y: auto;
+        max-height: 280px;
+    }
+    
+    .control-section {
+        margin-bottom: 0;
+    }
+    
+    .map-container {
+        border-right: none;
+        border-bottom: 2px solid var(--color-cosmic-blue);
+    }
+    
+    .map-overlay {
+        flex-direction: row;
+        flex-wrap: wrap;
+        top: 1rem;
+        left: 1rem;
+        right: 1rem;
+        justify-content: space-between;
+    }
+    
+    .coordinates-display {
+        flex: 1;
+        min-width: 250px;
+        margin-right: 1rem;
+    }
+    
+    .iss-info-panel {
+        flex: 1;
+        min-width: 250px;
+    }
+    
+    .performance-stats {
+        grid-template-columns: repeat(4, 1fr);
+    }
+    
+    .primary-controls {
+        flex-direction: row;
+        gap: 1rem;
+    }
+    
+    .primary-btn {
+        flex: 1;
+    }
+    
+    .header {
+        padding: 0 1rem;
+    }
+    
+    .footer {
+        padding: 0 1rem;
+    }
+}
+
+/* ===================================
+   TABLET PORTRAIT (481px - 767px)
+   =================================== */
+@media (min-width: 481px) and (max-width: 767px) {
+    .app-container {
+        grid-template-areas:
+            "header"
+            "map"
+            "controls"
+            "footer";
+        grid-template-rows: 60px 1fr 320px 40px;
+        grid-template-columns: 1fr;
+    }
+    
+    .header {
+        padding: 0 1rem;
+    }
+    
+    .app-title {
+        font-size: var(--font-size-base);
+    }
+    
+    .header-icon {
+        width: 24px;
+        height: 24px;
+    }
+    
+    .header-nav {
+        gap: 0.5rem;
+    }
+    
+    .nav-btn {
+        padding: 0.5rem 0.75rem;
+        font-size: var(--font-size-xs);
+    }
+    
+    .controls-panel {
+        border-left: none;
+        border-top: 2px solid var(--color-cosmic-blue);
+        padding: 1rem;
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 1rem;
+        overflow-y: auto;
+        max-height: 320px;
+    }
+    
+    .control-section {
+        margin-bottom: 0;
+    }
+    
+    .map-container {
+        border-right: none;
+        border-bottom: 2px solid var(--color-cosmic-blue);
+    }
+    
+    .map-overlay {
+        flex-direction: column;
+        top: 0.75rem;
+        left: 0.75rem;
+        right: 0.75rem;
+        gap: 0.75rem;
+    }
+    
+    .coordinates-display,
+    .iss-info-panel {
+        padding: 0.75rem;
+    }
+    
+    .coordinate-item,
+    .info-item {
+        font-size: var(--font-size-xs);
+    }
+    
+    .coordinate-item label,
+    .info-label {
+        min-width: 70px;
+    }
+    
+    .coordinate-value,
+    .info-value {
+        min-width: 70px;
+    }
+    
+    .performance-stats {
+        grid-template-columns: 1fr 1fr;
+        gap: 0.5rem;
+    }
+    
+    .stat-item {
+        padding: 0.5rem;
+    }
+    
+    .primary-controls {
+        flex-direction: column;
+        gap: 0.75rem;
+    }
+    
+    .volume-slider-container {
+        flex-direction: column;
+        gap: 0.5rem;
+    }
+    
+    .volume-slider {
+        width: 100%;
+    }
+    
+    .audio-info {
+        padding: 0.5rem;
+    }
+    
+    .footer {
+        padding: 0 1rem;
+        font-size: var(--font-size-xs);
+    }
+    
+    .footer-content {
+        flex-direction: column;
+        gap: 0.25rem;
+        text-align: center;
+    }
+}
+
+/* ===================================
+   MOBILE LANDSCAPE (321px - 480px)
+   =================================== */
+@media (min-width: 321px) and (max-width: 480px) {
+    .app-container {
+        grid-template-areas:
+            "header"
+            "map"
+            "controls"
+            "footer";
+        grid-template-rows: 50px 1fr 260px 35px;
+        grid-template-columns: 1fr;
+    }
+    
+    .header {
+        padding: 0 0.75rem;
+        height: 50px;
+    }
+    
+    .app-title {
+        font-size: var(--font-size-sm);
+        gap: 0.5rem;
+    }
+    
+    .header-icon {
+        width: 20px;
+        height: 20px;
+    }
+    
+    .header-nav {
+        gap: 0.25rem;
+    }
+    
+    .nav-btn {
+        padding: 0.375rem 0.5rem;
+        font-size: var(--font-size-xs);
+    }
+    
+    .controls-panel {
+        border-left: none;
+        border-top: 2px solid var(--color-cosmic-blue);
+        padding: 0.75rem;
+        display: flex;
+        flex-direction: column;
+        gap: 1rem;
+        overflow-y: auto;
+        max-height: 260px;
+    }
+    
+    .control-section {
+        margin-bottom: 0;
+    }
+    
+    .control-section h2 {
+        font-size: var(--font-size-base);
+        margin-bottom: 0.75rem;
+    }
+    
+    .map-container {
+        border-right: none;
+        border-bottom: 2px solid var(--color-cosmic-blue);
+    }
+    
+    .map-overlay {
+        flex-direction: column;
+        top: 0.5rem;
+        left: 0.5rem;
+        right: 0.5rem;
+        gap: 0.5rem;
+    }
+    
+    .coordinates-display,
+    .iss-info-panel {
+        padding: 0.5rem;
+    }
+    
+    .coordinate-item,
+    .info-item {
+        font-size: var(--font-size-xs);
+        margin-bottom: 0.25rem;
+    }
+    
+    .coordinate-item label,
+    .info-label {
+        min-width: 60px;
+        font-size: 10px;
+    }
+    
+    .coordinate-value,
+    .info-value {
+        min-width: 60px;
+        font-size: 10px;
+    }
+    
+    .iss-info-panel h3 {
+        font-size: var(--font-size-base);
+        margin-bottom: 0.5rem;
+    }
+    
+    .performance-stats {
+        grid-template-columns: 1fr 1fr;
+        gap: 0.5rem;
+    }
+    
+    .stat-item {
+        padding: 0.5rem;
+    }
+    
+    .stat-label {
+        font-size: 10px;
+    }
+    
+    .stat-value {
+        font-size: var(--font-size-xs);
+    }
+    
+    .primary-controls {
+        flex-direction: column;
+        gap: 0.5rem;
+    }
+    
+    .primary-btn {
+        padding: 0.75rem 1rem;
+        font-size: var(--font-size-sm);
+    }
+    
+    .secondary-btn {
+        padding: 0.5rem 0.75rem;
+        font-size: var(--font-size-xs);
+    }
+    
+    .control-group {
+        margin-bottom: 1rem;
+    }
+    
+    .control-group label {
+        font-size: var(--font-size-xs);
+    }
+    
+    .control-select {
+        padding: 0.5rem;
+        font-size: var(--font-size-xs);
+    }
+    
+    .checkbox-label {
+        font-size: var(--font-size-xs);
+        margin-bottom: 0.5rem;
+    }
+    
+    .checkmark {
+        width: 16px;
+        height: 16px;
+        margin-right: 0.5rem;
+    }
+    
+    .volume-slider-container {
+        flex-direction: column;
+        gap: 0.5rem;
+    }
+    
+    .volume-btn {
+        width: 35px;
+        height: 35px;
+        font-size: var(--font-size-base);
+    }
+    
+    .volume-display {
+        font-size: var(--font-size-xs);
+        text-align: center;
+    }
+    
+    .audio-info {
+        padding: 0.5rem;
+    }
+    
+    .audio-info small {
+        font-size: 10px;
+    }
+    
+    .footer {
+        padding: 0 0.75rem;
+        font-size: 10px;
+        height: 35px;
+    }
+    
+    .footer-content {
+        flex-direction: column;
+        gap: 0.25rem;
+        text-align: center;
+    }
+    
+    /* Hide debug panel on mobile */
+    .debug-panel {
+        display: none;
+    }
+}
+
+/* ===================================
+   MOBILE PORTRAIT (320px and below)
+   =================================== */
+@media (max-width: 320px) {
+    .app-container {
+        grid-template-areas:
+            "header"
+            "map"
+            "controls"
+            "footer";
+        grid-template-rows: 45px 1fr 220px 30px;
+        grid-template-columns: 1fr;
+    }
+    
+    .header {
+        padding: 0 0.5rem;
+        height: 45px;
+    }
+    
+    .app-title {
+        font-size: var(--font-size-xs);
+        gap: 0.25rem;
+    }
+    
+    .header-icon {
+        width: 18px;
+        height: 18px;
+    }
+    
+    .header-nav {
+        gap: 0.25rem;
+    }
+    
+    .nav-btn {
+        padding: 0.25rem 0.375rem;
+        font-size: 10px;
+    }
+    
+    .controls-panel {
+        padding: 0.5rem;
+        max-height: 220px;
+        gap: 0.75rem;
+    }
+    
+    .control-section h2 {
+        font-size: var(--font-size-sm);
+        margin-bottom: 0.5rem;
+    }
+    
+    .map-overlay {
+        top: 0.25rem;
+        left: 0.25rem;
+        right: 0.25rem;
+        gap: 0.25rem;
+    }
+    
+    .coordinates-display,
+    .iss-info-panel {
+        padding: 0.375rem;
+    }
+    
+    .coordinate-item,
+    .info-item {
+        font-size: 10px;
+        margin-bottom: 0.125rem;
+    }
+    
+    .coordinate-item label,
+    .info-label {
+        min-width: 50px;
+        font-size: 9px;
+    }
+    
+    .coordinate-value,
+    .info-value {
+        min-width: 50px;
+        font-size: 9px;
+    }
+    
+    .iss-info-panel h3 {
+        font-size: var(--font-size-sm);
+        margin-bottom: 0.375rem;
+    }
+    
+    .performance-stats {
+        grid-template-columns: 1fr;
+        gap: 0.25rem;
+    }
+    
+    .stat-item {
+        padding: 0.375rem;
+    }
+    
+    .stat-label {
+        font-size: 9px;
+    }
+    
+    .stat-value {
+        font-size: 10px;
+    }
+    
+    .primary-btn {
+        padding: 0.625rem 0.75rem;
+        font-size: var(--font-size-xs);
+    }
+    
+    .secondary-btn {
+        padding: 0.375rem 0.5rem;
+        font-size: 10px;
+    }
+    
+    .control-group {
+        margin-bottom: 0.75rem;
+    }
+    
+    .control-group label {
+        font-size: 10px;
+        margin-bottom: 0.375rem;
+    }
+    
+    .control-select {
+        padding: 0.375rem;
+        font-size: 10px;
+    }
+    
+    .checkbox-label {
+        font-size: 10px;
+        margin-bottom: 0.375rem;
+    }
+    
+    .checkmark {
+        width: 14px;
+        height: 14px;
+        margin-right: 0.375rem;
+    }
+    
+    .volume-btn {
+        width: 30px;
+        height: 30px;
+        font-size: var(--font-size-sm);
+    }
+    
+    .volume-display {
+        font-size: 10px;
+    }
+    
+    .audio-info {
+        padding: 0.375rem;
+    }
+    
+    .audio-info small {
+        font-size: 9px;
+    }
+    
+    .footer {
+        padding: 0 0.5rem;
+        font-size: 9px;
+        height: 30px;
+    }
+    
+    .footer-text {
+        text-align: center;
+    }
+    
+    .footer-stats {
+        display: none;
+    }
+    
+    /* Hide complex controls on smallest screens */
+    .debug-panel,
+    .performance-stats {
+        display: none;
+    }
+    
+    /* Simplify controls */
+    .control-section:nth-child(n+3) {
+        display: none;
+    }
+}
+
+/* ===================================
+   MODAL RESPONSIVE STYLES
+   =================================== */
+@media (max-width: 768px) {
+    .modal-content {
+        width: 95%;
+        margin: 1rem;
+    }
+    
+    .modal-header {
+        padding: 1rem;
+    }
+    
+    .modal-header h2 {
+        font-size: var(--font-size-lg);
+    }
+    
+    .modal-body {
+        padding: 1rem;
+    }
+    
+    .modal-footer {
+        padding: 1rem;
+        flex-direction: column;
+        gap: 0.75rem;
+    }
+    
+    .modal-footer .primary-btn,
+    .modal-footer .secondary-btn {
+        width: 100%;
+    }
+}
+
+@media (max-width: 480px) {
+    .modal-content {
+        width: 98%;
+        margin: 0.5rem;
+        max-height: 90vh;
+    }
+    
+    .modal-header {
+        padding: 0.75rem;
+    }
+    
+    .modal-header h2 {
+        font-size: var(--font-size-base);
+    }
+    
+    .modal-body {
+        padding: 0.75rem;
+        font-size: var(--font-size-sm);
+    }
+    
+    .modal-body h3 {
+        font-size: var(--font-size-base);
+        margin-top: 1rem;
+        margin-bottom: 0.5rem;
+    }
+    
+    .modal-footer {
+        padding: 0.75rem;
+    }
+}
+
+/* ===================================
+   TOUCH OPTIMIZATIONS
+   =================================== */
+@media (hover: none) and (pointer: coarse) {
+    /* Touch targets should be at least 44px */
+    .primary-btn,
+    .secondary-btn,
+    .nav-btn,
+    .volume-btn,
+    .modal-close {
+        min-height: 44px;
+        min-width: 44px;
+    }
+    
+    .checkbox-label {
+        min-height: 44px;
+        align-items: center;
+    }
+    
+    .checkmark {
+        width: 20px;
+        height: 20px;
+    }
+    
+    /* Remove hover effects on touch devices */
+    .primary-btn:hover,
+    .secondary-btn:hover,
+    .nav-btn:hover,
+    .volume-btn:hover,
+    .checkbox-label:hover,
+    .modal-close:hover {
+        transform: none;
+        background: var(--color-cosmic-blue);
+    }
+    
+    /* Add touch feedback */
+    .primary-btn:active,
+    .secondary-btn:active,
+    .nav-btn:active,
+    .volume-btn:active {
+        transform: scale(0.98);
+        transition: transform 100ms ease-out;
+    }
+}
+
+/* ===================================
+   HIGH DPI / RETINA DISPLAYS
+   =================================== */
+@media (-webkit-min-device-pixel-ratio: 2), (min-resolution: 192dpi) {
+    /* Optimize for high DPI displays */
+    .header-icon,
+    .checkmark::after {
+        -webkit-font-smoothing: antialiased;
+        -moz-osx-font-smoothing: grayscale;
+    }
+    
+    /* Ensure crisp borders */
+    .modal-content,
+    .coordinates-display,
+    .iss-info-panel,
+    .control-select,
+    .checkmark {
+        border-width: 1px;
+    }
+}
+
+/* ===================================
+   REDUCED MOTION PREFERENCES
+   =================================== */
+@media (prefers-reduced-motion: reduce) {
+    * {
+        animation-duration: 0.01ms !important;
+        animation-iteration-count: 1 !important;
+        transition-duration: 0.01ms !important;
+    }
+    
+    .loading-spinner {
+        animation: none;
+        border: 4px solid var(--color-orbit-cyan);
+    }
+    
+    .header-icon {
+        animation: none;
+    }
+    
+    .status-indicator.connecting {
+        animation: none;
+    }
+}
+
+/* ===================================
+   DARK MODE SUPPORT
+   =================================== */
+@media (prefers-color-scheme: dark) {
+    /* Default styles are already dark, but ensure consistency */
+    :root {
+        color-scheme: dark;
+    }
+}
+
+/* ===================================
+   HIGH CONTRAST MODE
+   =================================== */
+@media (prefers-contrast: high) {
+    :root {
+        --color-text-primary: #ffffff;
+        --color-text-secondary: #ffffff;
+        --color-border: #ffffff;
+        --color-orbit-cyan: #00ffff;
+        --color-stellar-blue: #0066ff;
+    }
+    
+    .modal-content,
+    .coordinates-display,
+    .iss-info-panel,
+    .controls-panel {
+        border-width: 2px;
+        border-color: var(--color-border);
+    }
+    
+    .primary-btn,
+    .secondary-btn {
+        border-width: 2px;
+    }
+}

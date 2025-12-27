@@ -1,0 +1,442 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Conway's Game of Life</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/p5.js/1.9.0/p5.js"></script>
+    <style>
+        html, body {
+            margin: 0;
+            padding: 0;
+            background-color: #1a1a1a;
+            color: #e0e0e0;
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+            overflow-x: hidden;
+        }
+
+        body {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding: 20px;
+        }
+
+        h1 {
+            margin: 0 0 10px 0;
+            font-size: 2.5em;
+            background: linear-gradient(135deg, #00ff88 0%, #00ccff 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .controls {
+            margin: 20px 0;
+            display: flex;
+            gap: 15px;
+            flex-wrap: wrap;
+            justify-content: center;
+            align-items: center;
+        }
+
+        button {
+            padding: 10px 20px;
+            background: rgba(0, 255, 136, 0.1);
+            border: 1px solid rgba(0, 255, 136, 0.3);
+            border-radius: 8px;
+            color: #00ff88;
+            font-size: 14px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-weight: 600;
+        }
+
+        button:hover {
+            background: rgba(0, 255, 136, 0.2);
+            transform: scale(1.05);
+        }
+
+        button:active {
+            transform: scale(0.95);
+        }
+
+        .info {
+            background: rgba(255, 255, 255, 0.05);
+            padding: 15px 25px;
+            border-radius: 8px;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            font-size: 14px;
+        }
+
+        .info strong {
+            color: #00ff88;
+        }
+
+        canvas {
+            border: 2px solid rgba(0, 255, 136, 0.3);
+            border-radius: 8px;
+            margin: 10px 0;
+            box-shadow: 0 8px 32px rgba(0, 255, 136, 0.2);
+        }
+
+        .pattern-selector {
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+            justify-content: center;
+        }
+
+        .pattern-btn {
+            padding: 8px 16px;
+            background: rgba(0, 204, 255, 0.1);
+            border: 1px solid rgba(0, 204, 255, 0.3);
+            border-radius: 6px;
+            color: #00ccff;
+            font-size: 13px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .pattern-btn:hover {
+            background: rgba(0, 204, 255, 0.2);
+        }
+
+        .speed-control {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        input[type="range"] {
+            width: 150px;
+        }
+
+        .rules {
+            max-width: 600px;
+            text-align: left;
+            background: rgba(255, 255, 255, 0.03);
+            padding: 20px;
+            border-radius: 8px;
+            margin-top: 20px;
+            line-height: 1.6;
+        }
+
+        .rules h3 {
+            color: #00ff88;
+            margin-top: 0;
+        }
+
+        .rules ul {
+            margin: 10px 0;
+            padding-left: 25px;
+        }
+
+        .rules li {
+            margin: 8px 0;
+        }
+    </style>
+</head>
+<body>
+    <h1>Conway's Game of Life</h1>
+
+    <div class="controls">
+        <button id="pauseBtn" onclick="togglePause()">⏸ Pause</button>
+        <button onclick="resetRandom()">🎲 Random</button>
+        <button onclick="clearGrid()">🗑 Clear</button>
+        <button onclick="stepForward()">⏭ Step</button>
+
+        <div class="speed-control">
+            <label for="speedSlider">Speed:</label>
+            <input type="range" id="speedSlider" min="1" max="60" value="10" oninput="updateSpeed(this.value)">
+            <span id="speedDisplay">10 FPS</span>
+        </div>
+    </div>
+
+    <div class="pattern-selector">
+        <span style="color: #888;">Load Pattern:</span>
+        <button class="pattern-btn" onclick="loadGlider()">Glider</button>
+        <button class="pattern-btn" onclick="loadBlinker()">Blinker</button>
+        <button class="pattern-btn" onclick="loadToad()">Toad</button>
+        <button class="pattern-btn" onclick="loadBeacon()">Beacon</button>
+        <button class="pattern-btn" onclick="loadPulsar()">Pulsar</button>
+        <button class="pattern-btn" onclick="loadGliderGun()">Glider Gun</button>
+    </div>
+
+    <div class="info">
+        <strong>Generation:</strong> <span id="generation">0</span> |
+        <strong>Population:</strong> <span id="population">0</span> |
+        <strong>FPS:</strong> <span id="fps">0</span>
+    </div>
+
+    <div id="canvas-container"></div>
+
+    <div class="rules">
+        <h3>Conway's Game of Life Rules</h3>
+        <ul>
+            <li><strong>Birth:</strong> A dead cell with exactly 3 live neighbors becomes alive</li>
+            <li><strong>Survival:</strong> A live cell with 2 or 3 live neighbors survives</li>
+            <li><strong>Death:</strong> A live cell with fewer than 2 neighbors dies (underpopulation)</li>
+            <li><strong>Death:</strong> A live cell with more than 3 neighbors dies (overpopulation)</li>
+        </ul>
+        <p><strong>Click</strong> on cells to toggle them alive/dead. The simulation runs on a finite grid with dead boundaries.</p>
+    </div>
+
+    <script>
+        // Conway's Game of Life implementation
+        var alive = [];
+        alive.push([]);
+        alive.push([]);
+        var ix = 0;
+        var n = 80; // Increased grid size
+        var radius = 5;
+        var padding = 0;
+        var paused = false;
+        var generation = 0;
+        var targetFrameRate = 10;
+
+        function random_choice() {
+            // Initialize both buffers
+            alive[0] = [];
+            alive[1] = [];
+
+            for(var r = 0; r < n; r++) {
+                alive[0].push([]);
+                alive[1].push([]);
+                for(var c = 0; c < n; c++) {
+                    var isAlive = random() < 0.3; // 30% chance for more interesting patterns
+                    alive[0][r].push(isAlive);
+                    alive[1][r].push(isAlive);
+                }
+            }
+            generation = 0;
+        }
+
+        function update() {
+            background(20);
+            noStroke();
+
+            // Draw grid lines
+            stroke(40);
+            strokeWeight(1);
+            for(var r = 0; r <= n; r++) {
+                line(0, r * (padding + 2 * radius), width, r * (padding + 2 * radius));
+            }
+            for(var c = 0; c <= n; c++) {
+                line(c * (padding + 2 * radius), 0, c * (padding + 2 * radius), height);
+            }
+
+            // Draw cells
+            noStroke();
+            var population = 0;
+            for(var r = 0; r < n; r++) {
+                for(var c = 0; c < n; c++) {
+                    if(alive[ix][r][c]){
+                        // Gradient effect based on position
+                        var hue = map(c + r, 0, n * 2, 0, 120);
+                        fill(hue, 255, 200);
+                        rect(c * (padding + 2 * radius), r * (padding + 2 * radius), 2 * radius, 2 * radius, 2);
+                        population++;
+                    }
+                }
+            }
+
+            // Update UI
+            document.getElementById('generation').textContent = generation;
+            document.getElementById('population').textContent = population;
+        }
+
+        function setup() {
+            colorMode(HSB);
+            var canvas = createCanvas(n * (padding + 2 * radius), n * (padding + 2 * radius));
+            canvas.parent('canvas-container');
+            random_choice();
+            update();
+            frameRate(targetFrameRate);
+        }
+
+        function isAlive(r, c) {
+            if(0 <= r && r < n && 0 <= c && c < n) {
+                return alive[ix][r][c];
+            } else {
+                return false;
+            }
+        }
+
+        function draw() {
+            if(!paused) {
+                // Calculate next generation
+                for(var r = 0; r < n; r++) {
+                    for(var c = 0; c < n; c++) {
+                        var count = 0;
+                        // Count live neighbors
+                        for(var r_ = -1; r_ <= 1; r_++) {
+                            for(var c_ = -1; c_ <= 1; c_++) {
+                                if(r_ == 0 && c_ == 0) continue;
+                                if(isAlive(r + r_, c + c_)) count++;
+                            }
+                        }
+
+                        // Apply Conway's rules
+                        if(isAlive(r, c)) {
+                            // Survival: 2 or 3 neighbors
+                            alive[(ix + 1) % 2][r][c] = count == 2 || count == 3;
+                        } else {
+                            // Birth: exactly 3 neighbors
+                            alive[(ix + 1) % 2][r][c] = count == 3;
+                        }
+                    }
+                }
+                ix = (ix + 1) % 2;
+                generation++;
+            }
+
+            update();
+            document.getElementById('fps').textContent = Math.round(frameRate());
+        }
+
+        function mousePressed() {
+            // Toggle cell on click
+            var c = Math.floor(mouseX / (padding + 2 * radius));
+            var r = Math.floor(mouseY / (padding + 2 * radius));
+
+            if(r >= 0 && r < n && c >= 0 && c < n) {
+                alive[ix][r][c] = !alive[ix][r][c];
+                update();
+            }
+        }
+
+        function mouseDragged() {
+            // Draw cells while dragging
+            var c = Math.floor(mouseX / (padding + 2 * radius));
+            var r = Math.floor(mouseY / (padding + 2 * radius));
+
+            if(r >= 0 && r < n && c >= 0 && c < n) {
+                alive[ix][r][c] = true;
+                update();
+            }
+        }
+
+        // UI Controls
+        function togglePause() {
+            paused = !paused;
+            var btn = document.getElementById('pauseBtn');
+            btn.textContent = paused ? '▶ Play' : '⏸ Pause';
+        }
+
+        function resetRandom() {
+            random_choice();
+            update();
+        }
+
+        function clearGrid() {
+            for(var r = 0; r < n; r++) {
+                for(var c = 0; c < n; c++) {
+                    alive[0][r][c] = false;
+                    alive[1][r][c] = false;
+                }
+            }
+            generation = 0;
+            update();
+        }
+
+        function stepForward() {
+            if(paused) {
+                paused = false;
+                draw();
+                paused = true;
+            }
+        }
+
+        function updateSpeed(value) {
+            targetFrameRate = parseInt(value);
+            frameRate(targetFrameRate);
+            document.getElementById('speedDisplay').textContent = value + ' FPS';
+        }
+
+        // Pattern loading functions
+        function clearAndSetPattern(pattern) {
+            clearGrid();
+            var startR = Math.floor(n / 2 - pattern.length / 2);
+            var startC = Math.floor(n / 2 - pattern[0].length / 2);
+
+            for(var r = 0; r < pattern.length; r++) {
+                for(var c = 0; c < pattern[r].length; c++) {
+                    if(pattern[r][c]) {
+                        alive[ix][startR + r][startC + c] = true;
+                    }
+                }
+            }
+            update();
+        }
+
+        function loadGlider() {
+            var pattern = [
+                [0, 1, 0],
+                [0, 0, 1],
+                [1, 1, 1]
+            ];
+            clearAndSetPattern(pattern);
+        }
+
+        function loadBlinker() {
+            var pattern = [
+                [1, 1, 1]
+            ];
+            clearAndSetPattern(pattern);
+        }
+
+        function loadToad() {
+            var pattern = [
+                [0, 1, 1, 1],
+                [1, 1, 1, 0]
+            ];
+            clearAndSetPattern(pattern);
+        }
+
+        function loadBeacon() {
+            var pattern = [
+                [1, 1, 0, 0],
+                [1, 1, 0, 0],
+                [0, 0, 1, 1],
+                [0, 0, 1, 1]
+            ];
+            clearAndSetPattern(pattern);
+        }
+
+        function loadPulsar() {
+            var pattern = [
+                [0,0,1,1,1,0,0,0,1,1,1,0,0],
+                [0,0,0,0,0,0,0,0,0,0,0,0,0],
+                [1,0,0,0,0,1,0,1,0,0,0,0,1],
+                [1,0,0,0,0,1,0,1,0,0,0,0,1],
+                [1,0,0,0,0,1,0,1,0,0,0,0,1],
+                [0,0,1,1,1,0,0,0,1,1,1,0,0],
+                [0,0,0,0,0,0,0,0,0,0,0,0,0],
+                [0,0,1,1,1,0,0,0,1,1,1,0,0],
+                [1,0,0,0,0,1,0,1,0,0,0,0,1],
+                [1,0,0,0,0,1,0,1,0,0,0,0,1],
+                [1,0,0,0,0,1,0,1,0,0,0,0,1],
+                [0,0,0,0,0,0,0,0,0,0,0,0,0],
+                [0,0,1,1,1,0,0,0,1,1,1,0,0]
+            ];
+            clearAndSetPattern(pattern);
+        }
+
+        function loadGliderGun() {
+            var pattern = [
+                [0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1,0,0,0,0,0,0,0,0,0,0,0],
+                [0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1,0,1,0,0,0,0,0,0,0,0,0,0,0],
+                [0,0,0,0,0,0,0,0,0,0,0,0,1,1,0,0,0,0,0,0,1,1,0,0,0,0,0,0,0,0,0,0,0,0,1,1],
+                [0,0,0,0,0,0,0,0,0,0,0,1,0,0,0,1,0,0,0,0,1,1,0,0,0,0,0,0,0,0,0,0,0,0,1,1],
+                [1,1,0,0,0,0,0,0,0,0,1,0,0,0,0,0,1,0,0,0,1,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0],
+                [1,1,0,0,0,0,0,0,0,0,1,0,0,0,1,0,1,1,0,0,0,0,1,0,1,0,0,0,0,0,0,0,0,0,0,0],
+                [0,0,0,0,0,0,0,0,0,0,1,0,0,0,0,0,1,0,0,0,0,0,0,0,1,0,0,0,0,0,0,0,0,0,0,0],
+                [0,0,0,0,0,0,0,0,0,0,0,1,0,0,0,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],
+                [0,0,0,0,0,0,0,0,0,0,0,0,1,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0]
+            ];
+            clearAndSetPattern(pattern);
+        }
+    </script>
+</body>
+</html>

@@ -1,0 +1,21 @@
+<svg width="128" height="128" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <linearGradient id="grad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#667eea;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#764ba2;stop-opacity:1" />
+    </linearGradient>
+  </defs>
+
+  <!-- Background circle -->
+  <circle cx="64" cy="64" r="60" fill="url(#grad)"/>
+
+  <!-- Camera/record icon -->
+  <circle cx="64" cy="64" r="20" fill="white" opacity="0.9"/>
+  <circle cx="64" cy="64" r="12" fill="#ef4444"/>
+
+  <!-- Instagram corners -->
+  <rect x="30" y="30" width="8" height="8" rx="2" fill="white" opacity="0.6"/>
+  <rect x="90" y="30" width="8" height="8" rx="2" fill="white" opacity="0.6"/>
+  <rect x="30" y="90" width="8" height="8" rx="2" fill="white" opacity="0.6"/>
+  <rect x="90" y="90" width="8" height="8" rx="2" fill="white" opacity="0.6"/>
+</svg>

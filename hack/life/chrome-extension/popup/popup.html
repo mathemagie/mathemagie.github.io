@@ -1,0 +1,109 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Instagram Video Recorder</title>
+    <link rel="stylesheet" href="popup.css">
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>🎬 Instagram Recorder</h1>
+            <p class="subtitle">Canvas → Instagram Ready</p>
+        </header>
+
+        <div class="status" id="status">
+            <div class="status-indicator" id="statusIndicator"></div>
+            <span id="statusText">Ready to record</span>
+        </div>
+
+        <section class="format-section">
+            <h2>📐 Format</h2>
+            <div class="format-grid">
+                <button class="format-card active" data-format="square">
+                    <div class="format-icon">⬜</div>
+                    <div class="format-name">Square</div>
+                    <div class="format-size">1080×1080</div>
+                    <div class="format-label">Feed Posts</div>
+                </button>
+                <button class="format-card" data-format="story">
+                    <div class="format-icon">📱</div>
+                    <div class="format-name">Story</div>
+                    <div class="format-size">1080×1920</div>
+                    <div class="format-label">Stories/Reels</div>
+                </button>
+            </div>
+        </section>
+
+        <section class="quality-section">
+            <h2>⚙️ Quality</h2>
+            <div class="quality-options">
+                <label class="option-row">
+                    <span>Frame Rate:</span>
+                    <select id="frameRate">
+                        <option value="30">30 FPS</option>
+                        <option value="60" selected>60 FPS</option>
+                    </select>
+                </label>
+                <label class="option-row">
+                    <span>Bitrate:</span>
+                    <select id="bitrate">
+                        <option value="5000000">5 Mbps</option>
+                        <option value="10000000" selected>10 Mbps (High)</option>
+                        <option value="15000000">15 Mbps (Ultra)</option>
+                    </select>
+                </label>
+                <label class="option-row">
+                    <span>Max Duration:</span>
+                    <select id="maxDuration">
+                        <option value="15">15 seconds</option>
+                        <option value="30">30 seconds</option>
+                        <option value="60" selected>60 seconds</option>
+                    </select>
+                </label>
+            </div>
+        </section>
+
+        <section class="recording-info" id="recordingInfo" style="display: none;">
+            <div class="rec-indicator">
+                <div class="rec-dot"></div>
+                <span id="recordingTime">00:00</span>
+            </div>
+            <div class="rec-details">
+                <div>Canvas: <span id="canvasSize">-</span></div>
+                <div>FPS: <span id="currentFps">-</span></div>
+            </div>
+        </section>
+
+        <div class="actions">
+            <button class="btn btn-primary" id="startBtn">
+                <span class="btn-icon">●</span>
+                Start Recording
+            </button>
+            <button class="btn btn-stop" id="stopBtn" style="display: none;">
+                <span class="btn-icon">■</span>
+                Stop Recording
+            </button>
+            <button class="btn btn-download" id="downloadBtn" style="display: none;">
+                <span class="btn-icon">⬇</span>
+                Download MP4
+            </button>
+        </div>
+
+        <footer>
+            <div class="tips">
+                <h3>💡 Quick Tips</h3>
+                <ul>
+                    <li>Find canvas element on page before recording</li>
+                    <li>Enable audio in page for sound capture</li>
+                    <li>Video auto-downloads as WebM (convert to MP4)</li>
+                    <li>Use square for feed, story for reels</li>
+                </ul>
+            </div>
+        </footer>
+    </div>
+
+    <script src="popup.js"></script>
+</body>
+</html>
