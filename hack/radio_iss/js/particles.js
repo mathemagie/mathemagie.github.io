@@ -1,4 +1,4 @@
-// Particle system for ISS Radio application
+// Particle system for 25544.fm (ISS Orbital Radio)
 class Particle {
   constructor(x, y, isIss) {
     this.pos = createVector(x, y);

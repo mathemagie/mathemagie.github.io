@@ -4,7 +4,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Project Overview
 
-This is a "Radio ISS" application - an immersive ISS (International Space Station) tracker that combines real-time visualization with location-based internet radio streaming. The app displays a particle physics simulation where the ISS is visualized as a pulsating red particle moving based on its actual orbital position, while continent-based particles create dynamic interactions. As the ISS travels, the radio automatically switches between regional stations.
+This is "25544.fm" (ISS Orbital Radio) - an immersive ISS (International Space Station) tracker that combines real-time visualization with location-based internet radio streaming. The name "25544" is the NORAD catalog number for the International Space Station. The app displays a particle physics simulation where the ISS is visualized as a pulsating red particle moving based on its actual orbital position, while continent-based particles create dynamic interactions. As the ISS travels, the radio automatically switches between regional stations.
 
 
 ## Architecture

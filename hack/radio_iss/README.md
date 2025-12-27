@@ -1,8 +1,10 @@
-# Radio ISS
+# 25544.fm - ISS Orbital Radio
 
 An immersive ISS (International Space Station) tracker that combines real-time space station visualization with location-based internet radio streaming. Watch the ISS orbit Earth as a pulsating particle in a physics simulation while listening to regional radio stations that automatically switch based on the ISS's current location.
 
-![Radio ISS Demo](https://img.shields.io/badge/Demo-Live-brightgreen)
+**25544** is the NORAD catalog number for the International Space Station.
+
+![25544.fm Demo](https://img.shields.io/badge/Demo-Live-brightgreen)
 
 ## Features
 

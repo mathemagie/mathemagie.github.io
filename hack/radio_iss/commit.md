@@ -1,4 +1,6 @@
-# Radio ISS Project - Commit History
+# 25544.fm (ISS Orbital Radio) - Commit History
+
+**Note**: Project renamed from "Radio ISS" to "25544.fm" - NORAD catalog number for the ISS.
 
 ## Recent UI & Feature Development
 

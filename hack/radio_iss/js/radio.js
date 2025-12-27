@@ -1,7 +1,7 @@
 /* eslint-env browser */
 /* global localStorage, performance, requestAnimationFrame */
 
-// Radio functionality for ISS Radio application
+// Radio functionality for 25544.fm (ISS Orbital Radio)
 class RadioManager {
   constructor() {
     this.radioPlayer = null;

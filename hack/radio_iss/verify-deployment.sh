@@ -1,6 +1,6 @@
 #!/bin/bash
 
-# Radio ISS Deployment Verification Script
+# 25544.fm Deployment Verification Script
 # Checks if the latest version is deployed on GitHub Pages
 
 set -e
@@ -11,7 +11,7 @@ EXPECTED_COMMIT=$(git log --format="%h" -1 2>/dev/null || echo "unknown")
 TEMP_FILE="/tmp/radio_iss_index.html"
 DEPLOYED_COMMIT="unknown"
 
-echo "🚀 Radio ISS Deployment Verification"
+echo "🚀 25544.fm Deployment Verification"
 echo "======================================"
 echo "URL: $URL"
 echo "Expected commit: $EXPECTED_COMMIT"

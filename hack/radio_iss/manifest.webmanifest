@@ -1,6 +1,6 @@
 {
-  "name": "Radio ISS",
-  "short_name": "Radio ISS",
+  "name": "25544.fm - ISS Orbital Radio",
+  "short_name": "25544.fm",
   "start_url": ".",
   "display": "standalone",
   "background_color": "#000000",

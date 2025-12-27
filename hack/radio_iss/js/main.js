@@ -1,7 +1,7 @@
 /* eslint-env browser */
 /* global setup, draw, windowResized, keyPressed, createCanvas, background, fill, noStroke, circle, text, textSize, key, keyIsPressed, width, height, random, constrain, lerp, dist, cos, sin, TWO_PI, rect, navigator */
 
-// Main application for ISS Radio
+// Main application for 25544.fm (ISS Orbital Radio)
 // Global variables
 const particles = [];
 
