@@ -1,4 +1,4 @@
-# Python Dependencies for Nabaztag ISS Tracker
+# Python Dependencies for Le Lapin Cosmique
 # Install with: pip install -r requirements.txt
 
 # HTTP requests for API calls and Nabaztag communication

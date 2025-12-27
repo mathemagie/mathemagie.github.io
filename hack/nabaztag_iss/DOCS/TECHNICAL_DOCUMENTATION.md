@@ -1,4 +1,4 @@
-# Technical Documentation - Nabaztag ISS Tracker
+# Technical Documentation - Le Lapin Cosmique
 
 ## Table of Contents
 
@@ -16,7 +16,7 @@
 
 ## System Overview
 
-The Nabaztag ISS Tracker is a real-time web application that visualizes the International Space Station's current position on an interactive world map. The application fetches live ISS coordinates and displays them using the Leaflet mapping library.
+Le Lapin Cosmique is a real-time web application that visualizes the International Space Station's current position on an interactive world map. The application fetches live ISS coordinates and displays them using the Leaflet mapping library.
 
 ### Key Features
 

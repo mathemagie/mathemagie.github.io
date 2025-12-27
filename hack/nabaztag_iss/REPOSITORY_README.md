@@ -1,4 +1,4 @@
-# 🐰🌌 Nabaztag ISS Tracker
+# 🐰🌌 Le Lapin Cosmique
 
 > *A whimsical IoT project: My Nabaztag robot's ears wiggle every time the International Space Station flies over France. Live tracking + open source code.*
 
@@ -14,7 +14,7 @@ My **Nabaztag** robot (a delightful IoT toy from the mid-2000s) wiggles its ears
 
 **🎥 [Watch the Demo Video](https://mathemagie.github.io/hack/nabaztag_iss/)** | **🌐 [Live ISS Tracker](https://mathemagie.github.io/hack/nabaztag_iss/)**
 
-![Nabaztag ISS Tracker](https://mathemagie.github.io/hack/nabaztag_iss/nabaztag_ISS_scaled_x2.mp4)
+![Le Lapin Cosmique](https://mathemagie.github.io/hack/nabaztag_iss/nabaztag_ISS_scaled_x2.mp4)
 
 ## 🎯 Project Overview
 
@@ -193,7 +193,7 @@ Create a systemd service file `/etc/systemd/system/nabaztag-iss.service`:
 
 ```ini
 [Unit]
-Description=Nabaztag ISS Tracker
+Description=Le Lapin Cosmique
 After=network.target
 
 [Service]

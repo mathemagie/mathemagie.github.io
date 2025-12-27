@@ -1,8 +1,8 @@
-# Nabaztag ISS Tracker
+# Le Lapin Cosmique
 
 A real-time web application that tracks the International Space Station (ISS) and displays its current position on an interactive world map. This project also documents a creative IoT integration where a Nabaztag robot wiggles its ears when the ISS passes over France.
 
-![Nabaztag ISS Tracker](https://img.shields.io/badge/Status-Live-brightgreen) ![License](https://img.shields.io/badge/License-Open%20Source-blue)
+![Le Lapin Cosmique](https://img.shields.io/badge/Status-Live-brightgreen) ![License](https://img.shields.io/badge/License-Open%20Source-blue)
 
 ## 🌟 Features
 
@@ -347,7 +347,7 @@ This project is open source. Please check the repository for specific license de
 **Mathemagie**
 
 - GitHub: [@mathemagie](https://github.com/mathemagie)
-- Project: [Nabaztag ISS](https://github.com/mathemagie/nabaztag_ISS)
+- Project: [Le Lapin Cosmique](https://github.com/mathemagie/nabaztag_ISS)
 
 ## 🙏 Acknowledgments
 

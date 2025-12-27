@@ -1,6 +1,6 @@
 # Developer Guide
 
-This guide provides detailed explanations of the codebase, making it easier to understand, modify, and extend the Nabaztag ISS Tracker project.
+This guide provides detailed explanations of the codebase, making it easier to understand, modify, and extend the Le Lapin Cosmique project.
 
 ## Table of Contents
 
