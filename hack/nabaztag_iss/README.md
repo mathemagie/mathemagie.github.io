@@ -24,8 +24,8 @@ No build tools or package managers required! This is a pure static website that 
 
 1. **Clone or download this repository**
    ```bash
-   git clone https://github.com/mathemagie/nabaztag_ISS.git
-   cd nabaztag_ISS
+   git clone https://github.com/mathemagie/lapin_cosmique.git
+   cd lapin_cosmique
    ```
 
 2. **Open in a browser**
@@ -245,8 +245,8 @@ const issIcon = L.icon({
 
 The physical Nabaztag robot is controlled by a separate Python script:
 
-- **GitHub Repository**: [nabaztag_ISS](https://github.com/mathemagie/nabaztag_ISS)
-- **Python Code**: [ear.py](https://raw.githubusercontent.com/mathemagie/nabaztag_ISS/main/ear.py)
+- **GitHub Repository**: [lapin_cosmique](https://github.com/mathemagie/lapin_cosmique)
+- **Python Code**: [ear.py](https://raw.githubusercontent.com/mathemagie/lapin_cosmique/main/ear.py)
 
 The Python script:
 - Polls the ISS API every 5 seconds
@@ -347,7 +347,7 @@ This project is open source. Please check the repository for specific license de
 **Mathemagie**
 
 - GitHub: [@mathemagie](https://github.com/mathemagie)
-- Project: [Le Lapin Cosmique](https://github.com/mathemagie/nabaztag_ISS)
+- Project: [Le Lapin Cosmique](https://github.com/mathemagie/lapin_cosmique)
 
 ## 🙏 Acknowledgments
 

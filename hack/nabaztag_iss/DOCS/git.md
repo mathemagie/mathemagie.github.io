@@ -1,6 +1,6 @@
 # GitHub Repository Updates Needed
 
-## Repository: https://github.com/mathemagie/nabaztag_ISS
+## Repository: https://github.com/mathemagie/lapin_cosmique
 
 ### Current Issues
 

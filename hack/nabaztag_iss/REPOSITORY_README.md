@@ -40,8 +40,8 @@ When the ISS enters French airspace (or any region you configure), the Python sc
 
 1. **Clone this repository**
    ```bash
-   git clone https://github.com/mathemagie/nabaztag_ISS.git
-   cd nabaztag_ISS
+   git clone https://github.com/mathemagie/lapin_cosmique.git
+   cd lapin_cosmique
    ```
 
 2. **Install dependencies**
@@ -199,8 +199,8 @@ After=network.target
 [Service]
 Type=simple
 User=pi
-WorkingDirectory=/home/pi/nabaztag_ISS
-ExecStart=/usr/bin/python3 /home/pi/nabaztag_ISS/ear.py
+WorkingDirectory=/home/pi/lapin_cosmique
+ExecStart=/usr/bin/python3 /home/pi/lapin_cosmique/ear.py
 Restart=always
 
 [Install]

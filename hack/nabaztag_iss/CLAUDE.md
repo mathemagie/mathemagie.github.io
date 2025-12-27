@@ -107,7 +107,7 @@ Then navigate to `http://localhost:8000`
 
 ## Important Notes
 
-- The Python code that controls the physical Nabaztag robot is **external** and hosted at `https://raw.githubusercontent.com/mathemagie/nabaztag_ISS/main/ear.py`
+- The Python code that controls the physical Nabaztag robot is **external** and hosted at `https://raw.githubusercontent.com/mathemagie/lapin_cosmique/main/ear.py`
 - The home link (`/`) navigates to the parent site (pcito)
 - All CSS animations are CSS-only (no JavaScript animation libraries)
 - The site uses semantic HTML with proper ARIA labels for accessibility

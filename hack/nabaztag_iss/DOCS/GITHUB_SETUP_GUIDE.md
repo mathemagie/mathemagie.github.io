@@ -2,7 +2,7 @@
 
 This guide explains how to update the GitHub repository settings that require manual configuration through the GitHub web interface.
 
-## Repository: https://github.com/mathemagie/nabaztag_ISS
+## Repository: https://github.com/mathemagie/lapin_cosmique
 
 ## ✅ Files Created (Ready to Upload)
 
@@ -103,7 +103,7 @@ A whimsical IoT project: My Nabaztag robot's ears wiggle every time the ISS flie
 **Option B: Using Git Command Line**
 
 ```bash
-cd /path/to/nabaztag_ISS
+cd /path/to/lapin_cosmique
 git add REPOSITORY_README.md REPOSITORY_REQUIREMENTS.txt REPOSITORY_LICENSE REPOSITORY_GITIGNORE
 git mv REPOSITORY_README.md README.md
 git mv REPOSITORY_REQUIREMENTS.txt requirements.txt
