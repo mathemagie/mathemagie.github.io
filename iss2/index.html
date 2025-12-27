@@ -1,0 +1,42 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>ISS Tracker</title>
+  <style>
+    body {
+      margin: 0;
+      padding: 0;
+      text-align: center;
+      background-color: #222;
+      color: #fff;
+      font-family: Arial, sans-serif;
+    }
+    #canvas-container {
+      display: inline-block;
+      position: relative;
+    }
+    /* World map image and overlay canvas */
+    #canvas-container img {
+      display: block;
+      border: 1px solid #fff;
+    }
+    #canvas-container canvas {
+      display: block;
+      position: absolute;
+      top: 0;
+      left: 0;
+    }
+  </style>
+</head>
+<body>
+  <h1>International Space Station Tracker</h1>
+  <div id="canvas-container">
+    <img id="map"
+         src="https://upload.wikimedia.org/wikipedia/commons/thumb/8/80/World_map_-_low_resolution.svg/1024px-World_map_-_low_resolution.svg.png"
+         alt="World Map">
+  </div>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/p5.js/1.4.0/p5.min.js"></script>
+  <script src="sketch.js"></script>
+</body>
+</html>

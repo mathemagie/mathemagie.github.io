@@ -1,0 +1,155 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ISS Position Tracker</title>
+    
+    <!-- Leaflet CSS - This provides the styling for our map -->
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
+          integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY="
+          crossorigin=""/>
+    
+    <style>
+        /* Dark mode styling for our page */
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 20px;
+            background-color: #1a1a1a;
+            background-image: 
+                radial-gradient(white, rgba(255,255,255,.2) 2px, transparent 40px),
+                radial-gradient(white, rgba(255,255,255,.15) 1px, transparent 30px),
+                radial-gradient(white, rgba(255,255,255,.1) 2px, transparent 40px);
+            background-size: 550px 550px, 350px 350px, 250px 250px;
+            background-position: 0 0, 40px 60px, 130px 270px;
+            color: #e0e0e0;
+            min-height: 100vh;
+        }
+
+        h1 {
+            text-align: center;
+            color: #ffffff;
+            margin-bottom: 20px;
+            text-shadow: 0 0 10px rgba(255,255,255,0.3);
+        }
+
+        /* The map container - it needs a specific height to display properly */
+        #map {
+            height: 500px;
+            width: 100%;
+            border-radius: 8px;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.5);
+            margin-bottom: 20px;
+            border: 1px solid #333;
+        }
+
+        /* Style the information display */
+        #iss-info {
+            background-color: #2a2a2a;
+            background-image: linear-gradient(135deg, #2a2a2a 0%, #1e1e1e 100%);
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.3);
+            text-align: center;
+            font-size: 18px;
+            font-weight: bold;
+            color: #ffffff;
+            border: 1px solid #333;
+            line-height: 1.4;
+            min-height: 80px;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+        }
+
+        /* Container to center everything */
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        .info-text {
+            text-align: center;
+            color: #b0b0b0;
+            margin-bottom: 20px;
+        }
+
+        /* Styling for the radio player container */
+        #radio-container {
+            background-color: #2a2a2a;
+            background-image: linear-gradient(135deg, #2a2a2a 0%, #1e1e1e 100%);
+            padding: 15px;
+            border-radius: 8px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.3);
+            border: 1px solid #333;
+            margin-top: 20px;
+            text-align: center;
+        }
+
+        #radio-info {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 10px;
+            color: #e0e0e0;
+            padding: 0 5px;
+        }
+        
+        #station-name {
+            font-weight: bold;
+            font-size: 16px;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            max-width: 70%;
+            text-align: left;
+        }
+
+        #radio-status {
+            font-style: italic;
+            color: #aaa;
+        }
+
+        /* Styling for the audio player controls */
+        #audio-player {
+            width: 100%;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <!-- Page title -->
+        <h1>🛰️ International Space Station Live Tracker</h1>
+        
+        <!-- Description text -->
+        <p class="info-text">
+            Watch the International Space Station orbit Earth in real-time! 
+            The map updates every 5 seconds with the current position.
+        </p>
+        
+        <!-- This div will contain our interactive map -->
+        <div id="map"></div>
+        
+        <!-- This div will display the current ISS coordinates and country -->
+        <div id="iss-info">Loading ISS position...</div>
+        
+        <!-- This div will contain our audio player for the radio -->
+        <div id="radio-container">
+            <div id="radio-info">
+                <span id="station-name">Searching for a radio station...</span>
+                <span id="radio-status">(Paused)</span>
+            </div>
+            <audio id="audio-player" controls></audio>
+        </div>
+    </div>
+
+    <!-- Leaflet JavaScript library - This provides the map functionality -->
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"
+            integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo="
+            crossorigin=""></script>
+    
+    <!-- Our custom JavaScript code -->
+    <script src="map.js"></script>
+</body>
+</html>
