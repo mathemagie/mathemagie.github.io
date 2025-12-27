@@ -78,20 +78,20 @@ The script will continuously monitor the ISS position and trigger your Nabaztag'
 
 ### The Magic Behind the Ears
 
-1. **ISS Monitoring**: The Python script (`ear.py`) polls the [Where The ISS At API](https://api.wheretheiss.at/v1/satellites/25544) every 5 seconds to get the current ISS position.
+1. **ISS Monitoring**: The Python script (`ear.py`) polls the [Open-Notify API](http://api.open-notify.org/iss-now.json) every 10 seconds to get the current ISS position.
 
 2. **Region Detection**: It checks if the ISS coordinates fall within your configured geographic boundaries (default: France).
 
-3. **Ear Activation**: When the ISS enters the region, the script sends HTTP POST requests to your Nabaztag's local network interface, triggering ear movement commands.
+3. **Ear Activation**: When the ISS enters the region, the script sends commands to your Nabaztag via TCP socket connection on port 1234, triggering ear movement commands.
 
 4. **Continuous Tracking**: The script runs in a loop, keeping the Nabaztag synchronized with the ISS's orbit.
 
 ### Technical Details
 
-- **API Communication**: Uses Python's `requests` library to fetch ISS data
-- **Network Protocol**: HTTP POST requests to Nabaztag's local IP address
-- **Command Format**: JSON commands defined in `mescommandes.json`
-- **SSH Tunnel**: Optional SSH tunnel support for remote Nabaztag access
+- **API Communication**: Uses Python's `requests` library to fetch ISS data from Open-Notify API
+- **Network Protocol**: TCP socket connection on port 1234 (localhost)
+- **Command Format**: JSON-formatted pynab commands for ear positioning
+- **Polling Frequency**: Checks ISS position every 10 seconds
 
 ## 📁 Project Files
 

@@ -27,9 +27,9 @@ The README should include:
   - Show the project in action
 
 - **How It Works**
-  - Explain the Python script monitors ISS location via Where The ISS At API
-  - When ISS enters French airspace, sends commands to Nabaztag
-  - Technical details about the SSH tunnel and JSON commands
+  - Explain the Python script monitors ISS location via Open-Notify API
+  - When ISS enters French airspace, sends commands to Nabaztag via TCP socket connection (port 1234)
+  - Technical details about the TCP socket connection and pynab JSON commands
 
 - **Hardware Requirements**
   - Nabaztag/tag:tag rabbit (vintage smart toy from 2005-2011)

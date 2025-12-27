@@ -249,9 +249,9 @@ The physical Nabaztag robot is controlled by a separate Python script:
 - **Python Code**: [ear.py](https://raw.githubusercontent.com/mathemagie/lapin_cosmique/main/ear.py)
 
 The Python script:
-- Polls the ISS API every 5 seconds
-- Checks if ISS is over France (latitude 41.3°N to 51.1°N, longitude -5.1°W to 8.2°E)
-- Sends HTTP commands to the Nabaztag robot to wiggle its ears
+- Polls the Open-Notify ISS API every 10 seconds
+- Checks if ISS is over France (latitude 41.0°N to 51.0°N, longitude -5.0°W to 9.0°E)
+- Sends commands via TCP socket connection (port 1234) to the Nabaztag robot to wiggle its ears
 - Runs continuously on a local machine or Raspberry Pi
 
 ## 🌐 Browser Support
