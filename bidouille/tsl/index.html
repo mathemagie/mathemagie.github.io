@@ -152,13 +152,20 @@
     const earthSpecularTexture = textureLoader.load('https://raw.githubusercontent.com/mrdoob/three.js/dev/examples/textures/planets/earth_specular_2048.jpg');
     const earthCloudsTexture = textureLoader.load('https://raw.githubusercontent.com/mrdoob/three.js/dev/examples/textures/planets/earth_clouds_1024.png');
 
-    // City lights - Load image for sampling to determine continent positions
-    const nightLightsImage = new Image();
-    nightLightsImage.crossOrigin = 'anonymous';
-    nightLightsImage.src = 'https://raw.githubusercontent.com/mrdoob/three.js/dev/examples/textures/planets/earth_lights_2048.png';
+    // Function to load image as a Promise
+    function loadImage(src) {
+      return new Promise((resolve, reject) => {
+        const img = new Image();
+        img.crossOrigin = 'anonymous';
+        img.onload = () => resolve(img);
+        img.onerror = reject;
+        img.src = src;
+      });
+    }
 
-    // Function to create city lights based on texture sampling
+    // Function to create city lights based on texture sampling - ONLY on continents
     function createCityLights(image) {
+
       // Create canvas to read pixel data
       const canvas = document.createElement('canvas');
       canvas.width = image.width;
@@ -169,7 +176,7 @@
 
       // Geometry and attributes setup
       const cityLightsGeometry = new THREE.BufferGeometry();
-      const lightCount = 50000; // Very high target for constant light coverage across continents
+      const lightCount = 150000; // Massive count for dense, constantly visible lights
       const positions = new Float32Array(lightCount * 3);
       const sizes = new Float32Array(lightCount);
       const colors = new Float32Array(lightCount * 3);
@@ -192,19 +199,19 @@
         const brightness = (imageData.data[idx] + imageData.data[idx + 1] + imageData.data[idx + 2]) / (3 * 255);
 
         // Accept urban areas (brightness threshold filters out oceans which are ~0.0)
-        if (brightness > 0.15) {
+        if (brightness > 0.10) {
           // Convert UV to spherical coordinates
           const phi = v * Math.PI;
           const theta = u * Math.PI * 2;
-          const r = 2.005; // Just above Earth surface
+          const r = 2.001; // Right at Earth surface for building lights
 
           // Convert spherical to Cartesian
           positions[placed * 3] = r * Math.sin(phi) * Math.cos(theta);
           positions[placed * 3 + 1] = r * Math.cos(phi);
           positions[placed * 3 + 2] = r * Math.sin(phi) * Math.sin(theta);
 
-          // Larger sizes for better visibility (4.0-10.0 pixels)
-          sizes[placed] = 4.0 + Math.random() * 6.0;
+          // Large sizes for high visibility (5.0-12.0 pixels)
+          sizes[placed] = 5.0 + Math.random() * 7.0;
 
           // Warm color palette
           const colorType = Math.random();
@@ -228,8 +235,8 @@
           // Random phase offset for desynchronized pulsation
           phaseOffsets[placed] = Math.random() * 100;
 
-          // Very fast pulsation speeds for constant flickering
-          pulsationSpeeds[placed] = 1.5 + Math.random() * 2.5; // 1.5-4.0 (very fast)
+          // Extremely varied speeds for chaotic blinking
+          pulsationSpeeds[placed] = 0.5 + Math.random() * 4.5; // 0.5-5.0 (very varied)
 
           placed++;
         }
@@ -242,10 +249,10 @@
       cityLightsGeometry.setAttribute('phaseOffset', new THREE.BufferAttribute(phaseOffsets, 1));
       cityLightsGeometry.setAttribute('pulsationSpeed', new THREE.BufferAttribute(pulsationSpeeds, 1));
 
-      // Material with TSL animation
+      // Material with TSL animation - highly visible city lights
       const cityLightsMaterial = new THREE.PointsNodeMaterial({
         transparent: true,
-        blending: THREE.AdditiveBlending, // Glow effect
+        blending: THREE.AdditiveBlending, // Additive for maximum visibility
         depthWrite: false,
         depthTest: true // Hidden behind Earth
       });
@@ -275,17 +282,17 @@
         const speed = pulsationSpeed;
 
         // Create chaotic random pattern for each light
-        // Using multiple sin waves with different frequencies for rapid blinking
-        const random1 = sin(time.mul(speed.mul(6.0)).add(phase));
-        const random2 = sin(time.mul(speed.mul(10.5)).add(phase.mul(3.7)));
-        const random3 = sin(time.mul(speed.mul(3.8)).add(phase.mul(5.3)));
+        // Using multiple sin waves with very different frequencies for chaotic blinking
+        const random1 = sin(time.mul(speed.mul(8.0)).add(phase));
+        const random2 = sin(time.mul(speed.mul(15.3)).add(phase.mul(4.2)));
+        const random3 = sin(time.mul(speed.mul(5.7)).add(phase.mul(6.8)));
 
         // Combine for maximum randomness
         const randomValue = random1.mul(0.5).add(random2.mul(0.3)).add(random3.mul(0.2));
 
         // Sharp threshold - convert to binary ON (1.0) or OFF (0.0)
-        // step(-0.4, randomValue) keeps lights ON about 70% of the time for constant coverage
-        const onOffValue = step(float(-0.4), randomValue);
+        // step(0.0, randomValue) gives true 50/50 random blinking for maximum variation
+        const onOffValue = step(float(0.0), randomValue);
 
         // Day/night fade
         const sunDir = normalize(vec3(-5, 2, -8)); // Match the sun light position
@@ -293,8 +300,8 @@
         const NdotL = dot(lightNormal, sunDir);
         const nightSide = float(1.0).sub(NdotL.mul(0.5).add(0.5)).pow(2.0);
 
-        // Final brightness - VERY bright when ON, completely OFF otherwise
-        const finalBrightness = onOffValue.mul(nightSide).mul(5.0); // Much brighter!
+        // Final brightness - VERY visible with additive blending
+        const finalBrightness = onOffValue.mul(nightSide).mul(8.0);
 
         return vec4(baseColor.mul(finalBrightness), finalBrightness);
       })();
@@ -303,13 +310,8 @@
       const cityLights = new THREE.Points(cityLightsGeometry, cityLightsMaterial);
       earth.add(cityLights); // Parent to Earth for automatic rotation
 
-      console.log(`City lights created: ${placed} lights`);
+      console.log(`City lights created: ${placed} lights on continents only`);
     }
-
-    // Load city lights when image is ready
-    nightLightsImage.onload = () => {
-      createCityLights(nightLightsImage);
-    };
 
     // Earth
     const earthGeometry = new THREE.SphereGeometry(2, 128, 128);
@@ -350,6 +352,7 @@
     })();
 
     const earth = new THREE.Mesh(earthGeometry, earthMaterial);
+    earth.rotation.y = 0.5; // Initial rotation to show Europe/Africa/Asia with dense city lights
     scene.add(earth);
 
     // Clouds layer
@@ -365,11 +368,20 @@
     cloudsMaterial.metalnessNode = float(0.0);
 
     const clouds = new THREE.Mesh(cloudsGeometry, cloudsMaterial);
+    clouds.rotation.y = 0.5; // Match Earth's initial rotation
     scene.add(clouds);
 
     // Animation loop
     async function init() {
       await renderer.init();
+
+      // Load the night lights texture and create city lights BEFORE starting animation
+      console.log('Loading night lights texture...');
+      const nightLightsImage = await loadImage('https://raw.githubusercontent.com/mrdoob/three.js/dev/examples/textures/planets/earth_lights_2048.png');
+      console.log('Night lights texture loaded, creating city lights...');
+      createCityLights(nightLightsImage);
+      console.log('City lights ready, starting animation');
+
       animate();
     }
 
