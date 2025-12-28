@@ -1,0 +1,90 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Minou Connecté - Objet Connecté</title>
+    <link rel="stylesheet" href="../../css/normalize.css">
+    <link rel="stylesheet" href="../../css/main.css">
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>🐱 Minou Connecté</h1>
+            <p class="subtitle">Un Objet Connecté Artistique et Poétique</p>
+        </header>
+
+        <div class="content">
+            <div class="video-section">
+                <div class="video-wrapper">
+                    <video controls autoplay loop muted>
+                        <source src="chat.mp4" type="video/mp4">
+                        Votre navigateur ne supporte pas la vidéo HTML5.
+                    </video>
+                </div>
+            </div>
+
+            <section class="project-overview">
+                <div class="card">
+                    <h2>📡 Le Projet</h2>
+                    <p>Minou Connecté est un objet connecté basé sur <strong>Arduino</strong> qui récupère en temps réel les données de passage des bus via l'API RATP accessible sur <em>wap.ratp.fr</em>.</p>
+                    <p>Lorsque votre bus approche, le chat remue la queue pour vous prévenir qu'il est temps de partir ! Ce projet allie électronique, programmation et poésie urbaine pour transformer une information pratique en un moment artistique et ludique.</p>
+                </div>
+            </section>
+
+            <section class="description-section">
+                <div class="card">
+                    <h2>🔧 Fonctionnement Technique</h2>
+                    <h3>Hardware</h3>
+                    <ul>
+                        <li>Microcontrôleur Arduino</li>
+                        <li>Module WiFi pour connexion Internet</li>
+                        <li>Servomoteur pour mouvement de la queue</li>
+                        <li>Alimentation électrique</li>
+                    </ul>
+                    <h3>Software</h3>
+                    <ul>
+                        <li>Requêtes HTTP vers l'API RATP</li>
+                        <li>Parsing des données temps réel</li>
+                        <li>Calcul du temps d'arrivée du bus</li>
+                        <li>Déclenchement 3 minutes avant l'arrivée</li>
+                    </ul>
+                </div>
+            </section>
+        </div>
+
+        <footer>
+            <p>Minou Connecté - Objet Connecté Artistique</p>
+            <p class="footer-subtitle">Une création alliant art, mécanique et poésie</p>
+        </footer>
+    </div>
+
+    <script>
+        // Animation au scroll
+        const cards = document.querySelectorAll('.card');
+
+        const observer = new IntersectionObserver((entries) => {
+            entries.forEach(entry => {
+                if (entry.isIntersecting) {
+                    entry.target.style.opacity = '0';
+                    entry.target.style.transform = 'translateY(20px)';
+                    setTimeout(() => {
+                        entry.target.style.transition = 'all 0.6s ease';
+                        entry.target.style.opacity = '1';
+                        entry.target.style.transform = 'translateY(0)';
+                    }, 100);
+                }
+            });
+        }, { threshold: 0.1 });
+
+        cards.forEach(card => observer.observe(card));
+
+        // Amélioration de la lecture vidéo
+        const video = document.querySelector('video');
+        video.addEventListener('loadedmetadata', () => {
+            console.log('Vidéo chargée avec succès');
+        });
+    </script>
+</body>
+</html>
