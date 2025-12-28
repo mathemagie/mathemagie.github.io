@@ -4,11 +4,15 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Minou Connecté - Objet Connecté</title>
+    <meta name="description" content="Un objet connecté artistique et poétique basé sur Arduino qui vous prévient de l'arrivée de votre bus">
     <link rel="stylesheet" href="../../css/normalize.css">
     <link rel="stylesheet" href="../../css/main.css">
     <link rel="stylesheet" href="styles.css">
 </head>
 <body>
+    <!-- Custom cursor -->
+    <div class="cursor" id="cursor"></div>
+
     <div class="container">
         <header>
             <h1>🐱 Minou Connecté</h1>
@@ -18,7 +22,7 @@
         <div class="content">
             <div class="video-section">
                 <div class="video-wrapper">
-                    <video controls autoplay loop muted>
+                    <video controls autoplay loop muted playsinline>
                         <source src="chat.mp4" type="video/mp4">
                         Votre navigateur ne supporte pas la vidéo HTML5.
                     </video>
@@ -55,36 +59,142 @@
         </div>
 
         <footer>
-            <p>Minou Connecté - Objet Connecté Artistique</p>
+            <p>Minou Connecté</p>
             <p class="footer-subtitle">Une création alliant art, mécanique et poésie</p>
         </footer>
     </div>
 
     <script>
-        // Animation au scroll
+        // Custom cursor tracking
+        const cursor = document.getElementById('cursor');
+        let mouseX = 0;
+        let mouseY = 0;
+        let cursorX = 0;
+        let cursorY = 0;
+
+        document.addEventListener('mousemove', (e) => {
+            mouseX = e.clientX;
+            mouseY = e.clientY;
+        });
+
+        function animateCursor() {
+            const dx = mouseX - cursorX;
+            const dy = mouseY - cursorY;
+
+            cursorX += dx * 0.15;
+            cursorY += dy * 0.15;
+
+            cursor.style.left = cursorX + 'px';
+            cursor.style.top = cursorY + 'px';
+
+            requestAnimationFrame(animateCursor);
+        }
+        animateCursor();
+
+        // Cursor states
+        const interactiveElements = document.querySelectorAll('a, button, video, .card, .video-wrapper, li');
+        interactiveElements.forEach(el => {
+            el.addEventListener('mouseenter', () => cursor.classList.add('active'));
+            el.addEventListener('mouseleave', () => cursor.classList.remove('active'));
+        });
+
+        // Enhanced scroll reveal animations
         const cards = document.querySelectorAll('.card');
+
+        const observerOptions = {
+            threshold: 0.15,
+            rootMargin: '0px 0px -50px 0px'
+        };
 
         const observer = new IntersectionObserver((entries) => {
             entries.forEach(entry => {
                 if (entry.isIntersecting) {
-                    entry.target.style.opacity = '0';
-                    entry.target.style.transform = 'translateY(20px)';
-                    setTimeout(() => {
-                        entry.target.style.transition = 'all 0.6s ease';
-                        entry.target.style.opacity = '1';
-                        entry.target.style.transform = 'translateY(0)';
-                    }, 100);
+                    entry.target.style.opacity = '1';
+                    entry.target.style.transform = entry.target.style.transform || 'translateY(0)';
                 }
             });
-        }, { threshold: 0.1 });
+        }, observerOptions);
 
-        cards.forEach(card => observer.observe(card));
-
-        // Amélioration de la lecture vidéo
-        const video = document.querySelector('video');
-        video.addEventListener('loadedmetadata', () => {
-            console.log('Vidéo chargée avec succès');
+        cards.forEach(card => {
+            observer.observe(card);
         });
+
+        // Video quality and loading
+        const video = document.querySelector('video');
+        if (video) {
+            video.addEventListener('loadedmetadata', () => {
+                console.log('🎬 Vidéo chargée avec succès');
+            });
+
+            video.addEventListener('error', (e) => {
+                console.error('❌ Erreur de chargement vidéo:', e);
+            });
+        }
+
+        // Add subtle parallax effect to cards on scroll
+        let ticking = false;
+
+        function updateParallax() {
+            const scrolled = window.pageYOffset;
+
+            cards.forEach((card, index) => {
+                const rect = card.getBoundingClientRect();
+                const cardCenter = rect.top + rect.height / 2;
+                const windowCenter = window.innerHeight / 2;
+                const distance = (cardCenter - windowCenter) / 20;
+
+                // Subtle movement based on scroll position
+                if (rect.top < window.innerHeight && rect.bottom > 0) {
+                    const offset = Math.max(-10, Math.min(10, distance));
+                    card.style.transform = `translateY(${offset}px) rotate(${index % 2 === 0 ? '-0.3deg' : '0.4deg'})`;
+                }
+            });
+
+            ticking = false;
+        }
+
+        window.addEventListener('scroll', () => {
+            if (!ticking) {
+                requestAnimationFrame(updateParallax);
+                ticking = true;
+            }
+        });
+
+        // Add micro-interaction to list items
+        const listItems = document.querySelectorAll('.card li');
+        listItems.forEach((item, index) => {
+            item.style.animationDelay = `${index * 0.05}s`;
+        });
+
+        // Easter egg: Click the cat emoji multiple times
+        const catEmoji = document.querySelector('h1');
+        let clickCount = 0;
+        const easterEggThreshold = 5;
+
+        if (catEmoji) {
+            catEmoji.addEventListener('click', () => {
+                clickCount++;
+                catEmoji.style.transform = `rotate(${clickCount * 360}deg) scale(${1 + clickCount * 0.1})`;
+                catEmoji.style.transition = 'transform 0.5s cubic-bezier(0.34, 1.56, 0.64, 1)';
+
+                if (clickCount === easterEggThreshold) {
+                    setTimeout(() => {
+                        alert('🎉 Miaou ! Vous avez trouvé l\'easter egg ! 🐱');
+                        clickCount = 0;
+                    }, 500);
+                }
+
+                setTimeout(() => {
+                    catEmoji.style.transform = 'rotate(0deg) scale(1)';
+                }, 500);
+            });
+        }
+
+        // Log artistic intent
+        console.log('%c🐱 Minou Connecté', 'font-size: 24px; font-weight: bold; color: #FF6B35;');
+        console.log('%cDesign: Neo-Brutalist meets Playful Retro-Tech', 'font-style: italic; color: #7FB069;');
+        console.log('%cFonts: Unbounded × Manrope × IBM Plex Mono', 'color: #1A1A1A;');
+        console.log('%cCréé avec ❤️ et Arduino', 'color: #FF6B35;');
     </script>
 </body>
 </html>
