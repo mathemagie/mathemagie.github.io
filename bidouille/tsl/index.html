@@ -34,7 +34,7 @@
       Fn, vec3, vec4, float, uniform, time,
       positionLocal, normalWorld, normalLocal, uv,
       mix, pow, dot, normalize, max, sin, cos,
-      cameraPosition, positionWorld, texture
+      cameraPosition, positionWorld, texture, attribute
     } from 'three/tsl';
 
     // Scene setup
@@ -45,7 +45,7 @@
       0.1,
       1000
     );
-    camera.position.set(0, 5, 15);
+    camera.position.set(0, 3, 10);
 
     const renderer = new THREE.WebGPURenderer({ antialias: true });
     renderer.setSize(window.innerWidth, window.innerHeight);
@@ -64,28 +64,81 @@
     sunLight.position.set(5, 3, 5);
     scene.add(sunLight);
 
-    // Stars background
+    // Realistic stars background with twinkling effect
     const starsGeometry = new THREE.BufferGeometry();
-    const starCount = 5000;
+    const starCount = 8000;
     const positions = new Float32Array(starCount * 3);
+    const sizes = new Float32Array(starCount);
+    const colors = new Float32Array(starCount * 3);
+    const randomValues = new Float32Array(starCount); // For twinkling animation
 
-    for (let i = 0; i < starCount * 3; i += 3) {
+    for (let i = 0; i < starCount; i++) {
       const radius = 100 + Math.random() * 400;
       const theta = Math.random() * Math.PI * 2;
       const phi = Math.random() * Math.PI;
 
-      positions[i] = radius * Math.sin(phi) * Math.cos(theta);
-      positions[i + 1] = radius * Math.sin(phi) * Math.sin(theta);
-      positions[i + 2] = radius * Math.cos(phi);
+      positions[i * 3] = radius * Math.sin(phi) * Math.cos(theta);
+      positions[i * 3 + 1] = radius * Math.sin(phi) * Math.sin(theta);
+      positions[i * 3 + 2] = radius * Math.cos(phi);
+
+      // Variable star sizes (most small, some larger)
+      sizes[i] = Math.random() < 0.9 ? 1.5 + Math.random() * 2 : 3 + Math.random() * 3;
+
+      // Star colors - mostly white/blue-white, some yellow/orange/red
+      const colorType = Math.random();
+      if (colorType < 0.7) {
+        // Blue-white stars (most common)
+        colors[i * 3] = 0.9 + Math.random() * 0.1;
+        colors[i * 3 + 1] = 0.9 + Math.random() * 0.1;
+        colors[i * 3 + 2] = 1.0;
+      } else if (colorType < 0.9) {
+        // Yellow-white stars
+        colors[i * 3] = 1.0;
+        colors[i * 3 + 1] = 0.9 + Math.random() * 0.1;
+        colors[i * 3 + 2] = 0.7 + Math.random() * 0.2;
+      } else {
+        // Orange-red stars (rare)
+        colors[i * 3] = 1.0;
+        colors[i * 3 + 1] = 0.6 + Math.random() * 0.3;
+        colors[i * 3 + 2] = 0.4 + Math.random() * 0.2;
+      }
+
+      // Random offset for twinkling phase
+      randomValues[i] = Math.random() * 100;
     }
 
     starsGeometry.setAttribute('position', new THREE.BufferAttribute(positions, 3));
+    starsGeometry.setAttribute('size', new THREE.BufferAttribute(sizes, 1));
+    starsGeometry.setAttribute('color', new THREE.BufferAttribute(colors, 3));
+    starsGeometry.setAttribute('randomValue', new THREE.BufferAttribute(randomValues, 1));
 
     const starsMaterial = new THREE.PointsNodeMaterial({
-      colorNode: vec4(1, 1, 1, 1),
-      sizeNode: float(2),
-      transparent: true
+      transparent: true,
+      blending: THREE.AdditiveBlending,
+      depthWrite: false
     });
+
+    // Twinkling star animation using TSL
+    const starSize = attribute('size');
+    const starColor = attribute('color', 'vec3');
+    const randomValue = attribute('randomValue');
+
+    starsMaterial.sizeNode = Fn(() => {
+      const baseSize = starSize;
+      const random = randomValue;
+      // Create more pronounced twinkling effect with different speeds for each star
+      const twinkle = sin(time.mul(3.0).add(random)).mul(0.6).add(1.0);
+      return baseSize.mul(twinkle);
+    })();
+
+    starsMaterial.colorNode = Fn(() => {
+      const baseColor = starColor;
+      const random = randomValue;
+      // More dramatic brightness variation for twinkling
+      const brightness = sin(time.mul(2.5).add(random)).mul(0.5).add(0.8);
+      const alpha = sin(time.mul(3.0).add(random)).mul(0.5).add(0.5);
+      return vec4(baseColor.mul(brightness), alpha);
+    })();
 
     const stars = new THREE.Points(starsGeometry, starsMaterial);
     scene.add(stars);
@@ -155,49 +208,6 @@
     const clouds = new THREE.Mesh(cloudsGeometry, cloudsMaterial);
     scene.add(clouds);
 
-    // ISS Satellite (using sprite so it always faces camera)
-    const issTexture = textureLoader.load('https://raw.githubusercontent.com/mrdoob/three.js/dev/examples/textures/sprite0.png');
-
-    const issNodeMaterial = new THREE.SpriteNodeMaterial();
-    issNodeMaterial.colorNode = Fn(() => {
-      const issMap = texture(issTexture, uv());
-      return issMap;
-    })();
-
-    // Add slight pulsing glow
-    issNodeMaterial.emissiveNode = Fn(() => {
-      const pulse = sin(time.mul(2.0)).mul(0.3).add(0.7);
-      return vec3(1.0, 1.0, 1.0).mul(pulse).mul(0.1);
-    })();
-
-    const satellite = new THREE.Sprite(issNodeMaterial);
-    satellite.scale.set(0.8, 0.8, 1);
-    scene.add(satellite);
-
-    // Satellite orbit parameters
-    const orbitRadius = 4.5;
-    const orbitSpeed = 0.5;
-    const orbitTilt = 0.3; // radians
-
-    // Orbit visualization
-    const orbitPoints = [];
-    const orbitSegments = 128;
-    for (let i = 0; i <= orbitSegments; i++) {
-      const angle = (i / orbitSegments) * Math.PI * 2;
-      const x = Math.cos(angle) * orbitRadius;
-      const y = Math.sin(angle) * orbitRadius * Math.sin(orbitTilt);
-      const z = Math.sin(angle) * orbitRadius * Math.cos(orbitTilt);
-      orbitPoints.push(new THREE.Vector3(x, y, z));
-    }
-
-    const orbitGeometry = new THREE.BufferGeometry().setFromPoints(orbitPoints);
-    const orbitMaterial = new THREE.LineBasicNodeMaterial({
-      colorNode: vec4(0.5, 0.5, 0.8, 0.3),
-      transparent: true
-    });
-    const orbitLine = new THREE.Line(orbitGeometry, orbitMaterial);
-    scene.add(orbitLine);
-
     // Animation loop
     async function init() {
       await renderer.init();
@@ -214,12 +224,6 @@
 
       // Rotate clouds slightly faster for realism
       clouds.rotation.y = t * 0.12;
-
-      // Move satellite in orbit
-      const orbitAngle = t * orbitSpeed;
-      satellite.position.x = Math.cos(orbitAngle) * orbitRadius;
-      satellite.position.y = Math.sin(orbitAngle) * orbitRadius * Math.sin(orbitTilt);
-      satellite.position.z = Math.sin(orbitAngle) * orbitRadius * Math.cos(orbitTilt);
 
       controls.update();
       renderer.render(scene, camera);
