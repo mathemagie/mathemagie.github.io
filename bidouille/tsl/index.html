@@ -176,7 +176,7 @@
 
       // Geometry and attributes setup
       const cityLightsGeometry = new THREE.BufferGeometry();
-      const lightCount = 150000; // Massive count for dense, constantly visible lights
+      const lightCount = 200000; // High target with probability-based placement
       const positions = new Float32Array(lightCount * 3);
       const sizes = new Float32Array(lightCount);
       const colors = new Float32Array(lightCount * 3);
@@ -198,8 +198,11 @@
         const idx = (y * canvas.width + x) * 4;
         const brightness = (imageData.data[idx] + imageData.data[idx + 1] + imageData.data[idx + 2]) / (3 * 255);
 
-        // Accept urban areas (brightness threshold filters out oceans which are ~0.0)
-        if (brightness > 0.10) {
+        // First filter: eliminate oceans completely (brightness < 0.08 = ocean)
+        if (brightness > 0.08) {
+          // Then use brightness as probability for realistic city density
+          const placementProbability = Math.pow(brightness, 1.5) * 3.0;
+          if (Math.random() < placementProbability) {
           // Convert UV to spherical coordinates
           const phi = v * Math.PI;
           const theta = u * Math.PI * 2;
@@ -210,8 +213,8 @@
           positions[placed * 3 + 1] = r * Math.cos(phi);
           positions[placed * 3 + 2] = r * Math.sin(phi) * Math.sin(theta);
 
-          // Large sizes for high visibility (5.0-12.0 pixels)
-          sizes[placed] = 5.0 + Math.random() * 7.0;
+          // Medium-sized visible lights (3.0-6.0 pixels)
+          sizes[placed] = 3.0 + Math.random() * 3.0;
 
           // Warm color palette
           const colorType = Math.random();
@@ -239,6 +242,7 @@
           pulsationSpeeds[placed] = 0.5 + Math.random() * 4.5; // 0.5-5.0 (very varied)
 
           placed++;
+          }
         }
       }
 
@@ -249,10 +253,10 @@
       cityLightsGeometry.setAttribute('phaseOffset', new THREE.BufferAttribute(phaseOffsets, 1));
       cityLightsGeometry.setAttribute('pulsationSpeed', new THREE.BufferAttribute(pulsationSpeeds, 1));
 
-      // Material with TSL animation - highly visible city lights
+      // Material with TSL animation - visible city lights
       const cityLightsMaterial = new THREE.PointsNodeMaterial({
         transparent: true,
-        blending: THREE.AdditiveBlending, // Additive for maximum visibility
+        blending: THREE.AdditiveBlending, // Additive for visible glow
         depthWrite: false,
         depthTest: true // Hidden behind Earth
       });
@@ -300,8 +304,8 @@
         const NdotL = dot(lightNormal, sunDir);
         const nightSide = float(1.0).sub(NdotL.mul(0.5).add(0.5)).pow(2.0);
 
-        // Final brightness - VERY visible with additive blending
-        const finalBrightness = onOffValue.mul(nightSide).mul(8.0);
+        // Final brightness - visible city lights with good contrast
+        const finalBrightness = onOffValue.mul(nightSide).mul(5.0);
 
         return vec4(baseColor.mul(finalBrightness), finalBrightness);
       })();
