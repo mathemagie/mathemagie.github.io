@@ -86,8 +86,12 @@ radio_iss/
 ├── js/
 │   ├── main.js         # Core application setup and draw loop
 │   ├── radio.js        # RadioManager class
-│   ├── geography.js    # GeographyManager class  
+│   ├── geography.js    # GeographyManager class
 │   └── particles.js    # Particle class with physics
+├── tests/
+│   ├── radio.test.js   # RadioManager tests
+│   ├── geography.test.js # GeographyManager tests
+│   └── resize.test.js  # Window resize functionality tests
 └── CLAUDE.md           # This documentation file
 ```
 
@@ -97,8 +101,10 @@ radio_iss/
 
 **Testing**: Run unit tests with Vitest:
 ```bash
-npm test           # Run tests once
-npm run test:watch # Run tests in watch mode
+npm test                           # Run all tests once
+npm run test:watch                 # Run tests in watch mode
+npx vitest tests/radio.test.js    # Run a single test file
+npx vitest -t "region detection"  # Run tests matching a pattern
 ```
 Tests are located in `tests/` directory and cover:
 - **RadioManager**: Region detection, station switching, audio controls

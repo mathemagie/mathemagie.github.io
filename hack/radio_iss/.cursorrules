@@ -1,13 +1,18 @@
 ## Cursor Rules for Radio ISS
 
-These rules guide Cursor when working in this repository. They are derived from `CLAUDE.md` and focus on preserving the single-file architecture and core behaviors of the app.
+These rules guide Cursor when working in this repository. They are derived from `CLAUDE.md` and focus on preserving the modular architecture and core behaviors of the app.
 
 ### Purpose
 - **Goal**: Maintain and enhance an immersive ISS tracker with location-based internet radio and a particle physics visualization.
-- **Critical constraint**: The app is a **single HTML file** with embedded CSS and JavaScript.
+- **Critical constraint**: The app uses a **modular architecture** with separate CSS and JavaScript files loaded by index.html.
 
 ### Key Files
-- **`index.html`**: The only application file. All HTML, CSS, and JS live here.
+- **`index.html`**: Main HTML file that loads all components
+- **`css/styles.css`**: All styling for UI and visual effects
+- **`js/main.js`**: Core application setup and draw loop
+- **`js/radio.js`**: RadioManager class
+- **`js/geography.js`**: GeographyManager class
+- **`js/particles.js`**: Particle class with physics
 
 ### How to Run
 - Open `index.html` directly in a web browser. No build step.
@@ -38,10 +43,10 @@ These rules guide Cursor when working in this repository. They are derived from 
   - `latLonToXY()` to convert lat/lon to screen space.
   - Continent boundary point generation with inland variation.
 
-### Implementation Guidelines (Do/Don’t)
-- Do keep everything in `index.html`; **do not** split into multiple files or introduce a bundler/build step.
+### Implementation Guidelines (Do/Don't)
+- Do maintain the modular file structure (separate JS/CSS files); **do not** introduce a bundler or build step.
 - Do keep p5.js loaded from CDN; avoid adding heavyweight libraries unless explicitly requested.
-- Do preserve station mappings and the 7-region model (Ocean, North America, South America, Europe, Africa, Asia, Oceania).
+- Do preserve station mappings and the 20+ granular region model (US West, US East, Western Europe, Northern Europe, East Asia, Southeast Asia, etc.).
 - Do implement seamless audio transitions and maintain playback state across station changes.
 - Do handle network errors gracefully (e.g., failed ISS fetch or stream), retry sensibly, and keep the UI responsive.
 - Do maintain 60fps-friendly draws: avoid allocations in the draw loop, prefer precomputed structures and vector math.
@@ -72,5 +77,5 @@ These rules guide Cursor when working in this repository. They are derived from 
 - Handle network failures without crashing; fall back to last known ISS position when necessary.
 
 ### Maintenance
-- Keep this `.cursorrules` aligned with `CLAUDE.md` when the project’s architecture or behavior changes.
-- Prefer minimal, targeted edits that respect the single-file constraint and established function names.
+- Keep this `.cursorrules` aligned with `CLAUDE.md` when the project's architecture or behavior changes.
+- Prefer minimal, targeted edits that respect the modular architecture and established function names.
