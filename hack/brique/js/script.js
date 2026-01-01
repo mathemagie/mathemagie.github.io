@@ -374,27 +374,31 @@ function drawBackgroundBricks() {
 }
 
 function drawFaceBricks(faceX, faceY, faceWidth, faceHeight, centerX, centerY) {
-    let brickWidth = faceWidth / 6;
+    // Use same brick size as background for pattern continuity
+    let brickWidth = width / 12;
     let brickHeight = brickWidth * 0.5;
-    let mortarThickness = 3;
-    let numCols = ceil(faceWidth / (brickWidth + mortarThickness)) + 2;
-    let numRows = ceil(faceHeight / (brickHeight + mortarThickness)) + 2;
+    let mortarThickness = 5;
 
-    for (let r = 0; r < numRows; r++) {
-        for (let c = 0; c < numCols; c++) {
+    // Calculate which rows and columns are visible in the face area
+    let startCol = floor(faceX / (brickWidth + mortarThickness)) - 1;
+    let endCol = ceil((faceX + faceWidth) / (brickWidth + mortarThickness)) + 1;
+    let startRow = floor(faceY / (brickHeight + mortarThickness)) - 1;
+    let endRow = ceil((faceY + faceHeight) / (brickHeight + mortarThickness)) + 1;
+
+    for (let r = startRow; r <= endRow; r++) {
+        for (let c = startCol; c <= endCol; c++) {
             push();
+            // Use same offset pattern as background
             let xOffset = (r % 2 === 0) ? 0 : -(brickWidth + mortarThickness) * 0.5;
-            let baseX = faceX + c * (brickWidth + mortarThickness) + xOffset;
-            let baseY = faceY + r * (brickHeight + mortarThickness);
-            let floatX = sin(animationTime * 0.5 + r * 0.3 + c * 0.2) * 3;
-            let floatY = cos(animationTime * 0.4 + r * 0.25 + c * 0.15) * 2;
-            let distFromCenter = dist(baseX, baseY, centerX, centerY);
-            let maxDist = max(faceWidth, faceHeight) / 2;
-            let distFactor = map(distFromCenter, 0, maxDist, 0.5, 1.5);
-            translate(baseX + floatX * distFactor, baseY + floatY * distFactor);
+            let baseX = c * (brickWidth + mortarThickness) + xOffset;
+            let baseY = r * (brickHeight + mortarThickness);
+            // Use same animation as background
+            let floatX = sin(animationTime * 0.3 + r * 0.2 + c * 0.15) * 2;
+            let floatY = cos(animationTime * 0.2 + r * 0.15 + c * 0.1) * 1.5;
+            translate(baseX + floatX, baseY + floatY);
             // Brighter bricks for the face (protruding surface catches more light)
-            // Use row and col as seed for consistent texture per brick
-            let brickSeed = r * 100 + c + 5000;
+            // Use same seed as background for consistent texture
+            let brickSeed = r * 100 + c;
             drawBrick(brickWidth, brickHeight, lightShiftOffset + 0.3, brickSeed);
             pop();
         }
