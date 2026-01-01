@@ -4,38 +4,46 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Project Overview
 
-This is a p5.js-based web visualization project that renders an animated red brick pattern. The project consists of a single HTML file that creates a dynamic, floating brick wall effect with lighting variations.
+"Brick Face" is a p5.js-based web app that overlays an animated red brick pattern as a mask on the user's face using real-time face tracking. It's designed as a mobile-friendly PWA with iOS web app support.
 
 ## Technology Stack
 
-- **p5.js** (v1.4.0) - Creative coding library loaded via CDN
-- Pure JavaScript for animation logic
-- No build tools or package management required
-
-## Code Architecture
-
-The visualization uses p5.js's standard setup/draw pattern:
-
-- `setup()`: Initializes canvas and color scheme
-- `draw()`: Main animation loop that renders the brick pattern with:
-  - Staggered brick arrangement (alternating row offsets)
-  - Floating motion effects using sine/cosine functions
-  - Dynamic lighting shifts
-  - Shadow and highlight rendering for depth
-- `drawBrick()`: Renders individual bricks with lighting effects
-- `windowResized()`: Handles responsive canvas resizing
+- **p5.js** (v1.4.0) - Canvas rendering and animation
+- **MediaPipe FaceMesh** - Real-time face landmark detection (468 points)
+- **MediaPipe Camera Utils** - Webcam access and frame processing
+- All dependencies loaded via CDN, no build tools required
 
 ## Development
 
-Since this is a standalone HTML file with no build process:
+Open `index.html` in a browser (requires camera access). For local development, use a local server to avoid CORS issues with camera access.
 
-1. Open `index.html` directly in a web browser to view the visualization
-2. Edit the JavaScript code within the `<script>` tags
-3. Refresh the browser to see changes
+## Code Architecture
 
-## Key Variables and Effects
+The app uses p5.js's setup/draw loop with MediaPipe integration:
 
-- `brickColorBase`: Base red color for bricks (RGB: 180, 60, 50)
-- `animationTime`: Controls the floating and lighting animation cycles
-- `lightShiftOffset`: Creates subtle lighting variations across the pattern
-- Brick dimensions are responsive, calculated as 1/8 of window width
+- **Face Detection Pipeline**: Camera frames → FaceMesh → `onResults()` callback → `faces` array
+- **Rendering Layers** (in `draw()`):
+  1. `drawBackgroundBricks()` - Dark animated brick wall backdrop
+  2. Face mask area - Uses canvas clipping with face silhouette indices to render bright bricks only within face bounds
+  3. `drawEyeHoles()` - Cuts out eyes and mouth using specific landmark indices
+
+### Key Landmark Index Groups (js/script.js)
+
+- Face silhouette: indices 10, 338, 297... (37 points forming face outline)
+- Left eye: 33, 133, 160, 159, 158, 144, 145, 153
+- Right eye: 362, 263, 387, 386, 385, 373, 374, 380
+- Mouth: 61, 146, 91, 181, 84, 17, 314, 405, 321, 375, 291
+
+### Coordinate System
+
+MediaPipe returns normalized coordinates (0-1). The code mirrors X coordinates (`1 - pt.x`) and scales to screen dimensions for front-facing camera display.
+
+## File Structure
+
+```
+index.html      - Entry point with meta tags for iOS PWA
+js/script.js    - All p5.js and face tracking logic
+css/styles.css  - Minimal fullscreen styling
+manifest.json   - PWA manifest for "Brick Face"
+rules.md        - Project organization guidelines
+```
