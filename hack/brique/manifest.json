@@ -1,0 +1,9 @@
+{
+  "name": "Brick Face",
+  "short_name": "BrickFace",
+  "start_url": "/hack/brique/",
+  "display": "fullscreen",
+  "background_color": "#1a1a1a",
+  "theme_color": "#b43c32",
+  "icons": []
+}
