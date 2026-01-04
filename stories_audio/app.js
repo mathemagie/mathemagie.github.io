@@ -85,7 +85,7 @@ function generateThematiqueButtons() {
         const button = document.createElement('button');
         button.className = 'filter-btn';
         button.setAttribute('data-filter', thematique);
-        button.innerHTML = `${config.emoji} ${config.name}`;
+        button.innerHTML = `<span class="filter-emoji">${config.emoji}</span><span class="filter-label">${config.name}</span>`;
 
         // Insert before the closing div tag
         filterButtonsContainer.appendChild(button);
@@ -222,28 +222,27 @@ function nextTrack() {
 // Initialize audio event listeners
 function initializeAudioListeners() {
     const playPauseBtn = document.getElementById('playPauseBtn');
-    const playIcon = playPauseBtn.querySelector('i');
-    const playText = playPauseBtn.querySelector('span');
+    const vinylDisc = document.getElementById('vinylDisc');
 
-    // Update button when audio starts playing
+    // Update button and vinyl when audio starts playing
     audioPlayer.addEventListener('play', () => {
         isPlaying = true;
-        playIcon.className = 'fas fa-pause';
-        playText.textContent = 'Pause';
+        playPauseBtn.classList.add('playing');
+        if (vinylDisc) vinylDisc.classList.add('playing');
     });
 
-    // Update button when audio pauses
+    // Update button and vinyl when audio pauses
     audioPlayer.addEventListener('pause', () => {
         isPlaying = false;
-        playIcon.className = 'fas fa-play';
-        playText.textContent = 'Jouer';
+        playPauseBtn.classList.remove('playing');
+        if (vinylDisc) vinylDisc.classList.remove('playing');
     });
 
     // Update button when audio ends
     audioPlayer.addEventListener('ended', () => {
         isPlaying = false;
-        playIcon.className = 'fas fa-play';
-        playText.textContent = 'Jouer';
+        playPauseBtn.classList.remove('playing');
+        if (vinylDisc) vinylDisc.classList.remove('playing');
 
         // Advance to next track but don't auto-play
         trackIndex++;

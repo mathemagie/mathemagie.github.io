@@ -2,102 +2,209 @@
 <html lang="fr">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
     <meta name="apple-mobile-web-app-capable" content="yes">
-    <meta name="theme-color" content="#FF6B9D">
+    <meta name="theme-color" content="#1a1a2e">
     <meta name="apple-touch-fullscreen" content="yes">
-    <meta name="apple-mobile-web-app-status-bar-style" content="black">
-    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@400;500;600;700;800&family=Nunito:wght@400;500;600;700&display=swap" rel="stylesheet">
+
     <link id="stylesLink" rel="stylesheet" href="styles.css">
     <link rel="manifest" href="manifest.json">
-    <link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@300;400;500;600;700&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
 
-    <title>🎵 Mes Histoires Magiques 🎵</title>
+    <title>Mes Histoires Magiques</title>
 </head>
 <body>
-    <div class="container-fluid">
-        <div class="player-container">
-            <div class="header-section">
-                <h1 class="main-title">
-                    Mes Histoires Magiques
-                </h1>
-            </div>
-
-            <audio id="audioPlayer" src="output.mp3"></audio>
-
-            <div class="controls-section">
-                <button onclick="prevTrack()" class="control-btn prev-btn">
-                    <i class="fas fa-chevron-left"></i>
-                    <span>Retour</span>
-                </button>
-
-                <button onclick="togglePlayPause()" class="control-btn play-pause-btn" id="playPauseBtn">
-                    <i class="fas fa-play"></i>
-                    <span>Jouer</span>
-                </button>
-
-                <button onclick="nextTrack()" class="control-btn next-btn">
-                    <span>Suivant</span>
-                    <i class="fas fa-chevron-right"></i>
-                </button>
-            </div>
-
-            <div class="filter-section">
-                <div class="search-container">
-                    <input type="text" id="searchInput" placeholder="🔍 Trouve ton histoire..." class="search-input">
-                </div>
-
-                <div class="filter-buttons">
-                    <button class="filter-btn active" data-filter="all">Toutes</button>
-                    <button class="filter-btn" data-filter="magique">✨ Magique</button>
-                    <button class="filter-btn" data-filter="animaux">🐾 Animaux</button>
-                    <button class="filter-btn" data-filter="aventure">🗺️ Aventure</button>
-                    <button class="filter-btn" data-filter="amitié">🤝 Amitié</button>
-                    <button class="filter-btn" data-filter="famille">👨‍👩‍👧 Famille</button>
-                    <button class="filter-btn" data-filter="nature">🌿 Nature</button>
-                    <!-- Thematique buttons will be generated dynamically here -->
-                </div>
-            </div>
-
-            <div class="track-info">
-                <div class="track-display">
-                    <div class="track-icon">📖</div>
-                    <div id="currentTrack" class="track-title">Appuie sur Suivant pour commencer !</div>
-                </div>
-                <div class="track-stats">
-                    <span id="trackCount" class="track-count">0 histoires disponibles</span>
-                </div>
-            </div>
-
+    <!-- Animated background elements -->
+    <div class="sky-background">
+        <div class="stars-container" aria-hidden="true">
+            <div class="star star-1"></div>
+            <div class="star star-2"></div>
+            <div class="star star-3"></div>
+            <div class="star star-4"></div>
+            <div class="star star-5"></div>
+            <div class="star star-6"></div>
+            <div class="star star-7"></div>
+            <div class="star star-8"></div>
+            <div class="star star-9"></div>
+            <div class="star star-10"></div>
+            <div class="star star-11"></div>
+            <div class="star star-12"></div>
         </div>
+        <div class="cloud cloud-1" aria-hidden="true"></div>
+        <div class="cloud cloud-2" aria-hidden="true"></div>
+        <div class="moon" aria-hidden="true"></div>
     </div>
-    <script src="https://code.jquery.com/jquery-3.5.1.slim.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.5.4/dist/umd/popper.min.js"></script>
-    <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
+
+    <main class="app-container">
+        <!-- Theme toggle -->
+        <button class="theme-toggle" id="themeToggle" aria-label="Changer le thème">
+            <span class="theme-icon sun">☀️</span>
+            <span class="theme-icon moon">🌙</span>
+        </button>
+
+        <!-- Hero section -->
+        <header class="hero">
+            <div class="hero-icon" aria-hidden="true">📚✨</div>
+            <h1 class="hero-title">Mes Histoires Magiques</h1>
+            <p class="hero-subtitle">Des aventures merveilleuses à écouter</p>
+        </header>
+
+        <!-- Audio element (hidden) -->
+        <audio id="audioPlayer" src="output.mp3"></audio>
+
+        <!-- Now playing section -->
+        <section class="now-playing" aria-label="Lecture en cours">
+            <div class="vinyl-container">
+                <div class="vinyl" id="vinylDisc">
+                    <div class="vinyl-label">
+                        <span class="vinyl-emoji">🎵</span>
+                    </div>
+                </div>
+            </div>
+
+            <div class="track-info-wrapper">
+                <div class="track-badge">En écoute</div>
+                <h2 id="currentTrack" class="track-title">Appuie sur Suivant pour commencer !</h2>
+            </div>
+        </section>
+
+        <!-- Player controls -->
+        <section class="controls" aria-label="Contrôles de lecture">
+            <button onclick="prevTrack()" class="control-btn prev-btn" aria-label="Piste précédente">
+                <svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
+                    <path d="M6 6h2v12H6zm3.5 6l8.5 6V6z"/>
+                </svg>
+            </button>
+
+            <button onclick="togglePlayPause()" class="control-btn play-btn" id="playPauseBtn" aria-label="Lecture / Pause">
+                <span class="play-icon">
+                    <svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
+                        <path d="M8 5v14l11-7z"/>
+                    </svg>
+                </span>
+                <span class="pause-icon">
+                    <svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
+                        <path d="M6 19h4V5H6v14zm8-14v14h4V5h-4z"/>
+                    </svg>
+                </span>
+            </button>
+
+            <button onclick="nextTrack()" class="control-btn next-btn" aria-label="Piste suivante">
+                <svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
+                    <path d="M6 18l8.5-6L6 6v12zM16 6v12h2V6h-2z"/>
+                </svg>
+            </button>
+        </section>
+
+        <!-- Search section -->
+        <section class="search-section" aria-label="Recherche">
+            <div class="search-wrapper">
+                <span class="search-icon" aria-hidden="true">🔍</span>
+                <input
+                    type="text"
+                    id="searchInput"
+                    placeholder="Trouve ton histoire..."
+                    class="search-input"
+                    aria-label="Rechercher une histoire"
+                >
+            </div>
+        </section>
+
+        <!-- Filter section -->
+        <section class="filter-section" aria-label="Filtres">
+            <h3 class="filter-heading">Catégories</h3>
+            <div class="filter-buttons" role="group" aria-label="Filtrer par catégorie">
+                <button class="filter-btn active" data-filter="all">
+                    <span class="filter-emoji">🌟</span>
+                    <span class="filter-label">Toutes</span>
+                </button>
+                <button class="filter-btn" data-filter="magique">
+                    <span class="filter-emoji">✨</span>
+                    <span class="filter-label">Magique</span>
+                </button>
+                <button class="filter-btn" data-filter="animaux">
+                    <span class="filter-emoji">🐾</span>
+                    <span class="filter-label">Animaux</span>
+                </button>
+                <button class="filter-btn" data-filter="aventure">
+                    <span class="filter-emoji">🗺️</span>
+                    <span class="filter-label">Aventure</span>
+                </button>
+                <button class="filter-btn" data-filter="amitié">
+                    <span class="filter-emoji">🤝</span>
+                    <span class="filter-label">Amitié</span>
+                </button>
+                <button class="filter-btn" data-filter="famille">
+                    <span class="filter-emoji">👨‍👩‍👧</span>
+                    <span class="filter-label">Famille</span>
+                </button>
+                <button class="filter-btn" data-filter="nature">
+                    <span class="filter-emoji">🌿</span>
+                    <span class="filter-label">Nature</span>
+                </button>
+                <!-- Thematique buttons will be generated dynamically here -->
+            </div>
+        </section>
+
+        <!-- Stats footer -->
+        <footer class="stats-footer">
+            <div class="stats-badge">
+                <span class="stats-icon">📖</span>
+                <span id="trackCount" class="stats-count">0 histoires disponibles</span>
+            </div>
+        </footer>
+    </main>
+
     <script>
-      var random = Math.random();
-      var script = document.createElement('script');
-      script.src = "app.js?random=" + random;
-      document.head.appendChild(script);
-    </script>
-    <script>
-        if ('serviceWorker' in navigator) {
-          window.addEventListener('load', function() {
-            var serviceWorkerUrl = window.location.hostname === '127.0.0.1' ? '/service-worker.js' : '/audio/service-worker.js';
-            navigator.serviceWorker.register(serviceWorkerUrl).then(function(registration) {
-              // L'enregistrement du service worker a réussi
-              console.log('ServiceWorker registration successful with scope: ', registration.scope);
-            }, function(err) {
-              // L'enregistrement a échoué :(
-              console.log('ServiceWorker registration failed: ', err);
-            });
-          });
+        // Theme toggle functionality
+        const themeToggle = document.getElementById('themeToggle');
+        const prefersDark = window.matchMedia('(prefers-color-scheme: dark)');
+
+        function setTheme(isDark) {
+            document.documentElement.setAttribute('data-theme', isDark ? 'dark' : 'light');
+            localStorage.setItem('theme', isDark ? 'dark' : 'light');
         }
 
+        // Initialize theme
+        const savedTheme = localStorage.getItem('theme');
+        if (savedTheme) {
+            setTheme(savedTheme === 'dark');
+        } else {
+            setTheme(prefersDark.matches);
+        }
+
+        themeToggle.addEventListener('click', () => {
+            const currentTheme = document.documentElement.getAttribute('data-theme');
+            setTheme(currentTheme !== 'dark');
+        });
+
+        // Cache busting for app.js
+        var random = Math.random();
+        var script = document.createElement('script');
+        script.src = "app.js?random=" + random;
+        document.head.appendChild(script);
+    </script>
+
+    <script>
+        if ('serviceWorker' in navigator) {
+            window.addEventListener('load', function() {
+                var serviceWorkerUrl = window.location.hostname === '127.0.0.1' ? '/service-worker.js' : '/audio/service-worker.js';
+                navigator.serviceWorker.register(serviceWorkerUrl).then(function(registration) {
+                    console.log('ServiceWorker registration successful with scope: ', registration.scope);
+                }, function(err) {
+                    console.log('ServiceWorker registration failed: ', err);
+                });
+            });
+        }
+
+        // Cache busting for styles
         var stylesLink = document.getElementById("stylesLink");
         var random = Math.random();
         stylesLink.href = "styles.css?random=" + random;
-      </script>
+    </script>
 </body>
 </html>
