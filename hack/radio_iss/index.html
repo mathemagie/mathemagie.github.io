@@ -38,7 +38,7 @@
       const randomId = Math.random().toString(36).substr(2, 9);
       document.write('<link rel="stylesheet" href="css/styles.css?v=' + randomId + '">');
     } else {
-      document.write('<link rel="stylesheet" href="css/styles.css?v=1768056115">');
+      document.write('<link rel="stylesheet" href="css/styles.css?v=1736524800">');
     }
   </script>
   <!-- Version: commit 222af77 - Ultra compact mobile UI -->
@@ -84,16 +84,17 @@
   <script>
     // Cache busting for localhost development
     if (window.location.hostname === '127.0.0.1' || window.location.hostname === 'localhost') {
-      const jsFiles = ['js/particles.js', 'js/radio.js', 'js/geography.js', 'js/main.js'];
+      const jsFiles = ['js/particles.js', 'js/radio.js', 'js/geography.js', 'js/visualizer.js', 'js/main.js'];
       jsFiles.forEach(file => {
         const randomId = Math.random().toString(36).substr(2, 9);
         document.write('<script src="' + file + '?v=' + randomId + '"><\/script>');
       });
     } else {
-      document.write('<script src="js/particles.js?v=1768056115"><\/script>');
-      document.write('<script src="js/radio.js?v=1768056115"><\/script>');
-      document.write('<script src="js/geography.js?v=1768056115"><\/script>');
-      document.write('<script src="js/main.js?v=1768056115"><\/script>');
+      document.write('<script src="js/particles.js?v=1736524800"><\/script>');
+      document.write('<script src="js/radio.js?v=1736524800"><\/script>');
+      document.write('<script src="js/geography.js?v=1736524800"><\/script>');
+      document.write('<script src="js/visualizer.js?v=1736524800"><\/script>');
+      document.write('<script src="js/main.js?v=1736524800"><\/script>');
     }
   </script>
 </body>

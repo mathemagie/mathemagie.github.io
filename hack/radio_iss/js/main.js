@@ -1,5 +1,5 @@
 /* eslint-env browser */
-/* global setup, draw, windowResized, keyPressed, createCanvas, background, fill, noStroke, circle, text, textSize, key, keyIsPressed, width, height, random, constrain, lerp, dist, cos, sin, TWO_PI, rect, navigator */
+/* global setup, draw, windowResized, keyPressed, createCanvas, background, fill, noStroke, circle, text, textSize, key, keyIsPressed, width, height, random, constrain, lerp, dist, cos, sin, TWO_PI, rect, navigator, windowWidth, windowHeight, resizeCanvas, RadioManager, GeographyManager, Particle, AudioVisualizer */
 
 // Main application for 25544.fm (ISS Orbital Radio)
 // Global variables
@@ -18,6 +18,7 @@ const continentPoints = [];
 let particleGeoData = []; // Store original geographic data for particles
 let radioManager;
 let geographyManager;
+let audioVisualizer; // Audio visualization system
 let showContinentOutlines = false; // Toggle for continent outline visualization
 
 function setup() {
@@ -35,13 +36,18 @@ function setup() {
   // Initialize managers
   radioManager = new RadioManager();
   geographyManager = new GeographyManager();
+  audioVisualizer = new AudioVisualizer();
 
   // Make managers globally accessible immediately
   window.geographyManager = geographyManager;
   window.radioManager = radioManager;
+  window.audioVisualizer = audioVisualizer;
 
   // Initialize radio UI
   radioManager.init();
+
+  // Initialize audio visualizer (creates toggle button in ISS context overlay)
+  audioVisualizer.init();
 
   // Set up fullscreen event listeners for canvas resizing
   document.addEventListener('fullscreenchange', () => {
@@ -172,7 +178,19 @@ function keyPressed() {
 }
 
 function draw() {
-  background(0);
+  // Update audio visualizer
+  if (audioVisualizer) {
+    audioVisualizer.update();
+  }
+
+  // Background with subtle audio-reactive effect
+  if (audioVisualizer && audioVisualizer.isActive()) {
+    // Subtle background glow based on bass
+    const bassGlow = audioVisualizer.bassLevel * 15;
+    background(bassGlow, 0, bassGlow * 0.3);
+  } else {
+    background(0);
+  }
 
   // Draw continent outline points as tiny dots (press 'm' to toggle)
   if (showContinentOutlines && window.continentPoints) {
@@ -257,3 +275,4 @@ window.continentPoints = continentPoints;
 window.particleGeoData = particleGeoData;
 window.geographyManager = geographyManager;
 window.radioManager = radioManager;
+window.audioVisualizer = audioVisualizer;

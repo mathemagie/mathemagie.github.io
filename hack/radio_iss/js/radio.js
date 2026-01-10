@@ -415,6 +415,9 @@ class RadioManager {
         fromPlayer.pause();
         fromPlayer.volume = 1; // Reset for next use
         this.activePlayer = this.activePlayer === 'A' ? 'B' : 'A';
+
+        // Connect visualizer to the new active player
+        this.connectVisualizer();
       }
     };
     requestAnimationFrame(fadeOut);
@@ -439,7 +442,10 @@ class RadioManager {
     if (this.isPlaying) {
       currentPlayer.pause();
     } else {
-      currentPlayer.play().catch(() => {
+      currentPlayer.play().then(() => {
+        // Connect audio visualizer when playback starts
+        this.connectVisualizer();
+      }).catch(() => {
         console.log('Autoplay blocked - user interaction required');
       });
 
@@ -456,6 +462,14 @@ class RadioManager {
           }, 800);
         }, 2000);
       }
+    }
+  }
+
+  // Connect the current audio player to the visualizer
+  connectVisualizer() {
+    if (window.audioVisualizer) {
+      const currentPlayer = this.activePlayer === 'A' ? this.radioPlayer : this.radioPlayerB;
+      window.audioVisualizer.connectToAudio(currentPlayer);
     }
   }
 

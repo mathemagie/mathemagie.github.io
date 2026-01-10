@@ -1,3 +1,6 @@
+/* eslint-env browser */
+/* global createVector, p5, dist, sqrt, map, millis, sin, noStroke, stroke, strokeWeight, fill, noFill, ellipse, red, green, blue, push, pop, translate, TWO_PI, HALF_PI, cos, colorMode, HSB, RGB, line */
+
 // Particle system for 25544.fm (ISS Orbital Radio)
 class Particle {
   constructor(x, y, isIss) {
@@ -219,21 +222,40 @@ class Particle {
       fill(255, 255, 255, highlightAlpha * 0.7);
       ellipse(this.pos.x + this.r * 0.3, this.pos.y + this.r * 0.1, this.r * 0.2);
     } else if (this.isIss) {
+      // Get audio visualizer data if available
+      const visualizer = window.audioVisualizer;
+      const hasAudio = visualizer && visualizer.isActive();
+
       // Heartbeat visual for ISS (double-beat pulse)
-      const periodMs = 1100;
-      const t = (millis() % periodMs) / periodMs;
-      const pulse1 = Math.exp(-Math.pow((t - 0.06) / 0.06, 2));
-      const pulse2 = Math.exp(-Math.pow((t - 0.26) / 0.06, 2));
-      const amp = pulse1 + 0.75 * pulse2;
+      // When audio is active, sync with beat detection
+      let amp;
+      if (hasAudio && visualizer.beatIntensity > 0.1) {
+        // Use beat intensity for pulse when music is playing
+        amp = visualizer.beatIntensity * 1.5;
+      } else {
+        // Default heartbeat animation
+        const periodMs = 1100;
+        const t = (millis() % periodMs) / periodMs;
+        const pulse1 = Math.exp(-Math.pow((t - 0.06) / 0.06, 2));
+        const pulse2 = Math.exp(-Math.pow((t - 0.26) / 0.06, 2));
+        amp = pulse1 + 0.75 * pulse2;
+      }
+
       const drawR = this.baseRadius * (1 + 0.22 * amp);
 
-      // Outer glow rings
+      // Audio visualization: frequency spectrum around ISS
+      if (hasAudio) {
+        this.drawAudioSpectrum(visualizer, drawR);
+      }
+
+      // Outer glow rings - enhanced with audio
       const baseAlpha = 180;
+      const audioBoost = hasAudio ? (1 + visualizer.currentLevel * 0.5) : 1;
       noFill();
-      stroke(255, 70, 70, baseAlpha * 0.35 * (0.6 + 0.4 * amp));
+      stroke(255, 70, 70, baseAlpha * 0.35 * (0.6 + 0.4 * amp) * audioBoost);
       strokeWeight(3);
       ellipse(this.pos.x, this.pos.y, drawR * 2.6);
-      stroke(255, 70, 70, baseAlpha * 0.25 * (0.6 + 0.4 * amp));
+      stroke(255, 70, 70, baseAlpha * 0.25 * (0.6 + 0.4 * amp) * audioBoost);
       strokeWeight(6);
       ellipse(this.pos.x, this.pos.y, drawR * 3.2);
 
@@ -242,10 +264,61 @@ class Particle {
       fill(red(this.color), green(this.color), blue(this.color), 220);
       ellipse(this.pos.x, this.pos.y, drawR * 2);
     } else {
-      // Normal particle rendering
+      // Normal particle rendering - subtle glow when audio is active
+      const visualizer = window.audioVisualizer;
+      if (visualizer && visualizer.isActive() && visualizer.currentLevel > 0.1) {
+        // Add subtle audio-reactive glow to particles
+        const glowAlpha = visualizer.currentLevel * 60;
+        noFill();
+        stroke(red(this.color), green(this.color), blue(this.color), glowAlpha);
+        strokeWeight(2);
+        ellipse(this.pos.x, this.pos.y, this.r * 2.4);
+        noStroke();
+      }
+
       fill(this.color);
       ellipse(this.pos.x, this.pos.y, this.r * 2);
     }
+  }
+
+  drawAudioSpectrum(visualizer, baseRadius) {
+    // Draw frequency bars radiating from ISS
+    const numBars = 32;
+    const spectrum = visualizer.getSpectrum(numBars);
+    const innerRadius = baseRadius * 1.8;
+    const maxBarHeight = baseRadius * 1.2;
+
+    push();
+    translate(this.pos.x, this.pos.y);
+
+    for (let i = 0; i < numBars; i++) {
+      const angle = (i / numBars) * TWO_PI - HALF_PI;
+      const barHeight = spectrum[i] * maxBarHeight;
+
+      if (barHeight < 2) {continue;} // Skip very small bars
+
+      // Calculate bar position
+      const x1 = cos(angle) * innerRadius;
+      const y1 = sin(angle) * innerRadius;
+      const x2 = cos(angle) * (innerRadius + barHeight);
+      const y2 = sin(angle) * (innerRadius + barHeight);
+
+      // Color based on frequency (bass = red, mid = orange, high = yellow)
+      const hue = map(i, 0, numBars, 0, 60); // Red to yellow
+      const saturation = 100;
+      const brightness = 80 + spectrum[i] * 20;
+      const alpha = 150 + spectrum[i] * 100;
+
+      // Convert HSB to RGB for p5.js
+      colorMode(HSB, 360, 100, 100, 255);
+      stroke(hue, saturation, brightness, alpha);
+      colorMode(RGB, 255, 255, 255, 255);
+
+      strokeWeight(3);
+      line(x1, y1, x2, y2);
+    }
+
+    pop();
   }
 }
 
