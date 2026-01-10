@@ -29,36 +29,118 @@ class RadioManager {
 
     this.regionStations = {
       // Americas (6 regions)
-      'US West': { name: 'SomaFM Left Coast 70s', url: 'https://ice4.somafm.com/seventies-128-mp3' },
-      'US East': { name: 'SomaFM Indie Pop Rocks', url: 'https://ice2.somafm.com/indiepop-128-mp3' },
-      'Canada': { name: 'SomaFM Folk Forward', url: 'https://ice1.somafm.com/folkfwd-128-mp3' },
-      'Mexico/Central America': { name: 'SomaFM Sonic Universe', url: 'https://ice1.somafm.com/sonicuniverse-128-mp3' },
-      'Brazil': { name: 'SomaFM Bossa Beyond', url: 'https://ice2.somafm.com/bossa-128-mp3' },
-      'Argentina/Chile': { name: 'SomaFM ThistleRadio', url: 'https://ice1.somafm.com/thistle-128-mp3' },
+      'US West': [
+        { name: 'KEXP Seattle', url: 'https://kexp.streamguys1.com/kexp160.aac' },
+        { name: 'SomaFM Groove Salad', url: 'https://ice1.somafm.com/groovesalad-128-mp3' },
+        { name: 'SomaFM Secret Agent', url: 'https://ice1.somafm.com/secretagent-128-mp3' }
+      ],
+      'US East': [
+        { name: 'WFMU New Jersey', url: 'https://stream0.wfmu.org/freeform-128k' },
+        { name: 'SomaFM Indie Pop Rocks', url: 'https://ice1.somafm.com/indiepop-128-mp3' },
+        { name: 'SomaFM Left Coast 70s', url: 'https://ice1.somafm.com/seventies-128-mp3' }
+      ],
+      'Canada': [
+        { name: 'SomaFM Folk Forward', url: 'https://ice1.somafm.com/folkfwd-128-mp3' },
+        { name: 'SomaFM Covers', url: 'https://ice1.somafm.com/covers-128-mp3' },
+        { name: 'SomaFM Boot Liquor', url: 'https://ice1.somafm.com/bootliquor-128-mp3' }
+      ],
+      'Mexico/Central America': [
+        { name: 'SomaFM Sonic Universe', url: 'https://ice1.somafm.com/sonicuniverse-128-mp3' },
+        { name: 'SomaFM Fluid', url: 'https://ice1.somafm.com/fluid-128-mp3' },
+        { name: 'SomaFM Lush', url: 'https://ice1.somafm.com/lush-128-mp3' }
+      ],
+      'Brazil': [
+        { name: 'SomaFM Bossa Beyond', url: 'https://ice2.somafm.com/bossa-128-mp3' },
+        { name: 'SomaFM Groove Salad Classic', url: 'https://ice1.somafm.com/gsclassic-128-mp3' },
+        { name: 'SomaFM PopTron', url: 'https://ice1.somafm.com/poptron-128-mp3' }
+      ],
+      'Argentina/Chile': [
+        { name: 'SomaFM ThistleRadio', url: 'https://ice1.somafm.com/thistle-128-mp3' },
+        { name: 'SomaFM Metal Detector', url: 'https://ice1.somafm.com/metal-128-mp3' },
+        { name: 'SomaFM Synphaera', url: 'https://ice1.somafm.com/synphaera-128-mp3' }
+      ],
 
       // Europe (4 regions)
-      'Western Europe': { name: 'SomaFM PopTron', url: 'https://ice2.somafm.com/poptron-128-mp3' },
-      'Northern Europe': { name: 'SomaFM Deep Space One', url: 'https://ice1.somafm.com/deepspaceone-128-mp3' },
-      'Eastern Europe': { name: 'SomaFM Underground 80s', url: 'https://ice4.somafm.com/u80s-128-mp3' },
-      'Mediterranean': { name: 'Radio Swiss Pop', url: 'https://stream.srg-ssr.ch/m/rsp/mp3_128' },
+      'Western Europe': [
+        { name: 'FIP Paris', url: 'https://icecast.radiofrance.fr/fip-midfi.mp3' },
+        { name: 'FIP Rock', url: 'https://icecast.radiofrance.fr/fiprock-midfi.mp3' },
+        { name: 'FIP Jazz', url: 'https://icecast.radiofrance.fr/fipjazz-midfi.mp3' },
+        { name: 'FIP Electro', url: 'https://icecast.radiofrance.fr/fipelectro-midfi.mp3' }
+      ],
+      'Northern Europe': [
+        { name: 'SomaFM Deep Space One', url: 'https://ice1.somafm.com/deepspaceone-128-mp3' },
+        { name: 'SomaFM Drone Zone', url: 'https://ice1.somafm.com/dronezone-128-mp3' },
+        { name: 'SomaFM Space Station', url: 'https://ice1.somafm.com/spacestation-128-mp3' }
+      ],
+      'Eastern Europe': [
+        { name: 'SomaFM Underground 80s', url: 'https://ice4.somafm.com/u80s-128-mp3' },
+        { name: 'SomaFM DEF CON Radio', url: 'https://ice1.somafm.com/defcon-128-mp3' },
+        { name: 'SomaFM Cliqhop IDM', url: 'https://ice1.somafm.com/cliqhop-128-mp3' }
+      ],
+      'Mediterranean': [
+        { name: 'Radio Swiss Pop', url: 'https://stream.srg-ssr.ch/m/rsp/mp3_128' },
+        { name: 'Radio Swiss Jazz', url: 'https://stream.srg-ssr.ch/m/rsj/mp3_128' },
+        { name: 'Radio Swiss Classic', url: 'https://stream.srg-ssr.ch/m/rsc_de/mp3_128' }
+      ],
 
       // Asia (4 regions)
-      'East Asia': { name: 'SomaFM Drone Zone', url: 'https://ice1.somafm.com/dronezone-128-mp3' },
-      'Southeast Asia': { name: 'SomaFM Groove Salad', url: 'https://ice2.somafm.com/groovesalad-128-mp3' },
-      'South Asia': { name: 'SomaFM Beat Blender', url: 'https://ice1.somafm.com/beatblender-128-mp3' },
-      'Middle East': { name: 'SomaFM Digitalis', url: 'https://ice2.somafm.com/digitalis-128-mp3' },
+      'East Asia': [
+        { name: 'SomaFM Drone Zone', url: 'https://ice1.somafm.com/dronezone-128-mp3' },
+        { name: 'SomaFM Mission Control', url: 'https://ice1.somafm.com/missioncontrol-128-mp3' },
+        { name: 'SomaFM n5MD Radio', url: 'https://ice1.somafm.com/n5md-128-mp3' }
+      ],
+      'Southeast Asia': [
+        { name: 'SomaFM Suburbs of Goa', url: 'https://ice1.somafm.com/suburbsofgoa-128-mp3' },
+        { name: 'SomaFM Dub Step Beyond', url: 'https://ice1.somafm.com/dubstep-128-mp3' },
+        { name: 'SomaFM The Trip', url: 'https://ice1.somafm.com/thetrip-128-mp3' }
+      ],
+      'South Asia': [
+        { name: 'SomaFM Beat Blender', url: 'https://ice1.somafm.com/beatblender-128-mp3' },
+        { name: 'SomaFM Digitalis', url: 'https://ice2.somafm.com/digitalis-128-mp3' },
+        { name: 'SomaFM SF 10-33', url: 'https://ice1.somafm.com/sf1033-128-mp3' }
+      ],
+      'Middle East': [
+        { name: 'SomaFM Digitalis', url: 'https://ice2.somafm.com/digitalis-128-mp3' },
+        { name: 'SomaFM BAGeL Radio', url: 'https://ice1.somafm.com/bagel-128-mp3' },
+        { name: 'SomaFM Specials', url: 'https://ice1.somafm.com/specials-128-mp3' }
+      ],
 
       // Africa (2 regions)
-      'North Africa': { name: 'SomaFM Doomed', url: 'https://ice4.somafm.com/doomed-128-mp3' },
-      'Sub-Saharan Africa': { name: 'SomaFM Seven Inch Soul', url: 'https://ice1.somafm.com/7soul-128-mp3' },
+      'North Africa': [
+        { name: 'SomaFM Doomed', url: 'https://ice4.somafm.com/doomed-128-mp3' },
+        { name: 'SomaFM Black Rock FM', url: 'https://ice1.somafm.com/brfm-128-mp3' },
+        { name: 'SomaFM Vaporwaves', url: 'https://ice1.somafm.com/vaporwaves-128-mp3' }
+      ],
+      'Sub-Saharan Africa': [
+        { name: 'SomaFM Seven Inch Soul', url: 'https://ice1.somafm.com/7soul-128-mp3' },
+        { name: 'SomaFM SomaFM Live', url: 'https://ice1.somafm.com/live-128-mp3' },
+        { name: 'SomaFM Reggae', url: 'https://ice1.somafm.com/reggae-128-mp3' }
+      ],
 
       // Oceania/Pacific (2 regions)
-      'Australia': { name: 'SomaFM Suburbs of Goa', url: 'https://ice1.somafm.com/suburbsofgoa-128-mp3' },
-      'Pacific Islands': { name: 'SomaFM Illinois Street Lounge', url: 'https://ice1.somafm.com/illstreet-128-mp3' },
+      'Australia': [
+        { name: 'Triple J Australia', url: 'https://live-radio02.mediahubaustralia.com/2TJW/mp3/' },
+        { name: 'SomaFM Groove Salad', url: 'https://ice1.somafm.com/groovesalad-128-mp3' },
+        { name: 'SomaFM Secret Agent', url: 'https://ice1.somafm.com/secretagent-128-mp3' }
+      ],
+      'Pacific Islands': [
+        { name: 'SomaFM Illinois Street Lounge', url: 'https://ice1.somafm.com/illstreet-128-mp3' },
+        { name: 'SomaFM Tiki Time', url: 'https://ice1.somafm.com/tikitime-128-mp3' },
+        { name: 'SomaFM Xmas in Frisko', url: 'https://ice1.somafm.com/xmasinfrisko-128-mp3' }
+      ],
 
       // Polar/Ocean (2 regions)
-      'Arctic': { name: 'SomaFM Fluid', url: 'https://ice1.somafm.com/fluid-128-mp3' },
-      'Ocean': { name: 'SomaFM Mission Control', url: 'https://ice2.somafm.com/missioncontrol-128-mp3' }
+      'Arctic': [
+        { name: 'SomaFM Deep Space One', url: 'https://ice1.somafm.com/deepspaceone-128-mp3' },
+        { name: 'SomaFM Space Station', url: 'https://ice1.somafm.com/spacestation-128-mp3' },
+        { name: 'SomaFM Drone Zone', url: 'https://ice1.somafm.com/dronezone-128-mp3' }
+      ],
+      'Ocean': [
+        { name: 'Radio Paradise', url: 'https://stream.radioparadise.com/aac-320' },
+        { name: 'Radio Paradise Mellow', url: 'https://stream.radioparadise.com/mellow-320' },
+        { name: 'Radio Paradise Rock', url: 'https://stream.radioparadise.com/rock-320' },
+        { name: 'SomaFM Groove Salad', url: 'https://ice1.somafm.com/groovesalad-128-mp3' }
+      ]
     };
   }
 
@@ -205,8 +287,15 @@ class RadioManager {
     return 'Ocean';
   }
 
+  getRandomStation(region) {
+    const stations = this.regionStations[region] || this.regionStations['Ocean'];
+    if (!stations || stations.length === 0) {return null;}
+    const randomIndex = Math.floor(Math.random() * stations.length);
+    return stations[randomIndex];
+  }
+
   setStationForRegion(region) {
-    const station = this.regionStations[region] || this.regionStations['Ocean'];
+    const station = this.getRandomStation(region);
     if (!this.radioPlayer || !station) {return;}
 
     const currentPlayer = this.activePlayer === 'A' ? this.radioPlayer : this.radioPlayerB;

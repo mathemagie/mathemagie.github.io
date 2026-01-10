@@ -97,7 +97,7 @@ radio_iss/
 
 ## Development
 
-**Running the application**: Simply open `index.html` in a web browser - no build process required.
+**Running the application**: Simply open `index.html` in a web browser - no build process required. You can test the app locally by opening index.html in your browser and using `?debug=1` to cycle through regions and hear the new stations.
 
 **Testing**: Run unit tests with Vitest:
 ```bash

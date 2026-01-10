@@ -68,9 +68,15 @@ describe('RadioManager', () => {
 
     rm.setStationForRegion('Mediterranean');
 
-    expect(label.textContent).toContain('Over Mediterranean • Radio Swiss Pop');
-    expect(audio.src).toContain('https://stream.srg-ssr.ch/m/rsp/mp3_128');
-    expect(audio.dataset.station).toBe('Radio Swiss Pop');
+    // Station is now randomly selected from the region's array
+    const mediterraneanStations = rm.regionStations['Mediterranean'];
+    const validNames = mediterraneanStations.map(s => s.name);
+    const validUrls = mediterraneanStations.map(s => s.url);
+
+    expect(label.textContent).toContain('Over Mediterranean');
+    expect(validNames.some(name => label.textContent.includes(name))).toBe(true);
+    expect(validUrls.some(url => audio.src.includes(url))).toBe(true);
+    expect(validNames).toContain(audio.dataset.station);
   });
 
   it('updateRadioForLocation changes region and station once', () => {
