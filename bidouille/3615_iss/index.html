@@ -1,0 +1,690 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>3615 ISS - Suivi Orbital Temps Réel</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=VT323&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap" rel="stylesheet">
+    <style>
+        /* === CSS Reset & Base Styles === */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            min-height: 100vh;
+            background-color: #1a1a1a;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 1rem;
+            font-family: 'VT323', monospace;
+            image-rendering: pixelated;
+            image-rendering: -moz-crisp-edges;
+            image-rendering: crisp-edges;
+        }
+
+        /* Amélioration du rendu pixelisé */
+        .screen-content,
+        .minitel-header,
+        .title-bar,
+        .footer,
+        .telemetry-grid {
+            text-rendering: optimizeSpeed;
+            -webkit-font-smoothing: none;
+            -moz-osx-font-smoothing: unset;
+        }
+
+        /* === Container Styles === */
+        .minitel-container {
+            position: relative;
+            background-color: #e8e4d9;
+            padding: 2rem;
+            padding-bottom: 3rem;
+            border-radius: 0.5rem;
+            box-shadow: 0 20px 50px rgba(0, 0, 0, 0.5),
+                        inset 0 2px 5px rgba(255, 255, 255, 0.4);
+            max-width: 48rem;
+            width: 100%;
+            border-bottom: 12px solid #d1cdc2;
+            border-right: 12px solid #d1cdc2;
+        }
+
+        .brand-label {
+            position: absolute;
+            top: 0.75rem;
+            left: 2rem;
+            color: #8a8578;
+            font-family: sans-serif;
+            font-weight: bold;
+            font-size: 0.75rem;
+            letter-spacing: 0.1em;
+        }
+
+        /* === CRT Screen Styles === */
+        .crt-screen {
+            position: relative;
+            background-color: black;
+            border-radius: 0.5rem 0.5rem 1.5rem 1.5rem;
+            overflow: hidden;
+            aspect-ratio: 4 / 3;
+            box-shadow: inset 0 0 20px rgba(0, 0, 0, 1);
+            border: 16px solid #333;
+            box-shadow: inset 0 0 20px rgba(0, 0, 0, 1), 0 0 1px rgba(255, 255, 255, 0.1);
+        }
+
+        /* === CRT Overlay Effects === */
+        .crt-overlay {
+            pointer-events: none;
+            position: absolute;
+            inset: 0;
+            z-index: 50;
+            overflow: hidden;
+            border-radius: 0.5rem;
+        }
+
+        .scanlines {
+            position: absolute;
+            inset: 0;
+            background: linear-gradient(rgba(0, 0, 0, 0) 50%, rgba(0, 0, 0, 0.3) 50%),
+                        linear-gradient(90deg, rgba(0, 255, 255, 0.03), rgba(0, 255, 255, 0.01), rgba(0, 255, 255, 0.03));
+            background-size: 100% 3px, 2px 100%;
+            pointer-events: none;
+        }
+
+        .flicker {
+            position: absolute;
+            inset: 0;
+            background-color: white;
+            opacity: 0.02;
+            animation: flicker 0.3s infinite;
+            pointer-events: none;
+        }
+
+        .vignette {
+            position: absolute;
+            inset: 0;
+            background: radial-gradient(circle, rgba(0, 0, 0, 0) 60%, rgba(0, 0, 0, 0.6) 100%);
+            pointer-events: none;
+        }
+
+        /* === Screen Content === */
+        .screen-content {
+            position: relative;
+            z-index: 10;
+            height: 100%;
+            display: flex;
+            flex-direction: column;
+            padding: 1rem;
+            color: #00FFFF;
+            font-family: 'VT323', monospace;
+            line-height: 1.2;
+            text-shadow: 0 0 3px rgba(0, 255, 255, 0.5);
+        }
+
+        /* === Connection States === */
+        .init-screen {
+            height: 100%;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            gap: 1rem;
+        }
+
+        .init-dot {
+            color: #00FFFF;
+            font-size: 1.5rem;
+            animation: pulse 2s infinite;
+            text-shadow: 0 0 5px rgba(0, 255, 255, 0.8);
+        }
+
+        .init-text {
+            color: #00FFFF;
+            text-shadow: 0 0 3px rgba(0, 255, 255, 0.5);
+        }
+
+        .dialing-screen {
+            height: 100%;
+            display: flex;
+            flex-direction: column;
+            align-items: flex-start;
+            justify-content: flex-start;
+            padding: 2rem;
+            gap: 0.5rem;
+            color: #00FFFF;
+            text-shadow: 0 0 3px rgba(0, 255, 255, 0.5);
+        }
+
+        /* === Minitel Header === */
+        .minitel-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            background-color: #000000;
+            color: #00FFFF;
+            padding: 0.25rem 0.5rem;
+            font-family: 'VT323', monospace;
+            font-size: 0.875rem;
+            border-bottom: 2px solid #00FFFF;
+            text-shadow: 0 0 3px rgba(0, 255, 255, 0.5);
+        }
+
+        .header-left {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .header-number {
+            font-weight: bold;
+            background-color: #FFFFFF;
+            color: #000000;
+            padding: 0 0.25rem;
+            text-shadow: none;
+        }
+
+        .header-iss {
+            color: #00FFFF;
+            animation: pulse 2s infinite;
+            text-shadow: 0 0 5px rgba(0, 255, 255, 0.8);
+        }
+
+        .header-right {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+        }
+
+        .header-price {
+            font-size: 0.75rem;
+            color: #00FFFF;
+            text-shadow: 0 0 3px rgba(0, 255, 255, 0.5);
+        }
+
+        .status-dot {
+            width: 0.75rem;
+            height: 0.75rem;
+            border-radius: 50%;
+        }
+
+        .status-dot.connected {
+            background-color: #00FF00;
+            box-shadow: 0 0 8px rgba(0, 255, 0, 0.8);
+        }
+
+        .status-dot.disconnected {
+            background-color: #FF0000;
+            box-shadow: 0 0 5px rgba(255, 0, 0, 0.8);
+        }
+
+        /* === Title Bar === */
+        .title-bar {
+            background-color: #0000FF;
+            color: #FFFFFF;
+            text-align: center;
+            padding: 0.25rem 0;
+            margin-bottom: 0.5rem;
+            font-weight: bold;
+            text-transform: uppercase;
+            letter-spacing: 0.1em;
+            font-size: 1.125rem;
+            font-family: 'VT323', monospace;
+            text-shadow: none;
+        }
+
+        /* === Map Grid === */
+        .map-container {
+            background-color: #000000;
+            border: 2px solid #00FFFF;
+            margin-bottom: 1rem;
+            box-shadow: 0 0 15px rgba(0, 255, 255, 0.3);
+        }
+
+        .map-row {
+            display: flex;
+            width: 100%;
+        }
+
+        .map-cell {
+            width: 2.5%;
+            height: 2rem;
+            display: inline-block;
+            vertical-align: top;
+        }
+
+        .videotex-char {
+            width: 100%;
+            height: 100%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-family: 'VT323', monospace;
+            font-size: 1.125rem;
+            line-height: 1;
+            user-select: none;
+        }
+
+        .videotex-iss {
+            width: 100%;
+            height: 100%;
+            background-color: #00FFFF;
+            color: #000000;
+            animation: blink 1s step-end infinite;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+        }
+
+        .videotex-iss span {
+            color: #000000;
+            font-weight: bold;
+            font-size: 0.875rem;
+            text-shadow: none;
+        }
+
+        .videotex-land {
+            width: 100%;
+            height: 100%;
+            background-color: transparent;
+            color: #FFFFFF;
+            text-shadow: 0 0 2px rgba(255, 255, 255, 0.5);
+        }
+
+        .videotex-trace {
+            width: 0.25rem;
+            height: 0.25rem;
+            background-color: #00FFFF;
+            border-radius: 50%;
+            box-shadow: 0 0 3px rgba(0, 255, 255, 0.8);
+        }
+
+        .videotex-water {
+            color: #00FFFF;
+            opacity: 0.3;
+            text-shadow: 0 0 2px rgba(0, 255, 255, 0.3);
+        }
+
+        /* === Telemetry Panel === */
+        .telemetry-panel {
+            min-height: 6rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: #00FFFF;
+            animation: pulse 2s infinite;
+            text-shadow: 0 0 3px rgba(0, 255, 255, 0.5);
+        }
+
+        .telemetry-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 0.5rem 1rem;
+            padding: 0.5rem;
+            font-family: 'VT323', monospace;
+            font-size: 1rem;
+            text-transform: uppercase;
+        }
+
+        .telemetry-item {
+            display: flex;
+            flex-direction: column;
+        }
+
+        .telemetry-label {
+            color: #00FFFF;
+            font-size: 0.75rem;
+            text-shadow: 0 0 2px rgba(0, 255, 255, 0.5);
+        }
+
+        .telemetry-value-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: baseline;
+            border-bottom: 1px dashed #00FFFF;
+            padding-bottom: 0.25rem;
+            opacity: 0.6;
+        }
+
+        .telemetry-value {
+            color: #FFFFFF;
+            text-shadow: 0 0 3px rgba(255, 255, 255, 0.5);
+        }
+
+        .telemetry-unit {
+            color: #00FFFF;
+            font-size: 0.75rem;
+            text-shadow: 0 0 2px rgba(0, 255, 255, 0.5);
+        }
+
+        /* === Footer === */
+        .footer {
+            margin-top: auto;
+            border-top: 1px solid #00FFFF;
+            padding-top: 0.5rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            font-size: 0.75rem;
+            color: #00FFFF;
+            text-transform: uppercase;
+            font-family: 'VT323', monospace;
+            text-shadow: 0 0 2px rgba(0, 255, 255, 0.5);
+        }
+
+        .footer-buttons {
+            display: flex;
+            gap: 0.5rem;
+        }
+
+        .footer-button {
+            background-color: #0000FF;
+            color: #FFFFFF;
+            padding: 0.125rem 0.5rem;
+            font-family: 'VT323', monospace;
+            font-size: 0.75rem;
+            text-shadow: none;
+            border: 1px solid #00FFFF;
+            box-shadow: 0 0 5px rgba(0, 0, 255, 0.5);
+        }
+
+        /* === Power Light === */
+        .power-light {
+            position: absolute;
+            bottom: 1.5rem;
+            right: 2.5rem;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .power-dot {
+            width: 0.75rem;
+            height: 0.75rem;
+            background-color: #ef4444;
+            border-radius: 50%;
+            box-shadow: 0 0 5px rgba(239, 68, 68, 0.8);
+            animation: pulse 2s infinite;
+        }
+
+        .power-label {
+            font-size: 0.625rem;
+            color: #71717a;
+            font-family: sans-serif;
+            font-weight: bold;
+        }
+
+        /* === Animations === */
+        @keyframes blink {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0; }
+        }
+
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.5; }
+        }
+
+        @keyframes flicker {
+            0% { opacity: 0.02; }
+            5% { opacity: 0.05; }
+            10% { opacity: 0.02; }
+            15% { opacity: 0.06; }
+            20% { opacity: 0.02; }
+            50% { opacity: 0.02; }
+            55% { opacity: 0.05; }
+            60% { opacity: 0.02; }
+            100% { opacity: 0.02; }
+        }
+    </style>
+</head>
+<body>
+    <div class="minitel-container">
+        <!-- Brand Label -->
+        <div class="brand-label">TELIC ALCATEL</div>
+
+        <!-- CRT Screen -->
+        <div class="crt-screen">
+            <!-- CRT Overlay Effects -->
+            <div class="crt-overlay">
+                <div class="scanlines"></div>
+                <div class="flicker"></div>
+                <div class="vignette"></div>
+            </div>
+
+            <!-- Screen Content -->
+            <div class="screen-content" id="screenContent">
+                <!-- Content will be dynamically inserted here -->
+            </div>
+        </div>
+
+        <!-- Power Light -->
+        <div class="power-light">
+            <div class="power-dot"></div>
+            <span class="power-label">MARCHE</span>
+        </div>
+    </div>
+
+    <script>
+        // === Constants ===
+        const GRID_W = 40;
+        const GRID_H = 24;
+        const REFRESH_RATE = 3000; // ms
+
+        // ASCII World Map (40x14 grid)
+        const WORLD_MAP_ASCII = [
+            "                                        ",
+            "           ##      #######    ###       ",
+            "       #  ####   ##########  #####      ",
+            "      ########## ########## #######     ",
+            "      #########  ########## #######     ",
+            "       #######    ########   #####      ",
+            "        #####      ######     ###       ",
+            "   ##    ###   #    ####       #        ",
+            "  ####    #   ###    ##           ##    ",
+            " #####       #####               ####   ",
+            "  ###         ###                ####   ",
+            "   #           #                  ##    ",
+            "                                        ",
+            "         ##                             ",
+        ];
+
+        // === State Management ===
+        let issData = null;
+        let loading = true;
+        let connectionStep = 0; // 0: Init, 1: Dialing, 2: Connected
+        let trace = [];
+
+        // === API Functions ===
+        async function fetchISS() {
+            try {
+                const response = await fetch('https://api.wheretheiss.at/v1/satellites/25544');
+                const data = await response.json();
+                issData = data;
+                
+                // Update trace (keep last 20 points)
+                const newPoint = { lat: data.latitude, lon: data.longitude };
+                trace.push(newPoint);
+                if (trace.length > 20) {
+                    trace.shift();
+                }
+                
+                loading = false;
+                render();
+            } catch (error) {
+                console.error("Erreur de communication:", error);
+            }
+        }
+
+        // === Coordinate Mapping ===
+        function getGridPosition(lat, lon) {
+            const mapWidth = 40;
+            const mapHeight = 14;
+
+            // Normalize coordinates
+            const x = Math.round(((lon + 180) / 360) * (mapWidth - 1));
+            const y = Math.round(((90 - lat) / 180) * (mapHeight - 1));
+
+            return { x, y };
+        }
+
+        // === Rendering Functions ===
+        function renderVideotexChar(char, isIss, isTrace) {
+            if (isIss) {
+                return '<div class="videotex-iss"><span>X</span></div>';
+            }
+            
+            if (char === '#') {
+                return '<div class="videotex-land">⣿</div>';
+            }
+            
+            if (isTrace) {
+                return '<div class="videotex-trace"></div>';
+            }
+            
+            return '<span class="videotex-water">.</span>';
+        }
+
+        function renderGrid() {
+            const issPos = issData ? getGridPosition(issData.latitude, issData.longitude) : { x: -1, y: -1 };
+            let html = '<div class="map-container">';
+            
+            for (let row = 0; row < 14; row++) {
+                html += '<div class="map-row">';
+                for (let col = 0; col < 40; col++) {
+                    const char = WORLD_MAP_ASCII[row][col];
+                    const isIss = (row === issPos.y && col === issPos.x);
+                    
+                    let isTrace = false;
+                    if (!isIss) {
+                        isTrace = trace.some(p => {
+                            const pos = getGridPosition(p.lat, p.lon);
+                            return pos.x === col && pos.y === row;
+                        });
+                    }
+                    
+                    html += `<div class="map-cell">${renderVideotexChar(char, isIss, isTrace)}</div>`;
+                }
+                html += '</div>';
+            }
+            
+            html += '</div>';
+            return html;
+        }
+
+        function renderTelemetryPanel() {
+            if (!issData) {
+                return '<div class="telemetry-panel">RECHERCHE SATELLITE...</div>';
+            }
+
+            const items = [
+                { label: "LATITUDE", value: issData.latitude.toFixed(4), unit: "°" },
+                { label: "LONGITUDE", value: issData.longitude.toFixed(4), unit: "°" },
+                { label: "ALTITUDE", value: issData.altitude.toFixed(2), unit: "km" },
+                { label: "VITESSE", value: issData.velocity.toFixed(0), unit: "km/h" },
+            ];
+
+            let html = '<div class="telemetry-grid">';
+            items.forEach(item => {
+                html += `
+                    <div class="telemetry-item">
+                        <span class="telemetry-label">${item.label}</span>
+                        <div class="telemetry-value-row">
+                            <span class="telemetry-value">${item.value}</span>
+                            <span class="telemetry-unit">${item.unit}</span>
+                        </div>
+                    </div>
+                `;
+            });
+            html += '</div>';
+            return html;
+        }
+
+        function render() {
+            const screenContent = document.getElementById('screenContent');
+            let html = '';
+
+            if (connectionStep === 0) {
+                html = `
+                    <div class="init-screen">
+                        <div class="init-dot">●</div>
+                        <p class="init-text">INITIALISATION DU TERMINAL...</p>
+                    </div>
+                `;
+            } else if (connectionStep === 1) {
+                html = `
+                    <div class="dialing-screen">
+                        <p>COMPOSITION DU 3615 ISS...</p>
+                        <p>CONNEXION AU RESEAU TRANSPAC...</p>
+                        <p style="animation: blink 1s step-end infinite;">ATTENTE PORTEUSE...</p>
+                    </div>
+                `;
+            } else if (connectionStep === 2) {
+                html = `
+                    <div class="minitel-header">
+                        <div class="header-left">
+                            <span class="header-number">3615</span>
+                            <span class="header-iss">ISS</span>
+                        </div>
+                        <div class="header-right">
+                            <span class="header-price">0,34€/MIN</span>
+                            <div class="status-dot ${loading ? 'disconnected' : 'connected'}"></div>
+                        </div>
+                    </div>
+                    
+                    <div style="flex: 1; display: flex; flex-direction: column; padding-top: 1rem;">
+                        <div class="title-bar">Suivi Orbital Temps Reel</div>
+                        ${renderGrid()}
+                        ${renderTelemetryPanel()}
+                    </div>
+                    
+                    <div class="footer">
+                        <span>Modem: 1200 Bd</span>
+                        <span style="animation: ${loading ? 'pulse 2s infinite' : 'none'}">${loading ? 'RECEPTION...' : 'EN LIGNE'}</span>
+                        <div class="footer-buttons">
+                            <span class="footer-button">SUITE</span>
+                            <span class="footer-button">RETOUR</span>
+                            <span class="footer-button">GUIDE</span>
+                        </div>
+                    </div>
+                `;
+            }
+
+            screenContent.innerHTML = html;
+        }
+
+        // === Connection Sequence ===
+        function startConnectionSequence() {
+            setTimeout(() => {
+                connectionStep = 1;
+                render();
+            }, 1000);
+
+            setTimeout(() => {
+                connectionStep = 2;
+                loading = true;
+                render();
+                fetchISS();
+                
+                // Start polling
+                setInterval(fetchISS, REFRESH_RATE);
+            }, 3500);
+        }
+
+        // === Initialize ===
+        function init() {
+            render();
+            startConnectionSequence();
+        }
+
+        // Start the application when page loads
+        window.addEventListener('DOMContentLoaded', init);
+    </script>
+</body>
+</html>
