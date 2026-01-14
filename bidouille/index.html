@@ -1,0 +1,226 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="theme-color" content="#343a40">
+    <meta name="description" content="Bidouille Projects | Aurelien Fache">
+
+    <title>Bidouille - Aurelien Fache</title>
+
+    <!-- Favicon -->
+    <link rel="shortcut icon" href="https://pbs.twimg.com/profile_images/1351213542964400143/GJwBX4F9_400x400.jpg">
+
+    <!-- CSS Dependencies -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+
+    <style>
+        :root {
+            --bs-body-bg: #faf8ef;
+            --bs-body-color: #343a40;
+            --profile-bg: rgba(255, 255, 255, 0.7);
+            --btn-outline-color: #343a40;
+            --shadow-color: rgba(0, 0, 0, 0.1);
+            --shadow-light: rgba(0, 0, 0, 0.05);
+        }
+
+        [data-theme="dark"] {
+            --bs-body-bg: #1a1a1a;
+            --bs-body-color: #e9ecef;
+            --profile-bg: rgba(40, 40, 40, 0.7);
+            --btn-outline-color: #e9ecef;
+            --shadow-color: rgba(255, 255, 255, 0.1);
+            --shadow-light: rgba(255, 255, 255, 0.05);
+        }
+
+        body {
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .profile-section {
+            background: var(--profile-bg);
+            border-radius: 1rem;
+            padding: 1.5rem;
+            margin-bottom: 2rem;
+            backdrop-filter: blur(10px);
+            box-shadow: 0 4px 6px var(--shadow-light);
+        }
+
+        .social-link {
+            margin-bottom: 0.75rem;
+            transition: all 0.3s ease;
+            border-radius: 0.5rem;
+            padding: 0.75rem 1rem;
+        }
+
+        .social-link:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 8px var(--shadow-color);
+        }
+
+        .social-link i {
+            width: 1.5rem;
+            text-align: center;
+            margin-right: 0.5rem;
+        }
+
+        .theme-toggle {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            z-index: 1000;
+            border: none;
+            background: var(--profile-bg);
+            color: var(--bs-body-color);
+            width: 50px;
+            height: 50px;
+            border-radius: 50%;
+            box-shadow: 0 2px 8px var(--shadow-color);
+            transition: all 0.3s ease;
+            backdrop-filter: blur(10px);
+        }
+
+        .theme-toggle:hover {
+            transform: scale(1.1);
+            box-shadow: 0 4px 12px var(--shadow-color);
+        }
+
+        .back-link {
+            position: fixed;
+            top: 20px;
+            left: 20px;
+            z-index: 1000;
+            border: none;
+            background: var(--profile-bg);
+            color: var(--bs-body-color);
+            width: 50px;
+            height: 50px;
+            border-radius: 50%;
+            box-shadow: 0 2px 8px var(--shadow-color);
+            transition: all 0.3s ease;
+            backdrop-filter: blur(10px);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            text-decoration: none;
+        }
+
+        .back-link:hover {
+            transform: scale(1.1);
+            box-shadow: 0 4px 12px var(--shadow-color);
+            color: var(--bs-body-color);
+        }
+
+        @media (max-width: 479px) {
+            .container {
+                padding: 1rem;
+            }
+
+            .profile-section {
+                padding: 1rem;
+            }
+        }
+    </style>
+</head>
+
+<body class="py-4">
+    <a href="/" class="back-link" aria-label="Back to home">
+        <i class="fas fa-arrow-left"></i>
+    </a>
+
+    <button class="theme-toggle" onclick="toggleTheme()" aria-label="Toggle dark mode">
+        <i class="fas fa-moon" id="theme-icon"></i>
+    </button>
+
+    <div class="container">
+        <div class="profile-section">
+            <h1 class="h4 mb-2">Bidouille</h1>
+            <p class="mb-0">A collection of experimental projects and hacks.</p>
+        </div>
+
+        <nav class="d-grid gap-2">
+            <a href="/bidouille/25544_fm/"
+                class="btn social-link"
+                style="border: 1px solid var(--btn-outline-color); color: var(--btn-outline-color);"
+                target="_blank"
+                rel="noopener">
+                <i class="fas fa-radio"></i>
+                25544.fm
+            </a>
+
+            <a href="/bidouille/3615_iss/"
+                class="btn social-link"
+                style="border: 1px solid var(--btn-outline-color); color: var(--btn-outline-color);"
+                target="_blank"
+                rel="noopener">
+                <i class="fas fa-terminal"></i>
+                3615 ISS
+            </a>
+
+            <a href="/bidouille/lapin_cosmique/"
+                class="btn social-link"
+                style="border: 1px solid var(--btn-outline-color); color: var(--btn-outline-color);"
+                target="_blank"
+                rel="noopener">
+                <i class="fas fa-satellite-dish"></i>
+                Le Lapin Cosmique
+            </a>
+
+            <a href="/bidouille/minou_connected/"
+                class="btn social-link"
+                style="border: 1px solid var(--btn-outline-color); color: var(--btn-outline-color);"
+                target="_blank"
+                rel="noopener">
+                <i class="fas fa-cat"></i>
+                Minou Connecte
+            </a>
+
+            <a href="/bidouille/tsl/"
+                class="btn social-link"
+                style="border: 1px solid var(--btn-outline-color); color: var(--btn-outline-color);"
+                target="_blank"
+                rel="noopener">
+                <i class="fas fa-code"></i>
+                TSL
+            </a>
+        </nav>
+    </div>
+
+    <!-- Bootstrap JS -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+
+    <script>
+        function toggleTheme() {
+            const html = document.documentElement;
+            const icon = document.getElementById('theme-icon');
+            const currentTheme = html.getAttribute('data-theme');
+
+            if (currentTheme === 'dark') {
+                html.removeAttribute('data-theme');
+                icon.className = 'fas fa-moon';
+                localStorage.setItem('theme', 'light');
+            } else {
+                html.setAttribute('data-theme', 'dark');
+                icon.className = 'fas fa-sun';
+                localStorage.setItem('theme', 'dark');
+            }
+        }
+
+        document.addEventListener('DOMContentLoaded', function() {
+            const savedTheme = localStorage.getItem('theme');
+            const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+            const icon = document.getElementById('theme-icon');
+
+            if (savedTheme === 'dark' || (!savedTheme && prefersDark)) {
+                document.documentElement.setAttribute('data-theme', 'dark');
+                icon.className = 'fas fa-sun';
+            } else {
+                icon.className = 'fas fa-moon';
+            }
+        });
+    </script>
+</body>
+</html>
