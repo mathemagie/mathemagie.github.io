@@ -305,8 +305,27 @@
             width: 100%;
             height: 100%;
             background-color: transparent;
-            color: #FFFFFF;
             text-shadow: 0 0 2px rgba(255, 255, 255, 0.5);
+        }
+
+        .videotex-land-dense {
+            color: #FFFFFF;
+            text-shadow: 0 0 3px rgba(255, 255, 255, 0.7);
+        }
+
+        .videotex-land-medium {
+            color: #E0E0E0;
+            text-shadow: 0 0 2px rgba(255, 255, 255, 0.5);
+        }
+
+        .videotex-land-light {
+            color: #A0A0A0;
+            text-shadow: 0 0 2px rgba(255, 255, 255, 0.3);
+        }
+
+        .videotex-land-sparse {
+            color: #606060;
+            text-shadow: 0 0 1px rgba(255, 255, 255, 0.2);
         }
 
         .videotex-sound {
@@ -336,8 +355,9 @@
 
         .videotex-water {
             color: #00FFFF;
-            opacity: 0.3;
-            text-shadow: 0 0 2px rgba(0, 255, 255, 0.3);
+            opacity: 0.2;
+            text-shadow: 0 0 1px rgba(0, 255, 255, 0.2);
+            font-size: 0.6em;
         }
 
         /* === Sound Info Panel === */
@@ -1083,32 +1103,33 @@
         const ARCHIVE_API = 'https://archive.org/advancedsearch.php';
         const SOUND_BATCH_SIZE = 5000; // Load sounds in batches
 
-        // ASCII World Map (80x24 grid) - More detailed
+        // World Map using Unicode block characters (80x24 grid)
+        // █ = dense land/mountains, ▓ = regular land, ▒ = coastal/light, ░ = very light/islands
         const WORLD_MAP_ASCII = [
             "                                                                                ",
-            "                                                                                ",
-            "                         ####                                                   ",
-            "            ##########  ######  ################################                ",
-            "           ########### ######## ######################################          ",
-            "          ############ ###########################################  ###         ",
-            "    #    ############# ## ###########################################           ",
-            "   ###   ###########   #  ###########################################           ",
-            "    ##   #########        ##########################################            ",
-            "         #######           #####  ##################################            ",
-            "          #####             ###    #########################   ####             ",
-            "           ####   ##              #######################                       ",
-            "           ###   ####       #      #####################                        ",
-            "            #   ######      ##       #################                          ",
-            "    ##          #######    ####        #########  ###                           ",
-            "   ####          #####    ######         ####      #          ##                ",
-            "  ######                  #######                            ####               ",
-            "   #####                   #####                            ######              ",
-            "    ####                    ###                              #####              ",
-            "     ##                      #                                ###               ",
-            "                                                               #                ",
-            "                                                                                ",
-            "                        ########                                                ",
-            "                                                                                ",
+            "                                ░░▒░                                            ",
+            "           ░▒▒▓▓▓▒░  ░▒▓▓▓▒░   ▒▓██▓▒░    ░▒▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▒░             ",
+            "          ▒▓████▓▒░ ▒▓████▓▒  ▓██████▓▒▒▓▓████████████████████████▓▒           ",
+            "         ▒▓█████▓▒ ▒▓█████▓▒▒▓████████▓▓██████████████████████████▓░ ░▒░      ",
+            "         ▒▓█████▓░ ░▓██████▓▓█████████████████████████████████████▓▒  ▒▓▒     ",
+            "    ░▒░  ▒▓█████▓░  ▒▓█████████████████████████████████████████████▓▒  ░▒░    ",
+            "   ▒▓▓▒  ▒▓████▓▒    ░▓███████████████████████████████████████████▓▒░         ",
+            "    ▒▓▒  ░▓███▓▒░     ░▒▓█████████████████████████████████████████▓░          ",
+            "     ░    ▒▓█▓▒        ░▒▓██▓▒░▒▓█████████████████████████████████▓░          ",
+            "          ░▒▓▒░         ░▒▓▒░   ░▒▓██████████████████████████▓▒░▒▓▓▒          ",
+            "           ░▒░   ░▒▒░            ░▒▓████████████████████████▓▒░   ░░          ",
+            "           ░▒░  ░▒▓▓▒░      ░░    ░▒▓██████████████████████▓░                  ",
+            "            ░   ░▒▓██▒░    ░▒▓▒░    ░▒▓████████████████▓▓▒░                   ",
+            "    ░▒░         ░▒▓██▓▒░  ░▒▓██▒░     ░▒▓██████▓▓▒░░▒▓▓▒░                     ",
+            "   ░▒▓▒░         ░▒▓█▓▒░ ░▒▓███▓▒░      ░▒▓▓▓▒░     ░▒░        ░▒▒░          ",
+            "  ░▒▓██▒░          ░▒▒░  ░▒▓████▓▒░        ░░                 ░▒▓▓▒░          ",
+            "   ░▒▓█▓▒░               ░▒▓███▓▒░                           ░▒▓██▓▒░         ",
+            "    ░▒▓▓▒░                ░▒▓█▓▒░                            ░▒▓██▓▒░         ",
+            "     ░▒▒░                  ░▒▓▒░                              ░▒▓▓▒░          ",
+            "       ░                    ░▒░                                ░▒░            ",
+            "                             ░                                  ░             ",
+            "                       ░▒▓██████▓▒░                                           ",
+            "                        ░▒▓████▓▒░                                            ",
         ];
 
         // === State Management ===
@@ -1508,15 +1529,29 @@
                 return '<div class="videotex-sound"><span>S</span></div>';
             }
 
+            // Handle different block characters for terrain
+            if (char === '█') {
+                return '<div class="videotex-land videotex-land-dense videotex-char">█</div>';
+            }
+            if (char === '▓') {
+                return '<div class="videotex-land videotex-land-medium videotex-char">▓</div>';
+            }
+            if (char === '▒') {
+                return '<div class="videotex-land videotex-land-light videotex-char">▒</div>';
+            }
+            if (char === '░') {
+                return '<div class="videotex-land videotex-land-sparse videotex-char">░</div>';
+            }
+            // Legacy support for #
             if (char === '#') {
-                return '<div class="videotex-land videotex-char">\u2593</div>';
+                return '<div class="videotex-land videotex-land-medium videotex-char">▓</div>';
             }
 
             if (isTrace) {
                 return '<div class="videotex-char"><div class="videotex-trace"></div></div>';
             }
 
-            return '<span class="videotex-char videotex-water">.</span>';
+            return '<span class="videotex-char videotex-water">·</span>';
         }
 
         function renderGrid() {
