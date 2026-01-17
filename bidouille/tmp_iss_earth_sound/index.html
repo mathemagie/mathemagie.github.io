@@ -82,15 +82,31 @@
             z-index: 50;
             overflow: hidden;
             border-radius: 0.5rem;
+            /* Signal quality CSS custom properties */
+            --signal-quality: 1;
+            --scanline-opacity: 0.3;
+            --static-opacity: 0;
+            --glow-intensity: 1;
         }
 
         .scanlines {
             position: absolute;
             inset: 0;
-            background: linear-gradient(rgba(0, 0, 0, 0) 50%, rgba(0, 0, 0, 0.3) 50%),
+            background: linear-gradient(rgba(0, 0, 0, 0) 50%, rgba(0, 0, 0, var(--scanline-opacity)) 50%),
                         linear-gradient(90deg, rgba(0, 255, 255, 0.03), rgba(0, 255, 255, 0.01), rgba(0, 255, 255, 0.03));
             background-size: 100% 3px, 2px 100%;
             pointer-events: none;
+            transition: background 0.5s ease;
+        }
+
+        .static-noise {
+            position: absolute;
+            inset: 0;
+            opacity: var(--static-opacity);
+            background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)'/%3E%3C/svg%3E");
+            pointer-events: none;
+            mix-blend-mode: overlay;
+            transition: opacity 0.5s ease;
         }
 
         .flicker {
@@ -120,7 +136,7 @@
             color: #00FFFF;
             font-family: 'VT323', monospace;
             line-height: 1.2;
-            text-shadow: 0 0 3px rgba(0, 255, 255, 0.5);
+            text-shadow: 0 0 calc(3px * var(--glow-intensity, 1)) rgba(0, 255, 255, calc(0.5 * var(--glow-intensity, 1)));
         }
 
         /* === Connection States === */
@@ -389,6 +405,16 @@
 
         .sound-location {
             color: #FFFFFF;
+            margin-bottom: 0.125rem;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        .sound-geo-context {
+            color: #00FFFF;
+            font-size: 0.75rem;
+            opacity: 0.8;
             margin-bottom: 0.25rem;
             white-space: nowrap;
             overflow: hidden;
@@ -401,6 +427,13 @@
             white-space: nowrap;
             overflow: hidden;
             text-overflow: ellipsis;
+        }
+
+        .sound-meta {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            gap: 0.5rem;
         }
 
         .sound-artist {
@@ -492,42 +525,45 @@
 
         .telemetry-grid {
             display: grid;
-            grid-template-columns: repeat(2, 1fr);
-            gap: 0.25rem 1rem;
-            padding: 0.25rem;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 0.5rem 1.5rem;
+            padding: 0.5rem;
             font-family: 'VT323', monospace;
-            font-size: 0.875rem;
+            font-size: 1rem;
             text-transform: uppercase;
+            font-variant-numeric: tabular-nums;
         }
 
         .telemetry-item {
             display: flex;
             flex-direction: column;
+            gap: 0.125rem;
         }
 
         .telemetry-label {
             color: #00FFFF;
             font-size: 0.625rem;
+            opacity: 0.6;
             text-shadow: 0 0 2px rgba(0, 255, 255, 0.5);
         }
 
         .telemetry-value-row {
             display: flex;
-            justify-content: space-between;
             align-items: baseline;
-            border-bottom: 1px dashed #00FFFF;
-            padding-bottom: 0.125rem;
-            opacity: 0.6;
+            gap: 0.25rem;
         }
 
         .telemetry-value {
             color: #FFFFFF;
-            text-shadow: 0 0 3px rgba(255, 255, 255, 0.5);
+            font-size: 1.4rem;
+            font-weight: bold;
+            text-shadow: 0 0 5px rgba(255, 255, 255, 0.6);
         }
 
         .telemetry-unit {
             color: #00FFFF;
-            font-size: 0.625rem;
+            font-size: 0.75rem;
+            opacity: 0.8;
             text-shadow: 0 0 2px rgba(0, 255, 255, 0.5);
         }
 
@@ -738,6 +774,7 @@
             }
 
             .telemetry-grid {
+                grid-template-columns: repeat(4, 1fr);
                 font-size: 0.6rem;
                 gap: 0.15rem 0.4rem;
                 padding: 0.15rem;
@@ -747,12 +784,20 @@
                 font-size: 0.45rem;
             }
 
+            .telemetry-value {
+                font-size: 0.9rem;
+            }
+
             .telemetry-unit {
                 font-size: 0.45rem;
             }
 
             .telemetry-panel {
                 min-height: auto;
+            }
+
+            .sound-geo-context {
+                font-size: 0.55rem;
             }
 
             .footer {
@@ -933,8 +978,9 @@
             }
 
             .telemetry-grid {
+                grid-template-columns: repeat(4, 1fr);
                 font-size: 0.5rem;
-                gap: 0.1rem 0.3rem;
+                gap: 0.1rem 0.2rem;
                 padding: 0.1rem;
             }
 
@@ -944,7 +990,7 @@
             }
 
             .telemetry-value {
-                font-size: 0.5rem;
+                font-size: 0.7rem;
             }
 
             .telemetry-value-row {
@@ -953,6 +999,10 @@
 
             .telemetry-panel {
                 min-height: auto;
+            }
+
+            .sound-geo-context {
+                font-size: 0.45rem;
             }
 
             .footer {
@@ -1000,8 +1050,9 @@
         <!-- CRT Screen -->
         <div class="crt-screen">
             <!-- CRT Overlay Effects -->
-            <div class="crt-overlay">
+            <div class="crt-overlay" id="crtOverlay">
                 <div class="scanlines"></div>
+                <div class="static-noise"></div>
                 <div class="flicker"></div>
                 <div class="vignette"></div>
             </div>
@@ -1073,6 +1124,13 @@
         let isMuted = false;
         let activePlayer = 1;
         let isPlaying = false;
+
+        // Signal quality state (0.0 = weak, 1.0 = strong)
+        let signalQuality = 1.0;
+
+        // Geographic context state
+        let currentLocationInfo = null;
+        const geocodeCache = new Map();
 
         // Audio players
         const audioPlayer1 = document.getElementById('audioPlayer1');
@@ -1193,6 +1251,100 @@
             return R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
         }
 
+        // === Signal Quality Calculation ===
+        function calculateSignalQuality(distance) {
+            // Distance thresholds in km
+            // < 500 km = perfect (1.0)
+            // 500-2000 km = good (0.7-1.0)
+            // 2000-5000 km = fair (0.3-0.7)
+            // > 5000 km = weak (0.0-0.3)
+            if (distance < 500) return 1.0;
+            if (distance < 2000) return 0.7 + (0.3 * (1 - (distance - 500) / 1500));
+            if (distance < 5000) return 0.3 + (0.4 * (1 - (distance - 2000) / 3000));
+            return Math.max(0, 0.3 * (1 - (distance - 5000) / 5000));
+        }
+
+        function updateCRTEffects(quality) {
+            signalQuality = quality;
+            const overlay = document.getElementById('crtOverlay');
+            if (!overlay) return;
+
+            // Calculate effect values based on signal quality
+            // Weak signal = more static, stronger scanlines, less glow
+            const scanlineOpacity = 0.3 + (1 - quality) * 0.5; // 0.3 to 0.8
+            const staticOpacity = (1 - quality) * 0.05; // 0 to 0.05
+            const glowIntensity = 0.6 + quality * 0.4; // 0.6 to 1.0
+
+            overlay.style.setProperty('--signal-quality', quality);
+            overlay.style.setProperty('--scanline-opacity', scanlineOpacity);
+            overlay.style.setProperty('--static-opacity', staticOpacity);
+            overlay.style.setProperty('--glow-intensity', glowIntensity);
+
+            // Also update screen content glow
+            const screenContent = document.getElementById('screenContent');
+            if (screenContent) {
+                screenContent.style.setProperty('--glow-intensity', glowIntensity);
+            }
+        }
+
+        // === Geocoding Functions ===
+        async function geocodeLocation(lat, lng) {
+            // Round coordinates for cache key
+            const cacheKey = `${lat.toFixed(2)},${lng.toFixed(2)}`;
+
+            if (geocodeCache.has(cacheKey)) {
+                return geocodeCache.get(cacheKey);
+            }
+
+            try {
+                const response = await fetch(
+                    `https://api.bigdatacloud.net/data/reverse-geocode-client?latitude=${lat}&longitude=${lng}&localityLanguage=en`
+                );
+                const data = await response.json();
+
+                const locationInfo = {
+                    country: data.countryName || null,
+                    region: data.principalSubdivision || null,
+                    city: data.city || data.locality || null,
+                    timezone: data.localityInfo?.informative?.find(i => i.description === 'time zone')?.name || null
+                };
+
+                geocodeCache.set(cacheKey, locationInfo);
+                return locationInfo;
+            } catch (error) {
+                console.error('Geocoding error:', error);
+                return null;
+            }
+        }
+
+        function getLocalTime(timezone) {
+            if (!timezone) return null;
+            try {
+                return new Date().toLocaleTimeString('en-US', {
+                    timeZone: timezone,
+                    hour: '2-digit',
+                    minute: '2-digit',
+                    hour12: false
+                });
+            } catch (e) {
+                return null;
+            }
+        }
+
+        function formatLocationInfo(info) {
+            if (!info) return null;
+
+            const parts = [];
+            if (info.country) parts.push(info.country);
+            if (info.region && info.region !== info.country) parts.push(info.region);
+            if (info.city) parts.push(`near ${info.city}`);
+
+            const localTime = getLocalTime(info.timezone);
+            if (localTime) parts.push(`${localTime} local`);
+
+            return parts.length > 0 ? parts.join(' · ') : null;
+        }
+
         // === Sound Location Logic ===
         function findNearestSoundLocation() {
             if (!issData || soundLocations.length === 0) return null;
@@ -1222,9 +1374,17 @@
 
             if (!nearest) return;
 
+            // Update signal quality based on distance
+            const quality = calculateSignalQuality(nearest.distance);
+            updateCRTEffects(quality);
+
             // Check if we need to change the sound (different identifier)
             if (!currentSoundLocation || currentSoundLocation.identifier !== nearest.identifier) {
                 currentSoundLocation = nearest;
+
+                // Fetch geographic context for this location
+                const locationInfo = await geocodeLocation(nearest.lat, nearest.lng);
+                currentLocationInfo = locationInfo;
 
                 // Play the track from archive.org
                 const track = {
@@ -1410,16 +1570,21 @@
                 '</div>';
 
             let soundInfo;
+            const geoContext = formatLocationInfo(currentLocationInfo);
+
             if (currentSoundLocation && currentTrack) {
                 soundInfo = `
-                    <div class="sound-location">${currentSoundLocation.locationName || 'Unknown Location'}</div>
-                    <div class="sound-title">${currentTrack.title || 'Field Recording'}</div>
-                    <div class="sound-artist">${currentTrack.artist || 'Unknown Artist'}</div>
-                    <div class="sound-distance">${Math.round(currentSoundLocation.distance)} km away</div>
+                    <div class="sound-location">${currentTrack.title || 'Field Recording'}</div>
+                    ${geoContext ? `<div class="sound-geo-context">${geoContext}</div>` : ''}
+                    <div class="sound-meta">
+                        <span class="sound-artist">${currentTrack.artist || 'Unknown Artist'}</span>
+                        <span class="sound-distance">${Math.round(currentSoundLocation.distance)} km away</span>
+                    </div>
                 `;
             } else if (currentSoundLocation) {
                 soundInfo = `
                     <div class="sound-location">${currentSoundLocation.locationName || 'Unknown Location'}</div>
+                    ${geoContext ? `<div class="sound-geo-context">${geoContext}</div>` : ''}
                     <div class="sound-title no-sound">Loading audio...</div>
                     <div class="sound-distance">${Math.round(currentSoundLocation.distance)} km away</div>
                 `;
@@ -1458,11 +1623,20 @@
                 return '<div class="telemetry-panel">SEARCHING SATELLITE...</div>';
             }
 
+            // Format coordinates with N/S/E/W
+            const latDir = issData.latitude >= 0 ? 'N' : 'S';
+            const lonDir = issData.longitude >= 0 ? 'E' : 'W';
+            const latValue = Math.abs(issData.latitude).toFixed(1);
+            const lonValue = Math.abs(issData.longitude).toFixed(1);
+
+            // Format velocity with thousands separator
+            const velocityValue = Math.round(issData.velocity).toLocaleString();
+
             const items = [
-                { label: "LATITUDE", value: issData.latitude.toFixed(4), unit: "\u00B0" },
-                { label: "LONGITUDE", value: issData.longitude.toFixed(4), unit: "\u00B0" },
-                { label: "ALTITUDE", value: issData.altitude.toFixed(0), unit: "km" },
-                { label: "VELOCITY", value: issData.velocity.toFixed(0), unit: "km/h" },
+                { label: "ALT", value: Math.round(issData.altitude), unit: "km" },
+                { label: "VEL", value: velocityValue, unit: "km/h" },
+                { label: "LAT", value: latValue, unit: `°${latDir}` },
+                { label: "LNG", value: lonValue, unit: `°${lonDir}` },
             ];
 
             let html = '<div class="telemetry-grid">';
