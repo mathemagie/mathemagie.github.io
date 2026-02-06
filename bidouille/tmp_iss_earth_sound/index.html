@@ -6,7 +6,8 @@
     <title>ISS Earth Sound - Listen to the World from Space</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=VT323&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Share+Tech+Mono&family=VT323&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
     <style>
         /* === CSS Reset & Base Styles === */
         * {
@@ -22,10 +23,7 @@
             align-items: center;
             justify-content: center;
             padding: 1rem;
-            font-family: 'VT323', monospace;
-            image-rendering: pixelated;
-            image-rendering: -moz-crisp-edges;
-            image-rendering: crisp-edges;
+            font-family: 'Share Tech Mono', 'VT323', monospace;
         }
 
         .screen-content,
@@ -33,9 +31,9 @@
         .title-bar,
         .footer,
         .telemetry-grid {
-            text-rendering: optimizeSpeed;
-            -webkit-font-smoothing: none;
-            -moz-osx-font-smoothing: unset;
+            text-rendering: optimizeLegibility;
+            -webkit-font-smoothing: antialiased;
+            -moz-osx-font-smoothing: grayscale;
         }
 
         /* === Container Styles === */
@@ -134,8 +132,9 @@
             flex-direction: column;
             padding: 1rem;
             color: #00FFFF;
-            font-family: 'VT323', monospace;
-            line-height: 1.2;
+            font-family: 'Share Tech Mono', monospace;
+            line-height: 1.4;
+            font-size: 0.9rem;
             text-shadow: 0 0 calc(3px * var(--glow-intensity, 1)) rgba(0, 255, 255, calc(0.5 * var(--glow-intensity, 1)));
         }
 
@@ -180,9 +179,9 @@
             align-items: center;
             background-color: #000000;
             color: #00FFFF;
-            padding: 0.25rem 0.5rem;
-            font-family: 'VT323', monospace;
-            font-size: 0.875rem;
+            padding: 0.35rem 0.5rem;
+            font-family: 'Share Tech Mono', monospace;
+            font-size: 1rem;
             border-bottom: 2px solid #00FFFF;
             text-shadow: 0 0 3px rgba(0, 255, 255, 0.5);
         }
@@ -245,46 +244,59 @@
             font-weight: bold;
             text-transform: uppercase;
             letter-spacing: 0.1em;
-            font-size: 1.125rem;
-            font-family: 'VT323', monospace;
+            font-size: 1.25rem;
+            font-family: 'Share Tech Mono', monospace;
             text-shadow: none;
         }
 
-        /* === Map Grid === */
+        /* === Leaflet Map === */
         .map-container {
             background-color: #000000;
             border: 2px solid #00FFFF;
             margin-bottom: 0.5rem;
             box-shadow: 0 0 15px rgba(0, 255, 255, 0.3);
+            height: 400px;
+            position: relative;
+            overflow: hidden;
         }
 
-        .map-row {
-            display: flex;
-            width: 100%;
+        .map-container .leaflet-container {
+            background: #000000;
+            font-family: 'Share Tech Mono', monospace;
         }
 
-        .map-cell {
-            width: 1.25%;
-            height: 0.9rem;
-            display: inline-block;
-            vertical-align: top;
+        /* CRT cyan tint on map tiles */
+        .map-container .leaflet-tile-pane {
+            filter: brightness(2) contrast(1.1) sepia(0.5) hue-rotate(140deg) saturate(2.5);
+            opacity: 1;
         }
 
-        .videotex-char {
-            width: 100%;
-            height: 100%;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-family: 'VT323', monospace;
-            font-size: 1rem;
-            line-height: 1;
-            user-select: none;
+        /* Hide default Leaflet controls */
+        .map-container .leaflet-control-zoom {
+            display: none;
         }
 
-        .videotex-iss {
-            width: 100%;
-            height: 100%;
+        .map-container .leaflet-control-attribution {
+            background: rgba(0, 0, 0, 0.8) !important;
+            color: #00FFFF !important;
+            font-family: 'VT323', monospace !important;
+            font-size: 0.5rem !important;
+            border: none !important;
+        }
+
+        .map-container .leaflet-control-attribution a {
+            color: #00FFFF !important;
+        }
+
+        /* ISS Marker */
+        .leaflet-iss-marker {
+            background: transparent !important;
+            border: none !important;
+        }
+
+        .leaflet-iss-marker .iss-icon {
+            width: 24px;
+            height: 24px;
             background-color: #00FFFF;
             color: #000000;
             animation: blink 1s step-end infinite;
@@ -292,72 +304,54 @@
             align-items: center;
             justify-content: center;
             font-weight: bold;
-        }
-
-        .videotex-iss span {
-            color: #000000;
-            font-weight: bold;
-            font-size: 0.75rem;
+            font-family: 'Share Tech Mono', monospace;
+            font-size: 0.875rem;
             text-shadow: none;
+            box-shadow: 0 0 10px rgba(0, 255, 255, 0.8), 0 0 20px rgba(0, 255, 255, 0.4);
         }
 
-        .videotex-land {
-            width: 100%;
-            height: 100%;
-            background-color: transparent;
-            text-shadow: 0 0 2px rgba(255, 255, 255, 0.5);
+        /* ISS pulse ring */
+        .leaflet-iss-marker .iss-pulse {
+            position: absolute;
+            width: 24px;
+            height: 24px;
+            top: 0;
+            left: 0;
+            border: 2px solid rgba(0, 255, 255, 0.6);
+            border-radius: 50%;
+            animation: iss-pulse-ring 2s ease-out infinite;
         }
 
-        .videotex-land-dense {
-            color: #FFFFFF;
-            text-shadow: 0 0 3px rgba(255, 255, 255, 0.7);
+        @keyframes iss-pulse-ring {
+            0% { transform: scale(1); opacity: 1; }
+            100% { transform: scale(3); opacity: 0; }
         }
 
-        .videotex-land-medium {
-            color: #E0E0E0;
-            text-shadow: 0 0 2px rgba(255, 255, 255, 0.5);
+        /* Sound Location Marker */
+        .leaflet-sound-marker {
+            background: transparent !important;
+            border: none !important;
         }
 
-        .videotex-land-light {
-            color: #A0A0A0;
-            text-shadow: 0 0 2px rgba(255, 255, 255, 0.3);
-        }
-
-        .videotex-land-sparse {
-            color: #606060;
-            text-shadow: 0 0 1px rgba(255, 255, 255, 0.2);
-        }
-
-        .videotex-sound {
-            width: 100%;
-            height: 100%;
+        .leaflet-sound-marker .sound-icon {
+            width: 20px;
+            height: 20px;
             background-color: #FF00FF;
             color: #000000;
             display: flex;
             align-items: center;
             justify-content: center;
             font-weight: bold;
-            animation: pulse 1.5s infinite;
-        }
-
-        .videotex-sound span {
+            font-family: 'Share Tech Mono', monospace;
             font-size: 0.75rem;
             text-shadow: none;
+            animation: pulse 1.5s infinite;
+            box-shadow: 0 0 8px rgba(255, 0, 255, 0.8);
         }
 
-        .videotex-trace {
-            width: 0.25rem;
-            height: 0.25rem;
-            background-color: #00FFFF;
-            border-radius: 50%;
-            box-shadow: 0 0 3px rgba(0, 255, 255, 0.8);
-        }
-
-        .videotex-water {
-            color: #00FFFF;
-            opacity: 0.2;
-            text-shadow: 0 0 1px rgba(0, 255, 255, 0.2);
-            font-size: 0.6em;
+        /* Trace polyline glow */
+        .iss-trace-line {
+            filter: drop-shadow(0 0 3px rgba(0, 255, 255, 0.8));
         }
 
         /* === Sound Info Panel === */
@@ -380,7 +374,7 @@
 
         .sound-panel-title {
             color: #FF00FF;
-            font-size: 0.875rem;
+            font-size: 1rem;
             text-transform: uppercase;
         }
 
@@ -420,12 +414,12 @@
         }
 
         .sound-info {
-            font-size: 0.875rem;
+            font-size: 0.95rem;
         }
 
         .sound-location {
             color: #FFFFFF;
-            margin-bottom: 0.125rem;
+            margin-bottom: 0.2rem;
             white-space: nowrap;
             overflow: hidden;
             text-overflow: ellipsis;
@@ -433,7 +427,7 @@
 
         .sound-geo-context {
             color: #00FFFF;
-            font-size: 0.75rem;
+            font-size: 0.85rem;
             opacity: 0.8;
             margin-bottom: 0.25rem;
             white-space: nowrap;
@@ -443,7 +437,7 @@
 
         .sound-title {
             color: #00FFFF;
-            font-size: 0.75rem;
+            font-size: 0.85rem;
             white-space: nowrap;
             overflow: hidden;
             text-overflow: ellipsis;
@@ -458,12 +452,12 @@
 
         .sound-artist {
             color: #888888;
-            font-size: 0.625rem;
+            font-size: 0.8rem;
         }
 
         .sound-distance {
             color: #FFFF00;
-            font-size: 0.625rem;
+            font-size: 0.8rem;
         }
 
         .no-sound {
@@ -490,7 +484,7 @@
 
         .volume-label {
             color: #00FFFF;
-            font-size: 0.625rem;
+            font-size: 0.8rem;
         }
 
         .volume-slider {
@@ -516,9 +510,9 @@
             background: none;
             border: 1px solid #00FFFF;
             color: #00FFFF;
-            padding: 0.125rem 0.25rem;
-            font-family: 'VT323', monospace;
-            font-size: 0.625rem;
+            padding: 0.15rem 0.35rem;
+            font-family: 'Share Tech Mono', monospace;
+            font-size: 0.8rem;
             cursor: pointer;
             text-shadow: 0 0 3px rgba(0, 255, 255, 0.5);
         }
@@ -548,8 +542,8 @@
             grid-template-columns: repeat(4, 1fr);
             gap: 0.5rem 1.5rem;
             padding: 0.5rem;
-            font-family: 'VT323', monospace;
-            font-size: 1rem;
+            font-family: 'Share Tech Mono', monospace;
+            font-size: 1.1rem;
             text-transform: uppercase;
             font-variant-numeric: tabular-nums;
         }
@@ -562,7 +556,7 @@
 
         .telemetry-label {
             color: #00FFFF;
-            font-size: 0.625rem;
+            font-size: 0.8rem;
             opacity: 0.6;
             text-shadow: 0 0 2px rgba(0, 255, 255, 0.5);
         }
@@ -575,14 +569,14 @@
 
         .telemetry-value {
             color: #FFFFFF;
-            font-size: 1.4rem;
+            font-size: 1.5rem;
             font-weight: bold;
             text-shadow: 0 0 5px rgba(255, 255, 255, 0.6);
         }
 
         .telemetry-unit {
             color: #00FFFF;
-            font-size: 0.75rem;
+            font-size: 0.85rem;
             opacity: 0.8;
             text-shadow: 0 0 2px rgba(0, 255, 255, 0.5);
         }
@@ -595,10 +589,10 @@
             display: flex;
             justify-content: space-between;
             align-items: center;
-            font-size: 0.75rem;
+            font-size: 0.9rem;
             color: #00FFFF;
             text-transform: uppercase;
-            font-family: 'VT323', monospace;
+            font-family: 'Share Tech Mono', monospace;
             text-shadow: 0 0 2px rgba(0, 255, 255, 0.5);
         }
 
@@ -610,9 +604,9 @@
         .footer-button {
             background-color: #0000FF;
             color: #FFFFFF;
-            padding: 0.125rem 0.5rem;
-            font-family: 'VT323', monospace;
-            font-size: 0.75rem;
+            padding: 0.15rem 0.5rem;
+            font-family: 'Share Tech Mono', monospace;
+            font-size: 0.9rem;
             text-shadow: none;
             border: 1px solid #00FFFF;
             box-shadow: 0 0 5px rgba(0, 0, 255, 0.5);
@@ -719,24 +713,7 @@
 
             .map-container {
                 margin-bottom: 0.3rem;
-            }
-
-            .map-cell {
-                height: 0.5rem;
-            }
-
-            .videotex-char {
-                font-size: 0.4rem;
-            }
-
-            .videotex-iss span,
-            .videotex-sound span {
-                font-size: 0.3rem;
-            }
-
-            .videotex-trace {
-                width: 0.15rem;
-                height: 0.15rem;
+                height: 280px;
             }
 
             .sound-panel {
@@ -914,28 +891,24 @@
             .map-container {
                 margin-bottom: 0.15rem;
                 border-width: 1px;
+                height: 200px;
             }
 
-            .map-cell {
-                height: 0.35rem;
+            .leaflet-iss-marker .iss-icon {
+                width: 18px;
+                height: 18px;
+                font-size: 0.7rem;
             }
 
-            .videotex-char {
-                font-size: 0.28rem;
+            .leaflet-iss-marker .iss-pulse {
+                width: 18px;
+                height: 18px;
             }
 
-            .videotex-iss span,
-            .videotex-sound span {
-                font-size: 0.22rem;
-            }
-
-            .videotex-land {
-                font-size: 0.25rem;
-            }
-
-            .videotex-trace {
-                width: 0.1rem;
-                height: 0.1rem;
+            .leaflet-sound-marker .sound-icon {
+                width: 16px;
+                height: 16px;
+                font-size: 0.6rem;
             }
 
             .sound-panel {
@@ -1094,43 +1067,13 @@
     <audio id="audioPlayer1" crossorigin="anonymous"></audio>
     <audio id="audioPlayer2" crossorigin="anonymous"></audio>
 
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
     <script>
         // === Constants ===
-        const GRID_W = 80;
-        const GRID_H = 24;
         const ISS_REFRESH_RATE = 3000; // ms
         const CROSSFADE_DURATION = 2000; // ms
         const ARCHIVE_API = 'https://archive.org/advancedsearch.php';
         const SOUND_BATCH_SIZE = 5000; // Load sounds in batches
-
-        // World Map using Unicode block characters (80x24 grid)
-        // █ = dense land/mountains, ▓ = regular land, ▒ = coastal/light, ░ = very light/islands
-        const WORLD_MAP_ASCII = [
-            "                                                                                ",
-            "                                ░░▒░                                            ",
-            "           ░▒▒▓▓▓▒░  ░▒▓▓▓▒░   ▒▓██▓▒░    ░▒▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▒░             ",
-            "          ▒▓████▓▒░ ▒▓████▓▒  ▓██████▓▒▒▓▓████████████████████████▓▒           ",
-            "         ▒▓█████▓▒ ▒▓█████▓▒▒▓████████▓▓██████████████████████████▓░ ░▒░      ",
-            "         ▒▓█████▓░ ░▓██████▓▓█████████████████████████████████████▓▒  ▒▓▒     ",
-            "    ░▒░  ▒▓█████▓░  ▒▓█████████████████████████████████████████████▓▒  ░▒░    ",
-            "   ▒▓▓▒  ▒▓████▓▒    ░▓███████████████████████████████████████████▓▒░         ",
-            "    ▒▓▒  ░▓███▓▒░     ░▒▓█████████████████████████████████████████▓░          ",
-            "     ░    ▒▓█▓▒        ░▒▓██▓▒░▒▓█████████████████████████████████▓░          ",
-            "          ░▒▓▒░         ░▒▓▒░   ░▒▓██████████████████████████▓▒░▒▓▓▒          ",
-            "           ░▒░   ░▒▒░            ░▒▓████████████████████████▓▒░   ░░          ",
-            "           ░▒░  ░▒▓▓▒░      ░░    ░▒▓██████████████████████▓░                  ",
-            "            ░   ░▒▓██▒░    ░▒▓▒░    ░▒▓████████████████▓▓▒░                   ",
-            "    ░▒░         ░▒▓██▓▒░  ░▒▓██▒░     ░▒▓██████▓▓▒░░▒▓▓▒░                     ",
-            "   ░▒▓▒░         ░▒▓█▓▒░ ░▒▓███▓▒░      ░▒▓▓▓▒░     ░▒░        ░▒▒░          ",
-            "  ░▒▓██▒░          ░▒▒░  ░▒▓████▓▒░        ░░                 ░▒▓▓▒░          ",
-            "   ░▒▓█▓▒░               ░▒▓███▓▒░                           ░▒▓██▓▒░         ",
-            "    ░▒▓▓▒░                ░▒▓█▓▒░                            ░▒▓██▓▒░         ",
-            "     ░▒▒░                  ░▒▓▒░                              ░▒▓▓▒░          ",
-            "       ░                    ░▒░                                ░▒░            ",
-            "                             ░                                  ░             ",
-            "                       ░▒▓██████▓▒░                                           ",
-            "                        ░▒▓████▓▒░                                            ",
-        ];
 
         // === State Management ===
         let issData = null;
@@ -1145,6 +1088,7 @@
         let isMuted = false;
         let activePlayer = 1;
         let isPlaying = false;
+        let showTelemetry = false; // Toggle with 'I' key
 
         // Signal quality state (0.0 = weak, 1.0 = strong)
         let signalQuality = 1.0;
@@ -1152,6 +1096,13 @@
         // Geographic context state
         let currentLocationInfo = null;
         const geocodeCache = new Map();
+
+        // Leaflet map state
+        let leafletMap = null;
+        let issMarker = null;
+        let soundMarker = null;
+        let tracePolyline = null;
+        let mapInitialized = false;
 
         // Audio players
         const audioPlayer1 = document.getElementById('audioPlayer1');
@@ -1179,6 +1130,7 @@
                 }
 
                 render();
+                updateLeafletMap();
             } catch (error) {
                 console.error("ISS API Error:", error);
             }
@@ -1508,83 +1460,97 @@
             }
         }
 
-        // === Coordinate Mapping ===
-        function getGridPosition(lat, lon) {
-            const mapWidth = GRID_W;
-            const mapHeight = GRID_H;
-
-            const x = Math.round(((lon + 180) / 360) * (mapWidth - 1));
-            const y = Math.round(((90 - lat) / 180) * (mapHeight - 1));
-
-            return { x, y };
+        // === Leaflet Map Functions ===
+        function createISSIcon() {
+            return L.divIcon({
+                className: 'leaflet-iss-marker',
+                html: '<div class="iss-pulse"></div><div class="iss-icon">X</div>',
+                iconSize: [24, 24],
+                iconAnchor: [12, 12]
+            });
         }
 
-        // === Rendering Functions ===
-        function renderVideotexChar(char, isIss, isTrace, isSoundLoc) {
-            if (isIss) {
-                return '<div class="videotex-iss"><span>X</span></div>';
-            }
-
-            if (isSoundLoc) {
-                return '<div class="videotex-sound"><span>S</span></div>';
-            }
-
-            // Handle different block characters for terrain
-            if (char === '█') {
-                return '<div class="videotex-land videotex-land-dense videotex-char">█</div>';
-            }
-            if (char === '▓') {
-                return '<div class="videotex-land videotex-land-medium videotex-char">▓</div>';
-            }
-            if (char === '▒') {
-                return '<div class="videotex-land videotex-land-light videotex-char">▒</div>';
-            }
-            if (char === '░') {
-                return '<div class="videotex-land videotex-land-sparse videotex-char">░</div>';
-            }
-            // Legacy support for #
-            if (char === '#') {
-                return '<div class="videotex-land videotex-land-medium videotex-char">▓</div>';
-            }
-
-            if (isTrace) {
-                return '<div class="videotex-char"><div class="videotex-trace"></div></div>';
-            }
-
-            return '<span class="videotex-char videotex-water">·</span>';
+        function createSoundIcon() {
+            return L.divIcon({
+                className: 'leaflet-sound-marker',
+                html: '<div class="sound-icon">S</div>',
+                iconSize: [20, 20],
+                iconAnchor: [10, 10]
+            });
         }
 
-        function renderGrid() {
-            const issPos = issData ? getGridPosition(issData.latitude, issData.longitude) : { x: -1, y: -1 };
-            const soundPos = currentSoundLocation ? getGridPosition(
-                parseFloat(currentSoundLocation.lat),
-                parseFloat(currentSoundLocation.lng)
-            ) : { x: -1, y: -1 };
+        function initLeafletMap() {
+            if (mapInitialized) return;
 
-            let html = '<div class="map-container">';
+            const container = document.getElementById('leafletMapContainer');
+            if (!container) return;
 
-            for (let row = 0; row < GRID_H; row++) {
-                html += '<div class="map-row">';
-                for (let col = 0; col < GRID_W; col++) {
-                    const char = WORLD_MAP_ASCII[row][col];
-                    const isIss = (row === issPos.y && col === issPos.x);
-                    const isSoundLoc = !isIss && (row === soundPos.y && col === soundPos.x);
+            leafletMap = L.map('leafletMapContainer', {
+                center: [20, 0],
+                zoom: 3,
+                minZoom: 2,
+                maxZoom: 6,
+                zoomControl: false,
+                attributionControl: true,
+                worldCopyJump: true
+            });
 
-                    let isTrace = false;
-                    if (!isIss && !isSoundLoc) {
-                        isTrace = trace.some(p => {
-                            const pos = getGridPosition(p.lat, p.lon);
-                            return pos.x === col && pos.y === row;
-                        });
-                    }
+            // CartoDB Dark Matter tiles
+            L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png', {
+                attribution: '&copy; <a href="https://carto.com/">CARTO</a>',
+                subdomains: 'abcd',
+                maxZoom: 19
+            }).addTo(leafletMap);
 
-                    html += `<div class="map-cell">${renderVideotexChar(char, isIss, isTrace, isSoundLoc)}</div>`;
+            // Trace polyline
+            tracePolyline = L.polyline([], {
+                color: '#00FFFF',
+                weight: 2,
+                opacity: 0.6,
+                smoothFactor: 1,
+                dashArray: '6, 4'
+            }).addTo(leafletMap);
+
+            // ISS marker
+            issMarker = L.marker([0, 0], {
+                icon: createISSIcon(),
+                zIndexOffset: 1000
+            }).addTo(leafletMap);
+
+            mapInitialized = true;
+        }
+
+        function updateLeafletMap() {
+            if (!leafletMap || !issData) return;
+
+            const issLatLng = [issData.latitude, issData.longitude];
+
+            // Update ISS marker
+            issMarker.setLatLng(issLatLng);
+
+            // Update trace
+            const traceLatLngs = trace.map(p => [p.lat, p.lon]);
+            tracePolyline.setLatLngs(traceLatLngs);
+
+            // Center map on ISS
+            leafletMap.setView(issLatLng, leafletMap.getZoom(), { animate: true, duration: 1.5 });
+
+            // Update sound marker
+            if (currentSoundLocation) {
+                const soundLatLng = [currentSoundLocation.lat, currentSoundLocation.lng];
+                if (soundMarker) {
+                    soundMarker.setLatLng(soundLatLng);
+                } else {
+                    soundMarker = L.marker(soundLatLng, {
+                        icon: createSoundIcon(),
+                        zIndexOffset: 500
+                    }).addTo(leafletMap);
                 }
-                html += '</div>';
             }
+        }
 
-            html += '</div>';
-            return html;
+        function renderMapContainer() {
+            return '<div class="map-container"><div id="leafletMapContainer" style="width:100%;height:100%;"></div></div>';
         }
 
         function renderSoundPanel() {
@@ -1692,17 +1658,16 @@
 
         function render() {
             const screenContent = document.getElementById('screenContent');
-            let html = '';
 
             if (connectionStep === 0) {
-                html = `
+                screenContent.innerHTML = `
                     <div class="init-screen">
                         <div class="init-dot">\u25CF</div>
                         <p class="init-text">INITIALIZING TERMINAL...</p>
                     </div>
                 `;
             } else if (connectionStep === 1) {
-                html = `
+                screenContent.innerHTML = `
                     <div class="loading-screen">
                         <p>CONNECTING TO ISS TRACKER...</p>
                         <p>LOADING EARTH SOUND DATABASE...</p>
@@ -1711,39 +1676,69 @@
                     </div>
                 `;
             } else if (connectionStep === 2) {
-                const statusClass = isLoadingISS ? 'loading' : 'connected';
-                html = `
-                    <div class="minitel-header">
-                        <div class="header-left">
-                            <span class="header-number">ISS</span>
-                            <span class="header-iss">EARTH SOUND</span>
+                // Only build full layout once to preserve Leaflet map instance
+                if (!mapInitialized) {
+                    const statusClass = isLoadingISS ? 'loading' : 'connected';
+                    screenContent.innerHTML = `
+                        <div class="minitel-header" id="miniHeader">
+                            <div class="header-left">
+                                <span class="header-number">ISS</span>
+                                <span class="header-iss">EARTH SOUND</span>
+                            </div>
+                            <div class="header-right">
+                                <div class="status-dot ${statusClass}" id="statusDot"></div>
+                            </div>
                         </div>
-                        <div class="header-right">
-                            <div class="status-dot ${statusClass}"></div>
+
+                        <div style="flex: 1; display: flex; flex-direction: column; padding-top: 0.5rem;">
+                            <div class="title-bar">Listen to the World from Space</div>
+                            <div class="map-container">
+                                <div id="leafletMapContainer" style="width:100%;height:100%;"></div>
+                            </div>
+                            <div id="soundPanelSlot">${renderSoundPanel()}</div>
+                            <div id="telemetrySlot" style="display:${showTelemetry ? 'block' : 'none'}">${renderTelemetryPanel()}</div>
                         </div>
-                    </div>
 
-                    <div style="flex: 1; display: flex; flex-direction: column; padding-top: 0.5rem;">
-                        <div class="title-bar">Listen to the World from Space</div>
-                        ${renderGrid()}
-                        ${renderSoundPanel()}
-                        ${renderTelemetryPanel()}
-                    </div>
-
-                    <div class="footer">
-                        <span>${soundLocations.length.toLocaleString()} sounds</span>
-                        <span style="animation: ${isLoadingISS ? 'pulse 2s infinite' : 'none'}">${isLoadingISS ? 'RECEIVING...' : 'ONLINE'}</span>
-                        <div class="footer-buttons">
-                            <span class="footer-button" onclick="location.reload()">RELOAD</span>
+                        <div class="footer" id="footerSlot">
+                            <span id="footerSounds">${soundLocations.length.toLocaleString()} sounds</span>
+                            <span id="footerStatus" style="animation: ${isLoadingISS ? 'pulse 2s infinite' : 'none'}">${isLoadingISS ? 'RECEIVING...' : 'ONLINE'}</span>
+                            <div class="footer-buttons">
+                                <span class="footer-button" onclick="showTelemetry=!showTelemetry;render();">[I]NFO</span>
+                                <span class="footer-button" onclick="location.reload()">RELOAD</span>
+                            </div>
                         </div>
-                    </div>
-                `;
-            }
+                    `;
+                    // Init Leaflet after DOM is ready
+                    requestAnimationFrame(() => {
+                        initLeafletMap();
+                        updateLeafletMap();
+                    });
+                } else {
+                    // Incremental updates - only update dynamic parts
+                    const soundPanelSlot = document.getElementById('soundPanelSlot');
+                    if (soundPanelSlot) soundPanelSlot.innerHTML = renderSoundPanel();
 
-            screenContent.innerHTML = html;
+                    const telemetrySlot = document.getElementById('telemetrySlot');
+                    if (telemetrySlot) {
+                        telemetrySlot.style.display = showTelemetry ? 'block' : 'none';
+                        if (showTelemetry) telemetrySlot.innerHTML = renderTelemetryPanel();
+                    }
 
-            // Update volume slider after render
-            if (connectionStep === 2) {
+                    const statusDot = document.getElementById('statusDot');
+                    if (statusDot) {
+                        statusDot.className = `status-dot ${isLoadingISS ? 'loading' : 'connected'}`;
+                    }
+
+                    const footerSounds = document.getElementById('footerSounds');
+                    if (footerSounds) footerSounds.textContent = `${soundLocations.length.toLocaleString()} sounds`;
+
+                    const footerStatus = document.getElementById('footerStatus');
+                    if (footerStatus) {
+                        footerStatus.textContent = isLoadingISS ? 'RECEIVING...' : 'ONLINE';
+                        footerStatus.style.animation = isLoadingISS ? 'pulse 2s infinite' : 'none';
+                    }
+                }
+
                 updateVolumeSlider();
             }
         }
@@ -1777,6 +1772,14 @@
         function init() {
             render();
             startConnectionSequence();
+
+            // Toggle telemetry panel with 'I' key
+            document.addEventListener('keydown', (e) => {
+                if (e.key === 'i' || e.key === 'I') {
+                    showTelemetry = !showTelemetry;
+                    render();
+                }
+            });
 
             // Handle audio autoplay restrictions
             document.addEventListener('click', function initAudio() {

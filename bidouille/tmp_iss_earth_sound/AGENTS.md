@@ -185,35 +185,22 @@ soundLocation = {
 
 **Responsibilities**:
 - Renders different connection states (Init, Loading, Connected)
-- Draws ASCII world map with ISS position
+- Manages Leaflet interactive map with CRT-styled dark tiles
 - Displays sound information panel
 - Shows ISS telemetry data
-- Updates UI elements based on state
+- Uses incremental DOM updates to preserve Leaflet map instance
 
 **Key Functions**:
 - `render()`: Main rendering function
   - Determines current connection step
-  - Renders appropriate screen based on state
-  - Updates entire screen content
+  - On first connected render: builds full layout with Leaflet map container, inits map via `requestAnimationFrame`
+  - On subsequent renders: incrementally updates only dynamic slots (sound panel, telemetry, footer, status) to avoid destroying the Leaflet map instance
 
-- `renderGrid()`: Renders ASCII world map
-  - Converts ISS and sound locations to grid coordinates
-  - Draws world map using ASCII characters
-  - Marks ISS position with blinking 'X'
-  - Marks current sound location with pulsing 'S'
-  - Draws trace of recent ISS positions
-  - Uses different styles for land, water, ISS, sound, and trace
-
-- `renderVideotexChar(char, isIss, isTrace, isSoundLoc)`: Renders individual map cell
-  - Returns HTML for different cell types
-  - ISS: Blinking cyan background with 'X'
-  - Sound location: Pulsing magenta background with 'S'
-  - Land: White block character (█)
-  - Trace: Small cyan dots
-  - Water: Cyan dots
+- `renderMapContainer()`: Returns HTML for Leaflet map container div
+  - Creates `.map-container` wrapper with `#leafletMapContainer` inner div
 
 - `renderSoundPanel()`: Renders audio information panel
-  - Shows current sound location name
+  - Shows current sound location name and geographic context
   - Displays track title and artist
   - Shows distance to sound location
   - Renders animated sound level indicator
@@ -222,18 +209,12 @@ soundLocation = {
 - `renderTelemetryPanel()`: Renders ISS telemetry data
   - Displays latitude, longitude, altitude, velocity
   - Shows "SEARCHING SATELLITE..." when no data
-  - Formats values with appropriate units
-
-- `getGridPosition(lat, lon)`: Converts coordinates to grid position
-  - Maps latitude/longitude to 80x24 grid
-  - Uses standard map projection (Mercator-like)
+  - Formats values with appropriate units (N/S/E/W directions)
 
 **Connection States**:
 1. **Step 0 (Init)**: Shows "INITIALIZING TERMINAL..." with pulsing dot
 2. **Step 1 (Loading)**: Shows loading messages and progress
-3. **Step 2 (Connected)**: Shows full interface with map, sound panel, telemetry
-
-**Grid Dimensions**: 80 columns × 24 rows (GRID_W × GRID_H)
+3. **Step 2 (Connected)**: Shows full interface with Leaflet map, sound panel, telemetry
 
 ---
 
@@ -273,23 +254,61 @@ soundLocation = {
 
 ---
 
-## 7. Coordinate Mapping Agent
+## 7. Leaflet Map Agent
 
-**Purpose**: Handles coordinate transformations between geographic and grid space.
+**Purpose**: Manages the interactive Leaflet map with CRT-styled dark tiles.
 
 **Responsibilities**:
-- Converts latitude/longitude to grid coordinates
-- Maps real-world positions to ASCII map display
+- Initializes and configures Leaflet map instance
+- Manages custom DivIcon markers for ISS and sound locations
+- Draws orbital trace as a polyline
+- Auto-follows ISS position with smooth panning
+- Applies CRT aesthetic via CSS filters on tile layer
+
+**State Variables**:
+```javascript
+- leafletMap: Leaflet map instance
+- issMarker: L.marker for ISS position (DivIcon with blinking cyan "X" + pulse ring)
+- soundMarker: L.marker for sound location (DivIcon with pulsing magenta "S")
+- tracePolyline: L.polyline for orbital trace (cyan dashed line)
+- mapInitialized: Boolean flag to prevent re-initialization
+```
 
 **Key Functions**:
-- `getGridPosition(lat, lon)`: Converts geographic coordinates to grid
-  - Maps longitude [-180, 180] to x [0, GRID_W-1]
-  - Maps latitude [90, -90] to y [0, GRID_H-1]
-  - Uses simple linear projection
+- `createISSIcon()`: Returns a Leaflet DivIcon for the ISS
+  - 24x24px cyan square with "X" label
+  - Blinking animation (1s step-end)
+  - Expanding pulse ring animation (2s ease-out)
+  - Cyan box-shadow glow effect
 
-**Grid Mapping**:
-- X-axis: Longitude -180° (left) to +180° (right)
-- Y-axis: Latitude +90° (top) to -90° (bottom)
+- `createSoundIcon()`: Returns a Leaflet DivIcon for sound locations
+  - 20x20px magenta square with "S" label
+  - Pulse animation (1.5s)
+  - Magenta box-shadow glow effect
+
+- `initLeafletMap()`: Initializes the Leaflet map
+  - Creates map in `#leafletMapContainer` with zoom 3, centered at [20, 0]
+  - Adds CartoDB Dark Matter tile layer (`basemaps.cartocdn.com/dark_all`)
+  - Creates trace polyline (cyan, dashed, weight 2)
+  - Creates ISS marker at [0, 0] with high zIndex
+  - Disables zoom controls for clean CRT look
+  - Enables `worldCopyJump` for seamless wrapping
+
+- `updateLeafletMap()`: Updates map elements on each ISS position refresh
+  - Moves ISS marker to new position via `setLatLng()`
+  - Updates trace polyline with last 20 positions
+  - Smoothly pans map to follow ISS (`setView` with animate)
+  - Creates or updates sound marker position
+
+**Tile Layer Configuration**:
+- Provider: CartoDB Dark Matter (`dark_all`)
+- Subdomains: a, b, c, d
+- CSS filter: `brightness(2) contrast(1.1) sepia(0.5) hue-rotate(140deg) saturate(2.5)` for cyan CRT tint
+
+**Responsive Behavior**:
+- Desktop: 400px height
+- Tablet (768px): 280px height
+- Mobile (480px): 200px height, smaller marker icons (18px ISS, 16px sound)
 
 ---
 
@@ -323,7 +342,9 @@ Every 3 seconds:
     ↓ (if sound changed)
   Audio Playback Agent → playTrack()
     ↓
-  Rendering Agent → render()
+  Rendering Agent → render() (incremental DOM updates)
+    ↓
+  Leaflet Map Agent → updateLeafletMap() (marker/trace updates)
 ```
 
 ---
@@ -331,8 +352,6 @@ Every 3 seconds:
 ## Constants
 
 ```javascript
-GRID_W = 80                    // Map width in characters
-GRID_H = 24                    // Map height in characters
 ISS_REFRESH_RATE = 3000       // ISS update interval (ms)
 CROSSFADE_DURATION = 2000     // Audio crossfade duration (ms)
 SOUND_BATCH_SIZE = 5000       // Max sound locations to load
@@ -342,9 +361,16 @@ SOUND_BATCH_SIZE = 5000       // Max sound locations to load
 
 ## External Dependencies
 
+### Libraries
+- **Leaflet 1.9.4**: Interactive map library (loaded via unpkg CDN)
+  - CSS: `https://unpkg.com/leaflet@1.9.4/dist/leaflet.css`
+  - JS: `https://unpkg.com/leaflet@1.9.4/dist/leaflet.js`
+
 ### APIs
 - **ISS Tracker API**: `api.wheretheiss.at` - Real-time ISS position
 - **Archive.org API**: `archive.org` - Sound location database and audio files
+- **CartoDB Tile Server**: `basemaps.cartocdn.com/dark_all` - Dark Matter map tiles
+- **BigDataCloud Geocoding**: `api.bigdatacloud.net` - Reverse geocoding for location context
 
 ### Browser APIs
 - **Fetch API**: For HTTP requests
@@ -357,9 +383,48 @@ SOUND_BATCH_SIZE = 5000       // Max sound locations to load
 
 1. **Agent Pattern**: Each domain is handled by a dedicated agent
 2. **State Management**: Centralized state with reactive rendering
-3. **Observer Pattern**: Rendering updates when state changes
+3. **Incremental DOM Updates**: Rendering Agent updates only dynamic slots to preserve Leaflet map instance
 4. **Dual Buffer Pattern**: Two audio players for seamless crossfading
 5. **Polling Pattern**: Periodic ISS position updates
+6. **DivIcon Pattern**: Custom Leaflet markers using HTML/CSS for CRT-styled icons
+
+---
+
+## Changelog
+
+### v2.0 - Leaflet Map Migration (2026-02-06)
+
+**Replaced ASCII pixel map with interactive Leaflet map** while preserving the CRT/Minitel retro aesthetic.
+
+#### What Changed
+- **Map rendering**: Removed 80x24 Unicode block character grid (`WORLD_MAP_ASCII`, `renderGrid()`, `renderVideotexChar()`, `getGridPosition()`) and replaced with Leaflet.js interactive map using CartoDB Dark Matter tiles
+- **CRT filter on tiles**: CSS filter chain (`brightness + contrast + sepia + hue-rotate + saturate`) applies a cyan CRT tint to the dark map tiles
+- **ISS marker**: Custom `L.divIcon` with blinking cyan "X" and expanding pulse ring animation (replaces `.videotex-iss` grid cell)
+- **Sound marker**: Custom `L.divIcon` with pulsing magenta "S" (replaces `.videotex-sound` grid cell)
+- **Orbital trace**: Cyan dashed `L.polyline` connecting last 20 ISS positions (replaces `.videotex-trace` dots)
+- **Auto-follow**: Map smoothly pans to center on ISS every 3 seconds
+- **Incremental rendering**: `render()` refactored to build layout once, then update only dynamic slots (`#soundPanelSlot`, `#telemetrySlot`, `#footerSounds`, `#footerStatus`, `#statusDot`) to avoid destroying Leaflet map on re-renders
+- **Responsive map heights**: 400px (desktop), 280px (768px), 200px (480px) with smaller marker sizes on mobile
+
+#### What Stayed the Same
+- CRT overlay effects (scanlines, vignette, static noise, flicker) still layer over map
+- Signal quality system still adjusts CRT effects based on distance
+- Sound panel, telemetry panel, header, footer: unchanged
+- Audio playback with crossfade: unchanged
+- Connection sequence (Init → Loading → Connected): unchanged
+- All API integrations: unchanged
+
+#### Removed Code
+- `GRID_W`, `GRID_H` constants
+- `WORLD_MAP_ASCII` 80x24 character array
+- `getGridPosition(lat, lon)` coordinate mapping function
+- `renderVideotexChar()` cell renderer
+- `renderGrid()` ASCII map builder
+- All `.map-row`, `.map-cell`, `.videotex-*` CSS classes
+
+#### Added Dependencies
+- Leaflet 1.9.4 (CSS + JS via unpkg CDN)
+- CartoDB Dark Matter tile server
 
 ---
 
@@ -371,6 +436,6 @@ Potential improvements for each agent:
 2. **ISS Tracker Agent**: WebSocket for real-time updates, error recovery
 3. **Sound Location Agent**: Caching, incremental loading, search filtering
 4. **Audio Playback Agent**: Preloading, buffering, equalizer
-5. **Rendering Agent**: Canvas rendering, animations, themes
+5. **Rendering Agent**: Themes, additional CRT filter presets
 6. **Connection Sequence Agent**: Retry logic, offline mode
-7. **Coordinate Mapping Agent**: Better map projections, zoom levels
+7. **Leaflet Map Agent**: Zoom level linked to ISS altitude, click-to-play sounds, tile provider options
