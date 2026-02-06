@@ -1143,8 +1143,6 @@
         // AbortController for cancelling stale requests (Fix #5)
         let currentFetchController = null;
         
-        // Map initialization state (Fix #6: 3-state flag)
-        let mapInitState = 'pending'; // 'pending' | 'initializing' | 'ready'
         
         // Render debouncing (Fix #7)
         let renderScheduled = false;
@@ -1674,65 +1672,44 @@
         }
 
         function initLeafletMap() {
-            // Fix #6: Use 3-state flag to prevent race conditions
-            if (mapInitState === 'ready' || mapInitState === 'initializing') {
-                return;
-            }
-            
-            // Fix #9: Ensure Leaflet is loaded (if deferred)
-            if (typeof L === 'undefined') {
-                // Wait for Leaflet to load
-                setTimeout(initLeafletMap, 50);
-                return;
-            }
-            
-            mapInitState = 'initializing';
+            if (mapInitialized) return;
 
             const container = document.getElementById('leafletMapContainer');
-            if (!container) {
-                mapInitState = 'pending';
-                return;
-            }
+            if (!container) return;
 
-            try {
-                leafletMap = L.map('leafletMapContainer', {
-                    center: [20, 0],
-                    zoom: 3,
-                    minZoom: 2,
-                    maxZoom: 6,
-                    zoomControl: false,
-                    attributionControl: true,
-                    worldCopyJump: true
-                });
+            leafletMap = L.map('leafletMapContainer', {
+                center: [20, 0],
+                zoom: 3,
+                minZoom: 2,
+                maxZoom: 6,
+                zoomControl: false,
+                attributionControl: true,
+                worldCopyJump: true
+            });
 
-                // CartoDB Dark Matter tiles
-                L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png', {
-                    attribution: '&copy; <a href="https://carto.com/">CARTO</a>',
-                    subdomains: 'abcd',
-                    maxZoom: 19
-                }).addTo(leafletMap);
+            // CartoDB Dark Matter tiles
+            L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png', {
+                attribution: '&copy; <a href="https://carto.com/">CARTO</a>',
+                subdomains: 'abcd',
+                maxZoom: 19
+            }).addTo(leafletMap);
 
-                // Trace polyline
-                tracePolyline = L.polyline([], {
-                    color: '#00FFFF',
-                    weight: 2,
-                    opacity: 0.6,
-                    smoothFactor: 1,
-                    dashArray: '6, 4'
-                }).addTo(leafletMap);
+            // Trace polyline
+            tracePolyline = L.polyline([], {
+                color: '#00FFFF',
+                weight: 2,
+                opacity: 0.6,
+                smoothFactor: 1,
+                dashArray: '6, 4'
+            }).addTo(leafletMap);
 
-                // ISS marker
-                issMarker = L.marker([0, 0], {
-                    icon: createISSIcon(),
-                    zIndexOffset: 1000
-                }).addTo(leafletMap);
+            // ISS marker
+            issMarker = L.marker([0, 0], {
+                icon: createISSIcon(),
+                zIndexOffset: 1000
+            }).addTo(leafletMap);
 
-                mapInitState = 'ready';
-                mapInitialized = true; // Keep for backward compatibility
-            } catch (error) {
-                console.error('Map initialization error:', error);
-                mapInitState = 'pending';
-            }
+            mapInitialized = true;
         }
 
         function updateLeafletMap() {
@@ -1978,8 +1955,8 @@
                     </div>
                 `;
             } else if (connectionStep === 2) {
-                // Fix #6: Only build full layout once to preserve Leaflet map instance
-                if (mapInitState !== 'ready') {
+                // Only build full layout once to preserve Leaflet map instance
+                if (!mapInitialized) {
                     const statusClass = isLoadingISS ? 'loading' : 'connected';
                     screenContent.innerHTML = `
                         <div class="minitel-header" id="miniHeader">
@@ -1997,7 +1974,8 @@
                                 <div id="leafletMapContainer" style="width:100%;height:100%;"></div>
                             </div>
                             <div id="soundPanelSlot">${renderSoundPanel()}</div>
-                            <div id="telemetrySlot" style="visibility:${showTelemetry ? 'visible' : 'hidden'}">${renderTelemetryPanel()}</div>
+                            <!-- Hide telemetry with display:none to free footer space when off -->
+                            <div id="telemetrySlot" style="display:${showTelemetry ? 'block' : 'none'}">${renderTelemetryPanel()}</div>
                         </div>
 
                         <div class="footer" id="footerSlot">
@@ -2016,12 +1994,13 @@
                     });
                 } else {
                     // Incremental updates - only update dynamic parts
-                    // Fix #4: Use targeted update function that preserves volume slider
-                    updateSoundPanel();
+                    const soundPanelSlot = document.getElementById('soundPanelSlot');
+                    if (soundPanelSlot) soundPanelSlot.innerHTML = renderSoundPanel();
 
                     const telemetrySlot = document.getElementById('telemetrySlot');
                     if (telemetrySlot) {
-                        telemetrySlot.style.visibility = showTelemetry ? 'visible' : 'hidden';
+                        // Use display:none so the hidden panel doesn't take vertical space
+                        telemetrySlot.style.display = showTelemetry ? 'block' : 'none';
                         telemetrySlot.innerHTML = renderTelemetryPanel();
                     }
 
