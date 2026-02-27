@@ -30,14 +30,16 @@ let speed = 0;
 let targetSpeed = 1.2;
 let noiseOff = 0;
 let pauseTimer = 0;
-let margin = 120;
+let creatureRadius = 200;
+let margin;
 
 function setup() {
   createCanvas(windowWidth, windowHeight);
   stroke(255, 120);
-  cx = width / 2;
-  cy = height / 2;
+  cx = random(creatureRadius, width - creatureRadius);
+  cy = random(creatureRadius, height - creatureRadius);
   heading = random(TWO_PI);
+  margin = creatureRadius + 40;
 }
 
 function organism(x, y) {
@@ -102,15 +104,16 @@ function draw() {
   cx += vx;
   cy += vy;
 
-  // Rebond doux sur les bords — la créature tourne progressivement
-  if (cx < margin) heading = lerp(heading, 0, 0.05);
-  if (cx > width - margin) heading = lerp(heading, PI, 0.05);
-  if (cy < margin) heading = lerp(heading, HALF_PI, 0.05);
-  if (cy > height - margin) heading = lerp(heading, -HALF_PI, 0.05);
+  // Rebond doux sur les bords — la créature tourne vers le centre
+  let steerStrength = 0.1;
+  if (cx < margin) { heading = lerp(heading, 0, steerStrength); speed *= 0.95; }
+  if (cx > width - margin) { heading = lerp(heading, PI, steerStrength); speed *= 0.95; }
+  if (cy < margin) { heading = lerp(heading, HALF_PI, steerStrength); speed *= 0.95; }
+  if (cy > height - margin) { heading = lerp(heading, -HALF_PI, steerStrength); speed *= 0.95; }
 
-  // Sécurité : ne jamais sortir de l'écran
-  cx = constrain(cx, 0, width);
-  cy = constrain(cy, 0, height);
+  // Sécurité : ne jamais sortir de l'écran (avec marge pour la taille)
+  cx = constrain(cx, creatureRadius, width - creatureRadius);
+  cy = constrain(cy, creatureRadius, height - creatureRadius);
 
   for (let i = 0; i < 10000; i++) {
     let x = i % 80;
