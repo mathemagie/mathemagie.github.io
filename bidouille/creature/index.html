@@ -23,10 +23,21 @@
 <body>
 <script>
 let t = 0;
+let cx, cy;
+let vx = 0, vy = 0;
+let heading = 0;
+let speed = 0;
+let targetSpeed = 1.2;
+let noiseOff = 0;
+let pauseTimer = 0;
+let margin = 120;
 
 function setup() {
-  createCanvas(400, 400);
+  createCanvas(windowWidth, windowHeight);
   stroke(255, 120);
+  cx = width / 2;
+  cy = height / 2;
+  heading = random(TWO_PI);
 }
 
 function organism(x, y) {
@@ -42,15 +53,64 @@ function organism(x, y) {
 
   let c = d / 2 + e / 99 - t / 18;
 
-  let xCoord = (q + wave) * sin(c) + 200;
-  let yCoord = (q + d * 9) * cos(c) + 200;
+  let s = 2;
+  let xCoord = (q + wave) * s * sin(c) + cx;
+  let yCoord = (q + d * 9) * s * cos(c) + cy;
 
   point(xCoord, yCoord);
 }
 
+function windowResized() {
+  resizeCanvas(windowWidth, windowHeight);
+}
+
 function draw() {
-  background(9);
+  background(0);
   t += PI / 20;
+  noiseOff += 0.003;
+
+  // Pause aléatoire — la créature s'arrête parfois
+  if (pauseTimer > 0) {
+    pauseTimer--;
+    targetSpeed = 0;
+    if (pauseTimer === 0) {
+      targetSpeed = random(0.6, 2.0);
+      heading += random(-PI / 2, PI / 2);
+    }
+  } else if (random() < 0.003) {
+    pauseTimer = floor(random(30, 120));
+  }
+
+  // Vitesse variable — accélère et ralentit doucement
+  let speedNoise = noise(noiseOff * 2 + 100);
+  let desiredSpeed = targetSpeed * map(speedNoise, 0, 1, 0.3, 1.5);
+  speed = lerp(speed, desiredSpeed, 0.02);
+
+  // Direction avec Perlin noise — virages doux et naturels
+  let turnAmount = (noise(noiseOff) - 0.5) * 0.08;
+  heading += turnAmount;
+
+  // Petites saccades occasionnelles
+  if (random() < 0.008) {
+    heading += random(-PI / 4, PI / 4);
+    speed *= 1.5;
+  }
+
+  // Vélocité
+  vx = cos(heading) * speed;
+  vy = sin(heading) * speed;
+  cx += vx;
+  cy += vy;
+
+  // Rebond doux sur les bords — la créature tourne progressivement
+  if (cx < margin) heading = lerp(heading, 0, 0.05);
+  if (cx > width - margin) heading = lerp(heading, PI, 0.05);
+  if (cy < margin) heading = lerp(heading, HALF_PI, 0.05);
+  if (cy > height - margin) heading = lerp(heading, -HALF_PI, 0.05);
+
+  // Sécurité : ne jamais sortir de l'écran
+  cx = constrain(cx, 0, width);
+  cy = constrain(cy, 0, height);
 
   for (let i = 0; i < 10000; i++) {
     let x = i % 80;
