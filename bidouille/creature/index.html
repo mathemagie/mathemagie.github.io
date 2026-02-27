@@ -35,14 +35,14 @@ let margin;
 
 function setup() {
   createCanvas(windowWidth, windowHeight);
-  stroke(255, 120);
+  colorMode(HSB, 360, 100, 100, 255);
   cx = random(creatureRadius, width - creatureRadius);
   cy = random(creatureRadius, height - creatureRadius);
   heading = random(TWO_PI);
   margin = creatureRadius + 40;
 }
 
-function organism(x, y) {
+function organism(x, y, pulse) {
   let k = 5 * cos(x / 14) * cos(y / 30);
   let e = y / 8 - 13;
 
@@ -59,6 +59,12 @@ function organism(x, y) {
   let xCoord = (q + wave) * s * sin(c) + cx;
   let yCoord = (q + d * 9) * s * cos(c) + cy;
 
+  // Teinte cyan-vert bioluminescente — le glow vient de blendMode(ADD)
+  let hue = 170 + 25 * sin(t * 0.5 + d * 0.4);
+  let brightness = map(d, 4, 15, 100, 65);
+  let a = pulse * map(d, 4, 15, 180, 50);
+
+  stroke(hue, 75, brightness, a);
   point(xCoord, yCoord);
 }
 
@@ -67,7 +73,6 @@ function windowResized() {
 }
 
 function draw() {
-  background(0);
   t += PI / 20;
   noiseOff += 0.003;
 
@@ -115,11 +120,25 @@ function draw() {
   cx = constrain(cx, creatureRadius, width - creatureRadius);
   cy = constrain(cy, creatureRadius, height - creatureRadius);
 
+  // Traînée lumineuse avec blend normal
+  blendMode(BLEND);
+  noStroke();
+  fill(0, 0, 0, 40);
+  rect(0, 0, width, height);
+
+  // Pulse de luminosité — respiration lumineuse
+  let pulse = map(sin(t * 0.4), -1, 1, 0.7, 1.0);
+
+  // Une seule passe — blendMode(ADD) crée le glow naturellement :
+  // les zones denses s'additionnent et brillent plus fort
+  blendMode(ADD);
+  strokeWeight(1.5);
   for (let i = 0; i < 10000; i++) {
     let x = i % 80;
     let y = i / 43;
-    organism(x, y);
+    organism(x, y, pulse);
   }
+  blendMode(BLEND);
 }
 </script>
 </body>
