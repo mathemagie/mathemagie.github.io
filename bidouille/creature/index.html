@@ -311,16 +311,17 @@ function organism(x, y, pulse) {
   let xCoord = (q + wave) * params.scale * sin(c) + cx;
   let yCoord = (q + d * 9) * params.scale * cos(c) + cy;
 
-  // Couleur organique — rouge profond au cœur, rouge sombre aux extrémités
-  let baseHue = map(d, 4, 15, 0, 20);
+  // Couleur organique — varie selon la profondeur, position et temps
+  // Cœur chaud (vert-doré ~90°) vers périphérie froide (bleu profond ~210°)
+  let baseHue = map(d, 4, 15, 100, 210);
   // Variation Perlin par zone — chaque partie pulse sa propre teinte
-  let hueNoise = noise(x * 0.05, y * 0.05, t * 0.02) * 15 - 7;
+  let hueNoise = noise(x * 0.05, y * 0.05, t * 0.02) * 40 - 20;
   // Ondulation temporelle lente
-  let hueWave = 8 * sin(t * 0.3 + d * 0.5 + c * 0.2);
-  let hue = (baseHue + hueNoise + hueWave + 360) % 360;
+  let hueWave = 15 * sin(t * 0.3 + d * 0.5 + c * 0.2);
+  let hue = baseHue + hueNoise + hueWave;
 
-  // Saturation riche
-  let sat = map(d, 4, 15, 85, 95);
+  // Saturation plus riche au cœur, plus pâle aux extrémités
+  let sat = map(d, 4, 15, 60, 90);
   let brightness = map(d, 4, 15, 100, 55);
   let a = pulse * map(d, 4, 15, 180, 50);
 
