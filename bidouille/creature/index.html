@@ -18,9 +18,99 @@
     canvas {
       display: block;
     }
+    #hud {
+      position: fixed;
+      top: 16px;
+      right: 16px;
+      width: 260px;
+      background: rgba(0, 0, 0, 0.75);
+      border: 1px solid rgba(100, 220, 255, 0.15);
+      border-radius: 8px;
+      padding: 16px;
+      font-family: monospace;
+      font-size: 11px;
+      color: rgba(140, 220, 240, 0.9);
+      z-index: 10;
+      display: none;
+      backdrop-filter: blur(6px);
+      user-select: none;
+    }
+    #hud.visible { display: block; }
+    #hud h3 {
+      margin: 0 0 10px 0;
+      font-size: 12px;
+      color: rgba(140, 220, 240, 0.5);
+      text-transform: uppercase;
+      letter-spacing: 2px;
+      border-bottom: 1px solid rgba(100, 220, 255, 0.1);
+      padding-bottom: 6px;
+    }
+    #hud label {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin: 6px 0 2px 0;
+    }
+    #hud label span { opacity: 0.6; }
+    #hud input[type="range"] {
+      width: 100%;
+      height: 3px;
+      -webkit-appearance: none;
+      appearance: none;
+      background: rgba(100, 220, 255, 0.15);
+      border-radius: 2px;
+      outline: none;
+      margin: 2px 0 8px 0;
+    }
+    #hud input[type="range"]::-webkit-slider-thumb {
+      -webkit-appearance: none;
+      width: 10px;
+      height: 10px;
+      border-radius: 50%;
+      background: rgba(120, 220, 255, 0.7);
+      cursor: pointer;
+    }
+    #hud .section { margin-top: 12px; }
+    #hint {
+      position: fixed;
+      bottom: 12px;
+      right: 16px;
+      font-family: monospace;
+      font-size: 10px;
+      color: rgba(140, 220, 240, 0.25);
+      z-index: 10;
+    }
   </style>
 </head>
 <body>
+<div id="hud">
+  <h3>visuel</h3>
+  <label>taille <span id="v_scale">2.0</span></label>
+  <input type="range" id="s_scale" min="0.5" max="5" step="0.1" value="2">
+  <label>densit&eacute; <span id="v_density">10000</span></label>
+  <input type="range" id="s_density" min="2000" max="20000" step="500" value="10000">
+  <label>tra&icirc;n&eacute;e <span id="v_trail">40</span></label>
+  <input type="range" id="s_trail" min="5" max="120" step="1" value="40">
+  <label>&eacute;paisseur <span id="v_weight">1.5</span></label>
+  <input type="range" id="s_weight" min="0.3" max="4" step="0.1" value="1.5">
+
+  <div class="section">
+    <h3>mouvement</h3>
+    <label>vitesse max <span id="v_speed">1.8</span></label>
+    <input type="range" id="s_speed" min="0.2" max="4" step="0.1" value="1.8">
+    <label>ondulation <span id="v_sway">1.0</span></label>
+    <input type="range" id="s_sway" min="0" max="3" step="0.1" value="1">
+    <label>courant <span id="v_current">0.15</span></label>
+    <input type="range" id="s_current" min="0" max="0.6" step="0.01" value="0.15">
+  </div>
+
+  <div class="section">
+    <h3>audio</h3>
+    <label>volume <span id="v_vol">15</span>%</label>
+    <input type="range" id="s_vol" min="0" max="50" step="1" value="15">
+  </div>
+</div>
+<div id="hint">[H] param&egrave;tres</div>
 <script>
 let t = 0;
 let cx, cy;
@@ -33,6 +123,37 @@ let pauseTimer = 0;
 let creatureRadius = 200;
 let margin;
 let swayOffset = 0;
+
+// --- Paramètres contrôlables via HUD ---
+let params = {
+  scale: 2, density: 10000, trail: 40, weight: 1.5,
+  maxSpeed: 1.8, sway: 1, current: 0.15, volume: 15
+};
+let hudVisible = false;
+
+function readHUD() {
+  params.scale   = parseFloat(document.getElementById('s_scale').value);
+  params.density = parseInt(document.getElementById('s_density').value);
+  params.trail   = parseInt(document.getElementById('s_trail').value);
+  params.weight  = parseFloat(document.getElementById('s_weight').value);
+  params.maxSpeed = parseFloat(document.getElementById('s_speed').value);
+  params.sway    = parseFloat(document.getElementById('s_sway').value);
+  params.current = parseFloat(document.getElementById('s_current').value);
+  params.volume  = parseInt(document.getElementById('s_vol').value);
+
+  document.getElementById('v_scale').textContent   = params.scale.toFixed(1);
+  document.getElementById('v_density').textContent  = params.density;
+  document.getElementById('v_trail').textContent    = params.trail;
+  document.getElementById('v_weight').textContent   = params.weight.toFixed(1);
+  document.getElementById('v_speed').textContent    = params.maxSpeed.toFixed(1);
+  document.getElementById('v_sway').textContent     = params.sway.toFixed(1);
+  document.getElementById('v_current').textContent  = params.current.toFixed(2);
+  document.getElementById('v_vol').textContent      = params.volume;
+
+  if (audioStarted) {
+    masterGain.gain.linearRampToValueAtTime(params.volume / 100, audioCtx.currentTime + 0.1);
+  }
+}
 
 // --- Paysage sonore abyssal du cténophore ---
 let audioCtx, audioStarted = false;
@@ -187,9 +308,8 @@ function organism(x, y, pulse) {
 
   let c = d / 2 + e / 99 - t / 18;
 
-  let s = 2;
-  let xCoord = (q + wave) * s * sin(c) + cx;
-  let yCoord = (q + d * 9) * s * cos(c) + cy;
+  let xCoord = (q + wave) * params.scale * sin(c) + cx;
+  let yCoord = (q + d * 9) * params.scale * cos(c) + cy;
 
   // Couleur organique — varie selon la profondeur, position et temps
   // Cœur chaud (vert-doré ~90°) vers périphérie froide (bleu profond ~210°)
@@ -213,20 +333,28 @@ function mousePressed() {
   if (!audioStarted) initAudio();
 }
 
+function keyPressed() {
+  if (key === 'h' || key === 'H') {
+    hudVisible = !hudVisible;
+    document.getElementById('hud').classList.toggle('visible', hudVisible);
+  }
+}
+
 function windowResized() {
   resizeCanvas(windowWidth, windowHeight);
 }
 
 function draw() {
+  readHUD();
   t += PI / 20;
   noiseOff += 0.003;
 
   // Pause — la créature ralentit mais dérive encore (jamais immobile)
   if (pauseTimer > 0) {
     pauseTimer--;
-    targetSpeed = 0.15; // dérive lente au lieu d'arrêt total
+    targetSpeed = 0.15;
     if (pauseTimer <= 0) {
-      targetSpeed = random(0.6, 1.8);
+      targetSpeed = random(0.6, params.maxSpeed);
     }
   } else if (random() < 0.002) {
     pauseTimer = floor(random(60, 180));
@@ -238,20 +366,18 @@ function draw() {
   speed = lerp(speed, desiredSpeed, 0.015);
 
   // Direction — deux couches de Perlin à fréquences différentes
-  // Couche lente : grandes courbes (comme suivre un courant)
   let slowTurn = (noise(noiseOff * 0.7) - 0.5) * 0.04;
-  // Couche rapide : micro-corrections (comme des nageoires)
   let fastTurn = (noise(noiseOff * 3 + 50) - 0.5) * 0.03;
   heading += slowTurn + fastTurn;
 
-  // Ondulation latérale — la créature oscille perpendiculairement à sa direction
-  swayOffset = sin(t * 0.6) * 0.8 + sin(t * 1.1) * 0.3;
+  // Ondulation latérale — amplitude contrôlable
+  swayOffset = (sin(t * 0.6) * 0.8 + sin(t * 1.1) * 0.3) * params.sway;
   let swayX = cos(heading + HALF_PI) * swayOffset;
   let swayY = sin(heading + HALF_PI) * swayOffset;
 
-  // Courant ambiant — un champ de force Perlin global pousse doucement
+  // Courant ambiant — force contrôlable
   let currentAngle = noise(cx * 0.001, cy * 0.001, t * 0.01) * TWO_PI * 2;
-  let currentStrength = 0.15;
+  let currentStrength = params.current;
 
   // Vélocité = direction + ondulation + courant
   vx = cos(heading) * speed + swayX + cos(currentAngle) * currentStrength;
@@ -287,20 +413,19 @@ function draw() {
   cx = constrain(cx, creatureRadius, width - creatureRadius);
   cy = constrain(cy, creatureRadius, height - creatureRadius);
 
-  // Traînée lumineuse avec blend normal
+  // Traînée lumineuse — opacité contrôlable
   blendMode(BLEND);
   noStroke();
-  fill(0, 0, 0, 40);
+  fill(0, 0, 0, params.trail);
   rect(0, 0, width, height);
 
   // Pulse de luminosité — respiration lumineuse
   let pulse = map(sin(t * 0.4), -1, 1, 0.7, 1.0);
 
-  // Une seule passe — blendMode(ADD) crée le glow naturellement :
-  // les zones denses s'additionnent et brillent plus fort
+  // Une seule passe — blendMode(ADD) crée le glow naturellement
   blendMode(ADD);
-  strokeWeight(1.5);
-  for (let i = 0; i < 10000; i++) {
+  strokeWeight(params.weight);
+  for (let i = 0; i < params.density; i++) {
     let x = i % 80;
     let y = i / 43;
     organism(x, y, pulse);
