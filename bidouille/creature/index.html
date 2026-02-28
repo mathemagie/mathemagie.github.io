@@ -34,6 +34,137 @@ let creatureRadius = 200;
 let margin;
 let swayOffset = 0;
 
+// --- Paysage sonore abyssal du cténophore ---
+let audioCtx, audioStarted = false;
+let masterGain;
+// Eau profonde — ambiance hydrophone abyssale
+let deepNoiseNode, deepNoiseGain, deepFilter;
+// Pulsation des cils — battement rythmique filtré
+let ciliaNoiseNode, ciliaGain, ciliaFilter;
+// Résonance corporelle — vibration de la masse gélatineuse
+let bodyOsc, bodyGain;
+// Clics organiques — micro-impulsions biologiques
+let clickTimer = 0;
+
+function createNoiseBuffer() {
+  let bufferSize = audioCtx.sampleRate * 2;
+  let buffer = audioCtx.createBuffer(1, bufferSize, audioCtx.sampleRate);
+  let data = buffer.getChannelData(0);
+  for (let i = 0; i < bufferSize; i++) {
+    data[i] = Math.random() * 2 - 1;
+  }
+  return buffer;
+}
+
+function initAudio() {
+  audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+  masterGain = audioCtx.createGain();
+  masterGain.gain.value = 0.15;
+  masterGain.connect(audioCtx.destination);
+
+  let noiseBuf = createNoiseBuffer();
+
+  // --- Eau profonde : bruit très grave, filtré passe-bas ---
+  // Simule l'ambiance hydrophone des abysses (~5-80 Hz)
+  deepNoiseNode = audioCtx.createBufferSource();
+  deepNoiseNode.buffer = noiseBuf;
+  deepNoiseNode.loop = true;
+  deepFilter = audioCtx.createBiquadFilter();
+  deepFilter.type = 'lowpass';
+  deepFilter.frequency.value = 60;
+  deepFilter.Q.value = 3;
+  deepNoiseGain = audioCtx.createGain();
+  deepNoiseGain.gain.value = 0.5;
+  deepNoiseNode.connect(deepFilter);
+  deepFilter.connect(deepNoiseGain);
+  deepNoiseGain.connect(masterGain);
+  deepNoiseNode.start();
+
+  // --- Pulsation des cils : bruit bandpass pulsé ---
+  // Simule le battement des 8 rangées de cils du cténophore
+  ciliaNoiseNode = audioCtx.createBufferSource();
+  ciliaNoiseNode.buffer = noiseBuf;
+  ciliaNoiseNode.loop = true;
+  ciliaFilter = audioCtx.createBiquadFilter();
+  ciliaFilter.type = 'bandpass';
+  ciliaFilter.frequency.value = 300;
+  ciliaFilter.Q.value = 8;
+  ciliaGain = audioCtx.createGain();
+  ciliaGain.gain.value = 0;
+  ciliaNoiseNode.connect(ciliaFilter);
+  ciliaFilter.connect(ciliaGain);
+  ciliaGain.connect(masterGain);
+  ciliaNoiseNode.start();
+
+  // --- Résonance corporelle : sinusoïde très grave ---
+  // Vibration de la masse gélatineuse, suit le mouvement
+  bodyOsc = audioCtx.createOscillator();
+  bodyOsc.type = 'sine';
+  bodyOsc.frequency.value = 38;
+  bodyGain = audioCtx.createGain();
+  bodyGain.gain.value = 0;
+  bodyOsc.connect(bodyGain);
+  bodyGain.connect(masterGain);
+  bodyOsc.start();
+
+  audioStarted = true;
+}
+
+function triggerClick() {
+  // Micro-impulsion : simule les clics biologiques sous-marins
+  // (crevettes pistolet, craquements organiques captés par hydrophone)
+  let clickOsc = audioCtx.createOscillator();
+  clickOsc.type = 'sine';
+  clickOsc.frequency.value = 800 + Math.random() * 2000;
+  let clickGain = audioCtx.createGain();
+  let clickFilter = audioCtx.createBiquadFilter();
+  clickFilter.type = 'bandpass';
+  clickFilter.frequency.value = 1200 + Math.random() * 800;
+  clickFilter.Q.value = 15;
+  clickOsc.connect(clickFilter);
+  clickFilter.connect(clickGain);
+  clickGain.connect(masterGain);
+
+  let now = audioCtx.currentTime;
+  clickGain.gain.setValueAtTime(0, now);
+  clickGain.gain.linearRampToValueAtTime(0.06 + Math.random() * 0.04, now + 0.002);
+  clickGain.gain.exponentialRampToValueAtTime(0.001, now + 0.03 + Math.random() * 0.04);
+
+  clickOsc.start(now);
+  clickOsc.stop(now + 0.08);
+}
+
+function updateAudio(pulse, spd) {
+  if (!audioStarted) return;
+  let now = audioCtx.currentTime;
+
+  // Eau profonde — le filtre s'ouvre légèrement quand la créature bouge
+  let deepFreq = 50 + spd * 30 + Math.sin(t * 0.08) * 15;
+  deepFilter.frequency.linearRampToValueAtTime(deepFreq, now + 0.2);
+  deepNoiseGain.gain.linearRampToValueAtTime(0.35 + Math.sin(t * 0.12) * 0.1, now + 0.2);
+
+  // Pulsation des cils — gain modulé par la respiration de la créature
+  // Le son apparait et disparait rythmiquement, comme les battements de cils
+  let ciliaPulse = Math.pow(Math.max(0, Math.sin(t * 0.8)), 3) * 0.25;
+  ciliaGain.gain.linearRampToValueAtTime(ciliaPulse, now + 0.05);
+  // La fréquence des cils varie avec la vitesse
+  ciliaFilter.frequency.linearRampToValueAtTime(250 + spd * 200, now + 0.1);
+
+  // Résonance corporelle — suit le mouvement, pulse avec la respiration
+  let bodyVol = (0.08 + spd * 0.12) * pulse;
+  bodyGain.gain.linearRampToValueAtTime(bodyVol, now + 0.15);
+  // Fréquence dérive très lentement (masse gélatineuse qui vibre)
+  bodyOsc.frequency.linearRampToValueAtTime(35 + Math.sin(t * 0.1) * 6 + spd * 8, now + 0.2);
+
+  // Clics organiques — déclenchés aléatoirement, plus fréquents quand la créature bouge
+  clickTimer--;
+  if (clickTimer <= 0) {
+    triggerClick();
+    // Intervalle aléatoire : 15-90 frames (plus fréquent si rapide)
+    clickTimer = Math.floor(15 + Math.random() * 75 * (1 - Math.min(spd, 1.5) / 2));
+  }
+}
+
 function setup() {
   createCanvas(windowWidth, windowHeight);
   colorMode(HSB, 360, 100, 100, 255);
@@ -76,6 +207,10 @@ function organism(x, y, pulse) {
 
   stroke(hue, sat, brightness, a);
   point(xCoord, yCoord);
+}
+
+function mousePressed() {
+  if (!audioStarted) initAudio();
 }
 
 function windowResized() {
@@ -171,6 +306,9 @@ function draw() {
     organism(x, y, pulse);
   }
   blendMode(BLEND);
+
+  // Synchroniser le son avec l'état de la créature
+  updateAudio(pulse, speed);
 }
 </script>
 </body>
