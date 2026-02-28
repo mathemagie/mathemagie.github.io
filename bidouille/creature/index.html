@@ -32,6 +32,7 @@ let noiseOff = 0;
 let pauseTimer = 0;
 let creatureRadius = 200;
 let margin;
+let swayOffset = 0;
 
 function setup() {
   createCanvas(windowWidth, windowHeight);
@@ -59,12 +60,21 @@ function organism(x, y, pulse) {
   let xCoord = (q + wave) * s * sin(c) + cx;
   let yCoord = (q + d * 9) * s * cos(c) + cy;
 
-  // Teinte cyan-vert bioluminescente — le glow vient de blendMode(ADD)
-  let hue = 170 + 25 * sin(t * 0.5 + d * 0.4);
-  let brightness = map(d, 4, 15, 100, 65);
+  // Couleur organique — varie selon la profondeur, position et temps
+  // Cœur chaud (vert-doré ~90°) vers périphérie froide (bleu profond ~210°)
+  let baseHue = map(d, 4, 15, 100, 210);
+  // Variation Perlin par zone — chaque partie pulse sa propre teinte
+  let hueNoise = noise(x * 0.05, y * 0.05, t * 0.02) * 40 - 20;
+  // Ondulation temporelle lente
+  let hueWave = 15 * sin(t * 0.3 + d * 0.5 + c * 0.2);
+  let hue = baseHue + hueNoise + hueWave;
+
+  // Saturation plus riche au cœur, plus pâle aux extrémités
+  let sat = map(d, 4, 15, 60, 90);
+  let brightness = map(d, 4, 15, 100, 55);
   let a = pulse * map(d, 4, 15, 180, 50);
 
-  stroke(hue, 75, brightness, a);
+  stroke(hue, sat, brightness, a);
   point(xCoord, yCoord);
 }
 
@@ -76,47 +86,69 @@ function draw() {
   t += PI / 20;
   noiseOff += 0.003;
 
-  // Pause aléatoire — la créature s'arrête parfois
+  // Pause — la créature ralentit mais dérive encore (jamais immobile)
   if (pauseTimer > 0) {
     pauseTimer--;
-    targetSpeed = 0;
-    if (pauseTimer === 0) {
-      targetSpeed = random(0.6, 2.0);
-      heading += random(-PI / 2, PI / 2);
+    targetSpeed = 0.15; // dérive lente au lieu d'arrêt total
+    if (pauseTimer <= 0) {
+      targetSpeed = random(0.6, 1.8);
     }
-  } else if (random() < 0.003) {
-    pauseTimer = floor(random(30, 120));
+  } else if (random() < 0.002) {
+    pauseTimer = floor(random(60, 180));
   }
 
-  // Vitesse variable — accélère et ralentit doucement
-  let speedNoise = noise(noiseOff * 2 + 100);
-  let desiredSpeed = targetSpeed * map(speedNoise, 0, 1, 0.3, 1.5);
-  speed = lerp(speed, desiredSpeed, 0.02);
+  // Vitesse — Perlin noise pour des accélérations/décélérations organiques
+  let speedNoise = noise(noiseOff * 1.5 + 100);
+  let desiredSpeed = targetSpeed * map(speedNoise, 0, 1, 0.4, 1.4);
+  speed = lerp(speed, desiredSpeed, 0.015);
 
-  // Direction avec Perlin noise — virages doux et naturels
-  let turnAmount = (noise(noiseOff) - 0.5) * 0.08;
-  heading += turnAmount;
+  // Direction — deux couches de Perlin à fréquences différentes
+  // Couche lente : grandes courbes (comme suivre un courant)
+  let slowTurn = (noise(noiseOff * 0.7) - 0.5) * 0.04;
+  // Couche rapide : micro-corrections (comme des nageoires)
+  let fastTurn = (noise(noiseOff * 3 + 50) - 0.5) * 0.03;
+  heading += slowTurn + fastTurn;
 
-  // Petites saccades occasionnelles
-  if (random() < 0.008) {
-    heading += random(-PI / 4, PI / 4);
-    speed *= 1.5;
-  }
+  // Ondulation latérale — la créature oscille perpendiculairement à sa direction
+  swayOffset = sin(t * 0.6) * 0.8 + sin(t * 1.1) * 0.3;
+  let swayX = cos(heading + HALF_PI) * swayOffset;
+  let swayY = sin(heading + HALF_PI) * swayOffset;
 
-  // Vélocité
-  vx = cos(heading) * speed;
-  vy = sin(heading) * speed;
+  // Courant ambiant — un champ de force Perlin global pousse doucement
+  let currentAngle = noise(cx * 0.001, cy * 0.001, t * 0.01) * TWO_PI * 2;
+  let currentStrength = 0.15;
+
+  // Vélocité = direction + ondulation + courant
+  vx = cos(heading) * speed + swayX + cos(currentAngle) * currentStrength;
+  vy = sin(heading) * speed + swayY + sin(currentAngle) * currentStrength;
   cx += vx;
   cy += vy;
 
-  // Rebond doux sur les bords — la créature tourne vers le centre
-  let steerStrength = 0.1;
-  if (cx < margin) { heading = lerp(heading, 0, steerStrength); speed *= 0.95; }
-  if (cx > width - margin) { heading = lerp(heading, PI, steerStrength); speed *= 0.95; }
-  if (cy < margin) { heading = lerp(heading, HALF_PI, steerStrength); speed *= 0.95; }
-  if (cy > height - margin) { heading = lerp(heading, -HALF_PI, steerStrength); speed *= 0.95; }
+  // Bords — force de répulsion progressive (pas de lerp sur angles)
+  let repelForce = 0;
+  let repelAngle = 0;
+  let centerX = width / 2;
+  let centerY = height / 2;
 
-  // Sécurité : ne jamais sortir de l'écran (avec marge pour la taille)
+  if (cx < margin) { repelForce = map(cx, 0, margin, 0.12, 0); repelAngle = 0; }
+  if (cx > width - margin) { repelForce = map(cx, width, width - margin, 0.12, 0); repelAngle = PI; }
+  if (cy < margin) { repelForce = max(repelForce, map(cy, 0, margin, 0.12, 0)); repelAngle = HALF_PI; }
+  if (cy > height - margin) { repelForce = max(repelForce, map(cy, height, height - margin, 0.12, 0)); repelAngle = -HALF_PI; }
+
+  if (repelForce > 0) {
+    // Appliquer la force directement sur la vélocité (pas sur l'angle)
+    cx += cos(repelAngle) * repelForce * 3;
+    cy += sin(repelAngle) * repelForce * 3;
+    // Tourner doucement vers le centre
+    let toCenter = atan2(centerY - cy, centerX - cx);
+    let angleDiff = toCenter - heading;
+    // Normaliser l'angle pour toujours prendre le chemin le plus court
+    angleDiff = atan2(sin(angleDiff), cos(angleDiff));
+    heading += angleDiff * repelForce;
+    speed *= (1 - repelForce * 0.5);
+  }
+
+  // Sécurité : ne jamais sortir de l'écran
   cx = constrain(cx, creatureRadius, width - creatureRadius);
   cy = constrain(cy, creatureRadius, height - creatureRadius);
 
