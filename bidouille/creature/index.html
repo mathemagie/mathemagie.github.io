@@ -158,6 +158,8 @@ function readHUD() {
 // --- Paysage sonore abyssal du cténophore ---
 let audioCtx, audioStarted = false;
 let masterGain;
+// Spatialisation 3D — HRTF pour AirPods spatial audio
+let panner;
 // Eau profonde — ambiance hydrophone abyssale
 let deepNoiseNode, deepNoiseGain, deepFilter;
 // Pulsation des cils — battement rythmique filtré
@@ -181,12 +183,42 @@ function initAudio() {
   audioCtx = new (window.AudioContext || window.webkitAudioContext)();
   masterGain = audioCtx.createGain();
   masterGain.gain.value = 0.15;
-  masterGain.connect(audioCtx.destination);
+
+  // --- Spatialisation HRTF — le son suit la créature dans l'espace ---
+  // Listener = ta tête au centre de l'écran
+  let listener = audioCtx.listener;
+  listener.positionX.value = 0;
+  listener.positionY.value = 0;
+  listener.positionZ.value = 0;
+  listener.forwardX.value = 0;
+  listener.forwardY.value = 0;
+  listener.forwardZ.value = -1;
+  listener.upX.value = 0;
+  listener.upY.value = 1;
+  listener.upZ.value = 0;
+
+  // PannerNode HRTF — simule la position 3D pour AirPods
+  panner = new PannerNode(audioCtx, {
+    panningModel: 'HRTF',
+    distanceModel: 'inverse',
+    positionX: 0,
+    positionY: 0,
+    positionZ: -1,
+    refDistance: 1,
+    maxDistance: 100,
+    rolloffFactor: 1.5,
+    coneInnerAngle: 360,
+    coneOuterAngle: 360,
+    coneOuterGain: 1,
+  });
+
+  // Chaîne : sources → masterGain → panner → destination
+  masterGain.connect(panner);
+  panner.connect(audioCtx.destination);
 
   let noiseBuf = createNoiseBuffer();
 
   // --- Eau profonde : bruit très grave, filtré passe-bas ---
-  // Simule l'ambiance hydrophone des abysses (~5-80 Hz)
   deepNoiseNode = audioCtx.createBufferSource();
   deepNoiseNode.buffer = noiseBuf;
   deepNoiseNode.loop = true;
@@ -202,7 +234,6 @@ function initAudio() {
   deepNoiseNode.start();
 
   // --- Pulsation des cils : bruit bandpass pulsé ---
-  // Simule le battement des 8 rangées de cils du cténophore
   ciliaNoiseNode = audioCtx.createBufferSource();
   ciliaNoiseNode.buffer = noiseBuf;
   ciliaNoiseNode.loop = true;
@@ -218,7 +249,6 @@ function initAudio() {
   ciliaNoiseNode.start();
 
   // --- Résonance corporelle : sinusoïde très grave ---
-  // Vibration de la masse gélatineuse, suit le mouvement
   bodyOsc = audioCtx.createOscillator();
   bodyOsc.type = 'sine';
   bodyOsc.frequency.value = 38;
@@ -259,29 +289,43 @@ function updateAudio(pulse, spd) {
   if (!audioStarted) return;
   let now = audioCtx.currentTime;
 
+  // --- Spatialisation — la créature se déplace dans ton espace sonore ---
+  // Mapper la position écran vers coordonnées audio 3D
+  // X: gauche(-) / droite(+), Y: bas(-) / haut(+), Z: profondeur
+  let halfW = width / 2;
+  let halfH = height / 2;
+  // Normaliser position créature : -1 (bord gauche/haut) à +1 (bord droit/bas)
+  let nx = (cx - halfW) / halfW;
+  let ny = -(cy - halfH) / halfH; // inversé : écran Y↓, audio Y↑
+  // Échelle spatiale — contrôle l'amplitude du déplacement perçu
+  let spatialScale = 8;
+  // Z varie légèrement avec la distance au centre (plus loin = plus profond)
+  let distFromCenter = Math.sqrt(nx * nx + ny * ny);
+  let zBase = -3 - distFromCenter * 2;
+
+  panner.positionX.linearRampToValueAtTime(nx * spatialScale, now + 0.05);
+  panner.positionY.linearRampToValueAtTime(ny * spatialScale, now + 0.05);
+  panner.positionZ.linearRampToValueAtTime(zBase, now + 0.05);
+
   // Eau profonde — le filtre s'ouvre légèrement quand la créature bouge
   let deepFreq = 50 + spd * 30 + Math.sin(t * 0.08) * 15;
   deepFilter.frequency.linearRampToValueAtTime(deepFreq, now + 0.2);
   deepNoiseGain.gain.linearRampToValueAtTime(0.35 + Math.sin(t * 0.12) * 0.1, now + 0.2);
 
   // Pulsation des cils — gain modulé par la respiration de la créature
-  // Le son apparait et disparait rythmiquement, comme les battements de cils
   let ciliaPulse = Math.pow(Math.max(0, Math.sin(t * 0.8)), 3) * 0.25;
   ciliaGain.gain.linearRampToValueAtTime(ciliaPulse, now + 0.05);
-  // La fréquence des cils varie avec la vitesse
   ciliaFilter.frequency.linearRampToValueAtTime(250 + spd * 200, now + 0.1);
 
   // Résonance corporelle — suit le mouvement, pulse avec la respiration
   let bodyVol = (0.08 + spd * 0.12) * pulse;
   bodyGain.gain.linearRampToValueAtTime(bodyVol, now + 0.15);
-  // Fréquence dérive très lentement (masse gélatineuse qui vibre)
   bodyOsc.frequency.linearRampToValueAtTime(35 + Math.sin(t * 0.1) * 6 + spd * 8, now + 0.2);
 
   // Clics organiques — déclenchés aléatoirement, plus fréquents quand la créature bouge
   clickTimer--;
   if (clickTimer <= 0) {
     triggerClick();
-    // Intervalle aléatoire : 15-90 frames (plus fréquent si rapide)
     clickTimer = Math.floor(15 + Math.random() * 75 * (1 - Math.min(spd, 1.5) / 2));
   }
 }
@@ -349,25 +393,25 @@ function draw() {
   t += PI / 20;
   noiseOff += 0.003;
 
-  // Pause — la créature ralentit mais dérive encore (jamais immobile)
+  // Pause — plus courtes, la créature reste en mouvement
   if (pauseTimer > 0) {
     pauseTimer--;
-    targetSpeed = 0.15;
+    targetSpeed = 0.4;
     if (pauseTimer <= 0) {
-      targetSpeed = random(0.6, params.maxSpeed);
+      targetSpeed = random(1.0, params.maxSpeed);
     }
-  } else if (random() < 0.002) {
-    pauseTimer = floor(random(60, 180));
+  } else if (random() < 0.001) {
+    pauseTimer = floor(random(30, 90));
   }
 
-  // Vitesse — Perlin noise pour des accélérations/décélérations organiques
+  // Vitesse — plus rapide pour couvrir tout l'écran
   let speedNoise = noise(noiseOff * 1.5 + 100);
-  let desiredSpeed = targetSpeed * map(speedNoise, 0, 1, 0.4, 1.4);
-  speed = lerp(speed, desiredSpeed, 0.015);
+  let desiredSpeed = targetSpeed * map(speedNoise, 0, 1, 0.6, 1.6);
+  speed = lerp(speed, desiredSpeed, 0.02);
 
-  // Direction — deux couches de Perlin à fréquences différentes
-  let slowTurn = (noise(noiseOff * 0.7) - 0.5) * 0.04;
-  let fastTurn = (noise(noiseOff * 3 + 50) - 0.5) * 0.03;
+  // Direction — virages plus larges pour de grandes orbites
+  let slowTurn = (noise(noiseOff * 0.5) - 0.5) * 0.06;
+  let fastTurn = (noise(noiseOff * 2 + 50) - 0.5) * 0.04;
   heading += slowTurn + fastTurn;
 
   // Ondulation latérale — amplitude contrôlable
@@ -375,7 +419,7 @@ function draw() {
   let swayX = cos(heading + HALF_PI) * swayOffset;
   let swayY = sin(heading + HALF_PI) * swayOffset;
 
-  // Courant ambiant — force contrôlable
+  // Courant ambiant — pousse la créature vers les bords
   let currentAngle = noise(cx * 0.001, cy * 0.001, t * 0.01) * TWO_PI * 2;
   let currentStrength = params.current;
 
@@ -385,33 +429,30 @@ function draw() {
   cx += vx;
   cy += vy;
 
-  // Bords — force de répulsion progressive (pas de lerp sur angles)
+  // Bords — marge minimale, rebond souple seulement au bord extrême
+  let edgeMargin = 40;
   let repelForce = 0;
   let repelAngle = 0;
   let centerX = width / 2;
   let centerY = height / 2;
 
-  if (cx < margin) { repelForce = map(cx, 0, margin, 0.12, 0); repelAngle = 0; }
-  if (cx > width - margin) { repelForce = map(cx, width, width - margin, 0.12, 0); repelAngle = PI; }
-  if (cy < margin) { repelForce = max(repelForce, map(cy, 0, margin, 0.12, 0)); repelAngle = HALF_PI; }
-  if (cy > height - margin) { repelForce = max(repelForce, map(cy, height, height - margin, 0.12, 0)); repelAngle = -HALF_PI; }
+  if (cx < edgeMargin) { repelForce = map(cx, 0, edgeMargin, 0.08, 0); repelAngle = 0; }
+  if (cx > width - edgeMargin) { repelForce = map(cx, width, width - edgeMargin, 0.08, 0); repelAngle = PI; }
+  if (cy < edgeMargin) { repelForce = max(repelForce, map(cy, 0, edgeMargin, 0.08, 0)); repelAngle = HALF_PI; }
+  if (cy > height - edgeMargin) { repelForce = max(repelForce, map(cy, height, height - edgeMargin, 0.08, 0)); repelAngle = -HALF_PI; }
 
   if (repelForce > 0) {
-    // Appliquer la force directement sur la vélocité (pas sur l'angle)
-    cx += cos(repelAngle) * repelForce * 3;
-    cy += sin(repelAngle) * repelForce * 3;
-    // Tourner doucement vers le centre
+    cx += cos(repelAngle) * repelForce * 2;
+    cy += sin(repelAngle) * repelForce * 2;
     let toCenter = atan2(centerY - cy, centerX - cx);
     let angleDiff = toCenter - heading;
-    // Normaliser l'angle pour toujours prendre le chemin le plus court
     angleDiff = atan2(sin(angleDiff), cos(angleDiff));
-    heading += angleDiff * repelForce;
-    speed *= (1 - repelForce * 0.5);
+    heading += angleDiff * repelForce * 0.8;
   }
 
   // Sécurité : ne jamais sortir de l'écran
-  cx = constrain(cx, creatureRadius, width - creatureRadius);
-  cy = constrain(cy, creatureRadius, height - creatureRadius);
+  cx = constrain(cx, 10, width - 10);
+  cy = constrain(cy, 10, height - 10);
 
   // Traînée lumineuse — opacité contrôlable
   blendMode(BLEND);
