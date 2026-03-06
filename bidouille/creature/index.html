@@ -106,8 +106,8 @@
 
   <div class="section">
     <h3>audio</h3>
-    <label>volume <span id="v_vol">15</span>%</label>
-    <input type="range" id="s_vol" min="0" max="50" step="1" value="15">
+    <label>volume <span id="v_vol">50</span>%</label>
+    <input type="range" id="s_vol" min="0" max="50" step="1" value="50">
   </div>
 </div>
 <div id="hint">[H] param&egrave;tres</div>
@@ -128,7 +128,7 @@ let hudRefs = {};
 // --- Paramètres contrôlables via HUD ---
 let params = {
   scale: 2, density: 10000, trail: 40, weight: 1.5,
-  maxSpeed: 1.8, sway: 1, current: 0.15, volume: 15
+  maxSpeed: 1.8, sway: 1, current: 0.15, volume: 50
 };
 let hudVisible = false;
 
@@ -229,7 +229,7 @@ function createNoiseBuffer() {
 function initAudio() {
   audioCtx = new (window.AudioContext || window.webkitAudioContext)();
   masterGain = audioCtx.createGain();
-  masterGain.gain.value = 0.15;
+  masterGain.gain.value = params.volume / 100;
 
   // --- Spatialisation HRTF — le son suit la créature dans l'espace ---
   // Listener = ta tête au centre de l'écran
