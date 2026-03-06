@@ -123,6 +123,7 @@ let pauseTimer = 0;
 let creatureRadius = 200;
 let margin;
 let swayOffset = 0;
+let hudRefs = {};
 
 // --- Paramètres contrôlables via HUD ---
 let params = {
@@ -132,27 +133,73 @@ let params = {
 let hudVisible = false;
 
 function readHUD() {
-  params.scale   = parseFloat(document.getElementById('s_scale').value);
-  params.density = parseInt(document.getElementById('s_density').value);
-  params.trail   = parseInt(document.getElementById('s_trail').value);
-  params.weight  = parseFloat(document.getElementById('s_weight').value);
-  params.maxSpeed = parseFloat(document.getElementById('s_speed').value);
-  params.sway    = parseFloat(document.getElementById('s_sway').value);
-  params.current = parseFloat(document.getElementById('s_current').value);
-  params.volume  = parseInt(document.getElementById('s_vol').value);
+  params.scale   = parseFloat(hudRefs.s_scale.value);
+  params.density = parseInt(hudRefs.s_density.value);
+  params.trail   = parseInt(hudRefs.s_trail.value);
+  params.weight  = parseFloat(hudRefs.s_weight.value);
+  params.maxSpeed = parseFloat(hudRefs.s_speed.value);
+  params.sway    = parseFloat(hudRefs.s_sway.value);
+  params.current = parseFloat(hudRefs.s_current.value);
+  params.volume  = parseInt(hudRefs.s_vol.value);
 
-  document.getElementById('v_scale').textContent   = params.scale.toFixed(1);
-  document.getElementById('v_density').textContent  = params.density;
-  document.getElementById('v_trail').textContent    = params.trail;
-  document.getElementById('v_weight').textContent   = params.weight.toFixed(1);
-  document.getElementById('v_speed').textContent    = params.maxSpeed.toFixed(1);
-  document.getElementById('v_sway').textContent     = params.sway.toFixed(1);
-  document.getElementById('v_current').textContent  = params.current.toFixed(2);
-  document.getElementById('v_vol').textContent      = params.volume;
+  hudRefs.v_scale.textContent   = params.scale.toFixed(1);
+  hudRefs.v_density.textContent  = params.density;
+  hudRefs.v_trail.textContent    = params.trail;
+  hudRefs.v_weight.textContent   = params.weight.toFixed(1);
+  hudRefs.v_speed.textContent    = params.maxSpeed.toFixed(1);
+  hudRefs.v_sway.textContent     = params.sway.toFixed(1);
+  hudRefs.v_current.textContent  = params.current.toFixed(2);
+  hudRefs.v_vol.textContent      = params.volume;
 
   if (audioStarted) {
     masterGain.gain.linearRampToValueAtTime(params.volume / 100, audioCtx.currentTime + 0.1);
   }
+}
+
+function initHUD() {
+  hudRefs = {
+    s_scale: document.getElementById('s_scale'),
+    s_density: document.getElementById('s_density'),
+    s_trail: document.getElementById('s_trail'),
+    s_weight: document.getElementById('s_weight'),
+    s_speed: document.getElementById('s_speed'),
+    s_sway: document.getElementById('s_sway'),
+    s_current: document.getElementById('s_current'),
+    s_vol: document.getElementById('s_vol'),
+    v_scale: document.getElementById('v_scale'),
+    v_density: document.getElementById('v_density'),
+    v_trail: document.getElementById('v_trail'),
+    v_weight: document.getElementById('v_weight'),
+    v_speed: document.getElementById('v_speed'),
+    v_sway: document.getElementById('v_sway'),
+    v_current: document.getElementById('v_current'),
+    v_vol: document.getElementById('v_vol')
+  };
+
+  [
+    hudRefs.s_scale,
+    hudRefs.s_density,
+    hudRefs.s_trail,
+    hudRefs.s_weight,
+    hudRefs.s_speed,
+    hudRefs.s_sway,
+    hudRefs.s_current,
+    hudRefs.s_vol
+  ].forEach((slider) => slider.addEventListener('input', readHUD));
+
+  readHUD();
+}
+
+function axisBounds(size) {
+  return [
+    Math.min(creatureRadius, size - creatureRadius),
+    Math.max(creatureRadius, size - creatureRadius)
+  ];
+}
+
+function updateSpatialBounds() {
+  creatureRadius = Math.max(8, Math.min(200, Math.min(width, height) / 2 - 8));
+  margin = Math.max(8, Math.min(creatureRadius + 40, Math.min(width, height) / 2 - 2));
 }
 
 // --- Paysage sonore abyssal du cténophore ---
@@ -333,10 +380,13 @@ function updateAudio(pulse, spd) {
 function setup() {
   createCanvas(windowWidth, windowHeight);
   colorMode(HSB, 360, 100, 100, 255);
-  cx = random(creatureRadius, width - creatureRadius);
-  cy = random(creatureRadius, height - creatureRadius);
+  initHUD();
+  updateSpatialBounds();
+  let [minX, maxX] = axisBounds(width);
+  let [minY, maxY] = axisBounds(height);
+  cx = random(minX, maxX);
+  cy = random(minY, maxY);
   heading = random(TWO_PI);
-  margin = creatureRadius + 40;
 }
 
 function organism(x, y, pulse) {
@@ -386,10 +436,10 @@ function keyPressed() {
 
 function windowResized() {
   resizeCanvas(windowWidth, windowHeight);
+  updateSpatialBounds();
 }
 
 function draw() {
-  readHUD();
   t += PI / 20;
   noiseOff += 0.003;
 
@@ -451,8 +501,10 @@ function draw() {
   }
 
   // Sécurité : ne jamais sortir de l'écran
-  cx = constrain(cx, 10, width - 10);
-  cy = constrain(cy, 10, height - 10);
+  let [minX, maxX] = axisBounds(width);
+  let [minY, maxY] = axisBounds(height);
+  cx = constrain(cx, minX, maxX);
+  cy = constrain(cy, minY, maxY);
 
   // Traînée lumineuse — opacité contrôlable
   blendMode(BLEND);
