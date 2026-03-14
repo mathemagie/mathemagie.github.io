@@ -80,6 +80,29 @@
       color: rgba(140, 180, 255, 0.25);
       z-index: 10;
     }
+    #btn-fs {
+      position: fixed;
+      bottom: 12px;
+      left: 16px;
+      width: 32px;
+      height: 32px;
+      background: rgba(0, 0, 0, 0.5);
+      border: 1px solid rgba(80, 140, 255, 0.2);
+      border-radius: 6px;
+      color: rgba(140, 180, 255, 0.6);
+      font-size: 16px;
+      cursor: pointer;
+      z-index: 10;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      backdrop-filter: blur(6px);
+      transition: border-color 0.2s, color 0.2s;
+    }
+    #btn-fs:hover {
+      border-color: rgba(80, 140, 255, 0.5);
+      color: rgba(140, 180, 255, 0.9);
+    }
   </style>
 </head>
 <body>
@@ -110,7 +133,8 @@
     <input type="range" id="s_vol" min="0" max="50" step="1" value="50">
   </div>
 </div>
-<div id="hint">[H] param&egrave;tres</div>
+<button id="btn-fs" title="Plein &eacute;cran">&#x26F6;</button>
+<div id="hint">[H] param&egrave;tres &middot; [F] plein &eacute;cran</div>
 <script>
 let t = 0;
 let cx, cy;
@@ -123,6 +147,7 @@ let pauseTimer = 0;
 let creatureRadius = 200;
 let margin;
 let swayOffset = 0;
+let smoothVx = 0, smoothVy = 0;
 let hudRefs = {};
 
 // --- Paramètres contrôlables via HUD ---
@@ -188,6 +213,8 @@ function initHUD() {
   ].forEach((slider) => slider.addEventListener('input', readHUD));
 
   readHUD();
+
+  document.getElementById('btn-fs').addEventListener('click', toggleFullscreen);
 }
 
 function axisBounds(size) {
@@ -427,10 +454,21 @@ function mousePressed() {
   if (!audioStarted) initAudio();
 }
 
+function toggleFullscreen() {
+  if (!document.fullscreenElement) {
+    document.documentElement.requestFullscreen();
+  } else {
+    document.exitFullscreen();
+  }
+}
+
 function keyPressed() {
   if (key === 'h' || key === 'H') {
     hudVisible = !hudVisible;
     document.getElementById('hud').classList.toggle('visible', hudVisible);
+  }
+  if (key === 'f' || key === 'F') {
+    toggleFullscreen();
   }
 }
 
@@ -441,63 +479,55 @@ function windowResized() {
 
 function draw() {
   t += PI / 20;
-  noiseOff += 0.003;
+  noiseOff += 0.001;
 
-  // Pause — plus courtes, la créature reste en mouvement
-  if (pauseTimer > 0) {
-    pauseTimer--;
-    targetSpeed = 0.4;
-    if (pauseTimer <= 0) {
-      targetSpeed = random(1.0, params.maxSpeed);
-    }
-  } else if (random() < 0.001) {
-    pauseTimer = floor(random(30, 90));
-  }
+  // --- Nage fluide — tout piloté par Perlin, zéro à-coup ---
+  // Vitesse cible varie très lentement via Perlin
+  let speedWave = noise(noiseOff * 0.4 + 100);
+  let targetVel = params.maxSpeed * map(speedWave, 0, 1, 0.3, 1.0);
 
-  // Vitesse — plus rapide pour couvrir tout l'écran
-  let speedNoise = noise(noiseOff * 1.5 + 100);
-  let desiredSpeed = targetSpeed * map(speedNoise, 0, 1, 0.6, 1.6);
-  speed = lerp(speed, desiredSpeed, 0.02);
+  // Respiration de vitesse — sinusoïde très lente
+  targetVel *= 0.6 + 0.4 * sin(t * 0.08);
 
-  // Direction — virages plus larges pour de grandes orbites
-  let slowTurn = (noise(noiseOff * 0.5) - 0.5) * 0.06;
-  let fastTurn = (noise(noiseOff * 2 + 50) - 0.5) * 0.04;
-  heading += slowTurn + fastTurn;
+  // Direction — Perlin ultra-lent pour des courbes amples
+  heading += (noise(noiseOff * 0.15) - 0.5) * 0.015;
 
-  // Ondulation latérale — amplitude contrôlable
-  swayOffset = (sin(t * 0.6) * 0.8 + sin(t * 1.1) * 0.3) * params.sway;
-  let swayX = cos(heading + HALF_PI) * swayOffset;
-  let swayY = sin(heading + HALF_PI) * swayOffset;
+  // Ondulation perpendiculaire — le corps ondule comme un poisson
+  swayOffset = sin(t * 0.25) * 0.4 * params.sway;
 
-  // Courant ambiant — pousse la créature vers les bords
-  let currentAngle = noise(cx * 0.001, cy * 0.001, t * 0.01) * TWO_PI * 2;
-  let currentStrength = params.current;
+  // Courant marin — dérive douce
+  let currentAngle = noise(cx * 0.0002, cy * 0.0002, t * 0.002) * TWO_PI;
+  let currentX = cos(currentAngle) * params.current * 0.5;
+  let currentY = sin(currentAngle) * params.current * 0.5;
 
-  // Vélocité = direction + ondulation + courant
-  vx = cos(heading) * speed + swayX + cos(currentAngle) * currentStrength;
-  vy = sin(heading) * speed + swayY + sin(currentAngle) * currentStrength;
-  cx += vx;
-  cy += vy;
+  // Vélocité cible
+  let perpX = cos(heading + HALF_PI) * swayOffset;
+  let perpY = sin(heading + HALF_PI) * swayOffset;
+  let targetVx = cos(heading) * targetVel + perpX + currentX;
+  let targetVy = sin(heading) * targetVel + perpY + currentY;
 
-  // Bords — marge minimale, rebond souple seulement au bord extrême
-  let edgeMargin = 40;
-  let repelForce = 0;
-  let repelAngle = 0;
+  // Inertie de l'eau — lerp très lent = glisse fluide
+  smoothVx = lerp(smoothVx, targetVx, 0.006);
+  smoothVy = lerp(smoothVy, targetVy, 0.006);
+  cx += smoothVx;
+  cy += smoothVy;
+  speed = mag(smoothVx, smoothVy);
+
+  // Bords — virage très progressif
+  let edgeMargin = 120;
   let centerX = width / 2;
   let centerY = height / 2;
 
-  if (cx < edgeMargin) { repelForce = map(cx, 0, edgeMargin, 0.08, 0); repelAngle = 0; }
-  if (cx > width - edgeMargin) { repelForce = map(cx, width, width - edgeMargin, 0.08, 0); repelAngle = PI; }
-  if (cy < edgeMargin) { repelForce = max(repelForce, map(cy, 0, edgeMargin, 0.08, 0)); repelAngle = HALF_PI; }
-  if (cy > height - edgeMargin) { repelForce = max(repelForce, map(cy, height, height - edgeMargin, 0.08, 0)); repelAngle = -HALF_PI; }
+  let dx = 0, dy = 0;
+  if (cx < edgeMargin) dx = pow(1 - cx / edgeMargin, 2);
+  if (cx > width - edgeMargin) dx = -pow(1 - (width - cx) / edgeMargin, 2);
+  if (cy < edgeMargin) dy = pow(1 - cy / edgeMargin, 2);
+  if (cy > height - edgeMargin) dy = -pow(1 - (height - cy) / edgeMargin, 2);
 
-  if (repelForce > 0) {
-    cx += cos(repelAngle) * repelForce * 2;
-    cy += sin(repelAngle) * repelForce * 2;
+  if (dx !== 0 || dy !== 0) {
     let toCenter = atan2(centerY - cy, centerX - cx);
-    let angleDiff = toCenter - heading;
-    angleDiff = atan2(sin(angleDiff), cos(angleDiff));
-    heading += angleDiff * repelForce * 0.8;
+    let diff = atan2(sin(toCenter - heading), cos(toCenter - heading));
+    heading += diff * (abs(dx) + abs(dy)) * 0.02;
   }
 
   // Sécurité : ne jamais sortir de l'écran
@@ -512,8 +542,8 @@ function draw() {
   fill(0, 0, 0, params.trail);
   rect(0, 0, width, height);
 
-  // Pulse de luminosité — respiration lumineuse
-  let pulse = map(sin(t * 0.4), -1, 1, 0.7, 1.0);
+  // Pulse de luminosité — respiration lente
+  let pulse = map(sin(t * 0.25), -1, 1, 0.75, 1.0);
 
   // Une seule passe — blendMode(ADD) crée le glow naturellement
   blendMode(ADD);
