@@ -1332,6 +1332,7 @@
         let filterNode = null;  // Low-pass filter modulated by signal quality
         let noiseGainNode = null;
         let noiseSource = null;
+        let pannerNode = null;  // HRTF spatial panner for AirPods spatial audio
         
         // Crossfade interval tracking (Fix #1: Store interval ID to cancel if needed)
         let crossfadeIntervalId = null;
@@ -1735,6 +1736,7 @@
                 const quality = calculateSignalQuality(nearest.distance);
                 updateCRTEffects(quality);
                 updateAudioSignalQuality(quality);
+                updateSpatialPosition();
 
                 // Check if we need to change the sound (different identifier)
                 if (!currentSoundLocation || currentSoundLocation.identifier !== nearest.identifier) {
@@ -1764,8 +1766,9 @@
                         await playTrack(track, controller.signal);
                     }
                 } else {
-                    // Update distance
+                    // Update distance and spatial panning direction
                     currentSoundLocation.distance = nearest.distance;
+                    updateSpatialPosition();
                 }
             } finally {
                 isFindingSound = false;
@@ -1788,6 +1791,34 @@
                 filterNode.frequency.value = 22000; // Full bandwidth = good signal
                 filterNode.Q.value = 0.5;
 
+                // Create HRTF panner for spatial audio (AirPods spatial audio support)
+                pannerNode = audioContext.createPanner();
+                pannerNode.panningModel = 'HRTF';
+                pannerNode.distanceModel = 'inverse';
+                pannerNode.refDistance = 1;
+                pannerNode.maxDistance = 10000;
+                pannerNode.rolloffFactor = 1;
+                pannerNode.coneInnerAngle = 360;
+                pannerNode.coneOuterAngle = 360;
+                pannerNode.coneOuterGain = 0;
+                // Start centered (sound in front)
+                pannerNode.positionX.value = 0;
+                pannerNode.positionY.value = 0;
+                pannerNode.positionZ.value = -1;
+
+                // Set listener orientation (facing -Z, up is +Y)
+                const listener = audioContext.listener;
+                if (listener.forwardX) {
+                    listener.forwardX.value = 0;
+                    listener.forwardY.value = 0;
+                    listener.forwardZ.value = -1;
+                    listener.upX.value = 0;
+                    listener.upY.value = 1;
+                    listener.upZ.value = 0;
+                } else {
+                    listener.setOrientation(0, 0, -1, 0, 1, 0);
+                }
+
                 // Create noise for static effect
                 noiseGainNode = audioContext.createGain();
                 noiseGainNode.gain.value = 0; // Silent by default
@@ -1807,6 +1838,7 @@
                 noiseSource.start();
 
                 // Connect audio elements through WebAudio
+                // Chain: source → gain → filter → panner (HRTF) → destination
                 const source1 = audioContext.createMediaElementSource(audioPlayer1);
                 const source2 = audioContext.createMediaElementSource(audioPlayer2);
 
@@ -1815,7 +1847,13 @@
 
                 gainNode1.connect(filterNode);
                 gainNode2.connect(filterNode);
-                filterNode.connect(audioContext.destination);
+                filterNode.connect(pannerNode);
+                pannerNode.connect(audioContext.destination);
+
+                console.log('WebAudio HRTF spatial audio initialized', {
+                    panningModel: pannerNode.panningModel,
+                    distanceModel: pannerNode.distanceModel
+                });
 
             } catch (e) {
                 console.error('WebAudio init failed:', e);
@@ -1834,6 +1872,39 @@
             // Static noise: full signal = 0, weak = 0.08
             const noiseLevel = (1 - quality) * 0.08;
             noiseGainNode.gain.setTargetAtTime(noiseLevel, now, 0.3);
+        }
+
+        // Update HRTF spatial panner so the sound comes from the direction of the field recording
+        // relative to the ISS position. Uses bearing to place audio on a unit sphere around the listener.
+        function updateSpatialPosition() {
+            if (!pannerNode || !audioContext || !issData || !currentSoundLocation) return;
+
+            const issLat = issData.latitude * Math.PI / 180;
+            const issLng = issData.longitude * Math.PI / 180;
+            const sndLat = currentSoundLocation.lat * Math.PI / 180;
+            const sndLng = currentSoundLocation.lng * Math.PI / 180;
+
+            // Calculate bearing from ISS to sound source
+            const dLng = sndLng - issLng;
+            const y = Math.sin(dLng) * Math.cos(sndLat);
+            const x = Math.cos(issLat) * Math.sin(sndLat) - Math.sin(issLat) * Math.cos(sndLat) * Math.cos(dLng);
+            const bearing = Math.atan2(y, x); // radians, 0 = north, CW positive
+
+            // Map bearing to 3D position on unit sphere (WebAudio: +X=right, +Y=up, -Z=front)
+            // bearing 0 (north) = front (-Z), PI/2 (east) = right (+X), etc.
+            const px = Math.sin(bearing);
+            const pz = -Math.cos(bearing);
+            // Slight elevation: closer sound = more overhead, farther = horizon level
+            const dist = currentSoundLocation.distance || 1000;
+            const elevationFactor = Math.max(0, 1 - dist / 5000); // 0..1
+            const py = elevationFactor * 0.5; // subtle vertical offset
+
+            const now = audioContext.currentTime;
+            pannerNode.positionX.setTargetAtTime(px, now, 0.5);
+            pannerNode.positionY.setTargetAtTime(py, now, 0.5);
+            pannerNode.positionZ.setTargetAtTime(pz, now, 0.5);
+
+            console.log(`Spatial: bearing=${(bearing * 180 / Math.PI).toFixed(1)}° pos=(${px.toFixed(2)}, ${py.toFixed(2)}, ${pz.toFixed(2)}) dist=${dist.toFixed(0)}km`);
         }
 
         // === Audio Playback ===
