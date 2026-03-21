@@ -1,0 +1,539 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Bonjour, Thomas — Tour Eiffel × ISS</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,600;1,300;1,400&family=JetBrains+Mono:wght@300;400&display=swap" rel="stylesheet">
+<style>
+*,*::before,*::after{margin:0;padding:0;box-sizing:border-box}
+:root{
+  --gold:#D4A853;
+  --gold-dim:rgba(212,168,83,.15);
+  --gold-glow:rgba(212,168,83,.6);
+  --night:#07080C;
+  --deep:#0C0E15;
+  --mist:rgba(255,255,255,.78);
+  --whisper:rgba(255,255,255,.45);
+}
+html{scroll-behavior:smooth;overflow-x:hidden}
+body{
+  background:var(--night);
+  color:var(--mist);
+  font-family:'Cormorant Garamond',Georgia,serif;
+  font-size:20px;
+  line-height:1.95;
+  overflow-x:hidden;
+}
+
+/* ─── starfield ─── */
+#stars{position:fixed;inset:0;z-index:0;pointer-events:none}
+#stars canvas{width:100%;height:100%}
+
+/* ─── hero ─── */
+.hero{
+  position:relative;
+  z-index:1;
+  min-height:100vh;
+  display:flex;
+  flex-direction:column;
+  justify-content:center;
+  align-items:center;
+  text-align:center;
+  padding:2rem;
+}
+.hero::after{
+  content:'';
+  position:absolute;
+  bottom:0;left:0;right:0;
+  height:30vh;
+  background:linear-gradient(to bottom,transparent,var(--night));
+  pointer-events:none;
+}
+.hero__morse{
+  font-family:'JetBrains Mono',monospace;
+  font-size:clamp(.7rem,1.2vw,.95rem);
+  letter-spacing:.6em;
+  color:var(--gold);
+  text-transform:uppercase;
+  margin-bottom:1.5rem;
+  opacity:0;
+  animation:fadeUp 1.2s .3s ease forwards;
+}
+.hero__morse span{
+  display:inline-block;
+  animation:blink 2.4s infinite;
+}
+.hero__morse span:nth-child(even){animation-delay:.3s}
+.hero__title{
+  font-size:clamp(2.8rem,8vw,7rem);
+  font-weight:300;
+  line-height:1.05;
+  color:#fff;
+  letter-spacing:-.02em;
+  opacity:0;
+  animation:fadeUp 1.4s .6s ease forwards;
+}
+.hero__title em{
+  font-style:italic;
+  color:var(--gold);
+  display:block;
+  font-size:.65em;
+  margin-top:.15em;
+}
+.hero__sub{
+  margin-top:1.8rem;
+  font-size:clamp(1.25rem,2vw,1.6rem);
+  font-weight:300;
+  color:var(--whisper);
+  max-width:34ch;
+  opacity:0;
+  animation:fadeUp 1.4s 1s ease forwards;
+}
+.hero__scroll{
+  position:absolute;
+  bottom:3rem;
+  left:50%;
+  transform:translateX(-50%);
+  z-index:2;
+  display:flex;
+  flex-direction:column;
+  align-items:center;
+  gap:.5rem;
+  opacity:0;
+  animation:fadeUp 1.2s 1.8s ease forwards;
+}
+.hero__scroll span{
+  font-family:'JetBrains Mono',monospace;
+  font-size:.6rem;
+  letter-spacing:.25em;
+  text-transform:uppercase;
+  color:var(--whisper);
+}
+.hero__scroll-line{
+  width:1px;height:40px;
+  background:linear-gradient(to bottom,var(--gold),transparent);
+  animation:scrollPulse 2s infinite;
+}
+
+/* ─── countdown ─── */
+.countdown{
+  position:relative;
+  z-index:1;
+  padding:6rem 2rem;
+  display:flex;
+  justify-content:center;
+  gap:clamp(1rem,4vw,3rem);
+  flex-wrap:wrap;
+}
+.countdown__digit{
+  font-family:'JetBrains Mono',monospace;
+  font-size:clamp(3rem,8vw,6.5rem);
+  font-weight:300;
+  color:var(--gold-dim);
+  transition:color 1s,text-shadow 1s;
+  position:relative;
+}
+.countdown__digit.lit{
+  color:var(--gold);
+  text-shadow:0 0 30px var(--gold-glow),0 0 80px rgba(212,168,83,.2);
+}
+
+/* ─── sections ─── */
+.section{
+  position:relative;
+  z-index:1;
+  max-width:740px;
+  margin:0 auto;
+  padding:5rem 2.5rem;
+}
+.section__label{
+  font-family:'JetBrains Mono',monospace;
+  font-size:.8rem;
+  letter-spacing:.35em;
+  text-transform:uppercase;
+  color:var(--gold);
+  margin-bottom:2rem;
+  padding-left:2.5rem;
+  position:relative;
+}
+.section__label::before{
+  content:'';
+  position:absolute;
+  left:0;top:50%;
+  width:1.8rem;height:1px;
+  background:var(--gold);
+}
+.section__text{
+  font-size:clamp(1.4rem,2.5vw,1.75rem);
+  font-weight:300;
+  line-height:2.1;
+  color:var(--mist);
+}
+.section__text strong{
+  font-weight:600;
+  color:rgba(255,255,255,.92);
+}
+.section__text em{
+  font-style:italic;
+  color:var(--gold);
+}
+.section__text + .section__text{margin-top:1.8em}
+
+/* ─── tower silhouette ─── */
+.tower-break{
+  position:relative;
+  z-index:1;
+  display:flex;
+  justify-content:center;
+  align-items:center;
+  padding:5rem 2rem;
+  min-height:50vh;
+}
+.tower-svg{
+  height:clamp(200px,40vh,360px);
+  opacity:.12;
+  filter:drop-shadow(0 0 40px var(--gold-glow));
+  animation:towerPulse 4s ease-in-out infinite;
+}
+
+/* ─── quote ─── */
+.quote-block{
+  position:relative;
+  z-index:1;
+  max-width:780px;
+  margin:0 auto;
+  padding:6rem 2rem;
+  text-align:center;
+}
+.quote-block__text{
+  font-size:clamp(1.8rem,4vw,3rem);
+  font-weight:300;
+  font-style:italic;
+  color:rgba(255,255,255,.85);
+  line-height:1.6;
+}
+.quote-block__text span{color:var(--gold)}
+.quote-block__dash{
+  display:block;
+  width:40px;height:1px;
+  background:var(--gold);
+  margin:2rem auto;
+}
+
+/* ─── morse legend ─── */
+.morse-legend{
+  position:relative;
+  z-index:1;
+  display:flex;
+  justify-content:center;
+  gap:2.5rem;
+  padding:3rem 2rem;
+  flex-wrap:wrap;
+}
+.morse-letter{
+  display:flex;
+  flex-direction:column;
+  align-items:center;
+  gap:.4rem;
+}
+.morse-letter__char{
+  font-size:1.6rem;
+  color:rgba(255,255,255,.7);
+  font-weight:400;
+}
+.morse-letter__code{
+  font-family:'JetBrains Mono',monospace;
+  font-size:.7rem;
+  letter-spacing:.15em;
+  color:var(--gold);
+}
+.morse-letter__dots{
+  display:flex;
+  gap:3px;
+  margin-top:2px;
+}
+.morse-letter__dots i{
+  display:block;
+  height:4px;
+  border-radius:2px;
+  background:var(--gold);
+}
+.morse-letter__dots i.dot{width:4px}
+.morse-letter__dots i.dash{width:14px}
+
+/* ─── footer ─── */
+.footer{
+  position:relative;
+  z-index:1;
+  text-align:center;
+  padding:5rem 2rem 3rem;
+  border-top:1px solid rgba(255,255,255,.04);
+}
+.footer__line{
+  font-family:'JetBrains Mono',monospace;
+  font-size:.6rem;
+  letter-spacing:.3em;
+  text-transform:uppercase;
+  color:var(--whisper);
+}
+.footer__year{
+  display:block;
+  margin-top:.8rem;
+  font-size:.55rem;
+  color:rgba(255,255,255,.15);
+  letter-spacing:.2em;
+}
+
+/* ─── reveal ─── */
+.reveal{
+  opacity:0;
+  transform:translateY(30px);
+  transition:opacity .9s ease,transform .9s ease;
+}
+.reveal.visible{opacity:1;transform:translateY(0)}
+
+/* ─── keyframes ─── */
+@keyframes fadeUp{
+  from{opacity:0;transform:translateY(24px)}
+  to{opacity:1;transform:translateY(0)}
+}
+@keyframes blink{
+  0%,100%{opacity:1}
+  50%{opacity:.2}
+}
+@keyframes scrollPulse{
+  0%,100%{opacity:.4}
+  50%{opacity:1}
+}
+@keyframes towerPulse{
+  0%,100%{opacity:.1;filter:drop-shadow(0 0 40px rgba(212,168,83,.3))}
+  50%{opacity:.18;filter:drop-shadow(0 0 60px rgba(212,168,83,.5))}
+}
+
+/* ─── responsive ─── */
+@media(max-width:600px){
+  .section{padding:3.5rem 1.5rem}
+  .quote-block{padding:4rem 1.5rem}
+  .countdown{gap:.8rem}
+}
+</style>
+</head>
+<body>
+
+<!-- starfield -->
+<div id="stars"><canvas></canvas></div>
+
+<!-- hero -->
+<header class="hero">
+  <p class="hero__morse">
+    <span>·&mdash;</span>&ensp;
+    <span>·&mdash;&mdash;&mdash;</span>&ensp;
+    <span>&mdash;·&mdash;&mdash;</span>
+  </p>
+  <h1 class="hero__title">
+    Bonjour, Thomas
+    <em>Tour Eiffel &times; ISS</em>
+  </h1>
+  <p class="hero__sub">Quand Paris clignote vers les&nbsp;étoiles</p>
+  <div class="hero__scroll">
+    <span>Descendre</span>
+    <div class="hero__scroll-line"></div>
+  </div>
+</header>
+
+<!-- countdown -->
+<div class="countdown" aria-label="Compte à rebours lumineux">
+  <span class="countdown__digit" data-delay="0">6</span>
+  <span class="countdown__digit" data-delay="1">5</span>
+  <span class="countdown__digit" data-delay="2">4</span>
+  <span class="countdown__digit" data-delay="3">3</span>
+  <span class="countdown__digit" data-delay="4">2</span>
+  <span class="countdown__digit" data-delay="5">1</span>
+  <span class="countdown__digit" data-delay="6">0</span>
+</div>
+
+<!-- section 1 : overview effect -->
+<section class="section reveal">
+  <p class="section__label">Overview Effect</p>
+  <p class="section__text">
+    Durant les six derniers mois de 2021, <strong>Thomas Pesquet</strong> était en mission à bord de la Station Spatiale Internationale. La France vivait au rythme de ses images. La Terre, photographiée depuis l'orbite, apparaissait comme un <em>écrin fragile suspendu dans le noir</em>.
+  </p>
+  <p class="section__text">
+    Cette vision produit un phénomène documenté chez les astronautes : <strong>l'Overview Effect</strong> &mdash; un bouleversement cognitif et émotionnel face à la beauté et à la vulnérabilité de notre planète.
+  </p>
+</section>
+
+<!-- tower silhouette -->
+<div class="tower-break reveal">
+  <svg class="tower-svg" viewBox="0 0 120 300" fill="none" xmlns="http://www.w3.org/2000/svg">
+    <path d="M60 0 L60 20 M55 20 L65 20 M52 30 L68 30 M52 30 L55 20 M68 30 L65 20
+             M48 50 L72 50 M48 50 L52 30 M72 50 L68 30
+             M45 70 L75 70 M45 70 L48 50 M75 70 L72 50
+             M55 70 L55 90 M65 70 L65 90
+             M42 90 L78 90 M42 90 L45 70 M78 90 L75 70
+             M38 120 L82 120 M38 120 L42 90 M82 120 L78 90
+             M50 120 L50 140 M70 120 L70 140 M60 110 L60 140
+             M35 140 L85 140 M35 140 L38 120 M85 140 L82 120
+             M30 180 L90 180 M30 180 L35 140 M90 180 L85 140
+             M25 220 L95 220 M25 220 L30 180 M95 220 L90 180
+             M20 260 L100 260 M20 260 L25 220 M100 260 L95 220
+             M15 290 L105 290 M15 290 L20 260 M105 290 L100 260
+             M10 295 L110 295"
+          stroke="var(--gold)" stroke-width=".8" stroke-linecap="round"/>
+    <!-- beacon light -->
+    <circle cx="60" cy="4" r="3" fill="var(--gold)" opacity=".8">
+      <animate attributeName="opacity" values=".3;1;.3" dur="2s" repeatCount="indefinite"/>
+      <animate attributeName="r" values="2;4;2" dur="2s" repeatCount="indefinite"/>
+    </circle>
+  </svg>
+</div>
+
+<!-- section 2 : intuition -->
+<section class="section reveal">
+  <p class="section__label">L'intuition</p>
+  <p class="section__text">
+    Imaginer que Paris puisse <em>répondre</em>. Faire de la Tour Eiffel un relais symbolique, une balise envoyant en morse un <strong>« bonjour »</strong> vers le ciel.
+  </p>
+  <p class="section__text">
+    Une semaine avant son retour, le 9 novembre 2021, égrener un <strong>compte à rebours lumineux</strong> &mdash; 6, 5, 4, 3, 2, 1… 0 &mdash; comme une respiration collective.
+  </p>
+</section>
+
+<!-- morse "BONJOUR" -->
+<div class="morse-legend reveal">
+  <div class="morse-letter">
+    <span class="morse-letter__char">B</span>
+    <div class="morse-letter__dots"><i class="dash"></i><i class="dot"></i><i class="dot"></i><i class="dot"></i></div>
+    <span class="morse-letter__code">&mdash;···</span>
+  </div>
+  <div class="morse-letter">
+    <span class="morse-letter__char">O</span>
+    <div class="morse-letter__dots"><i class="dash"></i><i class="dash"></i><i class="dash"></i></div>
+    <span class="morse-letter__code">&mdash;&mdash;&mdash;</span>
+  </div>
+  <div class="morse-letter">
+    <span class="morse-letter__char">N</span>
+    <div class="morse-letter__dots"><i class="dash"></i><i class="dot"></i></div>
+    <span class="morse-letter__code">&mdash;·</span>
+  </div>
+  <div class="morse-letter">
+    <span class="morse-letter__char">J</span>
+    <div class="morse-letter__dots"><i class="dot"></i><i class="dash"></i><i class="dash"></i><i class="dash"></i></div>
+    <span class="morse-letter__code">·&mdash;&mdash;&mdash;</span>
+  </div>
+  <div class="morse-letter">
+    <span class="morse-letter__char">O</span>
+    <div class="morse-letter__dots"><i class="dash"></i><i class="dash"></i><i class="dash"></i></div>
+    <span class="morse-letter__code">&mdash;&mdash;&mdash;</span>
+  </div>
+  <div class="morse-letter">
+    <span class="morse-letter__char">U</span>
+    <div class="morse-letter__dots"><i class="dot"></i><i class="dot"></i><i class="dash"></i></div>
+    <span class="morse-letter__code">··&mdash;</span>
+  </div>
+  <div class="morse-letter">
+    <span class="morse-letter__char">R</span>
+    <div class="morse-letter__dots"><i class="dot"></i><i class="dash"></i><i class="dot"></i></div>
+    <span class="morse-letter__code">·&mdash;·</span>
+  </div>
+</div>
+
+<!-- section 3 : ecology -->
+<section class="section reveal">
+  <p class="section__label">Poétique & Écologie</p>
+  <p class="section__text">
+    La dimension écologique et poétique était au c&oelig;ur du geste. Dialoguer avec le cosmos, non pour le conquérir, mais pour <em>mieux préserver la Terre</em>.
+  </p>
+  <p class="section__text">
+    Si l'Overview Effect transforme ceux qui montent là-haut, pourquoi ne pas en proposer une <strong>traduction poétique ici-bas</strong>&nbsp;? Utiliser la magie &mdash; celle du récit, de la lumière, du symbole &mdash; pour rendre visible l'essentiel&nbsp;: nous habitons un miracle commun.
+  </p>
+</section>
+
+<!-- quote -->
+<div class="quote-block reveal">
+  <p class="quote-block__text">
+    &laquo;&nbsp;Penser en <span>visionnaire</span>,<br>agir en <span>artisan</span>&nbsp;&raquo;
+  </p>
+  <span class="quote-block__dash"></span>
+</div>
+
+<!-- section 4 : method -->
+<section class="section reveal">
+  <p class="section__label">La Méthode</p>
+  <p class="section__text">
+    Partir de l'effet final &mdash; l'émotion d'une ville qui clignote vers l'espace &mdash; puis descendre vers le possible. Transformer une contrainte en changement d'échelle.
+  </p>
+  <p class="section__text">
+    Quand l'idée est proposée en DM à <strong>Jean-François Martin</strong> de la SETE, l'enthousiasme est réciproque&nbsp;: <em>«&nbsp;deal&nbsp;»</em>. L'ESA évoque une autre temporalité. Le frère de Thomas se montre enthousiaste. Aucun refus formel &mdash; simplement la complexité légitime des procédures.
+  </p>
+  <p class="section__text">
+    Créer un pont entre <strong>science, art et conscience écologique</strong>. Raconter une histoire assez belle pour rassembler, et assez précise pour devenir réelle.
+  </p>
+</section>
+
+<!-- footer -->
+<footer class="footer reveal">
+  <p class="footer__line">·&mdash; &ensp; ·&mdash;&mdash;&mdash; &ensp; &mdash;·&mdash;&mdash;</p>
+  <span class="footer__year">Paris &mdash; ISS &middot; Novembre 2021</span>
+</footer>
+
+<script>
+/* ─── starfield ─── */
+(function(){
+  const c=document.querySelector('#stars canvas');
+  const ctx=c.getContext('2d');
+  let stars=[];
+  function resize(){c.width=innerWidth;c.height=innerHeight;init()}
+  function init(){
+    stars=[];
+    for(let i=0;i<260;i++){
+      stars.push({
+        x:Math.random()*c.width,
+        y:Math.random()*c.height,
+        r:Math.random()*1.2+.2,
+        a:Math.random()*.6+.1,
+        s:Math.random()*.0008+.0002
+      });
+    }
+  }
+  function draw(t){
+    ctx.clearRect(0,0,c.width,c.height);
+    stars.forEach(s=>{
+      const flicker=Math.sin(t*s.s*6+s.x)*0.3+0.7;
+      ctx.globalAlpha=s.a*flicker;
+      ctx.fillStyle='#fff';
+      ctx.beginPath();
+      ctx.arc(s.x,s.y,s.r,0,Math.PI*2);
+      ctx.fill();
+    });
+    requestAnimationFrame(draw);
+  }
+  resize();
+  addEventListener('resize',resize);
+  requestAnimationFrame(draw);
+})();
+
+/* ─── scroll reveal ─── */
+const obs=new IntersectionObserver((entries)=>{
+  entries.forEach(e=>{if(e.isIntersecting)e.target.classList.add('visible')});
+},{threshold:.15});
+document.querySelectorAll('.reveal').forEach(el=>obs.observe(el));
+
+/* ─── countdown light-up on scroll ─── */
+const countObs=new IntersectionObserver((entries)=>{
+  entries.forEach(e=>{
+    if(e.isIntersecting){
+      const digits=document.querySelectorAll('.countdown__digit');
+      digits.forEach((d,i)=>{
+        setTimeout(()=>d.classList.add('lit'),i*400);
+      });
+      countObs.disconnect();
+    }
+  });
+},{threshold:.5});
+countObs.observe(document.querySelector('.countdown'));
+</script>
+</body>
+</html>

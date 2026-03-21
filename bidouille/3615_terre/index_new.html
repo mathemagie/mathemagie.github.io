@@ -386,8 +386,6 @@ body {
 </head>
 <body>
     <main class="minitel-container">
-        <span class="brand-label" aria-hidden="true">MINITEL</span>
-
         <div class="crt-screen" role="application" aria-label="Terminal 3615 TERRE - Ecoute Aveugle">
             <div class="crt-overlay" id="crtOverlay" aria-hidden="true">
                 <div class="scanlines"></div>
@@ -400,10 +398,6 @@ body {
             </div>
         </div>
 
-        <div class="power-light" aria-hidden="true">
-            <div class="power-dot"></div>
-            <span class="power-label">POWER</span>
-        </div>
     </main>
 
     <!-- Hidden Audio Elements for Crossfade -->
@@ -1278,7 +1272,7 @@ body {
                     audioPlayer1.pause();
                     audioUnlocked = true;
                     const prompt = document.getElementById('audioUnlockPrompt');
-                    if (prompt) prompt.style.display = 'none';
+                    if (prompt) prompt.remove();
                     if (currentTrack && !isPlaying) {
                         const currentPlayer = activePlayer === 1 ? audioPlayer1 : audioPlayer2;
                         if (currentPlayer.src) {
@@ -1292,7 +1286,7 @@ body {
                         audioPlayer1.src = '';
                         audioUnlocked = true;
                         const prompt = document.getElementById('audioUnlockPrompt');
-                        if (prompt) prompt.style.display = 'none';
+                        if (prompt) prompt.remove();
                     }).catch(console.error);
                 });
             }
