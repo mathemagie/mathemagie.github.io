@@ -122,10 +122,22 @@ h1 {
     background: rgba(0,0,0,0.92);
     padding: 2rem;
     opacity: 1;
-    transition: opacity 1.5s ease-out;
+    transition: opacity 0.8s ease-out, backdrop-filter 0.8s ease-out;
     pointer-events: none;
+    backdrop-filter: blur(4px);
 }
-.overlay-text.fade-out { opacity: 0; }
+.overlay-text.fade-out .line {
+    transition: opacity 0.6s ease-out, transform 0.6s ease-out, filter 0.6s ease-out;
+    opacity: 0 !important;
+    transform: translateY(-10px) !important;
+    filter: blur(4px);
+}
+.overlay-text.fade-out .line:nth-child(1) { transition-delay: 0s; }
+.overlay-text.fade-out .line:nth-child(2) { transition-delay: 0.15s; }
+.overlay-text.fade-out .line:nth-child(3) { transition-delay: 0.3s; }
+.overlay-text.fade-out .line:nth-child(4) { transition-delay: 0.45s; }
+.overlay-text.fade-out .line:nth-child(5) { transition-delay: 0.6s; }
+.overlay-text.bg-fade { opacity: 0; backdrop-filter: blur(0px); }
 .overlay-text.gone { display: none; }
 
 .overlay-text .inner {
@@ -158,6 +170,17 @@ h1 {
 
 @keyframes soundbar { 0%, 100% { transform: scaleY(1); } 50% { transform: scaleY(0.5); } }
 @keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.4; } }
+
+:fullscreen h1 { font-size: 3.5rem; margin-bottom: 3rem; }
+:fullscreen .status { font-size: 1.5rem; margin-bottom: 2.5rem; }
+:fullscreen .sound-bars { height: 120px; gap: 8px; margin: 4rem 0; }
+:fullscreen .sound-bars .bar { width: 12px; }
+:fullscreen .signal-bar { width: 400px; height: 6px; margin: 2rem auto; }
+:fullscreen .controls { margin-top: 3rem; gap: 1.5rem; }
+:fullscreen .controls label { font-size: 1.3rem; }
+:fullscreen .controls input[type=range] { width: 220px; height: 6px; }
+:fullscreen .mute-btn { font-size: 2rem; }
+:fullscreen .container { max-width: 900px; }
     </style>
 </head>
 <body>
@@ -194,6 +217,7 @@ h1 {
         <label>VOL</label>
         <input type="range" id="volumeSlider" min="0" max="100" value="70">
         <button class="mute-btn" id="muteBtn">🔊</button>
+        <button class="mute-btn" id="fullscreenBtn">⛶</button>
     </div>
 </div>
 
@@ -575,7 +599,8 @@ function showOverlay() {
     if (!overlay) return;
     setTimeout(() => {
         overlay.classList.add('fade-out');
-        setTimeout(() => overlay.classList.add('gone'), 1600);
+        setTimeout(() => overlay.classList.add('bg-fade'), 1200);
+        setTimeout(() => overlay.classList.add('gone'), 2200);
     }, 13000);
 }
 
@@ -588,6 +613,19 @@ document.getElementById('unlockScreen').addEventListener('click', () => {
         audioPlayer1.play().then(() => { audioPlayer1.pause(); audioPlayer1.src = ''; }).catch(() => {});
     });
     start();
+});
+
+// === Fullscreen ===
+const fullscreenBtn = document.getElementById('fullscreenBtn');
+fullscreenBtn.addEventListener('click', () => {
+    if (!document.fullscreenElement) {
+        document.documentElement.requestFullscreen().catch(() => {});
+    } else {
+        document.exitFullscreen();
+    }
+});
+document.addEventListener('fullscreenchange', () => {
+    fullscreenBtn.textContent = document.fullscreenElement ? '⛶' : '⛶';
 });
 </script>
 </body>
