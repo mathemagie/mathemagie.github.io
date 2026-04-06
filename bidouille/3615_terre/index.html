@@ -95,12 +95,12 @@ h1 {
     background: #00FFFF; border-radius: 50%; cursor: pointer;
 }
 .mute-btn {
-    background: none; border: 1px solid #00FFFF; color: #00FFFF;
-    padding: 0.3rem 0.6rem; font-family: inherit; font-size: 0.85rem; letter-spacing: 0.05em;
-    cursor: pointer;
+    background: none; border: none; color: #00FFFF;
+    padding: 0.3rem; font-size: 1.2rem;
+    cursor: pointer; line-height: 1;
 }
-.mute-btn:hover { background: rgba(0,255,255,0.15); }
-.mute-btn.muted { color: #FF0000; border-color: #FF0000; }
+.mute-btn:hover { opacity: 0.7; }
+.mute-btn.muted { }
 
 .unlock {
     position: fixed; inset: 0; background: rgba(0,0,0,0.95);
@@ -193,7 +193,7 @@ h1 {
     <div class="controls">
         <label>VOL</label>
         <input type="range" id="volumeSlider" min="0" max="100" value="70">
-        <button class="mute-btn" id="muteBtn">SON</button>
+        <button class="mute-btn" id="muteBtn">🔊</button>
     </div>
 </div>
 
@@ -535,7 +535,7 @@ volumeSlider.addEventListener('input', e => {
 
 muteBtn.addEventListener('click', () => {
     isMuted = !isMuted;
-    muteBtn.textContent = isMuted ? 'MUET' : 'SON';
+    muteBtn.textContent = isMuted ? '🔇' : '🔊';
     muteBtn.classList.toggle('muted', isMuted);
     if (audioContext && gainNode1 && gainNode2) {
         const g = activePlayer === 1 ? gainNode1 : gainNode2;
