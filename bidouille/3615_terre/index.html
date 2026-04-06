@@ -37,14 +37,6 @@ h1 {
     letter-spacing: 0.15em;
 }
 
-.status {
-    font-size: 0.9rem;
-    opacity: 0.8;
-    margin-bottom: 1.5rem;
-    min-height: 1.4em;
-    letter-spacing: 0.05em;
-}
-
 .sound-bars {
     display: flex; align-items: flex-end; justify-content: center;
     gap: 4px; height: 60px; margin: 2rem 0;
@@ -172,7 +164,6 @@ h1 {
 @keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.4; } }
 
 :fullscreen h1 { font-size: 3.5rem; margin-bottom: 3rem; }
-:fullscreen .status { font-size: 1.5rem; margin-bottom: 2.5rem; }
 :fullscreen .sound-bars { height: 120px; gap: 8px; margin: 4rem 0; }
 :fullscreen .sound-bars .bar { width: 12px; }
 :fullscreen .signal-bar { width: 400px; height: 6px; margin: 2rem auto; }
@@ -201,7 +192,6 @@ h1 {
 
 <div class="container">
     <h1>3615 TERRE</h1>
-    <div class="status" id="status">CONNEXION...</div>
 
     <div class="sound-bars" id="soundBars">
         <div class="bar paused"></div><div class="bar paused"></div>
@@ -260,7 +250,6 @@ let lastNearestResult = null;
 
 const audioPlayer1 = document.getElementById('audioPlayer1');
 const audioPlayer2 = document.getElementById('audioPlayer2');
-const statusEl = document.getElementById('status');
 const signalFill = document.getElementById('signalFill');
 const soundBars = document.getElementById('soundBars');
 const muteBtn = document.getElementById('muteBtn');
@@ -306,7 +295,6 @@ async function fetchSoundLocations() {
                 const { data, timestamp } = JSON.parse(cached);
                 if (Date.now() - timestamp < cacheExpiry) {
                     soundLocations = data;
-                    statusEl.textContent = soundLocations.length.toLocaleString() + ' LIEUX SONORES';
                     return;
                 }
             } catch (e) {}
@@ -325,10 +313,8 @@ async function fetchSoundLocations() {
                 .filter(Boolean);
             try { localStorage.setItem(cacheKey, JSON.stringify({ data: soundLocations, timestamp: Date.now() })); } catch (e) {}
         }
-        statusEl.textContent = soundLocations.length.toLocaleString() + ' LIEUX SONORES';
     } catch (error) {
         console.error("Archive.org API Error:", error);
-        statusEl.textContent = 'ERREUR CHARGEMENT SONS';
     }
 }
 
@@ -573,9 +559,7 @@ muteBtn.addEventListener('click', () => {
 
 // === Boot ===
 async function start() {
-    statusEl.textContent = 'CHARGEMENT DES SONS...';
     await Promise.all([fetchSoundLocations(), fetchISS()]);
-    statusEl.textContent = 'CONNECTE - ' + soundLocations.length.toLocaleString() + ' LIEUX';
 
     function poll() {
         issPollIntervalId = setTimeout(() => {
