@@ -19,6 +19,8 @@ body {
     justify-content: center;
     font-family: 'Share Tech Mono', monospace;
     color: #00FFFF;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
 }
 
 .container {
@@ -29,17 +31,18 @@ body {
 }
 
 h1 {
-    font-size: 1.5rem;
+    font-size: 1.75rem;
     margin-bottom: 2rem;
     text-shadow: 0 0 10px rgba(0,255,255,0.5);
-    letter-spacing: 0.1em;
+    letter-spacing: 0.15em;
 }
 
 .status {
-    font-size: 0.85rem;
-    opacity: 0.7;
+    font-size: 0.9rem;
+    opacity: 0.8;
     margin-bottom: 1.5rem;
-    min-height: 1.2em;
+    min-height: 1.4em;
+    letter-spacing: 0.05em;
 }
 
 .sound-bars {
@@ -81,7 +84,7 @@ h1 {
     display: flex; align-items: center; justify-content: center;
     gap: 1rem; margin-top: 2rem;
 }
-.controls label { font-size: 0.8rem; }
+.controls label { font-size: 0.85rem; letter-spacing: 0.08em; }
 .controls input[type=range] {
     width: 120px; height: 4px;
     -webkit-appearance: none; appearance: none;
@@ -93,7 +96,7 @@ h1 {
 }
 .mute-btn {
     background: none; border: 1px solid #00FFFF; color: #00FFFF;
-    padding: 0.2rem 0.5rem; font-family: inherit; font-size: 0.8rem;
+    padding: 0.3rem 0.6rem; font-family: inherit; font-size: 0.85rem; letter-spacing: 0.05em;
     cursor: pointer;
 }
 .mute-btn:hover { background: rgba(0,255,255,0.15); }
@@ -105,9 +108,11 @@ h1 {
     z-index: 100; cursor: pointer;
 }
 .unlock p {
-    font-size: 1.2rem; color: #00FFFF;
-    text-shadow: 0 0 10px rgba(0,255,255,0.8);
+    font-size: 1.3rem; color: #00FFFF;
+    text-shadow: 0 0 12px rgba(0,255,255,0.8);
     animation: pulse 2s infinite;
+    letter-spacing: 0.12em;
+    line-height: 1.6;
 }
 .unlock.hidden { display: none; }
 
@@ -124,19 +129,20 @@ h1 {
 .overlay-text.gone { display: none; }
 
 .overlay-text .inner {
-    max-width: 560px;
+    max-width: 580px;
     text-align: center;
-    line-height: 2.4;
-    font-size: 1.15rem;
-    color: #e0e0e0;
-    letter-spacing: 0.02em;
+    line-height: 2.6;
+    font-size: 1.2rem;
+    color: #e8e8e8;
+    letter-spacing: 0.03em;
     font-family: 'Share Tech Mono', monospace;
+    word-spacing: 0.05em;
 }
 .overlay-text .inner .line {
     opacity: 0;
     transform: translateY(12px);
     animation: lineIn 0.8s ease forwards;
-    margin-bottom: 0.8rem;
+    margin-bottom: 1rem;
     display: block;
 }
 .overlay-text .inner .line:nth-child(1) { animation-delay: 0.5s; }
@@ -144,7 +150,7 @@ h1 {
 .overlay-text .inner .line:nth-child(3) { animation-delay: 5s; }
 .overlay-text .inner .line:nth-child(4) { animation-delay: 7s; }
 .overlay-text .inner .line:nth-child(5) { animation-delay: 9s; }
-.overlay-text .inner .accent { color: #00FFFF; text-shadow: 0 0 10px rgba(0,255,255,0.6); font-size: 1.25rem; }
+.overlay-text .inner .accent { color: #00FFFF; text-shadow: 0 0 12px rgba(0,255,255,0.6); font-size: 1.3rem; letter-spacing: 0.04em; }
 
 @keyframes lineIn {
     to { opacity: 1; transform: translateY(0); }
