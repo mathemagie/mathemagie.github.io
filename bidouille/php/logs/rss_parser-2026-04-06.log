@@ -1,0 +1,9 @@
+{"message":"Fetching RSS feed","context":{"url":"https://news.ycombinator.com/rss"},"level":200,"level_name":"INFO","channel":"rss-parser","datetime":"2026-04-06T15:16:16.619638+00:00","extra":{}}
+{"message":"Parsed RSS feed","context":{"title":"Hacker News","item_count":30},"level":200,"level_name":"INFO","channel":"rss-parser","datetime":"2026-04-06T15:16:17.427382+00:00","extra":{}}
+{"message":"Display complete","context":{"total_items":30},"level":200,"level_name":"INFO","channel":"rss-parser","datetime":"2026-04-06T15:16:17.427934+00:00","extra":{}}
+{"message":"Fetching RSS feed","context":{"url":"https://news.ycombinator.com/rss"},"level":200,"level_name":"INFO","channel":"rss-parser","datetime":"2026-04-06T15:16:27.713054+00:00","extra":{}}
+{"message":"Parsed RSS feed","context":{"title":"Hacker News","item_count":30},"level":200,"level_name":"INFO","channel":"rss-parser","datetime":"2026-04-06T15:16:28.336447+00:00","extra":{}}
+{"message":"Display complete","context":{"total_items":30},"level":200,"level_name":"INFO","channel":"rss-parser","datetime":"2026-04-06T15:16:28.337272+00:00","extra":{}}
+{"message":"Fetching RSS feed","context":{"url":"https://news.ycombinator.com/rss"},"level":200,"level_name":"INFO","channel":"rss-parser","datetime":"2026-04-06T19:46:21.496647+00:00","extra":{}}
+{"message":"Parsed RSS feed","context":{"title":"Hacker News","item_count":30},"level":200,"level_name":"INFO","channel":"rss-parser","datetime":"2026-04-06T19:46:22.191517+00:00","extra":{}}
+{"message":"Display complete","context":{"total_items":30},"level":200,"level_name":"INFO","channel":"rss-parser","datetime":"2026-04-06T19:46:22.193126+00:00","extra":{}}
