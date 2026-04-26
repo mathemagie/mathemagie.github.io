@@ -1,0 +1,91 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <meta name="theme-color" content="#0a0a14">
+    <meta name="description" content="Rotary phone interface — dial 06 20 83 88 25 to receive a transmission from deep space.">
+
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="apple-mobile-web-app-title" content="Alien Phone">
+
+    <title>Rotary Phone — Alien Call</title>
+    <link rel="stylesheet" href="css/styles.css">
+</head>
+<body>
+    <div class="stars" id="stars" aria-hidden="true"></div>
+
+    <main class="phone-stage" id="stage">
+        <header class="hud">
+            <h1>☎ ROTARY · DEEP SPACE LINE</h1>
+            <p class="hint" id="hint">Dial <strong>06 20 83 88 25</strong> · spin the dial, finger in the hole, drag to the stop</p>
+        </header>
+
+        <section class="display" aria-live="polite">
+            <span class="display-label">Dialed</span>
+            <span class="display-number" id="display">_ _ _ _ _ _ _ _ _ _</span>
+            <button class="clear-btn" id="clear" aria-label="Clear number">⟲ clear</button>
+        </section>
+
+        <section class="phone" aria-label="Rotary phone">
+            <div class="handset" id="handset" aria-label="Handset">
+                <div class="earpiece"></div>
+                <div class="bar"></div>
+                <div class="mouthpiece"></div>
+            </div>
+
+            <div class="dial-housing">
+                <svg class="finger-stop" viewBox="0 0 100 100" aria-hidden="true">
+                    <path d="M 50 10 L 90 10 L 90 50 Z" />
+                </svg>
+
+                <div class="dial" id="dial" role="group" aria-label="Rotary dial">
+                    <div class="dial-face">
+                        <!-- 10 number holes positioned via CSS -->
+                        <button class="hole" data-digit="1" style="--i:0">1</button>
+                        <button class="hole" data-digit="2" style="--i:1">2</button>
+                        <button class="hole" data-digit="3" style="--i:2">3</button>
+                        <button class="hole" data-digit="4" style="--i:3">4</button>
+                        <button class="hole" data-digit="5" style="--i:4">5</button>
+                        <button class="hole" data-digit="6" style="--i:5">6</button>
+                        <button class="hole" data-digit="7" style="--i:6">7</button>
+                        <button class="hole" data-digit="8" style="--i:7">8</button>
+                        <button class="hole" data-digit="9" style="--i:8">9</button>
+                        <button class="hole" data-digit="0" style="--i:9">0</button>
+                    </div>
+                    <div class="dial-center">
+                        <span>SPACE<br>OPÉRATEUR</span>
+                    </div>
+                </div>
+            </div>
+
+            <div class="cradle"></div>
+        </section>
+
+        <footer class="signal" id="signal">
+            <span class="dot"></span> idle · awaiting your call
+        </footer>
+    </main>
+
+    <!-- Alien call overlay -->
+    <div class="overlay" id="overlay" hidden>
+        <div class="overlay-frame">
+            <div class="scanlines"></div>
+            <div class="overlay-status" id="status">::: ESTABLISHING UPLINK :::</div>
+            <div class="waveform">
+                <canvas id="scope" width="800" height="160"></canvas>
+            </div>
+            <div class="subtitles" id="subtitles">— ̸ ̴ —</div>
+            <button class="hangup" id="hangup">HANG UP</button>
+            <div class="meta">
+                <span>SIGNAL: <em id="meta-rssi">-∞ dBm</em></span>
+                <span>DRIFT: <em id="meta-drift">0.0 Hz</em></span>
+                <span>ORIGIN: <em id="meta-origin">UNKNOWN</em></span>
+            </div>
+        </div>
+    </div>
+
+    <script src="js/script.js"></script>
+</body>
+</html>

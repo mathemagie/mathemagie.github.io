@@ -1,0 +1,483 @@
+:root {
+    --bg: #07070d;
+    --bg-2: #0f1020;
+    --ink: #e9e7d8;
+    --neon: #7cf9ff;
+    --neon-dim: #3aa8b3;
+    --hot: #ff5470;
+    --bake: #c9a36a;
+    --phone-body: #1c0f10;
+    --phone-glow: #2a1010;
+    --dial-face: #2b1a1a;
+    --dial-ring: #d8c9a0;
+    --hole-bg: #0c0608;
+}
+
+* { box-sizing: border-box; }
+
+html, body {
+    margin: 0;
+    padding: 0;
+    min-height: 100vh;
+    background: radial-gradient(ellipse at 50% 0%, #1a1330 0%, #07070d 55%, #000 100%);
+    color: var(--ink);
+    font-family: "Courier New", ui-monospace, monospace;
+    overflow-x: hidden;
+    user-select: none;
+    -webkit-user-select: none;
+    -webkit-tap-highlight-color: transparent;
+}
+
+/* ---------- starfield ---------- */
+.stars {
+    position: fixed;
+    inset: 0;
+    background:
+        radial-gradient(1px 1px at 12% 22%, #fff, transparent 60%),
+        radial-gradient(1px 1px at 78% 18%, #fff, transparent 60%),
+        radial-gradient(1.5px 1.5px at 30% 70%, #fff, transparent 60%),
+        radial-gradient(1px 1px at 65% 80%, #fff, transparent 60%),
+        radial-gradient(1px 1px at 88% 55%, #fff, transparent 60%),
+        radial-gradient(2px 2px at 5% 85%, #fff, transparent 60%),
+        radial-gradient(1px 1px at 50% 35%, #fff, transparent 60%),
+        radial-gradient(1.5px 1.5px at 22% 50%, #fff, transparent 60%),
+        radial-gradient(1px 1px at 95% 15%, #fff, transparent 60%),
+        radial-gradient(1px 1px at 40% 92%, #fff, transparent 60%);
+    background-size: 100% 100%;
+    z-index: 0;
+    animation: drift 60s linear infinite;
+    opacity: 0.7;
+}
+@keyframes drift {
+    from { transform: translateY(0); }
+    to { transform: translateY(-40px); }
+}
+
+/* ---------- main stage ---------- */
+.phone-stage {
+    position: relative;
+    z-index: 1;
+    max-width: 720px;
+    margin: 0 auto;
+    padding: 28px 18px 60px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 18px;
+}
+
+.hud {
+    text-align: center;
+    width: 100%;
+}
+.hud h1 {
+    margin: 0;
+    font-size: 1.1rem;
+    letter-spacing: 0.18em;
+    color: var(--neon);
+    text-shadow: 0 0 12px rgba(124, 249, 255, 0.45);
+}
+.hint {
+    margin: 8px 0 0;
+    font-size: 0.85rem;
+    opacity: 0.75;
+}
+.hint strong {
+    color: var(--bake);
+    letter-spacing: 0.1em;
+}
+
+/* ---------- display ---------- */
+.display {
+    width: 100%;
+    max-width: 480px;
+    background: linear-gradient(180deg, #0c2a14 0%, #05140a 100%);
+    border: 1px solid #1d4a2c;
+    border-radius: 8px;
+    padding: 12px 16px;
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    box-shadow:
+        inset 0 0 24px rgba(0, 255, 120, 0.18),
+        0 0 18px rgba(0, 0, 0, 0.5);
+    font-family: "VT323", "Courier New", monospace;
+}
+.display-label {
+    color: #6dd098;
+    font-size: 0.75rem;
+    letter-spacing: 0.15em;
+    text-transform: uppercase;
+    opacity: 0.7;
+}
+.display-number {
+    flex: 1;
+    color: #b8ffd0;
+    font-size: 1.5rem;
+    letter-spacing: 0.3em;
+    text-shadow: 0 0 8px rgba(120, 255, 170, 0.6);
+    word-spacing: 0.2em;
+}
+.clear-btn {
+    background: transparent;
+    border: 1px solid #2c5e3f;
+    color: #6dd098;
+    padding: 4px 10px;
+    border-radius: 4px;
+    cursor: pointer;
+    font-family: inherit;
+    font-size: 0.75rem;
+    transition: all 0.2s;
+}
+.clear-btn:hover {
+    background: rgba(108, 208, 152, 0.1);
+    color: #b8ffd0;
+}
+
+/* ---------- phone body ---------- */
+.phone {
+    position: relative;
+    width: min(92vw, 460px);
+    aspect-ratio: 1;
+    background:
+        radial-gradient(ellipse at 30% 25%, #4a1f22 0%, #1c0f10 60%),
+        var(--phone-body);
+    border-radius: 50% 50% 46% 46% / 48% 48% 52% 52%;
+    box-shadow:
+        0 30px 60px rgba(0, 0, 0, 0.7),
+        inset 0 -20px 40px rgba(0, 0, 0, 0.6),
+        inset 0 12px 30px rgba(255, 100, 100, 0.08);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin-top: 12px;
+}
+
+/* handset cradle on top */
+.handset {
+    position: absolute;
+    top: -36px;
+    left: 50%;
+    transform: translateX(-50%) rotate(-6deg);
+    width: 78%;
+    height: 60px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    pointer-events: none;
+    transition: transform 0.4s cubic-bezier(.2,.9,.3,1.4);
+    z-index: 5;
+}
+.handset.lifted {
+    transform: translate(-46%, -90px) rotate(-22deg);
+}
+.handset .earpiece,
+.handset .mouthpiece {
+    width: 70px;
+    height: 60px;
+    background: radial-gradient(circle at 40% 35%, #3a1c1f 0%, #120708 80%);
+    border-radius: 50%;
+    box-shadow:
+        inset 0 0 20px rgba(0, 0, 0, 0.7),
+        0 8px 16px rgba(0, 0, 0, 0.6);
+    position: relative;
+}
+.handset .earpiece::after,
+.handset .mouthpiece::after {
+    content: "";
+    position: absolute;
+    inset: 14px;
+    border-radius: 50%;
+    background:
+        radial-gradient(circle, #060304 1.6px, transparent 1.8px) 0 0 / 8px 8px;
+    opacity: 0.7;
+}
+.handset .bar {
+    flex: 1;
+    height: 22px;
+    margin: 0 -8px;
+    background: linear-gradient(180deg, #3a1c1f, #120708);
+    border-radius: 18px;
+    box-shadow: inset 0 -4px 10px rgba(0, 0, 0, 0.6);
+}
+
+/* dial housing */
+.dial-housing {
+    position: relative;
+    width: 86%;
+    aspect-ratio: 1;
+    background: radial-gradient(circle, #2c1a1a 0%, #1a0f0f 70%);
+    border-radius: 50%;
+    box-shadow:
+        inset 0 0 30px rgba(0, 0, 0, 0.8),
+        inset 0 6px 0 rgba(255, 200, 200, 0.05);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.finger-stop {
+    position: absolute;
+    top: 6%;
+    right: 6%;
+    width: 22%;
+    height: 22%;
+    transform: rotate(28deg);
+    pointer-events: none;
+    z-index: 3;
+}
+.finger-stop path {
+    fill: #150707;
+    stroke: rgba(0, 0, 0, 0.6);
+    stroke-width: 1;
+    filter: drop-shadow(0 4px 6px rgba(0, 0, 0, 0.6));
+}
+
+/* dial wheel */
+.dial {
+    position: relative;
+    width: 84%;
+    aspect-ratio: 1;
+    border-radius: 50%;
+    background:
+        radial-gradient(circle at 50% 40%, #f0e2b5 0%, #c9a36a 60%, #9a7a48 100%);
+    box-shadow:
+        0 6px 14px rgba(0, 0, 0, 0.55),
+        inset 0 0 0 6px rgba(70, 30, 30, 0.55),
+        inset 0 0 18px rgba(255, 255, 255, 0.18);
+    transition: transform 0.45s cubic-bezier(.45,.05,.55,.95);
+    will-change: transform;
+}
+.dial.spinning {
+    transition: transform var(--spin-time, 0.6s) cubic-bezier(.4,.05,.55,.95);
+}
+.dial.returning {
+    transition: transform var(--return-time, 1.2s) cubic-bezier(.45,.05,.55,.95);
+}
+
+.dial-face {
+    position: absolute;
+    inset: 0;
+}
+
+/* number holes — arranged on a circle */
+.hole {
+    position: absolute;
+    width: 17%;
+    aspect-ratio: 1;
+    top: 50%;
+    left: 50%;
+    margin: -8.5% 0 0 -8.5%;
+    border: none;
+    border-radius: 50%;
+    background:
+        radial-gradient(circle at 40% 40%, #1c0f0f 0%, #050203 80%);
+    color: rgba(20, 10, 10, 0.85);
+    font-family: "Georgia", serif;
+    font-weight: bold;
+    font-size: clamp(1rem, 4.4vw, 1.6rem);
+    cursor: pointer;
+    box-shadow:
+        inset 0 4px 8px rgba(0, 0, 0, 0.8),
+        inset 0 -2px 4px rgba(255, 200, 150, 0.08),
+        0 0 0 1px rgba(40, 20, 20, 0.5);
+    /* place each hole around a circle: angle = -90 + i*30 degrees, but
+       on rotary phones the digit "1" starts at the top-right of the stop.
+       We compute via custom property --i (0..9) and a base angle. */
+    --angle: calc(-60deg + var(--i) * 30deg);
+    --r: 38%;
+    transform:
+        rotate(var(--angle))
+        translate(var(--r))
+        rotate(calc(-1 * var(--angle)));
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: filter 0.15s;
+}
+.hole:hover {
+    filter: brightness(1.6);
+}
+.hole:active {
+    filter: brightness(0.7);
+}
+
+.dial-center {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    width: 30%;
+    height: 30%;
+    margin: -15% 0 0 -15%;
+    border-radius: 50%;
+    background: radial-gradient(circle, #1c0f0f, #050203);
+    color: var(--neon-dim);
+    font-size: 0.55rem;
+    letter-spacing: 0.15em;
+    text-align: center;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    box-shadow:
+        inset 0 0 10px rgba(0, 0, 0, 0.7),
+        0 0 0 4px rgba(60, 30, 30, 0.6);
+    pointer-events: none;
+}
+
+.cradle {
+    position: absolute;
+    bottom: 4%;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 30%;
+    height: 8%;
+    background: radial-gradient(ellipse, #2a1212 0%, #0a0303 100%);
+    border-radius: 50%;
+    box-shadow: inset 0 4px 8px rgba(0, 0, 0, 0.7);
+}
+
+/* signal/status row */
+.signal {
+    margin-top: 10px;
+    font-size: 0.78rem;
+    letter-spacing: 0.12em;
+    color: var(--neon);
+    text-transform: uppercase;
+    opacity: 0.85;
+}
+.signal .dot {
+    display: inline-block;
+    width: 8px; height: 8px;
+    border-radius: 50%;
+    background: var(--neon);
+    box-shadow: 0 0 10px var(--neon);
+    margin-right: 6px;
+    vertical-align: middle;
+    animation: pulse 1.5s ease-in-out infinite;
+}
+.signal.live .dot { background: var(--hot); box-shadow: 0 0 14px var(--hot); }
+.signal.live { color: var(--hot); }
+.signal.dialing .dot { background: var(--bake); box-shadow: 0 0 12px var(--bake); }
+.signal.dialing { color: var(--bake); }
+
+@keyframes pulse {
+    0%, 100% { opacity: 1; transform: scale(1); }
+    50%      { opacity: 0.4; transform: scale(0.7); }
+}
+
+/* ---------- alien overlay ---------- */
+.overlay {
+    position: fixed;
+    inset: 0;
+    background: radial-gradient(ellipse at 50% 50%, #0a0030 0%, #000 75%);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 100;
+    animation: fadein 0.6s ease;
+}
+.overlay[hidden] { display: none; }
+@keyframes fadein {
+    from { opacity: 0; }
+    to   { opacity: 1; }
+}
+
+.overlay-frame {
+    position: relative;
+    width: min(94vw, 720px);
+    padding: 22px 24px 28px;
+    border: 1px solid var(--neon);
+    border-radius: 10px;
+    background: rgba(8, 0, 24, 0.7);
+    box-shadow:
+        0 0 60px rgba(124, 249, 255, 0.3),
+        inset 0 0 30px rgba(124, 249, 255, 0.08);
+    backdrop-filter: blur(6px);
+    overflow: hidden;
+}
+
+.scanlines {
+    position: absolute;
+    inset: 0;
+    pointer-events: none;
+    background: repeating-linear-gradient(
+        180deg,
+        rgba(124, 249, 255, 0.04) 0 2px,
+        transparent 2px 4px
+    );
+    mix-blend-mode: screen;
+    animation: scan 6s linear infinite;
+}
+@keyframes scan {
+    from { transform: translateY(0); }
+    to   { transform: translateY(40px); }
+}
+
+.overlay-status {
+    color: var(--neon);
+    letter-spacing: 0.2em;
+    text-shadow: 0 0 10px rgba(124, 249, 255, 0.6);
+    margin-bottom: 14px;
+    font-size: 0.95rem;
+}
+
+.waveform {
+    background: rgba(0, 0, 0, 0.55);
+    border: 1px solid rgba(124, 249, 255, 0.3);
+    border-radius: 6px;
+    padding: 4px;
+}
+#scope {
+    width: 100%;
+    height: 160px;
+    display: block;
+}
+
+.subtitles {
+    margin: 16px 0 14px;
+    min-height: 3.2em;
+    font-family: "VT323", "Courier New", monospace;
+    font-size: 1.4rem;
+    color: var(--ink);
+    letter-spacing: 0.1em;
+    text-shadow: 0 0 6px rgba(124, 249, 255, 0.4);
+    line-height: 1.4;
+    word-break: break-word;
+}
+
+.hangup {
+    background: linear-gradient(180deg, #ff5470 0%, #b82a44 100%);
+    border: none;
+    color: #fff;
+    padding: 10px 18px;
+    border-radius: 6px;
+    font-family: inherit;
+    font-weight: bold;
+    letter-spacing: 0.18em;
+    cursor: pointer;
+    box-shadow: 0 6px 16px rgba(255, 84, 112, 0.4);
+    transition: transform 0.2s;
+}
+.hangup:hover { transform: translateY(-2px); }
+.hangup:active { transform: translateY(1px); }
+
+.meta {
+    margin-top: 16px;
+    display: flex;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    gap: 10px;
+    font-size: 0.75rem;
+    color: var(--neon-dim);
+    letter-spacing: 0.1em;
+}
+.meta em {
+    font-style: normal;
+    color: var(--neon);
+}
+
+@media (max-width: 480px) {
+    .display-number { font-size: 1.1rem; letter-spacing: 0.18em; }
+    .hud h1 { font-size: 0.92rem; }
+    .subtitles { font-size: 1.1rem; }
+}
