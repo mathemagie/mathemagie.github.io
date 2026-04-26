@@ -28,39 +28,58 @@
             <button class="clear-btn" id="clear" aria-label="Clear number">⟲ clear</button>
         </section>
 
-        <section class="phone" aria-label="Rotary phone">
+        <section class="phone" aria-label="Rotary phone — Socotel S63">
             <div class="handset" id="handset" aria-label="Handset">
                 <div class="earpiece"></div>
                 <div class="bar"></div>
                 <div class="mouthpiece"></div>
             </div>
 
-            <div class="dial-housing">
-                <svg class="finger-stop" viewBox="0 0 100 100" aria-hidden="true">
-                    <path d="M 50 10 L 90 10 L 90 50 Z" />
-                </svg>
+            <div class="cradle-prong cradle-left"></div>
+            <div class="cradle-prong cradle-right"></div>
 
-                <div class="dial" id="dial" role="group" aria-label="Rotary dial">
-                    <div class="dial-face">
-                        <!-- 10 number holes positioned via CSS -->
-                        <button class="hole" data-digit="1" style="--i:0">1</button>
-                        <button class="hole" data-digit="2" style="--i:1">2</button>
-                        <button class="hole" data-digit="3" style="--i:2">3</button>
-                        <button class="hole" data-digit="4" style="--i:3">4</button>
-                        <button class="hole" data-digit="5" style="--i:4">5</button>
-                        <button class="hole" data-digit="6" style="--i:5">6</button>
-                        <button class="hole" data-digit="7" style="--i:6">7</button>
-                        <button class="hole" data-digit="8" style="--i:7">8</button>
-                        <button class="hole" data-digit="9" style="--i:8">9</button>
-                        <button class="hole" data-digit="0" style="--i:9">0</button>
+            <div class="dial-plate">
+                <div class="dial-housing">
+                    <svg class="finger-stop" viewBox="0 0 100 100" aria-hidden="true">
+                        <path d="M 50 8 L 92 8 L 92 50 Z" />
+                    </svg>
+
+                    <div class="number-ring" aria-hidden="true">
+                        <span class="num" style="--i:0">1</span>
+                        <span class="num" style="--i:1">2</span>
+                        <span class="num" style="--i:2">3</span>
+                        <span class="num" style="--i:3">4</span>
+                        <span class="num" style="--i:4">5</span>
+                        <span class="num" style="--i:5">6</span>
+                        <span class="num" style="--i:6">7</span>
+                        <span class="num" style="--i:7">8</span>
+                        <span class="num" style="--i:8">9</span>
+                        <span class="num" style="--i:9">0</span>
                     </div>
-                    <div class="dial-center">
-                        <span>SPACE<br>OPÉRATEUR</span>
+
+                    <div class="dial" id="dial" role="group" aria-label="Rotary dial">
+                        <div class="dial-face">
+                            <button class="hole" data-digit="1" style="--i:0" aria-label="1"></button>
+                            <button class="hole" data-digit="2" style="--i:1" aria-label="2"></button>
+                            <button class="hole" data-digit="3" style="--i:2" aria-label="3"></button>
+                            <button class="hole" data-digit="4" style="--i:3" aria-label="4"></button>
+                            <button class="hole" data-digit="5" style="--i:4" aria-label="5"></button>
+                            <button class="hole" data-digit="6" style="--i:5" aria-label="6"></button>
+                            <button class="hole" data-digit="7" style="--i:6" aria-label="7"></button>
+                            <button class="hole" data-digit="8" style="--i:7" aria-label="8"></button>
+                            <button class="hole" data-digit="9" style="--i:8" aria-label="9"></button>
+                            <button class="hole" data-digit="0" style="--i:9" aria-label="0"></button>
+                        </div>
+                        <div class="dial-center">
+                            <span>SOCOTEL<br>S63</span>
+                        </div>
                     </div>
                 </div>
             </div>
 
-            <div class="cradle"></div>
+            <div class="card-drawer" aria-hidden="true">
+                <span class="card-number">06 20 83 88 25</span>
+            </div>
         </section>
 
         <footer class="signal" id="signal">
