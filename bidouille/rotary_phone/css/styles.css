@@ -149,12 +149,45 @@ html, body {
     color: #b8ffd0;
 }
 
+/* ---------- desk surface beneath the phone (sells the 3D) ---------- */
+.phone-stage::before {
+    content: "";
+    position: absolute;
+    left: 50%;
+    top: 58%;
+    width: min(140vw, 1100px);
+    height: 60vh;
+    transform: translateX(-50%);
+    background:
+        /* soft wood grain streaks */
+        repeating-linear-gradient(94deg,
+            rgba(60, 30, 12, 0) 0 12px,
+            rgba(60, 30, 12, 0.08) 12px 14px,
+            rgba(60, 30, 12, 0) 14px 26px),
+        /* warm wood plank */
+        radial-gradient(ellipse at 50% 0%,
+            #5b3a1c 0%,
+            #3a2410 35%,
+            #1d130a 75%,
+            #08060a 100%);
+    z-index: 0;
+    pointer-events: none;
+    box-shadow:
+        inset 0 30px 60px rgba(0, 0, 0, 0.55),
+        inset 0 -10px 40px rgba(0, 0, 0, 0.6);
+    mask: linear-gradient(180deg, transparent 0%, #000 14%, #000 78%, transparent 100%);
+    -webkit-mask: linear-gradient(180deg, transparent 0%, #000 14%, #000 78%, transparent 100%);
+}
+
 /* ---------- phone body (Socotel S63 — orange teardrop) ---------- */
 .phone {
     position: relative;
     /* aspect close to reference photo (~4:5) */
     width: min(86vw, 440px);
     height: min(96vw, 500px);
+    /* slight 3D tilt — viewed from very slightly above */
+    transform: perspective(1400px) rotateX(8deg);
+    transform-style: preserve-3d;
     background:
         /* subtle wear/dust */
         radial-gradient(circle at 20% 70%, rgba(90, 35, 5, 0.07) 0 1.2px, transparent 1.5px),
@@ -164,11 +197,18 @@ html, body {
     /* shoulder / keyhole: rounded shoulders, gently curved bottom */
     border-radius: 50% 50% 28% 28% / 42% 42% 22% 22%;
     box-shadow:
-        0 40px 80px rgba(0, 0, 0, 0.6),
-        0 14px 28px rgba(0, 0, 0, 0.4),
-        0 6px 0 var(--body-shade),
-        inset 0 -22px 34px rgba(90, 35, 5, 0.45),
-        inset 0 -2px 0 rgba(122, 48, 8, 0.6),
+        /* hard contact shadow under the phone (sits on the desk) */
+        0 8px 0 -1px var(--body-shade),
+        0 14px 18px -4px rgba(0, 0, 0, 0.85),
+        /* soft cast shadow on the wood */
+        0 50px 90px -10px rgba(0, 0, 0, 0.78),
+        0 90px 70px -30px rgba(0, 0, 0, 0.55),
+        /* ambient occlusion ring directly beneath */
+        0 26px 40px -12px rgba(0, 0, 0, 0.7),
+        /* body depth — darker bottom-right rim, lighter top-left rim */
+        inset -8px -10px 30px rgba(90, 35, 5, 0.55),
+        inset 8px 8px 24px rgba(255, 255, 255, 0.18),
+        inset 0 -3px 0 rgba(122, 48, 8, 0.7),
         inset 0 8px 0 rgba(255, 255, 255, 0.55),
         inset 0 18px 28px rgba(255, 255, 255, 0.22);
     margin-top: 14px;
@@ -193,19 +233,19 @@ html, body {
         linear-gradient(180deg, transparent 70%, rgba(90, 35, 5, 0.32) 100%);
     pointer-events: none;
 }
-/* base shadow + subtle feet */
+/* elliptical contact shadow blob beneath, stretching out on the desk */
 .phone::after {
     content: "";
     position: absolute;
-    left: 14%;
-    right: 14%;
-    bottom: -10px;
-    height: 14px;
-    background:
-        radial-gradient(ellipse at 10% 50%, #15110b 0 7px, transparent 8px),
-        radial-gradient(ellipse at 90% 50%, #15110b 0 7px, transparent 8px);
-    filter: drop-shadow(0 6px 8px rgba(0, 0, 0, 0.5));
+    left: -10%;
+    right: -10%;
+    bottom: -34px;
+    height: 56px;
+    background: radial-gradient(ellipse at 50% 50%, rgba(0, 0, 0, 0.7) 0%, rgba(0, 0, 0, 0.45) 35%, rgba(0, 0, 0, 0.15) 65%, transparent 90%);
+    filter: blur(6px);
     pointer-events: none;
+    z-index: -1;
+    transform: scaleY(0.55);
 }
 
 /* coiled cord exiting bottom-left (visible behind body) */
