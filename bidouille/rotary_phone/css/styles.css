@@ -7,19 +7,25 @@
     --hot: #ff5470;
     --bake: #c9a36a;
 
-    /* GPO 746 / Socotel S63 cream palette — matches reference photo */
-    --body-light: #f3ebd6;
-    --body-mid:   #e3d6b8;
-    --body-dark:  #b8a784;
-    --body-shade: #6e6249;
-    --chrome-1:   #fbfaf3;
-    --chrome-2:   #c2bba8;
-    --chrome-3:   #6c6457;
-    --ink-dark:   #1a1208;
-    --plate-num:  #1c130a;
-    --hole-bg:    #f5efde;
-    --handset-1:  #1d1813;
-    --handset-2:  #0a0805;
+    /* Socotel S63 — iconic PTT orange (Wikimedia reference photo).
+       Saturated orange body, chrome dial ring, ivory dial-card. */
+    --body-light: #ff9a4a;
+    --body-mid:   #ec7a26;
+    --body-dark:  #b34d10;
+    --body-shade: #5a2305;
+    --body-seam:  #7a3008;
+    --chrome-1:   #f6f3eb;
+    --chrome-2:   #b8b09c;
+    --chrome-3:   #4f4a3f;
+    --ink-dark:   #1a0a02;
+    --plate-num:  #15080a;
+    --plate-bg:   #f0e7d2;
+    --hole-bg:    #ec7a26;
+    --handset-1:  #ff9a4a;
+    --handset-2:  #d96214;
+    --handset-3:  #5a2305;
+    --cord:       #b34d10;
+    --led-red:    #d62828;
 }
 
 * { box-sizing: border-box; }
@@ -143,48 +149,103 @@ html, body {
     color: #b8ffd0;
 }
 
-/* ---------- phone body (GPO 746 / Socotel S63) ---------- */
+/* ---------- phone body (Socotel S63 — orange teardrop) ---------- */
 .phone {
     position: relative;
-    width: min(94vw, 500px);
-    height: min(82vw, 420px);
+    /* aspect close to reference photo (~4:5) */
+    width: min(86vw, 440px);
+    height: min(96vw, 500px);
     background:
-        radial-gradient(ellipse at 32% 14%, #fbf5e3 0%, var(--body-light) 28%, var(--body-mid) 70%, var(--body-dark) 100%);
-    border-radius: 36% 36% 14% 14% / 28% 28% 14% 14%;
+        /* subtle wear/dust */
+        radial-gradient(circle at 20% 70%, rgba(90, 35, 5, 0.07) 0 1.2px, transparent 1.5px),
+        radial-gradient(circle at 78% 38%, rgba(255, 255, 255, 0.05) 0 1.2px, transparent 1.5px),
+        /* glossy plastic body — left highlight, dark right shadow */
+        radial-gradient(ellipse at 30% 16%, #ffb074 0%, var(--body-light) 18%, var(--body-mid) 55%, #b85311 92%, var(--body-dark) 100%);
+    /* shoulder / keyhole: rounded shoulders, gently curved bottom */
+    border-radius: 50% 50% 28% 28% / 42% 42% 22% 22%;
     box-shadow:
-        0 30px 60px rgba(0, 0, 0, 0.55),
+        0 40px 80px rgba(0, 0, 0, 0.6),
+        0 14px 28px rgba(0, 0, 0, 0.4),
         0 6px 0 var(--body-shade),
-        inset 0 -14px 22px rgba(110, 98, 73, 0.35),
-        inset 0 6px 0 rgba(255, 255, 255, 0.55);
+        inset 0 -22px 34px rgba(90, 35, 5, 0.45),
+        inset 0 -2px 0 rgba(122, 48, 8, 0.6),
+        inset 0 8px 0 rgba(255, 255, 255, 0.55),
+        inset 0 18px 28px rgba(255, 255, 255, 0.22);
     margin-top: 14px;
-    margin-bottom: 18px;
+    margin-bottom: 24px;
     overflow: visible;
+    isolation: isolate;
 }
-/* subtle texture/seam */
+/* mould-line seam + glossy top sheen */
 .phone::before {
     content: "";
     position: absolute;
     inset: 0;
     border-radius: inherit;
     background:
-        linear-gradient(180deg, transparent 55%, rgba(110, 98, 73, 0.18) 100%);
+        /* horizontal parting line */
+        linear-gradient(180deg, transparent calc(72% - 1px), rgba(90, 35, 5, 0.28) 72%, transparent calc(72% + 1px)),
+        /* glossy left-side highlight strip */
+        radial-gradient(ellipse at 18% 30%, rgba(255, 255, 255, 0.38) 0%, transparent 22%),
+        /* deep right-side shadow */
+        linear-gradient(90deg, transparent 60%, rgba(90, 35, 5, 0.18) 100%),
+        /* base darkening */
+        linear-gradient(180deg, transparent 70%, rgba(90, 35, 5, 0.32) 100%);
     pointer-events: none;
 }
-/* four little feet at the base */
+/* base shadow + subtle feet */
 .phone::after {
     content: "";
     position: absolute;
-    left: 6%;
-    right: 6%;
+    left: 14%;
+    right: 14%;
     bottom: -10px;
     height: 14px;
     background:
-        radial-gradient(circle at 6% 50%, #1b1612 0 7px, transparent 8px),
-        radial-gradient(circle at 30% 50%, #1b1612 0 6px, transparent 7px),
-        radial-gradient(circle at 70% 50%, #1b1612 0 6px, transparent 7px),
-        radial-gradient(circle at 94% 50%, #1b1612 0 7px, transparent 8px);
-    filter: drop-shadow(0 4px 4px rgba(0, 0, 0, 0.4));
+        radial-gradient(ellipse at 10% 50%, #15110b 0 7px, transparent 8px),
+        radial-gradient(ellipse at 90% 50%, #15110b 0 7px, transparent 8px);
+    filter: drop-shadow(0 6px 8px rgba(0, 0, 0, 0.5));
     pointer-events: none;
+}
+
+/* coiled cord exiting bottom-left (visible behind body) */
+.cord {
+    position: absolute;
+    left: -14px;
+    bottom: 8%;
+    width: 80px;
+    height: 26px;
+    background:
+        repeating-linear-gradient(70deg,
+            #b34d10 0 4px,
+            #7a3008 4px 7px,
+            #4d1e04 7px 9px);
+    border-radius: 18% 50% 50% 18% / 40% 60% 60% 40%;
+    box-shadow:
+        inset 0 -3px 4px rgba(0, 0, 0, 0.4),
+        0 4px 6px rgba(0, 0, 0, 0.45);
+    transform: rotate(-6deg);
+    z-index: 0;
+    opacity: 0.95;
+}
+
+/* small red signal/call button at lower-right (Socotel S63 detail) */
+.led-button {
+    position: absolute;
+    right: 14%;
+    bottom: 13%;
+    width: 18px;
+    height: 18px;
+    border-radius: 50%;
+    background:
+        radial-gradient(circle at 35% 30%, #ff8a8a 0%, var(--led-red) 55%, #6a1010 100%);
+    box-shadow:
+        inset 0 -2px 3px rgba(0, 0, 0, 0.5),
+        inset 0 2px 2px rgba(255, 255, 255, 0.5),
+        0 0 0 3px rgba(90, 35, 5, 0.55),
+        0 2px 4px rgba(0, 0, 0, 0.45),
+        0 0 12px rgba(214, 40, 40, 0.35);
+    z-index: 4;
 }
 
 /* horizontal handset resting on cradle prongs at the top */
@@ -209,74 +270,86 @@ html, body {
 
 .handset .earpiece,
 .handset .mouthpiece {
-    width: 90px;
-    height: 64px;
+    width: 96px;
+    height: 78px;
     background:
-        radial-gradient(ellipse at 40% 28%, #fbf5e3 0%, var(--body-light) 40%, var(--body-mid) 80%, var(--body-dark) 100%);
-    border-radius: 50% 50% 46% 46% / 60% 60% 40% 40%;
+        /* dark recessed grille opening */
+        radial-gradient(circle at 50% 50%, #1a0a02 0 24%, transparent 25%),
+        radial-gradient(ellipse at 32% 22%, #ffc28a 0%, var(--handset-1) 32%, var(--handset-2) 78%, var(--handset-3) 100%);
+    border-radius: 50% 50% 38% 38% / 62% 62% 38% 38%;
     box-shadow:
-        inset 0 -3px 8px rgba(110, 98, 73, 0.45),
-        inset 0 3px 4px rgba(255, 255, 255, 0.7),
-        0 10px 18px rgba(0, 0, 0, 0.35);
+        inset 0 -5px 12px rgba(90, 35, 5, 0.55),
+        inset 0 5px 6px rgba(255, 255, 255, 0.65),
+        inset 0 0 0 1px rgba(122, 48, 8, 0.5),
+        0 14px 24px rgba(0, 0, 0, 0.5);
     position: relative;
 }
 .handset .earpiece::after,
 .handset .mouthpiece::after {
     content: "";
     position: absolute;
-    inset: 14px;
+    inset: 18px;
     border-radius: 50%;
     background:
-        radial-gradient(circle, rgba(0, 0, 0, 0.55) 1.2px, transparent 1.4px) 0 0 / 6px 6px,
-        radial-gradient(circle at 50% 50%, rgba(255, 255, 255, 0.4) 0%, transparent 60%);
-    opacity: 0.7;
-    box-shadow: inset 0 0 6px rgba(110, 98, 73, 0.4);
+        /* speaker grille dot pattern */
+        radial-gradient(circle, rgba(0, 0, 0, 0.9) 1.5px, transparent 1.7px) 0 0 / 7px 7px,
+        radial-gradient(circle at 50% 50%, rgba(255, 255, 255, 0.18) 0%, rgba(0, 0, 0, 0.55) 75%);
+    opacity: 0.95;
+    box-shadow:
+        inset 0 0 12px rgba(0, 0, 0, 0.7),
+        inset 0 2px 3px rgba(0, 0, 0, 0.85);
 }
 .handset .bar {
     flex: 1;
     height: 30px;
-    margin: 0 -10px;
+    margin: 0 -12px;
     background:
-        linear-gradient(180deg, #fbf5e3 0%, var(--body-light) 40%, var(--body-mid) 75%, var(--body-dark) 100%);
+        linear-gradient(180deg, transparent calc(50% - 0.5px), rgba(90, 35, 5, 0.5) 50%, transparent calc(50% + 0.5px)),
+        linear-gradient(180deg, #ffc28a 0%, var(--handset-1) 32%, var(--handset-2) 78%, var(--handset-3) 100%);
     border-radius: 16px / 22px;
     box-shadow:
-        inset 0 -4px 8px rgba(110, 98, 73, 0.4),
-        inset 0 2px 3px rgba(255, 255, 255, 0.7),
-        0 6px 12px rgba(0, 0, 0, 0.25);
+        inset 0 -6px 12px rgba(90, 35, 5, 0.55),
+        inset 0 3px 4px rgba(255, 255, 255, 0.7),
+        0 10px 16px rgba(0, 0, 0, 0.35);
+}
+
+/* the handset on the reference dips slightly at the ends */
+.handset {
+    height: 64px;
 }
 
 /* small cream cradle bumps on the body holding the handset */
 .cradle-prong {
     position: absolute;
-    top: 12px;
-    width: 26px;
-    height: 14px;
-    background: linear-gradient(180deg, #fbf5e3, var(--body-mid) 70%, var(--body-dark));
-    border-radius: 8px 8px 4px 4px;
+    top: -8px;
+    width: 42px;
+    height: 38px;
+    background: linear-gradient(180deg, #ffc28a 0%, var(--body-light) 35%, var(--body-mid) 80%, var(--body-dark) 100%);
+    border-radius: 14px 14px 4px 4px;
     box-shadow:
-        inset 0 -2px 3px rgba(110, 98, 73, 0.45),
-        inset 0 1px 2px rgba(255, 255, 255, 0.6),
-        0 2px 3px rgba(0, 0, 0, 0.3);
+        inset 0 -4px 5px rgba(90, 35, 5, 0.55),
+        inset 0 2px 2px rgba(255, 255, 255, 0.7),
+        0 4px 6px rgba(0, 0, 0, 0.4);
     z-index: 4;
 }
-.cradle-prong.cradle-left  { left: 14%; }
-.cradle-prong.cradle-right { right: 14%; }
+.cradle-prong.cradle-left  { left: 16%; }
+.cradle-prong.cradle-right { right: 16%; }
 
-/* dial mounting plate (slightly recessed area on the body) */
+/* dial mounting plate (subtle recess on the body) */
 .dial-plate {
     position: absolute;
-    top: 50%;
+    top: 55%;
     left: 50%;
     transform: translate(-50%, -50%);
-    width: 70%;
+    width: 78%;
     aspect-ratio: 1;
     border-radius: 50%;
     background:
-        radial-gradient(circle, var(--body-mid) 0%, var(--body-dark) 100%);
+        radial-gradient(circle, #d96214 0%, var(--body-dark) 100%);
     box-shadow:
-        inset 0 4px 10px rgba(0, 0, 0, 0.35),
-        inset 0 -2px 4px rgba(255, 255, 255, 0.4),
-        0 1px 0 rgba(255, 255, 255, 0.6);
+        inset 0 5px 12px rgba(0, 0, 0, 0.4),
+        inset 0 -2px 4px rgba(255, 200, 150, 0.35),
+        0 1px 0 rgba(255, 200, 150, 0.55);
     display: flex;
     align-items: center;
     justify-content: center;
@@ -288,18 +361,23 @@ html, body {
     width: 96%;
     aspect-ratio: 1;
     border-radius: 50%;
-    /* polished chrome ring (lighter than before) */
+    /* polished chrome ring with anisotropic highlights */
     background:
         conic-gradient(from 0deg,
-            #f5f1e3 0deg, #c2bba8 60deg,
-            #f5f1e3 120deg, #8d8676 180deg,
-            #f5f1e3 240deg, #c2bba8 300deg,
-            #f5f1e3 360deg);
-    padding: 5%;
+            #fbf8ed 0deg, #8a8472 25deg,
+            #f5f1e3 60deg, #5e584a 95deg,
+            #fbf8ed 130deg, #8a8472 165deg,
+            #f5f1e3 200deg, #5e584a 235deg,
+            #fbf8ed 270deg, #8a8472 305deg,
+            #f5f1e3 340deg, #fbf8ed 360deg);
+    padding: 7%;
     box-shadow:
-        0 6px 12px rgba(0, 0, 0, 0.35),
-        inset 0 0 0 1px rgba(0, 0, 0, 0.2),
-        inset 0 1px 0 rgba(255, 255, 255, 0.7);
+        0 10px 18px rgba(0, 0, 0, 0.5),
+        0 2px 4px rgba(0, 0, 0, 0.45),
+        inset 0 0 0 1.5px rgba(0, 0, 0, 0.55),
+        inset 0 0 0 3px rgba(255, 255, 255, 0.45),
+        inset 0 2px 2px rgba(255, 255, 255, 0.9),
+        inset 0 -3px 4px rgba(0, 0, 0, 0.45);
     display: flex;
     align-items: center;
     justify-content: center;
@@ -307,20 +385,28 @@ html, body {
 
 .finger-stop {
     position: absolute;
-    top: 0;
-    right: 4%;
-    width: 22%;
-    height: 22%;
-    transform: rotate(36deg);
+    top: 6%;
+    right: 6%;
+    width: 18%;
+    height: 18%;
+    transform: rotate(58deg);
     pointer-events: none;
     z-index: 3;
 }
 .finger-stop path {
-    fill: var(--chrome-3);
-    stroke: rgba(0, 0, 0, 0.6);
-    stroke-width: 1;
-    filter: drop-shadow(0 2px 3px rgba(0, 0, 0, 0.6));
+    fill: url(#fs-grad);
+    stroke: rgba(0, 0, 0, 0.7);
+    stroke-width: 1.2;
+    filter: drop-shadow(0 2px 3px rgba(0, 0, 0, 0.65));
 }
+.finger-stop {
+    background:
+        linear-gradient(135deg, #f5f1e3 0%, #b8b09c 45%, #4a4438 100%);
+    -webkit-mask: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><path d='M 50 8 L 92 8 L 92 50 Z'/></svg>") no-repeat center / contain;
+            mask: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><path d='M 50 8 L 92 8 L 92 50 Z'/></svg>") no-repeat center / contain;
+    filter: drop-shadow(0 2px 3px rgba(0, 0, 0, 0.7));
+}
+.finger-stop path { display: none; }
 
 /* numbers printed on the FIXED back-plate, visible THROUGH the holes */
 .number-ring {
@@ -329,32 +415,54 @@ html, body {
     border-radius: 50%;
     pointer-events: none;
     z-index: 1;
-    /* metallic chrome backplate showing through the cut holes */
+    /* ivory printed back-plate — only an ANNULUS around the digits;
+       middle stays orange like the reference photo */
     background:
-        radial-gradient(circle at 50% 35%, #fdfaf0 0%, #d6cdb8 60%, #aea58f 100%);
-    box-shadow: inset 0 0 0 1px rgba(0, 0, 0, 0.18);
+        radial-gradient(circle,
+            #d96214 0 18%,
+            #b34d10 18% 20%,
+            #fdf8e8 22% 38%,
+            #efe4c8 38% 47%,
+            rgba(255,255,255,0) 50% 100%);
 }
 .number-ring .num {
     position: absolute;
     top: 50%;
     left: 50%;
-    width: 11%;
+    width: 12%;
     aspect-ratio: 1;
-    margin: -5.5% 0 0 -5.5%;
+    margin: -6% 0 0 -6%;
     color: var(--plate-num);
     font-family: "Helvetica Neue", "Helvetica", "Arial", sans-serif;
     font-weight: 700;
-    font-size: clamp(1rem, 3.6vw, 1.3rem);
     display: flex;
+    flex-direction: column;
     align-items: center;
     justify-content: center;
-    --angle: calc(-60deg + var(--i) * 30deg);
-    --r: 425%;
+    line-height: 1;
+    --angle: calc(-60deg - var(--i) * 30deg);
+    /* sit just outside the finger holes, inside the chrome bezel */
+    --r: 325%;
     transform:
         rotate(var(--angle))
         translate(var(--r))
         rotate(calc(-1 * var(--angle)));
-    text-shadow: 0 1px 0 rgba(255, 255, 255, 0.6);
+    text-shadow: 0 1px 0 rgba(255, 255, 255, 0.7);
+}
+.number-ring .num b {
+    font-weight: 900;
+    font-size: clamp(0.85rem, 3vw, 1.05rem);
+    letter-spacing: -0.02em;
+    color: #0c0804;
+}
+.number-ring .num i {
+    font-style: normal;
+    font-weight: 700;
+    font-size: clamp(0.36rem, 1vw, 0.46rem);
+    letter-spacing: 0.08em;
+    margin-top: 1px;
+    color: #2a1f10;
+    opacity: 0.9;
 }
 
 /* the rotating dial — clear disc with cut holes (mostly invisible) */
@@ -380,25 +488,27 @@ html, body {
     inset: 0;
 }
 
-/* finger holes — white discs with darker rim (like reference photo) */
+/* finger holes — recessed cups showing orange dial body through */
 .hole {
     position: absolute;
-    width: 18%;
+    width: 17%;
     aspect-ratio: 1;
     top: 50%;
     left: 50%;
-    margin: -9% 0 0 -9%;
+    margin: -8.5% 0 0 -8.5%;
     border: none;
     border-radius: 50%;
+    /* deep recessed cup — dark with hint of orange body deep inside */
     background:
-        radial-gradient(circle at 50% 38%, #ffffff 0%, #f5efde 55%, #d4ccb6 100%);
+        radial-gradient(circle at 50% 60%, #c95a13 0%, #6a2a08 35%, #2a1004 75%, #15080a 100%);
     cursor: pointer;
     box-shadow:
-        inset 0 -2px 6px rgba(110, 98, 73, 0.5),
-        inset 0 2px 4px rgba(255, 255, 255, 0.9),
-        0 0 0 1.5px rgba(80, 70, 50, 0.55),
-        0 2px 4px rgba(0, 0, 0, 0.25);
-    --angle: calc(-60deg + var(--i) * 30deg);
+        inset 0 4px 8px rgba(0, 0, 0, 0.55),
+        inset 0 -2px 4px rgba(255, 255, 255, 0.7),
+        inset 0 0 0 1px rgba(60, 52, 36, 0.6),
+        0 0 0 2px rgba(80, 70, 50, 0.5),
+        0 3px 5px rgba(0, 0, 0, 0.35);
+    --angle: calc(-60deg - var(--i) * 30deg);
     --r: 195%;
     transform:
         rotate(var(--angle))
@@ -414,9 +524,9 @@ html, body {
     position: absolute;
     top: 50%;
     left: 50%;
-    width: 30%;
-    height: 30%;
-    margin: -15% 0 0 -15%;
+    width: 26%;
+    height: 26%;
+    margin: -13% 0 0 -13%;
     border-radius: 50%;
     background:
         radial-gradient(circle at 45% 35%, #ffffff 0%, #f4eedc 65%, #c9c0a8 100%);
@@ -445,14 +555,14 @@ html, body {
 .dial-center .ec-mid    { font-size: 0.78em; opacity: 0.85; line-height: 1.05; }
 .dial-center .ec-bot    { font-size: 0.78em; opacity: 0.85; }
 
-/* small card-number slot at the top center between cradle prongs */
+/* small card-number slot under the cradle prongs */
 .card-drawer {
     position: absolute;
-    top: 14px;
+    top: 38px;
     left: 50%;
     transform: translateX(-50%);
-    width: 30%;
-    height: 14px;
+    width: 32%;
+    height: 16px;
     background:
         linear-gradient(180deg, #ffffff 0%, #ece4cd 100%);
     border-radius: 2px;
