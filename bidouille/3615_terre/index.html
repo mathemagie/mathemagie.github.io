@@ -172,6 +172,44 @@ h1 {
 :fullscreen .controls input[type=range] { width: 220px; height: 6px; }
 :fullscreen .mute-btn { font-size: 2rem; }
 :fullscreen .container { max-width: 900px; }
+
+/* Portrait mobile / Reels — fill the screen */
+@media (max-width: 768px), (orientation: portrait) {
+    html { font-size: clamp(16px, 3.2vw, 48px); }
+    .container {
+        max-width: 100%;
+        padding: 2rem 1.5rem;
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+        gap: 2.5rem;
+        min-height: 100vh;
+    }
+    h1 { font-size: 2.6rem; margin-bottom: 0; letter-spacing: 0.18em; }
+    .sound-bars { height: 110px; gap: 6px; margin: 0; }
+    .sound-bars .bar { width: 10px; }
+    .sound-bars .bar:nth-child(1)  { height: 28px; }
+    .sound-bars .bar:nth-child(2)  { height: 56px; }
+    .sound-bars .bar:nth-child(3)  { height: 40px; }
+    .sound-bars .bar:nth-child(4)  { height: 75px; }
+    .sound-bars .bar:nth-child(5)  { height: 65px; }
+    .sound-bars .bar:nth-child(6)  { height: 95px; }
+    .sound-bars .bar:nth-child(7)  { height: 52px; }
+    .sound-bars .bar:nth-child(8)  { height: 84px; }
+    .sound-bars .bar:nth-child(9)  { height: 34px; }
+    .sound-bars .bar:nth-child(10) { height: 72px; }
+    .signal-bar { width: 80%; max-width: 420px; height: 6px; margin: 0 auto; }
+    .controls { gap: 1.4rem; margin-top: 0; }
+    .controls label { font-size: 1.1rem; }
+    .controls input[type=range] { width: 50%; max-width: 240px; height: 6px; }
+    .controls input[type=range]::-webkit-slider-thumb { width: 18px; height: 18px; }
+    .mute-btn { font-size: 1.8rem; padding: 0.4rem; }
+    .unlock p { font-size: 1.6rem; padding: 0 1.5rem; text-align: center; }
+    .overlay-text { padding: 2rem 1.25rem; }
+    .overlay-text .inner { max-width: 100%; font-size: 1.25rem; line-height: 2; }
+    .overlay-text .inner .line { margin-bottom: 1.5rem; }
+    .overlay-text .inner .accent { font-size: 1.4rem; }
+}
     </style>
 </head>
 <body>
@@ -575,6 +613,11 @@ async function start() {
             poll();
         }
     });
+}
+
+// Remove overlay entirely if text=false in URL
+if (new URLSearchParams(location.search).get('text') === 'false') {
+    document.getElementById('overlayText')?.remove();
 }
 
 // Overlay auto-hide after 10s
