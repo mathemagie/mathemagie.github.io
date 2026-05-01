@@ -85,6 +85,60 @@
         o2.stop(t + duration);
     }
 
+    // ---------- per-digit DTMF tone ----------
+    /* Standard DTMF row/column frequencies — each digit has a unique pair. */
+    const DTMF = {
+        "1": [697, 1209], "2": [697, 1336], "3": [697, 1477],
+        "4": [770, 1209], "5": [770, 1336], "6": [770, 1477],
+        "7": [852, 1209], "8": [852, 1336], "9": [852, 1477],
+        "0": [941, 1336]
+    };
+
+    function digitTone(digit, duration = 0.22) {
+        const pair = DTMF[String(digit)];
+        if (!pair) return;
+        const a = audio();
+        const t = a.currentTime;
+        const [fLo, fHi] = pair;
+
+        const oLo = a.createOscillator();
+        const oHi = a.createOscillator();
+        oLo.type = "sine"; oHi.type = "sine";
+        oLo.frequency.value = fLo;
+        oHi.frequency.value = fHi;
+
+        const g = a.createGain();
+        g.gain.setValueAtTime(0, t);
+        g.gain.linearRampToValueAtTime(0.18, t + 0.012);
+        g.gain.setValueAtTime(0.18, t + duration - 0.04);
+        g.gain.linearRampToValueAtTime(0, t + duration);
+
+        oLo.connect(g); oHi.connect(g);
+        g.connect(a.destination);
+        oLo.start(t); oHi.start(t);
+        oLo.stop(t + duration + 0.02);
+        oHi.stop(t + duration + 0.02);
+    }
+
+    function ringChime() {
+        // gentle two-pulse chime when prefix matches 01 / 02 / 09
+        const a = audio();
+        const t = a.currentTime;
+        [0, 0.18].forEach((offset, idx) => {
+            const o = a.createOscillator();
+            const g = a.createGain();
+            o.type = "sine";
+            o.frequency.value = idx === 0 ? 880 : 1175;
+            const t0 = t + offset;
+            g.gain.setValueAtTime(0, t0);
+            g.gain.linearRampToValueAtTime(0.12, t0 + 0.02);
+            g.gain.exponentialRampToValueAtTime(0.001, t0 + 0.16);
+            o.connect(g).connect(a.destination);
+            o.start(t0);
+            o.stop(t0 + 0.18);
+        });
+    }
+
     // ---------- dial spin animation ----------
     /* Each digit rotates the wheel clockwise by digit*30deg (0 → 300deg),
        then springs back. While returning, we emit N click ticks. */
@@ -123,14 +177,25 @@
         }, spinTime * 1000 + 60);
     }
 
+    const PREFIXES = ["01", "02", "09"];
+
     function registerDigit(digit) {
         if (dialed.length >= MAX_DIGITS) return;
         dialed += String(digit);
         renderDisplay();
 
+        // unique DTMF tone per digit — fires once the dial returns home
+        digitTone(digit);
+
         signal.classList.add("dialing");
         signal.classList.remove("live");
         signal.innerHTML = `<span class="dot"></span> dialing… ${dialed.length}/${MAX_DIGITS}`;
+
+        // recognize French regional prefixes 01 / 02 / 09 — gentle chime
+        if (dialed.length === 2 && PREFIXES.includes(dialed)) {
+            setTimeout(ringChime, 220);
+            signal.innerHTML = `<span class="dot"></span> prefix ${dialed} · keep dialing…`;
+        }
 
         if (dialed === SECRET) {
             startAlienCall();
