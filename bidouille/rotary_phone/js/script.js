@@ -38,31 +38,125 @@
     }
 
     // ---------- rotary click sound ----------
+    /* Real GPO/Socotel pulse: very brief mechanical "tac" — a sharp metallic
+       transient (pawl hitting tooth) plus a low-frequency body resonance
+       from the bakelite case. No long oscillator tail. */
     function clickTick(strength = 1) {
         const a = audio();
         const t = a.currentTime;
-        const osc = a.createOscillator();
-        const gain = a.createGain();
-        osc.type = "square";
-        osc.frequency.setValueAtTime(180, t);
-        osc.frequency.exponentialRampToValueAtTime(60, t + 0.05);
-        gain.gain.setValueAtTime(0, t);
-        gain.gain.linearRampToValueAtTime(0.18 * strength, t + 0.005);
-        gain.gain.exponentialRampToValueAtTime(0.001, t + 0.08);
-        osc.connect(gain).connect(a.destination);
-        osc.start(t);
-        osc.stop(t + 0.1);
 
-        // tiny noise pop for mechanical feel
-        const buf = a.createBuffer(1, 1024, a.sampleRate);
+        // 1) Sharp metallic transient — short filtered noise burst
+        const burstLen = Math.floor(a.sampleRate * 0.012);
+        const burst = a.createBuffer(1, burstLen, a.sampleRate);
+        const bd = burst.getChannelData(0);
+        for (let i = 0; i < burstLen; i++) {
+            // very fast exponential decay, with sub-ms attack
+            const env = Math.exp(-i / (a.sampleRate * 0.0018));
+            bd[i] = (Math.random() * 2 - 1) * env;
+        }
+        const bs = a.createBufferSource();
+        bs.buffer = burst;
+        const bp = a.createBiquadFilter();
+        bp.type = "bandpass";
+        bp.frequency.value = 2600;     // bright metallic "tick"
+        bp.Q.value = 4;
+        const bg = a.createGain();
+        bg.gain.value = 0.32 * strength;
+        bs.connect(bp).connect(bg).connect(a.destination);
+        bs.start(t);
+
+        // 2) Low body thunk — bakelite resonance picked up from the case
+        const body = a.createOscillator();
+        const bodyGain = a.createGain();
+        body.type = "triangle";
+        body.frequency.setValueAtTime(140, t);
+        body.frequency.exponentialRampToValueAtTime(70, t + 0.04);
+        bodyGain.gain.setValueAtTime(0, t);
+        bodyGain.gain.linearRampToValueAtTime(0.10 * strength, t + 0.003);
+        bodyGain.gain.exponentialRampToValueAtTime(0.0005, t + 0.07);
+        body.connect(bodyGain).connect(a.destination);
+        body.start(t);
+        body.stop(t + 0.09);
+    }
+
+    // ---------- governor whirr (centrifugal speed regulator) ----------
+    /* A real rotary dial has a centrifugal governor that limits return speed.
+       It produces a steady high-pitched mechanical whirr underneath the clicks,
+       starting fast and gradually slowing as the dial decelerates near home. */
+    function startGovernorWhirr(durationSec) {
+        const a = audio();
+        const t = a.currentTime;
+
+        // Filtered noise = mechanical air/spring rush
+        const buf = a.createBuffer(1, Math.floor(a.sampleRate * durationSec) + 256, a.sampleRate);
         const data = buf.getChannelData(0);
-        for (let i = 0; i < data.length; i++) data[i] = (Math.random() * 2 - 1) * Math.exp(-i / 80);
-        const src = a.createBufferSource();
-        const ng = a.createGain();
-        ng.gain.value = 0.08 * strength;
-        src.buffer = buf;
-        src.connect(ng).connect(a.destination);
-        src.start(t);
+        for (let i = 0; i < data.length; i++) data[i] = Math.random() * 2 - 1;
+        const noise = a.createBufferSource();
+        noise.buffer = buf;
+
+        const bp = a.createBiquadFilter();
+        bp.type = "bandpass";
+        bp.frequency.setValueAtTime(1800, t);
+        // Slows down as dial approaches rest — pitch drops
+        bp.frequency.exponentialRampToValueAtTime(900, t + durationSec);
+        bp.Q.value = 2.2;
+
+        const g = a.createGain();
+        g.gain.setValueAtTime(0, t);
+        g.gain.linearRampToValueAtTime(0.045, t + 0.04);
+        g.gain.setValueAtTime(0.045, t + Math.max(0.04, durationSec - 0.12));
+        g.gain.linearRampToValueAtTime(0, t + durationSec);
+
+        // Subtle amplitude tremolo from the spinning governor blades
+        const trem = a.createOscillator();
+        const tremGain = a.createGain();
+        trem.frequency.setValueAtTime(38, t);
+        trem.frequency.exponentialRampToValueAtTime(14, t + durationSec);
+        tremGain.gain.value = 0.018;
+        trem.connect(tremGain).connect(g.gain);
+
+        noise.connect(bp).connect(g).connect(a.destination);
+        noise.start(t);
+        noise.stop(t + durationSec + 0.05);
+        trem.start(t);
+        trem.stop(t + durationSec + 0.05);
+    }
+
+    // ---------- final stop "thunk" when the finger-stop catches the wheel ----------
+    function dialHomeThud() {
+        const a = audio();
+        const t = a.currentTime;
+
+        // Low body thud
+        const o = a.createOscillator();
+        const g = a.createGain();
+        o.type = "triangle";
+        o.frequency.setValueAtTime(95, t);
+        o.frequency.exponentialRampToValueAtTime(45, t + 0.09);
+        g.gain.setValueAtTime(0, t);
+        g.gain.linearRampToValueAtTime(0.18, t + 0.004);
+        g.gain.exponentialRampToValueAtTime(0.0005, t + 0.16);
+        o.connect(g).connect(a.destination);
+        o.start(t);
+        o.stop(t + 0.18);
+
+        // Soft metallic tap on top — finger-stop contact
+        const burstLen = Math.floor(a.sampleRate * 0.018);
+        const buf = a.createBuffer(1, burstLen, a.sampleRate);
+        const d = buf.getChannelData(0);
+        for (let i = 0; i < burstLen; i++) {
+            d[i] = (Math.random() * 2 - 1) * Math.exp(-i / (a.sampleRate * 0.003));
+        }
+        const bs = a.createBufferSource();
+        bs.buffer = buf;
+        const bp = a.createBiquadFilter();
+        bp.type = "bandpass";
+        bp.frequency.value = 1700;
+        bp.Q.value = 3;
+        const bg = a.createGain();
+        bg.gain.value = 0.16;
+        bs.connect(bp).connect(bg).connect(a.destination);
+        bs.start(t);
     }
 
     function dialTone(duration = 0.3) {
@@ -164,11 +258,22 @@
             dial.classList.add("returning");
             dial.style.transform = "rotate(0deg)";
 
-            // schedule click ticks during return — 1 per pulse
+            // governor whirr underneath the whole return — slows with the dial
+            startGovernorWhirr(returnTime + 0.04);
+
+            // schedule click ticks during return — 1 per pulse, slightly
+            // accelerating spacing (dial is slower at start, faster mid-return)
+            // is wrong for real dials: governor keeps speed roughly constant,
+            // so equal spacing matches reality.
             const dt = (returnTime * 1000) / pulses;
             for (let i = 0; i < pulses; i++) {
-                setTimeout(() => clickTick(0.85), Math.round(i * dt + 30));
+                // alternate slight strength variation — pawl/spring asymmetry
+                const s = 0.82 + (i % 2 === 0 ? 0.08 : 0);
+                setTimeout(() => clickTick(s), Math.round(i * dt + 30));
             }
+
+            // final "thunk" when the wheel hits the finger-stop at home
+            setTimeout(dialHomeThud, Math.round(returnTime * 1000 + 10));
 
             setTimeout(() => {
                 isSpinning = false;
