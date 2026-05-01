@@ -104,7 +104,7 @@
     "path-type": "^4.0.0",
     "picocolors": "^1.1.1",
     "picomatch": "^2.3.1",
-    "postcss": "^8.5.3",
+    "postcss": "^8.5.13",
     "postcss-resolve-nested-selector": "^0.1.6",
     "postcss-safe-parser": "^7.0.1",
     "postcss-selector-parser": "^7.1.0",
