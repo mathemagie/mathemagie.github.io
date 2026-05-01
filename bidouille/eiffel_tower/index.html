@@ -53,11 +53,11 @@ body{
 }
 .hero__morse{
   font-family:'JetBrains Mono',monospace;
-  font-size:clamp(.7rem,1.2vw,.95rem);
+  font-size:clamp(1.1rem,2.4vw,1.8rem);
   letter-spacing:.6em;
   color:var(--gold);
   text-transform:uppercase;
-  margin-bottom:1.5rem;
+  margin-bottom:2rem;
   opacity:0;
   animation:fadeUp 1.2s .3s ease forwards;
 }
@@ -332,10 +332,10 @@ body{
     <span>·&mdash;&mdash;&mdash;</span>&ensp;
     <span>&mdash;·&mdash;&mdash;</span>
   </p>
-  <h1 class="hero__title">
+  <h2 class="hero__title">
     Bonjour, Thomas
     <em>Tour Eiffel &times; ISS</em>
-  </h1>
+  </h2>
   <p class="hero__sub">Quand Paris clignote vers les&nbsp;étoiles</p>
   <div class="hero__scroll">
     <span>Descendre</span>
@@ -367,25 +367,80 @@ body{
 
 <!-- tower silhouette -->
 <div class="tower-break reveal">
-  <svg class="tower-svg" viewBox="0 0 120 300" fill="none" xmlns="http://www.w3.org/2000/svg">
-    <path d="M60 0 L60 20 M55 20 L65 20 M52 30 L68 30 M52 30 L55 20 M68 30 L65 20
-             M48 50 L72 50 M48 50 L52 30 M72 50 L68 30
-             M45 70 L75 70 M45 70 L48 50 M75 70 L72 50
-             M55 70 L55 90 M65 70 L65 90
-             M42 90 L78 90 M42 90 L45 70 M78 90 L75 70
-             M38 120 L82 120 M38 120 L42 90 M82 120 L78 90
-             M50 120 L50 140 M70 120 L70 140 M60 110 L60 140
-             M35 140 L85 140 M35 140 L38 120 M85 140 L82 120
-             M30 180 L90 180 M30 180 L35 140 M90 180 L85 140
-             M25 220 L95 220 M25 220 L30 180 M95 220 L90 180
-             M20 260 L100 260 M20 260 L25 220 M100 260 L95 220
-             M15 290 L105 290 M15 290 L20 260 M105 290 L100 260
-             M10 295 L110 295"
-          stroke="var(--gold)" stroke-width=".8" stroke-linecap="round"/>
-    <!-- beacon light -->
-    <circle cx="60" cy="4" r="3" fill="var(--gold)" opacity=".8">
+  <svg class="tower-svg" viewBox="0 0 120 300" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+    <g stroke="var(--gold)" stroke-linecap="round" stroke-linejoin="round">
+      <!-- profil gauche : pied → 1er étage → 2e étage → 3e étage → flèche -->
+      <path d="M 10 298
+               C 18 278 28 262 34 245
+               L 34 241
+               C 38 228 42 214 44 193
+               L 44 189
+               C 48 150 52 95 54 45
+               L 54 42
+               L 58 12"
+            stroke-width="1"/>
+      <!-- profil droit (miroir) -->
+      <path d="M 110 298
+               C 102 278 92 262 86 245
+               L 86 241
+               C 82 228 78 214 76 193
+               L 76 189
+               C 72 150 68 95 66 45
+               L 66 42
+               L 62 12"
+            stroke-width="1"/>
+
+      <!-- arche centrale sous le 1er étage (front view) -->
+      <path d="M 18 292 C 30 262 48 250 60 250 C 72 250 90 262 102 292" stroke-width=".7" opacity=".85"/>
+
+      <!-- plateformes (double trait) -->
+      <path d="M 33 241 L 87 241 M 33 245 L 87 245 M 34 241 L 34 245 M 86 241 L 86 245" stroke-width=".7"/>
+      <path d="M 43 189 L 77 189 M 43 193 L 77 193 M 44 189 L 44 193 M 76 189 L 76 193" stroke-width=".7"/>
+      <path d="M 52 41  L 68 41  M 52 45  L 68 45  M 53 41  L 53 45  M 67 41  L 67 45"  stroke-width=".7"/>
+
+      <!-- treillis : section base → 1er étage -->
+      <g stroke-width=".4" opacity=".8">
+        <path d="M 14 290 L 32 252 M 30 290 L 16 258
+                 M 90 290 L 108 258 M 106 290 L 88 252
+                 M 18 278 L 30 278 M 90 278 L 102 278
+                 M 22 266 L 30 266 M 90 266 L 98 266"/>
+      </g>
+
+      <!-- treillis : 1er → 2e étage -->
+      <g stroke-width=".4" opacity=".8">
+        <path d="M 34 241 L 44 193 M 44 241 L 34 193
+                 M 86 241 L 76 193 M 76 241 L 86 193
+                 M 37 222 L 44 222 M 83 222 L 76 222
+                 M 40 208 L 44 208 M 80 208 L 76 208"/>
+      </g>
+
+      <!-- treillis : 2e étage → 3e étage (grande section élancée) -->
+      <g stroke-width=".35" opacity=".7">
+        <path d="M 44 189 L 54 45 M 76 189 L 66 45
+                 M 45 170 L 75 170
+                 M 47 140 L 73 140
+                 M 49 110 L 71 110
+                 M 51 80  L 69 80
+                 M 52 60  L 68 60
+                 M 44 189 L 66 45 M 76 189 L 54 45"/>
+      </g>
+
+      <!-- 3e étage → flèche (campanile / spire) -->
+      <g stroke-width=".4">
+        <path d="M 54 42 L 54 34 L 66 34 L 66 42
+                 M 55 34 L 55 28 L 65 28 L 65 34
+                 M 56 28 L 56 22 L 64 22 L 64 28
+                 M 57 22 L 57 18 L 63 18 L 63 22"/>
+      </g>
+
+      <!-- antenne centrale -->
+      <path d="M 60 42 L 60 4" stroke-width=".6"/>
+    </g>
+
+    <!-- phare du sommet -->
+    <circle cx="60" cy="5" r="2.4" fill="var(--gold)" opacity=".9">
       <animate attributeName="opacity" values=".3;1;.3" dur="2s" repeatCount="indefinite"/>
-      <animate attributeName="r" values="2;4;2" dur="2s" repeatCount="indefinite"/>
+      <animate attributeName="r" values="1.6;3.2;1.6" dur="2s" repeatCount="indefinite"/>
     </circle>
   </svg>
 </div>
