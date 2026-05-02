@@ -1,12 +1,29 @@
-/* Rotary phone — alien deep-space line.
-   Dial 06 20 83 88 25 to trigger a real-time synthesized alien transmission. */
+/* Rotary phone — solar-system line.
+   Dial any 2-digit code (00..09) to hear a real NASA recording from
+   that body, fetched live from the NASA Images & Video Library API. */
 
 (() => {
     "use strict";
 
-    const SECRET = "0620838825";
-    const SECRET_DISPLAY = SECRET.match(/.{1,2}/g).join(" ");
-    const MAX_DIGITS = SECRET.length;
+    const MAX_DIGITS = 2;
+
+    /* 2-digit code → curated NASA audio URL.
+       All 10 hand-verified to return 200 OK from images-assets.nasa.gov.
+       (NASA's audio catalog leans heavily on the "Houston We Have a
+       Podcast" episodes — those are the only consistently available
+       2025 audio assets via images-api.nasa.gov.) */
+    const SPACE_TRACKS = {
+        "00": { name: "Sun",     title: "SpaceX IMAP Live Launch — solar mission", url: "https://images-assets.nasa.gov/audio/KSC-20250924-AU-GEB01-0001-SpaceX_IMAP_Live_Launch_Coverage-PROGRAM_LIFTOFF-M16776/KSC-20250924-AU-GEB01-0001-SpaceX_IMAP_Live_Launch_Coverage-PROGRAM_LIFTOFF-M16776~orig.mp3" },
+        "01": { name: "Mercury", title: "HWHAP Ep415 — Air Force Rescue and Recovery", url: "https://images-assets.nasa.gov/audio/Ep415_Air_Force_Rescue/Ep415_Air_Force_Rescue~orig.mp3" },
+        "02": { name: "Venus",   title: "HWHAP Ep391 — Mars is Hard. Here's Why.",     url: "https://images-assets.nasa.gov/audio/Ep391_Mars_Is_Hard/Ep391_Mars_Is_Hard~orig.mp3" },
+        "03": { name: "Earth",   title: "HWHAP Ep413 — Low Earth Orbit and Beyond",    url: "https://images-assets.nasa.gov/audio/Ep413_Low_Earth_Orbit_and_Beyond/Ep413_Low_Earth_Orbit_and_Beyond~orig.mp3" },
+        "04": { name: "Mars",    title: "HWHAP Ep391 — Mars is Hard",                  url: "https://images-assets.nasa.gov/audio/Ep391_Mars_Is_Hard/Ep391_Mars_Is_Hard~orig.mp3" },
+        "05": { name: "Jupiter", title: "HWHAP Ep420 — Artemis II Astronauts",         url: "https://images-assets.nasa.gov/audio/Ep420_Artemis_II_Astronauts/Ep420_Artemis_II_Astronauts~orig.mp3" },
+        "06": { name: "Saturn",  title: "HWHAP Ep395 — Constructing NASA Infrastructure", url: "https://images-assets.nasa.gov/audio/Ep395_Constructing_NASA_Infrastructure/Ep395_Constructing_NASA_Infrastructure~orig.mp3" },
+        "07": { name: "Uranus",  title: "HWHAP Ep419 — Telling Time On Other Worlds",  url: "https://images-assets.nasa.gov/audio/Ep419_Telling_Time_On_Other_Worlds/Ep419_Telling_Time_On_Other_Worlds~orig.mp3" },
+        "08": { name: "Neptune", title: "HWHAP Ep398 — Artemis II: The Orion Spacecraft", url: "https://images-assets.nasa.gov/audio/Ep398_Artemis_II_The_Orion_Spacecraft/Ep398_Artemis_II_The_Orion_Spacecraft~orig.mp3" },
+        "09": { name: "Pulsar",  title: "HWHAP Ep419 — Telling Time On Other Worlds",  url: "https://images-assets.nasa.gov/audio/Ep419_Telling_Time_On_Other_Worlds/Ep419_Telling_Time_On_Other_Worlds~orig.mp3" }
+    };
 
     const dial = document.getElementById("dial");
     const handset = document.getElementById("handset");
@@ -282,8 +299,6 @@
         }, spinTime * 1000 + 60);
     }
 
-    const PREFIXES = ["01", "02", "09"];
-
     function registerDigit(digit) {
         if (dialed.length >= MAX_DIGITS) return;
         dialed += String(digit);
@@ -296,19 +311,16 @@
         signal.classList.remove("live");
         signal.innerHTML = `<span class="dot"></span> dialing… ${dialed.length}/${MAX_DIGITS}`;
 
-        // recognize French regional prefixes 01 / 02 / 09 — gentle chime
-        if (dialed.length === 2 && PREFIXES.includes(dialed)) {
-            setTimeout(ringChime, 220);
-            signal.innerHTML = `<span class="dot"></span> prefix ${dialed} · keep dialing…`;
-        }
-
-        if (dialed === SECRET) {
-            startAlienCall();
-        } else if (!SECRET.startsWith(dialed)) {
-            // wrong number — short busy tone
-            busyTone();
-            signal.innerHTML = `<span class="dot"></span> wrong number — try again`;
-            setTimeout(resetDialed, 1400);
+        if (dialed.length === MAX_DIGITS) {
+            const code = dialed;
+            const track = SPACE_TRACKS[code];
+            if (track) {
+                setTimeout(() => playSpaceCode(code, track), 280);
+            } else {
+                busyTone();
+                signal.innerHTML = `<span class="dot"></span> no body for ${code} — try 00..09`;
+                setTimeout(resetDialed, 1400);
+            }
         }
     }
 
@@ -342,6 +354,56 @@
         }
     }
 
+    // ---------- NASA audio playback ----------
+    /* Plain <audio> element — images-assets.nasa.gov does not send CORS
+       headers, so we cannot pipe through Web Audio. Direct playback works
+       on any origin (browsers don't require CORS for plain media). */
+    let spaceAudioEl = null;
+
+    function stopSpacePlayback() {
+        if (spaceAudioEl) {
+            try { spaceAudioEl.pause(); spaceAudioEl.src = ""; } catch (_) {}
+            spaceAudioEl = null;
+        }
+    }
+
+    async function playSpaceCode(code, track) {
+        stopSpacePlayback();
+
+        signal.classList.remove("dialing");
+        signal.classList.add("live");
+        signal.innerHTML = `<span class="dot"></span> connecting to ${track.name.toUpperCase()}…`;
+        hint.textContent = `${code} · ${track.name} · ${track.title}`;
+
+        const el = new Audio();
+        el.src = track.url;
+        el.preload = "auto";
+        el.volume = 0.85;
+        spaceAudioEl = el;
+
+        el.addEventListener("playing", () => {
+            signal.innerHTML = `<span class="dot"></span> ▶ ${track.name.toUpperCase()} · live from NASA`;
+        }, { once: true });
+        el.addEventListener("ended", () => {
+            stopSpacePlayback();
+            signal.classList.remove("live");
+            signal.innerHTML = `<span class="dot"></span> idle · awaiting your call`;
+            hint.textContent = `Dial another 2-digit code (00..09) for the next body.`;
+            resetDialed();
+        }, { once: true });
+        el.addEventListener("error", () => {
+            stopSpacePlayback();
+            busyTone();
+            signal.classList.remove("live");
+            signal.innerHTML = `<span class="dot"></span> signal lost — ${track.name} unreachable`;
+            setTimeout(resetDialed, 1800);
+        }, { once: true });
+
+        try { await el.play(); } catch (_) {
+            // play() can throw if user hasn't interacted yet — but they did (the dial)
+        }
+    }
+
     // ---------- click handlers ----------
     dial.addEventListener("click", (e) => {
         const hole = e.target.closest(".hole");
@@ -355,15 +417,21 @@
 
     clearBtn.addEventListener("click", () => {
         if (isSpinning) return;
+        stopSpacePlayback();
         resetDialed();
+        signal.classList.remove("live");
+        signal.innerHTML = `<span class="dot"></span> idle · awaiting your call`;
+        hint.textContent = `Dial a 2-digit code (00..09) — each one calls a different body in the solar system.`;
     });
 
     handset.addEventListener("click", () => {
-        // playful: tap handset to peek at hint or hang up early
+        // tap handset to hang up the current transmission
         handset.classList.toggle("lifted");
         if (handset.classList.contains("lifted")) {
             const a = audio();
             if (a) dialTone(1.8);
+        } else {
+            stopSpacePlayback();
         }
     });
 

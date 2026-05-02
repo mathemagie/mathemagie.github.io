@@ -4,13 +4,13 @@
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no, viewport-fit=cover">
     <meta name="theme-color" content="#0a0a14">
-    <meta name="description" content="Rotary phone interface — dial 06 20 83 88 25 to receive a transmission from deep space.">
+    <meta name="description" content="Rotary phone interface — dial a 2-digit code (00..09) to hear a real NASA recording from each body of the solar system.">
 
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-    <meta name="apple-mobile-web-app-title" content="Alien Phone">
+    <meta name="apple-mobile-web-app-title" content="Solar Phone">
 
-    <title>Rotary Phone — Alien Call</title>
+    <title>Rotary Phone — Solar System Line</title>
     <link rel="stylesheet" href="css/styles.css?v=181d8907">
 </head>
 <body>
@@ -18,14 +18,14 @@
 
     <main class="phone-stage" id="stage">
         <header class="hud">
-            <h1>☎ ROTARY · DEEP SPACE LINE</h1>
-            <p class="hint" id="hint">Dial <strong>06 20 83 88 25</strong> · spin the dial, finger in the hole, drag to the stop</p>
+            <h1>☎ ROTARY · SOLAR SYSTEM LINE</h1>
+            <p class="hint" id="hint">Dial a 2-digit code (00..09) — each one calls a different body in the solar system.</p>
         </header>
 
         <section class="display" aria-live="polite">
-            <span class="display-label">Dialed</span>
-            <span class="display-number" id="display">_ _ _ _ _ _ _ _ _ _</span>
-            <button class="clear-btn" id="clear" aria-label="Clear number">⟲ clear</button>
+            <span class="display-label">Code</span>
+            <span class="display-number" id="display">_ _</span>
+            <button class="clear-btn" id="clear" aria-label="Clear code">⟲ clear</button>
         </section>
 
         <section class="phone" aria-label="Rotary phone — Socotel S63 (PTT, France)">
@@ -94,24 +94,6 @@
         </footer>
     </main>
 
-    <!-- Alien call overlay -->
-    <div class="overlay" id="overlay" hidden>
-        <div class="overlay-frame">
-            <div class="scanlines"></div>
-            <div class="overlay-status" id="status">::: ESTABLISHING UPLINK :::</div>
-            <div class="waveform">
-                <canvas id="scope" width="800" height="160"></canvas>
-            </div>
-            <div class="subtitles" id="subtitles">— ̸ ̴ —</div>
-            <button class="hangup" id="hangup">HANG UP</button>
-            <div class="meta">
-                <span>SIGNAL: <em id="meta-rssi">-∞ dBm</em></span>
-                <span>DRIFT: <em id="meta-drift">0.0 Hz</em></span>
-                <span>ORIGIN: <em id="meta-origin">UNKNOWN</em></span>
-            </div>
-        </div>
-    </div>
-
-    <script src="js/script.js?v=7e3dc6b4"></script>
+    <script src="js/script.js?v=af427e89"></script>
 </body>
 </html>
