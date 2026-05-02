@@ -23,6 +23,14 @@ range when shifted.
 
 ## Where to source the audio
 
+**Programmatic**
+- NASA Images & Video Library API (public, no key, supports
+  `media_type=audio`):
+  <https://images-api.nasa.gov/search?q=mars&media_type=audio>
+- Note: the historical "NASA Space Sounds API" on `data.nasa.gov` wraps
+  SoundCloud but its dataset is effectively empty — prefer the Images
+  API above.
+
 **Primary NASA pages**
 - "Sounds from Beyond" — solar-system audio gallery:
   <https://www.nasa.gov/sounds-from-beyond/>
@@ -71,6 +79,75 @@ assets/space/
   8_neptune.ogg
   9_pulsar.ogg
 ```
+
+## Fetching at runtime — NASA Images & Video Library API
+
+Instead of bundling local files, the prototype can lazy-fetch a relevant
+NASA clip the first time a digit is dialed. The endpoint is **public,
+no API key**, and CORS-friendly:
+
+```
+GET https://images-api.nasa.gov/search?q=<query>&media_type=audio
+```
+
+The response shape (trimmed):
+
+```json
+{
+  "collection": {
+    "items": [
+      {
+        "href": "https://images-assets.nasa.gov/audio/<id>/collection.json",
+        "data": [{
+          "nasa_id": "<id>",
+          "title":   "...",
+          "description": "...",
+          "media_type": "audio",
+          "date_created": "..."
+        }]
+      }
+    ]
+  }
+}
+```
+
+To get the actual audio file: fetch `items[i].href` → it returns a JSON
+array of asset URLs; pick the `.mp3` or `.wav`.
+
+```js
+async function spaceSoundFor(query) {
+  const r = await fetch(
+    `https://images-api.nasa.gov/search?q=${encodeURIComponent(query)}&media_type=audio`
+  );
+  const j = await r.json();
+  const item = j.collection.items[0];
+  if (!item) return null;
+  const assets = await (await fetch(item.href)).json();
+  const mp3 = assets.find(u => u.endsWith('.mp3')) || assets[0];
+  return { url: mp3, title: item.data[0].title };
+}
+```
+
+Suggested per-digit queries (override per taste):
+
+```js
+const DIGIT_QUERIES = {
+  0: 'voyager solar wind',
+  1: 'mercury mariner',
+  2: 'parker solar probe venus',
+  3: 'voyager golden record',
+  4: 'perseverance mars wind',
+  5: 'juno jupiter',
+  6: 'cassini saturn radio',
+  7: 'voyager 2 uranus',
+  8: 'voyager 2 neptune',
+  9: 'pulsar sonification'
+};
+```
+
+Cache successful lookups in `localStorage` (URL only, not the audio
+itself — the browser HTTP cache handles that) so subsequent dials are
+instant.
 
 ## Hooks for the rotary UI
 
