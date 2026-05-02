@@ -19,26 +19,60 @@ const scaleValue = document.getElementById('scale-value');
 const fullscreenButton = document.getElementById('fullscreen-button');
 
 // Show controls only if debug=1 in URL
-if (debugMode) {
+let debugVisible = debugMode;
+if (debugVisible) {
   controlsPanel.classList.add('debug-mode');
   toggleButton.classList.add('debug-mode');
 }
 
-// Toggle controls visibility (only works in debug mode)
-let controlsVisible = true;
-
-if (debugMode) {
-  toggleButton.addEventListener('click', () => {
-    controlsVisible = !controlsVisible;
-    if (controlsVisible) {
-      controlsPanel.classList.remove('hidden');
-      toggleButton.textContent = '⚙️ Controls';
-    } else {
-      controlsPanel.classList.add('hidden');
-      toggleButton.textContent = '⚙️ Show';
-    }
-  });
+// Toggle controls visibility (start collapsed on small screens so the nebula stays visible)
+const isMobile = window.matchMedia('(max-width: 768px)').matches;
+let controlsVisible = !isMobile;
+if (!controlsVisible) {
+  controlsPanel.classList.add('hidden');
+  toggleButton.textContent = '⚙️ Show';
 }
+
+toggleButton.addEventListener('click', () => {
+  if (!debugVisible) return;
+  controlsVisible = !controlsVisible;
+  if (controlsVisible) {
+    controlsPanel.classList.remove('hidden');
+    toggleButton.textContent = '⚙️ Controls';
+  } else {
+    controlsPanel.classList.add('hidden');
+    toggleButton.textContent = '⚙️ Show';
+  }
+});
+
+// Toggle debug display by pressing H
+function toggleDebug() {
+  debugVisible = !debugVisible;
+  controlsPanel.classList.toggle('debug-mode', debugVisible);
+  toggleButton.classList.toggle('debug-mode', debugVisible);
+  if (debugVisible) {
+    controlsVisible = true;
+    controlsPanel.classList.remove('hidden');
+    toggleButton.textContent = '⚙️ Controls';
+  }
+}
+
+document.addEventListener('keydown', (e) => {
+  if (e.key === 'h' || e.key === 'H') toggleDebug();
+});
+
+// Triple-tap anywhere on the page to toggle debug on touch devices.
+let tapTimes = [];
+document.addEventListener('touchend', (e) => {
+  if (e.target.closest('.controls') || e.target.closest('.toggle-controls') || e.target.closest('.fullscreen-button')) return;
+  const now = Date.now();
+  tapTimes = tapTimes.filter(t => now - t < 600);
+  tapTimes.push(now);
+  if (tapTimes.length >= 3) {
+    tapTimes = [];
+    toggleDebug();
+  }
+}, { passive: true });
 
 // Function to update CSS custom properties with ULTRA SMOOTH sine wave interpolation
 function updatePulse() {
@@ -57,16 +91,20 @@ function updatePulse() {
   // Keyframe percentages for ultra-smooth breathing
   const keyframes = [0, 3, 6, 9, 12, 15, 18, 21, 25, 29, 33, 37, 42, 46, 50, 54, 58, 63, 67, 71, 75, 79, 83, 87, 91, 94, 97, 100];
 
+  // Heartbeat envelope: a strong "lub" (S1) followed by a softer "dub" (S2),
+  // then a long diastolic rest. Modeled as two gaussian peaks plus a tiny
+  // baseline tremor so the nebula keeps breathing during the rest phase.
+  const lubCenter = 14;   // % of cycle
+  const lubWidth = 9;
+  const dubCenter = 34;
+  const dubWidth = 11;
+  const dubAmp = 0.6;
+
   keyframes.forEach(percent => {
-    // Convert percentage to radians for sine wave calculation (0 to 2π)
-    const angle = (percent / 100) * 2 * Math.PI;
-
-    // Sine wave calculation for natural breathing pattern
-    const sineValue = (Math.sin(angle - Math.PI/2) + 1) / 2; // Normalized 0-1
-
-    // Add micro-variations for realism (±2% random fluctuation)
-    const microVariation = 1 + (Math.sin(angle * 7.3) * 0.02);
-    const finalSine = Math.max(0, Math.min(1, sineValue * microVariation));
+    const lub = Math.exp(-Math.pow((percent - lubCenter) / lubWidth, 2));
+    const dub = dubAmp * Math.exp(-Math.pow((percent - dubCenter) / dubWidth, 2));
+    const baseline = 0.04 * (Math.sin((percent / 100) * 2 * Math.PI * 1.7) + 1) / 2;
+    const finalSine = Math.max(0, Math.min(1, lub + dub + baseline));
 
     // Calculate smooth interpolated values
     const brightness = (minBrightness + (intensity - minBrightness) * finalSine).toFixed(3);
@@ -134,4 +172,13 @@ if (fullscreenButton) {
   fullscreenButton.addEventListener('click', toggleFullscreen);
   document.addEventListener('fullscreenchange', updateFullscreenButtonText);
   updateFullscreenButtonText();
+
+  // Desktop affordances: press F or double-click anywhere outside the controls
+  document.addEventListener('keydown', (e) => {
+    if (e.key === 'f' || e.key === 'F') toggleFullscreen();
+  });
+  document.addEventListener('dblclick', (e) => {
+    if (e.target.closest('.controls') || e.target.closest('.toggle-controls')) return;
+    toggleFullscreen();
+  });
 }
