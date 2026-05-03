@@ -99,20 +99,45 @@ h1 {
     left: max(1.25rem, env(safe-area-inset-left));
     font-size: 1.4rem;
     letter-spacing: 0.32em;
-    color: rgba(0,255,255,0.45);
-    text-shadow: none;
+    color: rgba(159, 245, 255, 0.9);
+    text-shadow: 0 0 14px rgba(0, 255, 255, 0.35);
     font-weight: normal;
     z-index: 10;
     display: inline-flex;
     flex-direction: column;
-    gap: 0.15rem;
+    gap: 0.2rem;
 }
 h1 .h1-sub {
-    font-size: 0.55rem;
-    letter-spacing: 0.18em;
+    font-size: 0.6rem;
+    letter-spacing: 0.2em;
     text-transform: uppercase;
-    color: rgba(0,255,255,0.55);
-    opacity: 0.6;
+    color: rgba(159, 245, 255, 0.75);
+    text-shadow: 0 0 8px rgba(0, 255, 255, 0.25);
+}
+
+.status-text {
+    margin-top: 1.5rem;
+    text-align: center;
+    color: rgba(159, 245, 255, 0.92);
+    font-family: 'Share Tech Mono', monospace;
+    font-size: 0.85rem;
+    letter-spacing: 0.22em;
+    text-transform: uppercase;
+    min-height: 1.4em;
+    text-shadow: 0 0 12px rgba(0, 255, 255, 0.45);
+    opacity: 0;
+    transition: opacity 0.4s ease;
+    pointer-events: none;
+    position: relative;
+    z-index: 5;
+}
+.status-text.visible {
+    opacity: 1;
+    animation: statusPulse 1.8s ease-in-out infinite;
+}
+@keyframes statusPulse {
+    0%, 100% { opacity: 0.65; }
+    50% { opacity: 1; }
 }
 
 .sound-bars {
@@ -417,6 +442,8 @@ h1 .h1-sub {
 
     <div class="sound-bars" id="soundBars"></div>
 
+    <div class="status-text" id="statusText" role="status" aria-live="polite"></div>
+
     <div class="location-info" id="locationInfo">
         <div class="loc-name"></div>
         <div class="loc-meta"></div>
@@ -485,6 +512,14 @@ const volumeSlider = document.getElementById('volumeSlider');
 const locationEl = document.getElementById('locationInfo');
 const locNameEl = locationEl.querySelector('.loc-name');
 const locMetaEl = locationEl.querySelector('.loc-meta');
+const statusEl = document.getElementById('statusText');
+
+function setStatus(text) {
+    if (!statusEl) return;
+    if (!text) { statusEl.classList.remove('visible'); return; }
+    statusEl.textContent = text;
+    statusEl.classList.add('visible');
+}
 
 function renderLocationInfo() {
     if (!currentSoundLocation) {
@@ -722,11 +757,14 @@ async function findAndPlayNearestSound() {
             const controller = new AbortController();
             soundFetchController = controller;
 
+            setStatus('Localisation du son…');
             const locationInfo = await geocodeLocation(nearest.lat, nearest.lng, controller.signal);
             if (controller.signal.aborted) return;
             currentLocationInfo = locationInfo;
             updateSoundInfo();
 
+            const cityLabel = (locationInfo && (locationInfo.city || locationInfo.country)) || nearest.locationName || 'inconnu';
+            setStatus(`Réception · ${cityLabel}…`);
             const track = { identifier: nearest.identifier, title: nearest.title, artist: nearest.creator };
             await playTrack(track, controller.signal);
         } else {
@@ -814,13 +852,15 @@ async function playTrack(track, signal) {
         crossfade(currentPlayer, nextPlayer);
         activePlayer = activePlayer === 1 ? 2 : 1;
         updateSoundInfo();
+        setStatus('');
     } catch (err) {
         if (signal && signal.aborted) return;
         console.error("Playback error:", err);
         currentPlayer.src = mp3Url;
         currentPlayer.volume = isMuted ? 0 : volume;
         currentPlayer.loop = true;
-        try { await currentPlayer.play(); isPlaying = true; updateSoundInfo(); } catch (e) { console.error("Fallback error:", e); }
+        try { await currentPlayer.play(); isPlaying = true; updateSoundInfo(); setStatus(''); }
+        catch (e) { console.error("Fallback error:", e); setStatus('Signal perdu'); }
     }
 }
 
@@ -881,6 +921,7 @@ muteBtn.addEventListener('click', () => {
 
 // === Boot ===
 async function start() {
+    setStatus('Connexion à la Station Spatiale…');
     await Promise.all([fetchSoundLocations(), fetchISS()]);
 
     function poll() {
