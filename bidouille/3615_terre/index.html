@@ -39,14 +39,20 @@ h1 {
 }
 
 .sound-bars {
+    --signal: 1;
     display: flex; align-items: flex-end; justify-content: center;
     gap: 4px; height: 60px; margin: 2rem 0;
 }
 .sound-bars .bar {
-    width: 6px; background: #00FF00; border-radius: 1px;
+    width: 6px; border-radius: 1px;
+    /* hue interpolates 110° (green) → 180° (cyan) with signal strength */
+    background: hsl(calc(110deg + 70deg * var(--signal)), 100%, calc(35% + 15% * var(--signal)));
+    box-shadow: 0 0 calc(8px * var(--signal)) hsla(calc(110deg + 70deg * var(--signal)), 100%, 60%, calc(0.6 * var(--signal)));
+    opacity: calc(0.4 + 0.6 * var(--signal));
+    transition: background 0.6s ease, box-shadow 0.6s ease, opacity 0.6s ease;
     animation: soundbar 0.5s ease-in-out infinite;
 }
-.sound-bars .bar.paused { animation: none; background: #333; }
+.sound-bars .bar.paused { animation: none; background: #333; box-shadow: none; opacity: 0.4; }
 .sound-bars .bar:nth-child(1) { height: 15px; animation-delay: 0s; }
 .sound-bars .bar:nth-child(2) { height: 30px; animation-delay: 0.1s; }
 .sound-bars .bar:nth-child(3) { height: 22px; animation-delay: 0.15s; }
@@ -57,21 +63,6 @@ h1 {
 .sound-bars .bar:nth-child(8) { height: 45px; animation-delay: 0.4s; }
 .sound-bars .bar:nth-child(9) { height: 18px; animation-delay: 0.45s; }
 .sound-bars .bar:nth-child(10) { height: 38px; animation-delay: 0.5s; }
-
-.signal-bar {
-    margin: 1rem auto;
-    width: 200px;
-    height: 4px;
-    background: #111;
-    border-radius: 2px;
-    overflow: hidden;
-}
-.signal-bar .fill {
-    height: 100%;
-    background: #00FFFF;
-    transition: width 0.5s ease;
-    box-shadow: 0 0 6px rgba(0,255,255,0.6);
-}
 
 .controls {
     display: flex; align-items: center; justify-content: center;
@@ -227,7 +218,6 @@ h1 {
 :fullscreen h1 { font-size: 3.5rem; margin-bottom: 3rem; }
 :fullscreen .sound-bars { height: 120px; gap: 8px; margin: 4rem 0; }
 :fullscreen .sound-bars .bar { width: 12px; }
-:fullscreen .signal-bar { width: 400px; height: 6px; margin: 2rem auto; }
 :fullscreen .controls { margin-top: 3rem; gap: 1.5rem; }
 :fullscreen .controls label { font-size: 1.3rem; }
 :fullscreen .controls input[type=range] { width: 220px; height: 6px; }
@@ -260,7 +250,6 @@ h1 {
     .sound-bars .bar:nth-child(8)  { height: 84px; }
     .sound-bars .bar:nth-child(9)  { height: 34px; }
     .sound-bars .bar:nth-child(10) { height: 72px; }
-    .signal-bar { width: 80%; max-width: 420px; height: 6px; margin: 0 auto; }
     .controls { gap: 1.4rem; margin-top: 0; }
     .controls label { font-size: 1.1rem; }
     .controls input[type=range] { width: 50%; max-width: 240px; height: 6px; }
@@ -309,8 +298,6 @@ h1 {
         <div class="bar paused"></div><div class="bar paused"></div>
         <div class="bar paused"></div><div class="bar paused"></div>
     </div>
-
-    <div class="signal-bar"><div class="fill" id="signalFill" style="width:0%"></div></div>
 
     <div class="controls">
         <input type="range" id="volumeSlider" min="0" max="100" value="70" aria-label="Volume">
@@ -369,7 +356,6 @@ let lastNearestResult = null;
 
 const audioPlayer1 = document.getElementById('audioPlayer1');
 const audioPlayer2 = document.getElementById('audioPlayer2');
-const signalFill = document.getElementById('signalFill');
 const soundBars = document.getElementById('soundBars');
 const muteBtn = document.getElementById('muteBtn');
 const volumeSlider = document.getElementById('volumeSlider');
@@ -519,7 +505,7 @@ async function findAndPlayNearestSound() {
         if (!nearest) return;
 
         signalQuality = calculateSignalQuality(nearest.distance);
-        signalFill.style.width = Math.round(signalQuality * 100) + '%';
+        soundBars.style.setProperty('--signal', signalQuality.toFixed(3));
         updateAudioSignalQuality(signalQuality);
 
         if (!currentSoundLocation || currentSoundLocation.identifier !== nearest.identifier) {
