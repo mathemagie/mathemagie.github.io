@@ -135,20 +135,44 @@ h1 a:hover .h1-sub, h1 a:focus-visible .h1-sub {
 
 .sound-bars {
     --signal: 1;
-    --max-h: 140px;
-    display: flex; align-items: flex-end; justify-content: center;
-    gap: 4px; height: calc(var(--max-h) + 12px); margin: 2rem 0;
+    --size: 280px;
+    --inner-r: 70px;
+    --max-len: 70px;
+    --bar-w: 6px;
+    position: relative;
+    width: var(--size); height: var(--size);
+    margin: 2rem auto;
+}
+/* Earth disc — bars radiate outward from this glowing ring */
+.sound-bars::before {
+    content: '';
+    position: absolute;
+    left: 50%; top: 50%;
+    width: calc(var(--inner-r) * 2); height: calc(var(--inner-r) * 2);
+    margin-left: calc(var(--inner-r) * -1);
+    margin-top: calc(var(--inner-r) * -1);
+    border-radius: 50%;
+    border: 1px solid hsla(calc(110deg + 70deg * var(--signal)), 100%, 50%, calc(0.35 * var(--signal)));
+    box-shadow:
+        0 0 calc(24px * var(--signal)) hsla(calc(110deg + 70deg * var(--signal)), 100%, 60%, calc(0.25 * var(--signal))),
+        inset 0 0 calc(36px * var(--signal)) hsla(calc(110deg + 70deg * var(--signal)), 100%, 40%, calc(0.18 * var(--signal)));
+    transition: border-color 0.6s ease, box-shadow 0.6s ease;
 }
 .sound-bars .bar {
-    width: 8px; border-radius: 2px;
-    /* height driven by FFT data via --h (0..1); falls back to 0 when paused */
-    height: calc(6px + var(--h, 0) * var(--max-h));
+    position: absolute;
+    left: 50%; top: 50%;
+    width: var(--bar-w); margin-left: calc(var(--bar-w) / -2);  /* center on container axis so pivot lands at center */
+    border-radius: 2px;
+    /* height driven by FFT data via --h (0..1); --angle set per bar in JS */
+    height: calc(4px + var(--h, 0) * var(--max-len));
+    transform-origin: 50% 0;  /* top-center = container center; bar grows outward */
+    transform: rotate(var(--angle, 0deg)) translateY(var(--inner-r));
     background: hsl(calc(110deg + 70deg * var(--signal)), 100%, calc(35% + 15% * var(--signal)));
     box-shadow: 0 0 calc(8px * var(--signal)) hsla(calc(110deg + 70deg * var(--signal)), 100%, 60%, calc(0.6 * var(--signal)));
     opacity: calc(0.4 + 0.6 * var(--signal));
     transition: background 0.6s ease, box-shadow 0.6s ease, opacity 0.6s ease;
 }
-.sound-bars .bar.paused { background: #333; box-shadow: none; opacity: 0.4; height: 6px; }
+.sound-bars .bar.paused { background: #333; box-shadow: none; opacity: 0.4; height: 4px; }
 
 /* Location readout — toggled by H key (Maeda law #10: surface the meaningful)
    Sits directly under the bars; space is RESERVED so toggling doesn't shift them. */
@@ -348,8 +372,7 @@ h1 a:hover .h1-sub, h1 a:focus-visible .h1-sub {
 @keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.4; } }
 
 :fullscreen h1 { font-size: 1.6rem; }
-:fullscreen .sound-bars { --max-h: 220px; gap: 6px; }
-:fullscreen .sound-bars .bar { width: 12px; }
+:fullscreen .sound-bars { --size: 440px; --inner-r: 110px; --max-len: 110px; --bar-w: 9px; }
 :fullscreen .controls { gap: 1.5rem; }
 :fullscreen .controls input[type=range] { width: 220px; height: 6px; }
 :fullscreen .mute-btn { font-size: 1.8rem; }
@@ -365,8 +388,7 @@ h1 a:hover .h1-sub, h1 a:focus-visible .h1-sub {
         min-height: 100dvh;
     }
     h1 { font-size: 1.3rem; letter-spacing: 0.32em; top: max(1rem, env(safe-area-inset-top)); left: max(1rem, env(safe-area-inset-left)); }
-    .sound-bars { --max-h: 110px; gap: 3px; margin: 0; }
-    .sound-bars .bar { width: 6px; }
+    .sound-bars { --size: 220px; --inner-r: 55px; --max-len: 55px; --bar-w: 5px; margin: 0 auto; }
     .controls { gap: 1.4rem; padding: 0.5rem 1rem; }
     .controls input[type=range] { width: 180px; max-width: 50vw; height: 6px; }
     .controls input[type=range]::-webkit-slider-thumb { width: 18px; height: 18px; }
@@ -522,6 +544,8 @@ function setupBars() {
     for (let i = 0; i < BAR_COUNT; i++) {
         const b = document.createElement('div');
         b.className = 'bar paused';
+        // Spread bars evenly around the disc; offset -90° so bar 0 sits at 12 o'clock
+        b.style.setProperty('--angle', `${(i / BAR_COUNT) * 360 - 90}deg`);
         soundBars.appendChild(b);
         barEls.push(b);
     }
