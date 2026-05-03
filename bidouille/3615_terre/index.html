@@ -48,29 +48,20 @@ h1 {
 
 .sound-bars {
     --signal: 1;
+    --max-h: 140px;
     display: flex; align-items: flex-end; justify-content: center;
-    gap: 8px; height: 160px; margin: 2rem 0;
+    gap: 4px; height: calc(var(--max-h) + 12px); margin: 2rem 0;
 }
 .sound-bars .bar {
-    width: 10px; border-radius: 2px;
-    /* hue interpolates 110° (green) → 180° (cyan) with signal strength */
+    width: 8px; border-radius: 2px;
+    /* height driven by FFT data via --h (0..1); falls back to 0 when paused */
+    height: calc(6px + var(--h, 0) * var(--max-h));
     background: hsl(calc(110deg + 70deg * var(--signal)), 100%, calc(35% + 15% * var(--signal)));
     box-shadow: 0 0 calc(8px * var(--signal)) hsla(calc(110deg + 70deg * var(--signal)), 100%, 60%, calc(0.6 * var(--signal)));
     opacity: calc(0.4 + 0.6 * var(--signal));
     transition: background 0.6s ease, box-shadow 0.6s ease, opacity 0.6s ease;
-    animation: soundbar 0.5s ease-in-out infinite;
 }
-.sound-bars .bar.paused { animation: none; background: #333; box-shadow: none; opacity: 0.4; }
-.sound-bars .bar:nth-child(1) { height: 40px; animation-delay: 0s; }
-.sound-bars .bar:nth-child(2) { height: 80px; animation-delay: 0.1s; }
-.sound-bars .bar:nth-child(3) { height: 60px; animation-delay: 0.15s; }
-.sound-bars .bar:nth-child(4) { height: 110px; animation-delay: 0.2s; }
-.sound-bars .bar:nth-child(5) { height: 95px; animation-delay: 0.25s; }
-.sound-bars .bar:nth-child(6) { height: 140px; animation-delay: 0.3s; }
-.sound-bars .bar:nth-child(7) { height: 75px; animation-delay: 0.35s; }
-.sound-bars .bar:nth-child(8) { height: 120px; animation-delay: 0.4s; }
-.sound-bars .bar:nth-child(9) { height: 50px; animation-delay: 0.45s; }
-.sound-bars .bar:nth-child(10) { height: 100px; animation-delay: 0.5s; }
+.sound-bars .bar.paused { background: #333; box-shadow: none; opacity: 0.4; height: 6px; }
 
 .controls {
     position: fixed;
@@ -226,12 +217,11 @@ h1 {
     to { opacity: 1; transform: translateY(0); }
 }
 
-@keyframes soundbar { 0%, 100% { transform: scaleY(1); } 50% { transform: scaleY(0.5); } }
 @keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.4; } }
 
 :fullscreen h1 { font-size: 0.8rem; }
-:fullscreen .sound-bars { height: 160px; gap: 10px; }
-:fullscreen .sound-bars .bar { width: 14px; }
+:fullscreen .sound-bars { --max-h: 220px; gap: 6px; }
+:fullscreen .sound-bars .bar { width: 12px; }
 :fullscreen .controls { gap: 1.5rem; }
 :fullscreen .controls input[type=range] { width: 220px; height: 6px; }
 :fullscreen .mute-btn { font-size: 1.8rem; }
@@ -246,18 +236,8 @@ h1 {
         min-height: 100dvh;
     }
     h1 { font-size: 0.65rem; letter-spacing: 0.32em; top: max(1rem, env(safe-area-inset-top)); left: max(1rem, env(safe-area-inset-left)); }
-    .sound-bars { height: 110px; gap: 6px; margin: 0; }
-    .sound-bars .bar { width: 10px; }
-    .sound-bars .bar:nth-child(1)  { height: 28px; }
-    .sound-bars .bar:nth-child(2)  { height: 56px; }
-    .sound-bars .bar:nth-child(3)  { height: 40px; }
-    .sound-bars .bar:nth-child(4)  { height: 75px; }
-    .sound-bars .bar:nth-child(5)  { height: 65px; }
-    .sound-bars .bar:nth-child(6)  { height: 95px; }
-    .sound-bars .bar:nth-child(7)  { height: 52px; }
-    .sound-bars .bar:nth-child(8)  { height: 84px; }
-    .sound-bars .bar:nth-child(9)  { height: 34px; }
-    .sound-bars .bar:nth-child(10) { height: 72px; }
+    .sound-bars { --max-h: 110px; gap: 3px; margin: 0; }
+    .sound-bars .bar { width: 6px; }
     .controls { gap: 1.4rem; padding: 0.5rem 1rem; }
     .controls input[type=range] { width: 180px; max-width: 50vw; height: 6px; }
     .controls input[type=range]::-webkit-slider-thumb { width: 18px; height: 18px; }
@@ -298,13 +278,7 @@ h1 {
 <div class="container">
     <h1>3615 TERRE</h1>
 
-    <div class="sound-bars" id="soundBars">
-        <div class="bar paused"></div><div class="bar paused"></div>
-        <div class="bar paused"></div><div class="bar paused"></div>
-        <div class="bar paused"></div><div class="bar paused"></div>
-        <div class="bar paused"></div><div class="bar paused"></div>
-        <div class="bar paused"></div><div class="bar paused"></div>
-    </div>
+    <div class="sound-bars" id="soundBars"></div>
 
     <div class="controls">
         <input type="range" id="volumeSlider" min="0" max="100" value="70" aria-label="Volume">
@@ -366,6 +340,60 @@ const audioPlayer2 = document.getElementById('audioPlayer2');
 const soundBars = document.getElementById('soundBars');
 const muteBtn = document.getElementById('muteBtn');
 const volumeSlider = document.getElementById('volumeSlider');
+
+// === Visualizer ===
+const BAR_COUNT = 24;
+let analyserNode = null;
+let freqData = null;
+const barLevels = new Float32Array(BAR_COUNT);
+let binRanges = [];
+let barEls = [];
+let visualizerRafId = null;
+
+function setupBars() {
+    soundBars.innerHTML = '';
+    barEls = [];
+    for (let i = 0; i < BAR_COUNT; i++) {
+        const b = document.createElement('div');
+        b.className = 'bar paused';
+        soundBars.appendChild(b);
+        barEls.push(b);
+    }
+}
+
+function computeBinRanges(fftSize, sampleRate) {
+    // Log-distributed bin ranges from ~80Hz to ~10kHz — matches how we hear ambient sound
+    const bins = fftSize / 2;
+    const nyquist = sampleRate / 2;
+    const minHz = 80, maxHz = Math.min(10000, nyquist - 100);
+    const minBin = Math.max(1, Math.round(minHz / nyquist * bins));
+    const maxBin = Math.min(bins - 1, Math.round(maxHz / nyquist * bins));
+    binRanges = [];
+    for (let i = 0; i < BAR_COUNT; i++) {
+        const t1 = i / BAR_COUNT, t2 = (i + 1) / BAR_COUNT;
+        const s = Math.round(minBin * Math.pow(maxBin / minBin, t1));
+        const e = Math.max(s, Math.round(minBin * Math.pow(maxBin / minBin, t2)) - 1);
+        binRanges.push({ start: s, end: e });
+    }
+}
+
+function visualize() {
+    if (!analyserNode || !freqData) return;
+    analyserNode.getByteFrequencyData(freqData);
+    for (let i = 0; i < BAR_COUNT; i++) {
+        const r = binRanges[i];
+        let peak = 0;
+        for (let j = r.start; j <= r.end; j++) if (freqData[j] > peak) peak = freqData[j];
+        const target = peak / 255;
+        const prev = barLevels[i];
+        // Fast attack, slow release — VU-meter feel
+        barLevels[i] = target > prev ? prev * 0.4 + target * 0.6 : prev * 0.88 + target * 0.12;
+        barEls[i].style.setProperty('--h', barLevels[i].toFixed(3));
+    }
+    visualizerRafId = requestAnimationFrame(visualize);
+}
+
+setupBars();
 
 // === ISS ===
 async function fetchISS() {
@@ -569,7 +597,15 @@ function initWebAudio() {
         const s2 = audioContext.createMediaElementSource(audioPlayer2);
         s1.connect(gainNode1); s2.connect(gainNode2);
         gainNode1.connect(filterNode); gainNode2.connect(filterNode);
-        filterNode.connect(audioContext.destination);
+        // Tap the post-filter signal for the visualizer
+        analyserNode = audioContext.createAnalyser();
+        analyserNode.fftSize = 256;
+        analyserNode.smoothingTimeConstant = 0.55;
+        freqData = new Uint8Array(analyserNode.frequencyBinCount);
+        computeBinRanges(analyserNode.fftSize, audioContext.sampleRate);
+        filterNode.connect(analyserNode);
+        analyserNode.connect(audioContext.destination);
+        if (visualizerRafId === null) visualize();
     } catch (e) {
         console.error('WebAudio init failed:', e);
         audioContext = null;
