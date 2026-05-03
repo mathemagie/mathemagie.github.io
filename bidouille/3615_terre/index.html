@@ -103,37 +103,16 @@ h1 {
     text-shadow: none;
     font-weight: normal;
     z-index: 10;
-}
-h1 a {
-    color: inherit;
-    text-decoration: none;
     display: inline-flex;
     flex-direction: column;
     gap: 0.15rem;
-    transition: color 0.3s ease;
-    -webkit-tap-highlight-color: transparent;
-}
-h1 a:hover, h1 a:focus-visible {
-    color: rgba(0,255,255,0.85);
-    outline: none;
 }
 h1 .h1-sub {
     font-size: 0.55rem;
     letter-spacing: 0.18em;
     text-transform: uppercase;
     color: rgba(0,255,255,0.55);
-    opacity: 0;
-    transform: translateY(-2px);
-    transition: opacity 0.3s ease, transform 0.3s ease;
-    pointer-events: none;
-}
-h1 a:hover .h1-sub, h1 a:focus-visible .h1-sub {
-    opacity: 1;
-    transform: translateY(0);
-}
-@media (hover: none) {
-    /* Touch devices: subtitle stays visible at low opacity since there's no hover */
-    h1 .h1-sub { opacity: 0.6; transform: none; }
+    opacity: 0.6;
 }
 
 .sound-bars {
@@ -973,6 +952,7 @@ function showOverlay() {
 }
 
 // Unlock audio on click
+const SILENT_WAV = 'data:audio/wav;base64,UklGRigAAABXQVZFZm10IBIAAAABAAEARKwAAIhYAQACABAAAABkYXRhAgAAAAEA';
 document.getElementById('unlockScreen').addEventListener('click', (e) => {
     e.stopPropagation();
     document.getElementById('unlockScreen').classList.add('hidden');
@@ -981,10 +961,20 @@ document.getElementById('unlockScreen').addEventListener('click', (e) => {
     } else {
         showOverlay();
     }
-    audioPlayer1.play().then(() => audioPlayer1.pause()).catch(() => {
-        audioPlayer1.src = 'data:audio/wav;base64,UklGRigAAABXQVZFZm10IBIAAAABAAEARKwAAIhYAQACABAAAABkYXRhAgAAAAEA';
-        audioPlayer1.play().then(() => { audioPlayer1.pause(); audioPlayer1.src = ''; }).catch(() => {});
+    // iOS (esp. home-screen / standalone) only unlocks audio elements that
+    // receive a synchronous play() inside the gesture. The first track plays
+    // through audioPlayer2, so both must be primed here.
+    [audioPlayer1, audioPlayer2].forEach(p => {
+        if (!p.src) p.src = SILENT_WAV;
+        const r = p.play();
+        if (r && r.then) r.then(() => p.pause()).catch(() => {});
     });
+    // Build the WebAudio graph + resume inside the gesture; otherwise the
+    // context (created later inside playTrack) stays suspended on iOS.
+    initWebAudio();
+    if (audioContext && audioContext.state === 'suspended') {
+        audioContext.resume().catch(() => {});
+    }
     start();
 }, { once: true });
 
