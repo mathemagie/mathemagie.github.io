@@ -27,15 +27,23 @@ body {
 .container {
     text-align: center;
     padding: 2rem;
-    max-width: 600px;
     width: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
 }
 
 h1 {
-    font-size: 1.75rem;
-    margin-bottom: 2rem;
-    text-shadow: 0 0 10px rgba(0,255,255,0.5);
-    letter-spacing: 0.15em;
+    position: fixed;
+    top: max(1.25rem, env(safe-area-inset-top));
+    left: max(1.25rem, env(safe-area-inset-left));
+    font-size: 0.7rem;
+    letter-spacing: 0.32em;
+    color: rgba(0,255,255,0.45);
+    text-shadow: none;
+    font-weight: normal;
+    z-index: 10;
+    pointer-events: none;
 }
 
 .sound-bars {
@@ -65,8 +73,14 @@ h1 {
 .sound-bars .bar:nth-child(10) { height: 38px; animation-delay: 0.5s; }
 
 .controls {
+    position: fixed;
+    bottom: max(1.25rem, env(safe-area-inset-bottom));
+    left: 50%;
+    transform: translateX(-50%);
     display: flex; align-items: center; justify-content: center;
-    gap: 1rem; margin-top: 2rem;
+    gap: 1rem;
+    padding: 0.6rem 1rem;
+    z-index: 10;
 }
 .controls label { font-size: 0.85rem; letter-spacing: 0.08em; }
 .controls input[type=range] {
@@ -215,14 +229,12 @@ h1 {
 @keyframes soundbar { 0%, 100% { transform: scaleY(1); } 50% { transform: scaleY(0.5); } }
 @keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.4; } }
 
-:fullscreen h1 { font-size: 3.5rem; margin-bottom: 3rem; }
-:fullscreen .sound-bars { height: 120px; gap: 8px; margin: 4rem 0; }
-:fullscreen .sound-bars .bar { width: 12px; }
-:fullscreen .controls { margin-top: 3rem; gap: 1.5rem; }
-:fullscreen .controls label { font-size: 1.3rem; }
+:fullscreen h1 { font-size: 0.8rem; }
+:fullscreen .sound-bars { height: 160px; gap: 10px; }
+:fullscreen .sound-bars .bar { width: 14px; }
+:fullscreen .controls { gap: 1.5rem; }
 :fullscreen .controls input[type=range] { width: 220px; height: 6px; }
-:fullscreen .mute-btn { font-size: 2rem; }
-:fullscreen .container { max-width: 900px; }
+:fullscreen .mute-btn { font-size: 1.8rem; }
 
 /* Portrait mobile / Reels — fill the screen */
 @media (max-width: 768px), (orientation: portrait) {
@@ -230,14 +242,10 @@ h1 {
     .container {
         max-width: 100%;
         padding: 2rem 1.5rem;
-        display: flex;
-        flex-direction: column;
-        justify-content: center;
-        gap: 2.5rem;
         min-height: 100vh;
         min-height: 100dvh;
     }
-    h1 { font-size: 2.6rem; margin-bottom: 0; letter-spacing: 0.18em; }
+    h1 { font-size: 0.65rem; letter-spacing: 0.32em; top: max(1rem, env(safe-area-inset-top)); left: max(1rem, env(safe-area-inset-left)); }
     .sound-bars { height: 110px; gap: 6px; margin: 0; }
     .sound-bars .bar { width: 10px; }
     .sound-bars .bar:nth-child(1)  { height: 28px; }
@@ -250,9 +258,8 @@ h1 {
     .sound-bars .bar:nth-child(8)  { height: 84px; }
     .sound-bars .bar:nth-child(9)  { height: 34px; }
     .sound-bars .bar:nth-child(10) { height: 72px; }
-    .controls { gap: 1.4rem; margin-top: 0; }
-    .controls label { font-size: 1.1rem; }
-    .controls input[type=range] { width: 50%; max-width: 240px; height: 6px; }
+    .controls { gap: 1.4rem; padding: 0.5rem 1rem; }
+    .controls input[type=range] { width: 180px; max-width: 50vw; height: 6px; }
     .controls input[type=range]::-webkit-slider-thumb { width: 18px; height: 18px; }
     .mute-btn { font-size: 1.8rem; padding: 0.4rem; }
     .unlock p { font-size: 1.6rem; padding: 0 1.5rem; text-align: center; }
