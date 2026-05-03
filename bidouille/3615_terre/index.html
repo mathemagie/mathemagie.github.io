@@ -37,7 +37,7 @@ h1 {
     position: fixed;
     top: max(1.25rem, env(safe-area-inset-top));
     left: max(1.25rem, env(safe-area-inset-left));
-    font-size: 0.7rem;
+    font-size: 1.4rem;
     letter-spacing: 0.32em;
     color: rgba(0,255,255,0.45);
     text-shadow: none;
@@ -219,12 +219,13 @@ h1 {
 
 @keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.4; } }
 
-:fullscreen h1 { font-size: 0.8rem; }
+:fullscreen h1 { font-size: 1.6rem; }
 :fullscreen .sound-bars { --max-h: 220px; gap: 6px; }
 :fullscreen .sound-bars .bar { width: 12px; }
 :fullscreen .controls { gap: 1.5rem; }
 :fullscreen .controls input[type=range] { width: 220px; height: 6px; }
 :fullscreen .mute-btn { font-size: 1.8rem; }
+:fullscreen #fullscreenBtn { display: none; }
 
 /* Portrait mobile / Reels — fill the screen */
 @media (max-width: 768px), (orientation: portrait) {
@@ -235,7 +236,7 @@ h1 {
         min-height: 100vh;
         min-height: 100dvh;
     }
-    h1 { font-size: 0.65rem; letter-spacing: 0.32em; top: max(1rem, env(safe-area-inset-top)); left: max(1rem, env(safe-area-inset-left)); }
+    h1 { font-size: 1.3rem; letter-spacing: 0.32em; top: max(1rem, env(safe-area-inset-top)); left: max(1rem, env(safe-area-inset-left)); }
     .sound-bars { --max-h: 110px; gap: 3px; margin: 0; }
     .sound-bars .bar { width: 6px; }
     .controls { gap: 1.4rem; padding: 0.5rem 1rem; }
