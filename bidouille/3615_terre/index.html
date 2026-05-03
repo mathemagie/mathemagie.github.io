@@ -49,10 +49,10 @@ h1 {
 .sound-bars {
     --signal: 1;
     display: flex; align-items: flex-end; justify-content: center;
-    gap: 4px; height: 60px; margin: 2rem 0;
+    gap: 8px; height: 160px; margin: 2rem 0;
 }
 .sound-bars .bar {
-    width: 6px; border-radius: 1px;
+    width: 10px; border-radius: 2px;
     /* hue interpolates 110° (green) → 180° (cyan) with signal strength */
     background: hsl(calc(110deg + 70deg * var(--signal)), 100%, calc(35% + 15% * var(--signal)));
     box-shadow: 0 0 calc(8px * var(--signal)) hsla(calc(110deg + 70deg * var(--signal)), 100%, 60%, calc(0.6 * var(--signal)));
@@ -61,16 +61,16 @@ h1 {
     animation: soundbar 0.5s ease-in-out infinite;
 }
 .sound-bars .bar.paused { animation: none; background: #333; box-shadow: none; opacity: 0.4; }
-.sound-bars .bar:nth-child(1) { height: 15px; animation-delay: 0s; }
-.sound-bars .bar:nth-child(2) { height: 30px; animation-delay: 0.1s; }
-.sound-bars .bar:nth-child(3) { height: 22px; animation-delay: 0.15s; }
-.sound-bars .bar:nth-child(4) { height: 40px; animation-delay: 0.2s; }
-.sound-bars .bar:nth-child(5) { height: 35px; animation-delay: 0.25s; }
-.sound-bars .bar:nth-child(6) { height: 50px; animation-delay: 0.3s; }
-.sound-bars .bar:nth-child(7) { height: 28px; animation-delay: 0.35s; }
-.sound-bars .bar:nth-child(8) { height: 45px; animation-delay: 0.4s; }
-.sound-bars .bar:nth-child(9) { height: 18px; animation-delay: 0.45s; }
-.sound-bars .bar:nth-child(10) { height: 38px; animation-delay: 0.5s; }
+.sound-bars .bar:nth-child(1) { height: 40px; animation-delay: 0s; }
+.sound-bars .bar:nth-child(2) { height: 80px; animation-delay: 0.1s; }
+.sound-bars .bar:nth-child(3) { height: 60px; animation-delay: 0.15s; }
+.sound-bars .bar:nth-child(4) { height: 110px; animation-delay: 0.2s; }
+.sound-bars .bar:nth-child(5) { height: 95px; animation-delay: 0.25s; }
+.sound-bars .bar:nth-child(6) { height: 140px; animation-delay: 0.3s; }
+.sound-bars .bar:nth-child(7) { height: 75px; animation-delay: 0.35s; }
+.sound-bars .bar:nth-child(8) { height: 120px; animation-delay: 0.4s; }
+.sound-bars .bar:nth-child(9) { height: 50px; animation-delay: 0.45s; }
+.sound-bars .bar:nth-child(10) { height: 100px; animation-delay: 0.5s; }
 
 .controls {
     position: fixed;
@@ -689,10 +689,14 @@ async function start() {
     });
 }
 
-// Remove overlay entirely if text=false in URL
-if (new URLSearchParams(location.search).get('text') === 'false') {
+// URL params for debug:
+//   ?text=false   — remove the intro overlay text
+//   ?skip=1       — skip unlock + intro and jump straight to the HUD (audio won't autoplay until interaction)
+const _params = new URLSearchParams(location.search);
+if (_params.get('text') === 'false') {
     document.getElementById('overlayText')?.remove();
 }
+const _skipIntro = _params.get('skip') === '1' || _params.get('nointro') === '1';
 
 // Overlay auto-hide + tap/key to skip + reduced-motion respect
 let overlayShown = false;
@@ -742,6 +746,14 @@ document.getElementById('unlockScreen').addEventListener('click', (e) => {
     });
     start();
 }, { once: true });
+
+// Debug: skip unlock + intro
+if (_skipIntro) {
+    document.getElementById('unlockScreen').classList.add('hidden');
+    document.getElementById('overlayText')?.remove();
+    document.querySelectorAll('.sound-bars .bar').forEach(b => b.classList.remove('paused'));
+    start();
+}
 
 // === Fullscreen ===
 const fullscreenBtn = document.getElementById('fullscreenBtn');
