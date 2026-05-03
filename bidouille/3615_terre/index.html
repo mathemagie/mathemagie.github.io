@@ -13,6 +13,7 @@
 
 body {
     min-height: 100vh;
+    min-height: 100dvh;
     background: #000;
     display: flex;
     align-items: center;
@@ -115,11 +116,38 @@ h1 {
         radial-gradient(ellipse 80% 60% at 50% 50%, rgba(8,12,20,0.78), rgba(0,0,0,0.97) 75%),
         #000;
     padding: 2rem;
-    opacity: 1;
-    transition: opacity 0.8s ease-out, backdrop-filter 0.8s ease-out;
+    opacity: 0;
+    visibility: hidden;
+    transition: opacity 0.8s ease-out, backdrop-filter 0.8s ease-out, visibility 0s linear 0.8s;
     pointer-events: none;
+    cursor: pointer;
     backdrop-filter: blur(6px);
+    -webkit-tap-highlight-color: transparent;
 }
+.overlay-text.show {
+    opacity: 1;
+    visibility: visible;
+    pointer-events: auto;
+    transition: opacity 0.4s ease-in, backdrop-filter 0.4s ease-in;
+}
+.overlay-text::after {
+    content: 'Touchez pour passer';
+    position: absolute;
+    bottom: max(1.25rem, env(safe-area-inset-bottom));
+    left: 50%;
+    transform: translateX(-50%);
+    font-family: 'Share Tech Mono', monospace;
+    font-size: 0.7rem;
+    letter-spacing: 0.18em;
+    color: rgba(0,255,255,0.45);
+    text-transform: uppercase;
+    opacity: 0;
+    pointer-events: none;
+}
+.overlay-text.show::after {
+    animation: skipHintIn 0.6s ease 2.5s forwards;
+}
+@keyframes skipHintIn { to { opacity: 1; } }
 .overlay-text.fade-out .line {
     transition: opacity 0.6s ease-out, transform 0.6s ease-out, filter 0.6s ease-out;
     opacity: 0 !important;
@@ -150,17 +178,27 @@ h1 {
 .overlay-text .inner .line {
     opacity: 0;
     transform: translateY(12px);
-    animation: lineIn 0.8s ease forwards;
     margin-bottom: 1.4em;
     display: block;
     text-wrap: balance;
 }
+.overlay-text.show .inner .line { animation: lineIn 0.8s ease forwards; }
 .overlay-text .inner .line:last-child { margin-bottom: 0; }
-.overlay-text .inner .line:nth-child(1) { animation-delay: 0.5s; }
-.overlay-text .inner .line:nth-child(2) { animation-delay: 2.5s; }
-.overlay-text .inner .line:nth-child(3) { animation-delay: 5s; }
-.overlay-text .inner .line:nth-child(4) { animation-delay: 7s; }
-.overlay-text .inner .line:nth-child(5) { animation-delay: 9s; }
+.overlay-text.show .inner .line:nth-child(1) { animation-delay: 0.3s; }
+.overlay-text.show .inner .line:nth-child(2) { animation-delay: 1.6s; }
+.overlay-text.show .inner .line:nth-child(3) { animation-delay: 3.0s; }
+.overlay-text.show .inner .line:nth-child(4) { animation-delay: 4.4s; }
+.overlay-text.show .inner .line:nth-child(5) { animation-delay: 5.7s; }
+
+@media (prefers-reduced-motion: reduce) {
+    .overlay-text, .overlay-text.fade-out .line { transition-duration: 0.2s !important; }
+    .overlay-text .inner .line {
+        animation-duration: 0.3s;
+        animation-delay: 0s !important;
+    }
+    .overlay-text.fade-out .line { transition-delay: 0s !important; filter: none !important; }
+    .overlay-text::after { animation-delay: 0.3s; }
+}
 .overlay-text .inner .accent {
     color: #9ff5ff;
     text-shadow: 0 0 22px rgba(0,255,255,0.45), 0 0 1px rgba(0,255,255,0.6);
@@ -201,6 +239,7 @@ h1 {
         justify-content: center;
         gap: 2.5rem;
         min-height: 100vh;
+        min-height: 100dvh;
     }
     h1 { font-size: 2.6rem; margin-bottom: 0; letter-spacing: 0.18em; }
     .sound-bars { height: 110px; gap: 6px; margin: 0; }
@@ -637,19 +676,46 @@ if (new URLSearchParams(location.search).get('text') === 'false') {
     document.getElementById('overlayText')?.remove();
 }
 
-// Overlay auto-hide after 10s
+// Overlay auto-hide + tap/key to skip + reduced-motion respect
+let overlayShown = false;
 function showOverlay() {
+    if (overlayShown) return;
+    overlayShown = true;
     const overlay = document.getElementById('overlayText');
     if (!overlay) return;
-    setTimeout(() => {
+    overlay.classList.add('show');
+    const reduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+    const autoHideMs = reduced ? 3500 : 8500;
+    let dismissed = false;
+    let autoHideId = null;
+
+    const dismiss = () => {
+        if (dismissed) return;
+        dismissed = true;
+        if (autoHideId) clearTimeout(autoHideId);
         overlay.classList.add('fade-out');
-        setTimeout(() => overlay.classList.add('bg-fade'), 1200);
-        setTimeout(() => overlay.classList.add('gone'), 2200);
-    }, 13000);
+        setTimeout(() => overlay.classList.add('bg-fade'), reduced ? 200 : 800);
+        setTimeout(() => {
+            overlay.classList.add('gone');
+            overlay.removeEventListener('click', dismiss);
+            document.removeEventListener('keydown', onKey);
+        }, reduced ? 600 : 1800);
+    };
+    const onKey = (e) => {
+        if (e.key === 'Escape' || e.key === ' ' || e.key === 'Enter') dismiss();
+    };
+
+    // Defer listeners so the unlock-click doesn't immediately dismiss
+    setTimeout(() => {
+        overlay.addEventListener('click', dismiss);
+        document.addEventListener('keydown', onKey);
+    }, 400);
+    autoHideId = setTimeout(dismiss, autoHideMs);
 }
 
 // Unlock audio on click
-document.getElementById('unlockScreen').addEventListener('click', () => {
+document.getElementById('unlockScreen').addEventListener('click', (e) => {
+    e.stopPropagation();
     document.getElementById('unlockScreen').classList.add('hidden');
     showOverlay();
     audioPlayer1.play().then(() => audioPlayer1.pause()).catch(() => {
@@ -657,7 +723,7 @@ document.getElementById('unlockScreen').addEventListener('click', () => {
         audioPlayer1.play().then(() => { audioPlayer1.pause(); audioPlayer1.src = ''; }).catch(() => {});
     });
     start();
-});
+}, { once: true });
 
 // === Fullscreen ===
 const fullscreenBtn = document.getElementById('fullscreenBtn');
