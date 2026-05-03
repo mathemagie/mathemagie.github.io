@@ -150,22 +150,18 @@ h1 a:hover .h1-sub, h1 a:focus-visible .h1-sub {
 .sound-bars .bar.paused { background: #333; box-shadow: none; opacity: 0.4; height: 6px; }
 
 /* Location readout — toggled by H key (Maeda law #10: surface the meaningful)
-   Fixed above the controls so toggling doesn't displace the bars. */
+   Sits directly under the bars; space is RESERVED so toggling doesn't shift them. */
 .location-info {
-    position: fixed;
-    left: 50%;
-    bottom: calc(max(1.25rem, env(safe-area-inset-bottom)) + 3.5rem);
-    transform: translateX(-50%);
+    margin-top: 1.5rem;
     text-align: center;
     color: rgba(0,255,255,0.75);
     font-family: 'Share Tech Mono', monospace;
-    display: none;
-    z-index: 10;
+    visibility: hidden;
+    min-height: 3.2em;
     pointer-events: none;
-    white-space: nowrap;
 }
 .location-info.visible {
-    display: block;
+    visibility: visible;
     animation: locFadeIn 0.5s ease;
 }
 .location-info .loc-name {
@@ -494,7 +490,8 @@ function renderLocationInfo() {
     }
     const info = currentLocationInfo || {};
     const city = info.city || currentSoundLocation.locationName || '?';
-    const country = info.country || '';
+    // bigdatacloud returns names like "Canada (le)" with French articles — strip those
+    const country = (info.country || '').replace(/\s*\([^)]+\)\s*$/, '').trim();
     locNameEl.textContent = country ? `${city} · ${country}` : city;
     const lat = currentSoundLocation.lat.toFixed(2);
     const lng = currentSoundLocation.lng.toFixed(2);
