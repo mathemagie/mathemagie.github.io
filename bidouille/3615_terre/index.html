@@ -149,6 +149,35 @@ h1 a:hover .h1-sub, h1 a:focus-visible .h1-sub {
 }
 .sound-bars .bar.paused { background: #333; box-shadow: none; opacity: 0.4; height: 6px; }
 
+/* Location readout — toggled by H key (Maeda law #10: surface the meaningful) */
+.location-info {
+    margin-top: 1.75rem;
+    text-align: center;
+    color: rgba(0,255,255,0.75);
+    font-family: 'Share Tech Mono', monospace;
+    display: none;
+}
+.location-info.visible {
+    display: block;
+    animation: locFadeIn 0.5s ease;
+}
+.location-info .loc-name {
+    font-size: 0.95rem;
+    text-transform: uppercase;
+    letter-spacing: 0.28em;
+    text-shadow: 0 0 14px rgba(0,255,255,0.45);
+}
+.location-info .loc-meta {
+    font-size: 0.65rem;
+    opacity: 0.55;
+    margin-top: 0.55rem;
+    letter-spacing: 0.32em;
+}
+@keyframes locFadeIn {
+    from { opacity: 0; transform: translateY(-6px); }
+    to   { opacity: 1; transform: none; }
+}
+
 .controls {
     position: fixed;
     bottom: max(1.25rem, env(safe-area-inset-bottom));
@@ -381,6 +410,11 @@ h1 a:hover .h1-sub, h1 a:focus-visible .h1-sub {
 
     <div class="sound-bars" id="soundBars"></div>
 
+    <div class="location-info" id="locationInfo">
+        <div class="loc-name"></div>
+        <div class="loc-meta"></div>
+    </div>
+
     <div class="controls">
         <input type="range" id="volumeSlider" min="0" max="100" value="70" aria-label="Volume">
         <button class="mute-btn" id="muteBtn" aria-label="Mute">
@@ -441,6 +475,34 @@ const audioPlayer2 = document.getElementById('audioPlayer2');
 const soundBars = document.getElementById('soundBars');
 const muteBtn = document.getElementById('muteBtn');
 const volumeSlider = document.getElementById('volumeSlider');
+const locationEl = document.getElementById('locationInfo');
+const locNameEl = locationEl.querySelector('.loc-name');
+const locMetaEl = locationEl.querySelector('.loc-meta');
+
+function renderLocationInfo() {
+    if (!currentSoundLocation) {
+        locNameEl.textContent = '— En attente du signal —';
+        locMetaEl.textContent = '';
+        return;
+    }
+    const info = currentLocationInfo || {};
+    const city = info.city || currentSoundLocation.locationName || '?';
+    const country = info.country || '';
+    locNameEl.textContent = country ? `${city} · ${country}` : city;
+    const lat = currentSoundLocation.lat.toFixed(2);
+    const lng = currentSoundLocation.lng.toFixed(2);
+    const dist = Math.round(currentSoundLocation.distance);
+    locMetaEl.textContent = `${lat}° · ${lng}° · ${dist} km`;
+}
+
+document.addEventListener('keydown', (e) => {
+    // Only react to bare H/h (ignore if typing in an input or with modifiers)
+    if (e.key !== 'h' && e.key !== 'H') return;
+    if (e.metaKey || e.ctrlKey || e.altKey) return;
+    if (e.target && (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA')) return;
+    locationEl.classList.toggle('visible');
+    if (locationEl.classList.contains('visible')) renderLocationInfo();
+});
 
 // === Visualizer ===
 const BAR_COUNT = 24;
@@ -669,6 +731,7 @@ async function findAndPlayNearestSound() {
 function updateSoundInfo() {
     const bars = soundBars.querySelectorAll('.bar');
     bars.forEach(b => b.classList.toggle('paused', !isPlaying || isMuted));
+    if (locationEl.classList.contains('visible')) renderLocationInfo();
 }
 
 // === WebAudio ===
