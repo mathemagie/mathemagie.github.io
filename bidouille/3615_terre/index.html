@@ -14,7 +14,9 @@
 body {
     min-height: 100vh;
     min-height: 100dvh;
-    background: #000;
+    background:
+        radial-gradient(ellipse at 50% 40%, #060c18 0%, #000 70%),
+        #000;
     display: flex;
     align-items: center;
     justify-content: center;
@@ -22,7 +24,61 @@ body {
     color: #00FFFF;
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
+    overflow: hidden;
+    position: relative;
 }
+
+/* Drifting starfield — multi-layer parallax via radial-gradients */
+body::before {
+    content: '';
+    position: fixed; inset: -50%;
+    pointer-events: none;
+    z-index: 0;
+    background-image:
+        radial-gradient(1px 1px at 13% 27%, rgba(255,255,255,0.7), transparent 50%),
+        radial-gradient(1px 1px at 78% 14%, rgba(255,255,255,0.5), transparent 50%),
+        radial-gradient(1px 1px at 42% 81%, rgba(0,255,255,0.55), transparent 50%),
+        radial-gradient(1.5px 1.5px at 91% 63%, rgba(255,255,255,0.6), transparent 50%),
+        radial-gradient(1px 1px at 24% 58%, rgba(255,255,255,0.4), transparent 50%),
+        radial-gradient(1px 1px at 67% 41%, rgba(0,255,255,0.5), transparent 50%),
+        radial-gradient(1px 1px at 8% 73%, rgba(255,255,255,0.5), transparent 50%),
+        radial-gradient(1px 1px at 55% 9%, rgba(255,255,255,0.45), transparent 50%),
+        radial-gradient(1px 1px at 33% 36%, rgba(255,255,255,0.55), transparent 50%),
+        radial-gradient(2px 2px at 85% 88%, rgba(255,255,255,0.4), transparent 50%),
+        radial-gradient(1px 1px at 4% 12%, rgba(0,255,255,0.4), transparent 50%),
+        radial-gradient(1px 1px at 96% 32%, rgba(255,255,255,0.5), transparent 50%),
+        radial-gradient(1px 1px at 19% 92%, rgba(255,255,255,0.6), transparent 50%),
+        radial-gradient(1.5px 1.5px at 71% 78%, rgba(0,255,255,0.5), transparent 50%),
+        radial-gradient(1px 1px at 47% 55%, rgba(255,255,255,0.35), transparent 50%);
+    background-size: 800px 800px;
+    animation: drift 240s linear infinite;
+    opacity: 0.55;
+}
+
+/* Subtle grain — gives the void a tactile quality */
+body::after {
+    content: '';
+    position: fixed; inset: 0;
+    pointer-events: none;
+    z-index: 0;
+    background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='240' height='240'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='2' stitchTiles='stitch'/><feColorMatrix values='0 0 0 0 0.6  0 0 0 0 0.9  0 0 0 0 1  0 0 0 0.6 0'/></filter><rect width='100%' height='100%' filter='url(%23n)'/></svg>");
+    opacity: 0.05;
+    mix-blend-mode: screen;
+}
+
+@keyframes drift {
+    from { transform: translate(0, 0); }
+    to { transform: translate(-400px, -200px); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    body::before { animation: none; }
+}
+
+/* Keep app content above the atmosphere */
+.container, h1, .controls, .unlock, .overlay-text { position: relative; z-index: 1; }
+.unlock, .overlay-text { z-index: 100; }
+h1, .controls { z-index: 10; }
 
 .container {
     text-align: center;
@@ -43,7 +99,37 @@ h1 {
     text-shadow: none;
     font-weight: normal;
     z-index: 10;
+}
+h1 a {
+    color: inherit;
+    text-decoration: none;
+    display: inline-flex;
+    flex-direction: column;
+    gap: 0.15rem;
+    transition: color 0.3s ease;
+    -webkit-tap-highlight-color: transparent;
+}
+h1 a:hover, h1 a:focus-visible {
+    color: rgba(0,255,255,0.85);
+    outline: none;
+}
+h1 .h1-sub {
+    font-size: 0.55rem;
+    letter-spacing: 0.18em;
+    text-transform: uppercase;
+    color: rgba(0,255,255,0.55);
+    opacity: 0;
+    transform: translateY(-2px);
+    transition: opacity 0.3s ease, transform 0.3s ease;
     pointer-events: none;
+}
+h1 a:hover .h1-sub, h1 a:focus-visible .h1-sub {
+    opacity: 1;
+    transform: translateY(0);
+}
+@media (hover: none) {
+    /* Touch devices: subtitle stays visible at low opacity since there's no hover */
+    h1 .h1-sub { opacity: 0.6; transform: none; }
 }
 
 .sound-bars {
@@ -285,7 +371,13 @@ h1 {
 </div>
 
 <div class="container">
-    <h1>3615 TERRE</h1>
+    <h1>
+        <a href="https://radio.aporee.org/maps/" target="_blank" rel="noopener"
+           title="Sons de terrain captés par le projet Radio Aporee, joués selon la position en temps réel de l'ISS. Cliquez pour découvrir.">
+            3615 TERRE
+            <span class="h1-sub">qu'est-ce que c'est ?</span>
+        </a>
+    </h1>
 
     <div class="sound-bars" id="soundBars"></div>
 
@@ -734,14 +826,19 @@ async function start() {
     });
 }
 
-// URL params for debug:
-//   ?text=false   — remove the intro overlay text
-//   ?skip=1       — skip unlock + intro and jump straight to the HUD (audio won't autoplay until interaction)
+// URL params:
+//   ?text=false  — remove the intro overlay text
+//   ?skip=1      — skip unlock + intro entirely (debug; audio won't autoplay)
+//   ?intro=1    — force the intro to show even if user has seen it before
 const _params = new URLSearchParams(location.search);
 if (_params.get('text') === 'false') {
     document.getElementById('overlayText')?.remove();
 }
 const _skipIntro = _params.get('skip') === '1' || _params.get('nointro') === '1';
+const SEEN_KEY = '3615terre-seen';
+const _forceIntro = _params.get('intro') === '1';
+let _seenIntro = false;
+try { _seenIntro = !_forceIntro && localStorage.getItem(SEEN_KEY) === '1'; } catch(e) {}
 
 // Overlay auto-hide + tap/key to skip + reduced-motion respect
 let overlayShown = false;
@@ -750,6 +847,7 @@ function showOverlay() {
     overlayShown = true;
     const overlay = document.getElementById('overlayText');
     if (!overlay) return;
+    try { localStorage.setItem(SEEN_KEY, '1'); } catch(e) {}
     overlay.classList.add('show');
     const reduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
     const autoHideMs = reduced ? 3500 : 8500;
@@ -784,7 +882,11 @@ function showOverlay() {
 document.getElementById('unlockScreen').addEventListener('click', (e) => {
     e.stopPropagation();
     document.getElementById('unlockScreen').classList.add('hidden');
-    showOverlay();
+    if (_seenIntro) {
+        document.getElementById('overlayText')?.remove();
+    } else {
+        showOverlay();
+    }
     audioPlayer1.play().then(() => audioPlayer1.pause()).catch(() => {
         audioPlayer1.src = 'data:audio/wav;base64,UklGRigAAABXQVZFZm10IBIAAAABAAEARKwAAIhYAQACABAAAABkYXRhAgAAAAEA';
         audioPlayer1.play().then(() => { audioPlayer1.pause(); audioPlayer1.src = ''; }).catch(() => {});
