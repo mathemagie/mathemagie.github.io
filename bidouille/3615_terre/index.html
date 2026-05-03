@@ -149,13 +149,20 @@ h1 a:hover .h1-sub, h1 a:focus-visible .h1-sub {
 }
 .sound-bars .bar.paused { background: #333; box-shadow: none; opacity: 0.4; height: 6px; }
 
-/* Location readout — toggled by H key (Maeda law #10: surface the meaningful) */
+/* Location readout — toggled by H key (Maeda law #10: surface the meaningful)
+   Fixed above the controls so toggling doesn't displace the bars. */
 .location-info {
-    margin-top: 1.75rem;
+    position: fixed;
+    left: 50%;
+    bottom: calc(max(1.25rem, env(safe-area-inset-bottom)) + 3.5rem);
+    transform: translateX(-50%);
     text-align: center;
     color: rgba(0,255,255,0.75);
     font-family: 'Share Tech Mono', monospace;
     display: none;
+    z-index: 10;
+    pointer-events: none;
+    white-space: nowrap;
 }
 .location-info.visible {
     display: block;
