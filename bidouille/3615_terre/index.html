@@ -757,14 +757,12 @@ async function findAndPlayNearestSound() {
             const controller = new AbortController();
             soundFetchController = controller;
 
-            setStatus('Localisation du son…');
             const locationInfo = await geocodeLocation(nearest.lat, nearest.lng, controller.signal);
             if (controller.signal.aborted) return;
             currentLocationInfo = locationInfo;
             updateSoundInfo();
 
-            const cityLabel = (locationInfo && (locationInfo.city || locationInfo.country)) || nearest.locationName || 'inconnu';
-            setStatus(`Réception · ${cityLabel}…`);
+            setStatus('Réception en cours…');
             const track = { identifier: nearest.identifier, title: nearest.title, artist: nearest.creator };
             await playTrack(track, controller.signal);
         } else {
