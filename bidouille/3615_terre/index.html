@@ -952,6 +952,7 @@ function showOverlay() {
 }
 
 // Unlock audio on click
+const SILENT_WAV = 'data:audio/wav;base64,UklGRigAAABXQVZFZm10IBIAAAABAAEARKwAAIhYAQACABAAAABkYXRhAgAAAAEA';
 document.getElementById('unlockScreen').addEventListener('click', (e) => {
     e.stopPropagation();
     document.getElementById('unlockScreen').classList.add('hidden');
@@ -960,10 +961,20 @@ document.getElementById('unlockScreen').addEventListener('click', (e) => {
     } else {
         showOverlay();
     }
-    audioPlayer1.play().then(() => audioPlayer1.pause()).catch(() => {
-        audioPlayer1.src = 'data:audio/wav;base64,UklGRigAAABXQVZFZm10IBIAAAABAAEARKwAAIhYAQACABAAAABkYXRhAgAAAAEA';
-        audioPlayer1.play().then(() => { audioPlayer1.pause(); audioPlayer1.src = ''; }).catch(() => {});
+    // iOS (esp. home-screen / standalone) only unlocks audio elements that
+    // receive a synchronous play() inside the gesture. The first track plays
+    // through audioPlayer2, so both must be primed here.
+    [audioPlayer1, audioPlayer2].forEach(p => {
+        if (!p.src) p.src = SILENT_WAV;
+        const r = p.play();
+        if (r && r.then) r.then(() => p.pause()).catch(() => {});
     });
+    // Build the WebAudio graph + resume inside the gesture; otherwise the
+    // context (created later inside playTrack) stays suspended on iOS.
+    initWebAudio();
+    if (audioContext && audioContext.state === 'suspended') {
+        audioContext.resume().catch(() => {});
+    }
     start();
 }, { once: true });
 
