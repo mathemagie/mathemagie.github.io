@@ -118,7 +118,6 @@ h1 {
     padding: 2rem;
     opacity: 0;
     visibility: hidden;
-    transition: opacity 0.8s ease-out, backdrop-filter 0.8s ease-out, visibility 0s linear 0.8s;
     pointer-events: none;
     cursor: pointer;
     backdrop-filter: blur(6px);
@@ -128,7 +127,11 @@ h1 {
     opacity: 1;
     visibility: visible;
     pointer-events: auto;
-    transition: opacity 0.4s ease-in, backdrop-filter 0.4s ease-in;
+}
+.overlay-text.bg-fade {
+    opacity: 0;
+    backdrop-filter: blur(0px);
+    transition: opacity 0.8s ease-out, backdrop-filter 0.8s ease-out;
 }
 .overlay-text::after {
     content: 'Touchez pour passer';
@@ -159,7 +162,6 @@ h1 {
 .overlay-text.fade-out .line:nth-child(3) { transition-delay: 0.3s; }
 .overlay-text.fade-out .line:nth-child(4) { transition-delay: 0.45s; }
 .overlay-text.fade-out .line:nth-child(5) { transition-delay: 0.6s; }
-.overlay-text.bg-fade { opacity: 0; backdrop-filter: blur(0px); }
 .overlay-text.gone { display: none; }
 
 .overlay-text .inner {
