@@ -91,9 +91,13 @@ h1 {
     background: none; border: none; color: #00FFFF;
     padding: 0.3rem; font-size: 1.2rem;
     cursor: pointer; line-height: 1;
+    display: inline-flex; align-items: center; justify-content: center;
 }
 .mute-btn:hover { opacity: 0.7; }
-.mute-btn.muted { }
+.mute-btn svg { width: 1.1em; height: 1.1em; display: block; }
+.mute-btn .icon-mute { display: none; }
+.mute-btn.muted .icon-vol { display: none; }
+.mute-btn.muted .icon-mute { display: block; }
 
 .unlock {
     position: fixed; inset: 0; background: rgba(0,0,0,0.95);
@@ -309,10 +313,20 @@ h1 {
     <div class="signal-bar"><div class="fill" id="signalFill" style="width:0%"></div></div>
 
     <div class="controls">
-        <label>VOL</label>
-        <input type="range" id="volumeSlider" min="0" max="100" value="70">
-        <button class="mute-btn" id="muteBtn">🔊</button>
-        <button class="mute-btn" id="fullscreenBtn">⛶</button>
+        <input type="range" id="volumeSlider" min="0" max="100" value="70" aria-label="Volume">
+        <button class="mute-btn" id="muteBtn" aria-label="Mute">
+            <svg class="icon-vol" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                <path d="M4 9v6h4l5 4V5L8 9H4z"/>
+                <path d="M16 8.5a4 4 0 0 1 0 7"/>
+                <path d="M19 5.5a8 8 0 0 1 0 13" opacity=".7"/>
+            </svg>
+            <svg class="icon-mute" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                <path d="M4 9v6h4l5 4V5L8 9H4z"/>
+                <line x1="16" y1="9" x2="22" y2="15"/>
+                <line x1="22" y1="9" x2="16" y2="15"/>
+            </svg>
+        </button>
+        <button class="mute-btn" id="fullscreenBtn" aria-label="Fullscreen">⛶</button>
     </div>
 </div>
 
@@ -650,8 +664,8 @@ volumeSlider.addEventListener('input', e => {
 
 muteBtn.addEventListener('click', () => {
     isMuted = !isMuted;
-    muteBtn.textContent = isMuted ? '🔇' : '🔊';
     muteBtn.classList.toggle('muted', isMuted);
+    muteBtn.setAttribute('aria-label', isMuted ? 'Unmute' : 'Mute');
     if (audioContext && gainNode1 && gainNode2) {
         const g = activePlayer === 1 ? gainNode1 : gainNode2;
         g.gain.setTargetAtTime(isMuted ? 0 : volume, audioContext.currentTime, 0.05);
