@@ -494,6 +494,7 @@ let gainNode2 = null;
 let filterNode = null;
 let noiseGainNode = null;
 let noiseSource = null;
+let masterGainNode = null;
 let crossfadeIntervalId = null;
 let isFindingSound = false;
 let issPollIntervalId = null;
@@ -787,6 +788,8 @@ function initWebAudio() {
         audioContext = new (window.AudioContext || window.webkitAudioContext)();
         gainNode1 = audioContext.createGain();
         gainNode2 = audioContext.createGain();
+        masterGainNode = audioContext.createGain();
+        masterGainNode.gain.value = 1;
         filterNode = audioContext.createBiquadFilter();
         filterNode.type = 'lowpass';
         filterNode.frequency.value = 22000;
@@ -801,7 +804,7 @@ function initWebAudio() {
         noiseSource.buffer = noiseBuffer;
         noiseSource.loop = true;
         noiseSource.connect(noiseGainNode);
-        noiseGainNode.connect(audioContext.destination);
+        noiseGainNode.connect(masterGainNode);
         noiseSource.start();
         const s1 = audioContext.createMediaElementSource(audioPlayer1);
         const s2 = audioContext.createMediaElementSource(audioPlayer2);
@@ -814,7 +817,8 @@ function initWebAudio() {
         freqData = new Uint8Array(analyserNode.frequencyBinCount);
         computeBinRanges(analyserNode.fftSize, audioContext.sampleRate);
         filterNode.connect(analyserNode);
-        analyserNode.connect(audioContext.destination);
+        analyserNode.connect(masterGainNode);
+        masterGainNode.connect(audioContext.destination);
         if (visualizerRafId === null) visualize();
     } catch (e) {
         console.error('WebAudio init failed:', e);
@@ -907,13 +911,11 @@ muteBtn.addEventListener('click', () => {
     isMuted = !isMuted;
     muteBtn.classList.toggle('muted', isMuted);
     muteBtn.setAttribute('aria-label', isMuted ? 'Unmute' : 'Mute');
-    if (audioContext && gainNode1 && gainNode2) {
-        const g = activePlayer === 1 ? gainNode1 : gainNode2;
-        g.gain.setTargetAtTime(isMuted ? 0 : volume, audioContext.currentTime, 0.05);
-    } else {
-        const p = activePlayer === 1 ? audioPlayer1 : audioPlayer2;
-        p.volume = isMuted ? 0 : volume;
+    if (audioContext && masterGainNode) {
+        masterGainNode.gain.setTargetAtTime(isMuted ? 0 : 1, audioContext.currentTime, 0.05);
     }
+    audioPlayer1.muted = isMuted;
+    audioPlayer2.muted = isMuted;
     updateSoundInfo();
 });
 
