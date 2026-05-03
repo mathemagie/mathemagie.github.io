@@ -95,6 +95,14 @@ h1 {
 .mute-btn.muted .icon-vol { display: none; }
 .mute-btn.muted .icon-mute { display: block; }
 
+/* When muted, fade the volume slider so the visual matches the audible state */
+.controls:has(.mute-btn.muted) input[type=range] {
+    opacity: 0.35;
+    filter: grayscale(1);
+    transition: opacity 0.2s ease, filter 0.2s ease;
+}
+.controls input[type=range] { transition: opacity 0.2s ease, filter 0.2s ease; }
+
 .unlock {
     position: fixed; inset: 0; background: rgba(0,0,0,0.95);
     display: flex; align-items: center; justify-content: center;
