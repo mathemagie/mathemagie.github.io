@@ -1,5 +1,24 @@
 # AGENTS.md - ISS Earth Sound Application Architecture
 
+## ⚠️ GAME DESIGN — DO NOT SPOIL THE LOCATION
+
+**3615 TERRE is a guess-the-location game.** The user listens to the ambient
+field recording and tries to guess where the ISS is currently flying over.
+
+Therefore the UI **must never reveal the location by default**:
+
+- No city, country, region, coordinates, or distance in the header, status
+  line, page title, or any visible element on initial load.
+- The status line during loading must stay neutral (e.g. `RÉCEPTION EN
+  COURS…`), never `Réception · <ville>…`.
+- The H-key reveal (`#locationInfo`) is the **only** opt-in way to show the
+  answer. Don't surface it automatically.
+- When adding new features (now-playing, share, notifications, etc.),
+  default to *withholding* anything that names or pinpoints the place.
+
+If a future change needs to show location, it must be behind an explicit
+user action (key press, button, settings toggle).
+
 ## Overview
 
 This document describes the agent-based architecture of the ISS Earth Sound application. The application simulates listening to Earth sounds from the International Space Station (ISS) by tracking the ISS position and playing field recordings from the nearest location on Earth.
