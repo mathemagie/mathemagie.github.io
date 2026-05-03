@@ -263,10 +263,19 @@ h1 {
     .controls input[type=range]::-webkit-slider-thumb { width: 18px; height: 18px; }
     .mute-btn { font-size: 1.8rem; padding: 0.4rem; }
     .unlock p { font-size: 1.6rem; padding: 0 1.5rem; text-align: center; }
-    .overlay-text { padding: 2.5rem 1.75rem; }
-    .overlay-text .inner { max-width: 100%; font-size: 1.55rem; line-height: 1.45; }
-    .overlay-text .inner .line { margin-bottom: 1.5em; }
-    .overlay-text .inner .accent { font-size: 1.75rem; }
+    .overlay-text { padding: 2.5rem 1.75rem 4rem; }
+    .overlay-text .inner { max-width: 100%; font-size: 1.5rem; line-height: 1.4; }
+    .overlay-text .inner .line { margin-bottom: 1.3em; }
+    .overlay-text .inner .accent { font-size: 1.7rem; }
+}
+
+/* Short-height phones (iPhone SE class) — tighten further */
+@media (max-height: 700px) {
+    .overlay-text { padding: 1.5rem 1.5rem 3rem; }
+    .overlay-text .inner { font-size: 1.25rem; line-height: 1.4; }
+    .overlay-text .inner .line { margin-bottom: 1em; }
+    .overlay-text .inner .accent { font-size: 1.4rem; }
+    .overlay-text::after { font-size: 0.62rem; bottom: max(0.75rem, env(safe-area-inset-bottom)); }
 }
     </style>
 </head>
