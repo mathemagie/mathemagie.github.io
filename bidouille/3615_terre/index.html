@@ -384,10 +384,14 @@ h1 .h1-sub {
 @keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.4; } }
 
 :fullscreen h1 { font-size: 1.6rem; }
-:fullscreen .sound-bars { --size: 660px; --inner-r: 220px; --max-len: 110px; --bar-w: 9px; margin: 0; }
-:fullscreen .container { min-height: 100vh; justify-content: space-evenly; padding: 2rem 2rem 0; }
-:fullscreen .location-info { margin-top: 0; }
-:fullscreen .controls { position: static; transform: none; gap: 1.5rem; }
+:fullscreen .sound-bars {
+    --size: 660px; --inner-r: 220px; --max-len: 110px; --bar-w: 9px;
+    position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%); margin: 0;
+}
+:fullscreen .location-info {
+    position: fixed; bottom: 5.5rem; left: 0; right: 0; margin: 0;
+}
+:fullscreen .controls { gap: 1.5rem; }
 :fullscreen .controls input[type=range] { width: 220px; height: 6px; }
 :fullscreen .mute-btn { font-size: 1.8rem; }
 :fullscreen #fullscreenBtn { display: none; }

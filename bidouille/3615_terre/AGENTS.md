@@ -411,6 +411,34 @@ SOUND_BATCH_SIZE = 5000       // Max sound locations to load
 
 ## Changelog
 
+### v2.1 - Minimal orbital UI (2026-05-04)
+
+**Stripped chrome and refocused the interface around a single orbiting bar over a 2x-larger Earth disc.** Disc is now vertically centered in fullscreen.
+
+#### Visualizer
+- Replaced 24-band radial FFT visualizer with a single bar that orbits the disc once per ISS orbital period (`ORBIT_MS = 90 * 60 * 1000`); height pulses with overall audio level (mean of FFT bins).
+- Earth disc doubled across all breakpoints: `--inner-r` 70 → 140 (base), 110 → 220 (fullscreen), 55 → 110 (mobile).
+- Removed `computeBinRanges()` and per-band logic — single bar uses one `--angle` driven by `Date.now() % ORBIT_MS`.
+
+#### Layout
+- Hidden H1 "3615 TERRE" + "qu'est-ce que c'est ?" subtitle (`display: none`) so the orbiting disc carries the entire interface.
+- In `:fullscreen`, disc is `position: fixed` at `top: 50% / left: 50% / translate(-50%, -50%)` to guarantee viewport centering regardless of content.
+- Location info pinned at `bottom: 5.5rem` in fullscreen so it sits just above controls without disturbing disc centering.
+
+#### Behavior
+- Controls auto-hide after 2s of inactivity (`.controls.idle { opacity: 0; pointer-events: none; }`); restored on `mousemove` / `mousedown` / `touchstart` / `keydown` or direct hover / `:focus-within`.
+
+#### Copy
+- Intro text now explicitly names the **ISS — Station Spatiale Internationale**.
+- Orbital period softened to "**environ 90 minutes**" (true value: ~92.7 min).
+
+#### Commits
+- `b1ca18b` feat(3615_terre): minimal chrome — hide title, auto-hide controls, mention ISS
+- `193dbe9` feat(3615_terre): single bar orbiting 2x larger Earth disc
+- `88e89a5` feat(3615_terre): binaural HRTF spatialization for headphone listeners
+
+---
+
 ### v2.0 - Leaflet Map Migration (2026-02-06)
 
 **Replaced ASCII pixel map with interactive Leaflet map** while preserving the CRT/Minitel retro aesthetic.
