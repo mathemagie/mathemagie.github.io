@@ -236,6 +236,26 @@ h1 .h1-sub {
     50%      { opacity: 1;    transform: rotate(var(--angle, 0deg)) translateY(var(--inner-r)) scale(1.15); }
 }
 
+/* Ghost trail — tiny fading dots behind the muted bar to suggest motion */
+.sound-bars .bar.ghost {
+    position: absolute;
+    left: 50%; top: 50%;
+    width: var(--bar-w); height: var(--bar-w);
+    margin-left: calc(var(--bar-w) / -2);
+    border-radius: 50%;
+    transform-origin: 50% 0;
+    transform: rotate(var(--angle, 0deg)) translateY(var(--inner-r)) scale(calc(1 - var(--ghost-i, 1) * 0.18));
+    background: hsl(calc(110deg + 70deg * var(--signal)), 100%, 70%);
+    box-shadow: 0 0 6px hsla(calc(110deg + 70deg * var(--signal)), 100%, 70%, 0.5);
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.4s ease;
+}
+/* Show ghosts only when the main bar is paused (= muted/idle) */
+.sound-bars:has(.bar:not(.ghost).paused) .bar.ghost {
+    opacity: calc(0.55 / var(--ghost-i, 1));
+}
+
 /* About picto: tiny "i" in top-left, reveals title + 2-line intro on click/hover */
 .about-toggle {
     position: fixed;
@@ -721,12 +741,29 @@ let barEl = null;
 let barLevel = 0;
 let visualizerRafId = null;
 
+const TRAIL_COUNT = 3;
+const TRAIL_INTERVAL_MS = 1500;
+let trailEls = [];
+let trailAngles = [];
+let lastTrailSample = 0;
+
 function setupBars() {
     soundBars.innerHTML = '';
     const notch = document.createElement('div');
     notch.className = 'ref-notch';
     notch.setAttribute('aria-hidden', 'true');
     soundBars.appendChild(notch);
+    // Ghost trail dots — fade behind the main bar when muted
+    trailEls = [];
+    for (let i = 0; i < TRAIL_COUNT; i++) {
+        const g = document.createElement('div');
+        g.className = 'bar ghost';
+        g.style.setProperty('--ghost-i', i + 1);
+        g.style.setProperty('--angle', '-90deg');
+        g.setAttribute('aria-hidden', 'true');
+        soundBars.appendChild(g);
+        trailEls.push(g);
+    }
     barEl = document.createElement('div');
     barEl.className = 'bar paused';
     barEl.style.setProperty('--angle', '-90deg');
@@ -756,6 +793,17 @@ function visualize() {
         angle = ((Date.now() % ORBIT_MS) / ORBIT_MS) * 360 - 90;
     }
     barEl.style.setProperty('--angle', angle.toFixed(2) + 'deg');
+    // Sample trail snapshots every TRAIL_INTERVAL_MS — ghost dots glide behind
+    const now = Date.now();
+    if (now - lastTrailSample > TRAIL_INTERVAL_MS) {
+        trailAngles.unshift(angle);
+        if (trailAngles.length > TRAIL_COUNT) trailAngles.length = TRAIL_COUNT;
+        lastTrailSample = now;
+        for (let i = 0; i < trailEls.length; i++) {
+            const a = trailAngles[i] !== undefined ? trailAngles[i] : angle;
+            trailEls[i].style.setProperty('--angle', a.toFixed(2) + 'deg');
+        }
+    }
     visualizerRafId = requestAnimationFrame(visualize);
 }
 
