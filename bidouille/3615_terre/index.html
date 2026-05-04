@@ -117,19 +117,19 @@ h1 .h1-sub {
 }
 
 .status-text {
-    margin-top: 1.5rem;
+    position: fixed;
+    bottom: 5rem;
+    left: 0; right: 0;
     text-align: center;
     color: rgba(159, 245, 255, 0.92);
     font-family: 'Share Tech Mono', monospace;
     font-size: 0.85rem;
     letter-spacing: 0.22em;
     text-transform: uppercase;
-    min-height: 1.4em;
     text-shadow: 0 0 12px rgba(0, 255, 255, 0.45);
     opacity: 0;
     transition: opacity 0.4s ease;
     pointer-events: none;
-    position: relative;
     z-index: 5;
 }
 .status-text.visible {
@@ -167,6 +167,29 @@ h1 .h1-sub {
         inset 0 0 calc((36px + 24px * var(--pulse)) * var(--signal)) hsla(calc(110deg + 70deg * var(--signal)), 100%, 40%, calc((0.18 + 0.25 * var(--pulse)) * var(--signal)));
     transform: scale(calc(1 + 0.012 * var(--pulse)));
     transition: border-color 0.6s ease;
+}
+/* Border-crossing flash — amber halo overlay when ISS reaches a new sound location */
+.sound-bars::after {
+    content: '';
+    position: absolute;
+    left: 50%; top: 50%;
+    width: calc(var(--inner-r) * 2); height: calc(var(--inner-r) * 2);
+    margin-left: calc(var(--inner-r) * -1);
+    margin-top: calc(var(--inner-r) * -1);
+    border-radius: 50%;
+    pointer-events: none;
+    border: 1px solid hsla(35, 100%, 65%, 0.85);
+    box-shadow:
+        0 0 60px hsla(35, 100%, 60%, 0.55),
+        inset 0 0 40px hsla(35, 100%, 55%, 0.35);
+    opacity: 0;
+    transform: scale(1);
+}
+.sound-bars.crossing::after { animation: crossingFlash 1.4s ease-out; }
+@keyframes crossingFlash {
+    0%   { opacity: 0; transform: scale(1); }
+    18%  { opacity: 1; transform: scale(1.04); }
+    100% { opacity: 0; transform: scale(1.08); }
 }
 .sound-bars .bar {
     position: absolute;
@@ -299,11 +322,12 @@ h1 .h1-sub {
     color: rgba(190, 230, 245, 0.6);
 }
 
-/* Spoiler readout — top-left, H key toggles. NOT part of the about panel.
-   Amber accent (not red) — this is a benevolent reveal, not an alert. */
+/* Spoiler readout — bottom-left, H key toggles. NOT part of the about panel.
+   Amber accent (not red) — this is a benevolent reveal, not an alert.
+   Diagonal opposite of the "i" picto so the two never overlap. */
 .location-info {
     position: fixed;
-    top: max(3.6rem, calc(env(safe-area-inset-top) + 2.5rem));
+    bottom: max(5rem, calc(env(safe-area-inset-bottom) + 4rem));
     left: max(1.1rem, env(safe-area-inset-left));
     width: min(320px, calc(100vw - 2.5rem));
     padding: 0.9rem 1.1rem 1rem;
@@ -446,9 +470,6 @@ body.idle-cursor, body.idle-cursor * { cursor: none !important; }
 }
 .overlay-text.fade-out .line:nth-child(1) { transition-delay: 0s; }
 .overlay-text.fade-out .line:nth-child(2) { transition-delay: 0.15s; }
-.overlay-text.fade-out .line:nth-child(3) { transition-delay: 0.3s; }
-.overlay-text.fade-out .line:nth-child(4) { transition-delay: 0.45s; }
-.overlay-text.fade-out .line:nth-child(5) { transition-delay: 0.6s; }
 .overlay-text.gone { display: none; }
 
 .overlay-text .inner {
@@ -475,9 +496,6 @@ body.idle-cursor, body.idle-cursor * { cursor: none !important; }
 .overlay-text .inner .line:last-child { margin-bottom: 0; }
 .overlay-text.show .inner .line:nth-child(1) { animation-delay: 0.3s; }
 .overlay-text.show .inner .line:nth-child(2) { animation-delay: 1.6s; }
-.overlay-text.show .inner .line:nth-child(3) { animation-delay: 3.0s; }
-.overlay-text.show .inner .line:nth-child(4) { animation-delay: 4.4s; }
-.overlay-text.show .inner .line:nth-child(5) { animation-delay: 5.7s; }
 
 @media (prefers-reduced-motion: reduce) {
     .overlay-text, .overlay-text.fade-out .line { transition-duration: 0.2s !important; }
@@ -710,7 +728,9 @@ document.addEventListener('keydown', (e) => {
 });
 
 // === Visualizer ===
-// Single bar orbits the disc once per ISS orbital period (~90 min); height pulses with audio level.
+// Single bar orbits the disc; angle is derived from real ISS lat/lng when available
+// (atan2 of equatorial projection — completes one revolution per orbital period naturally).
+// Falls back to a clock-driven 90-min sweep until the first ISS fetch lands.
 const ORBIT_MS = 90 * 60 * 1000;
 let analyserNode = null;
 let freqData = null;
@@ -739,8 +759,15 @@ function visualize() {
     barLevel = target > barLevel ? barLevel * 0.4 + target * 0.6 : barLevel * 0.88 + target * 0.12;
     barEl.style.setProperty('--h', barLevel.toFixed(3));
     soundBars.style.setProperty('--pulse', Math.min(1, barLevel * 1.5).toFixed(3));
-    // Angle advances 360° / 90min. -90° offset puts t=0 at 12 o'clock.
-    const angle = ((Date.now() % ORBIT_MS) / ORBIT_MS) * 360 - 90;
+    // Angle: real ISS lat/lng if known (longitude drives sweep, latitude offsets it),
+    // else fall back to clock sweep so the disc isn't frozen before first fetch.
+    let angle;
+    if (issData) {
+        // Project (lng, lat) onto a unit circle; -90° puts the prime-meridian/equator near 12 o'clock
+        angle = Math.atan2(issData.latitude, issData.longitude) * 180 / Math.PI - 90;
+    } else {
+        angle = ((Date.now() % ORBIT_MS) / ORBIT_MS) * 360 - 90;
+    }
     barEl.style.setProperty('--angle', angle.toFixed(2) + 'deg');
     visualizerRafId = requestAnimationFrame(visualize);
 }
@@ -898,7 +925,13 @@ async function findAndPlayNearestSound() {
         updateSpatialPosition();
 
         if (!currentSoundLocation || currentSoundLocation.identifier !== nearest.identifier) {
+            const isInitial = !currentSoundLocation;
             currentSoundLocation = nearest;
+            if (!isInitial) {
+                soundBars.classList.remove('crossing');
+                void soundBars.offsetWidth;  // restart animation
+                soundBars.classList.add('crossing');
+            }
             if (soundFetchController) soundFetchController.abort();
             const controller = new AbortController();
             soundFetchController = controller;
