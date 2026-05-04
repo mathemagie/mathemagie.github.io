@@ -7,6 +7,9 @@
     <title>3615 TERRE </title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link rel="preconnect" href="https://api.wheretheiss.at" crossorigin>
+    <link rel="preconnect" href="https://archive.org" crossorigin>
+    <link rel="preconnect" href="https://api.bigdatacloud.net" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Newsreader:ital,opsz,wght@0,6..72,400;0,6..72,500;1,6..72,400;1,6..72,500&family=Share+Tech+Mono&display=swap" rel="stylesheet">
     <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🌍</text></svg>">
     <style>
@@ -54,6 +57,9 @@ body::before {
     background-size: 800px 800px;
     animation: drift 240s linear infinite;
     opacity: 0.55;
+    /* Perf: keep the starfield on its own GPU layer so the drift doesn't repaint the page */
+    will-change: transform;
+    transform: translateZ(0);
 }
 
 /* Subtle grain — gives the void a tactile quality */
@@ -150,6 +156,10 @@ h1 .h1-sub {
     width: var(--size); height: var(--size);
     margin: 2rem auto;
     cursor: pointer;
+    /* Perf: scope paint/layout invalidation to the disc, promote to compositor layer */
+    contain: layout paint;
+    will-change: transform;
+    transform: translateZ(0);
 }
 .sound-bars.muted { opacity: 0.85; }
 /* Earth disc — bars radiate outward from this glowing ring */
@@ -165,8 +175,9 @@ h1 .h1-sub {
     box-shadow:
         0 0 calc((24px + 28px * var(--pulse)) * var(--signal)) hsla(calc(110deg + 70deg * var(--signal)), 100%, 60%, calc((0.25 + 0.35 * var(--pulse)) * var(--signal))),
         inset 0 0 calc((36px + 24px * var(--pulse)) * var(--signal)) hsla(calc(110deg + 70deg * var(--signal)), 100%, 40%, calc((0.18 + 0.25 * var(--pulse)) * var(--signal)));
-    transform: scale(calc(1 + 0.012 * var(--pulse)));
+    transform: scale(calc(1 + 0.012 * var(--pulse))) translateZ(0);
     transition: border-color 0.6s ease;
+    will-change: box-shadow, border-color, transform;
 }
 /* 12 o'clock reference notch — gives the orbital bar a frame of comparison
    without adding chrome. A tiny dotted radial mark, barely there. */
@@ -776,10 +787,14 @@ function setupBars() {
     soundBars.appendChild(barEl);
 }
 
+// Caches to skip redundant style writes — saves repaints on idle/static frames
+let lastH = -1, lastPulse = -1, lastAngleSet = -999;
+
 function visualize() {
     if (!barEl) return;
+    // Skip FFT read entirely when muted — no signal to analyse, saves CPU
     let target = 0;
-    if (analyserNode && freqData) {
+    if (analyserNode && freqData && !isMuted) {
         analyserNode.getByteFrequencyData(freqData);
         let sum = 0;
         for (let j = 1; j < freqData.length; j++) sum += freqData[j];
@@ -787,18 +802,26 @@ function visualize() {
     }
     // Fast attack, slow release — VU-meter feel
     barLevel = target > barLevel ? barLevel * 0.4 + target * 0.6 : barLevel * 0.88 + target * 0.12;
-    barEl.style.setProperty('--h', barLevel.toFixed(3));
-    soundBars.style.setProperty('--pulse', Math.min(1, barLevel * 1.5).toFixed(3));
-    // Angle: real ISS lat/lng if known (longitude drives sweep, latitude offsets it),
-    // else fall back to clock sweep so the disc isn't frozen before first fetch.
+    if (Math.abs(barLevel - lastH) > 0.005) {
+        barEl.style.setProperty('--h', barLevel.toFixed(3));
+        lastH = barLevel;
+    }
+    const pulse = Math.min(1, barLevel * 1.5);
+    if (Math.abs(pulse - lastPulse) > 0.005) {
+        soundBars.style.setProperty('--pulse', pulse.toFixed(3));
+        lastPulse = pulse;
+    }
+    // Angle: real ISS lat/lng if known, else fall back to a slow clock sweep.
     let angle;
     if (issData) {
-        // Project (lng, lat) onto a unit circle; -90° puts the prime-meridian/equator near 12 o'clock
         angle = Math.atan2(issData.latitude, issData.longitude) * 180 / Math.PI - 90;
     } else {
         angle = ((Date.now() % ORBIT_MS) / ORBIT_MS) * 360 - 90;
     }
-    barEl.style.setProperty('--angle', angle.toFixed(2) + 'deg');
+    if (Math.abs(angle - lastAngleSet) > 0.5) {
+        barEl.style.setProperty('--angle', angle.toFixed(2) + 'deg');
+        lastAngleSet = angle;
+    }
     // Sample trail snapshots every TRAIL_INTERVAL_MS — ghost dots glide behind
     const now = Date.now();
     if (now - lastTrailSample > TRAIL_INTERVAL_MS) {
