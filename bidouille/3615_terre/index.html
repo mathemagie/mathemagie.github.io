@@ -261,6 +261,21 @@ h1 .h1-sub {
     letter-spacing: 0.01em;
 }
 .about-panel p + p { color: rgba(190, 230, 245, 0.78); }
+.about-panel .about-credits {
+    margin-top: 1.1rem;
+    padding-top: 0.8rem;
+    border-top: 1px dashed rgba(0, 255, 255, 0.18);
+    font-size: 0.7rem;
+    color: rgba(159, 245, 255, 0.5) !important;
+    letter-spacing: 0.04em;
+}
+.about-panel .about-credits a {
+    color: rgba(0, 255, 255, 0.75);
+    text-decoration: none;
+    border-bottom: 1px dotted rgba(0, 255, 255, 0.35);
+    transition: color 0.2s ease, border-color 0.2s ease;
+}
+.about-panel .about-credits a:hover { color: #fff; border-bottom-color: #fff; }
 .about-panel .about-loc {
     margin-top: 1.1rem;
     padding-top: 1rem;
@@ -284,7 +299,8 @@ h1 .h1-sub {
     color: rgba(190, 230, 245, 0.6);
 }
 
-/* Spoiler readout — top-left, H key toggles. NOT part of the about panel. */
+/* Spoiler readout — top-left, H key toggles. NOT part of the about panel.
+   Amber accent (not red) — this is a benevolent reveal, not an alert. */
 .location-info {
     position: fixed;
     top: max(3.6rem, calc(env(safe-area-inset-top) + 2.5rem));
@@ -292,7 +308,7 @@ h1 .h1-sub {
     width: min(320px, calc(100vw - 2.5rem));
     padding: 0.9rem 1.1rem 1rem;
     background: rgba(0, 0, 0, 0.78);
-    border: 1px solid rgba(255, 60, 80, 0.35);
+    border: 1px solid rgba(255, 180, 80, 0.35);
     border-radius: 4px;
     box-shadow: 0 8px 24px rgba(0, 0, 0, 0.5);
     color: rgba(232, 248, 255, 0.95);
@@ -307,8 +323,8 @@ h1 .h1-sub {
 .location-info.visible { opacity: 1; pointer-events: auto; transform: none; }
 .location-info .loc-name {
     font-size: 1.1rem;
-    color: rgba(255, 200, 210, 0.98);
-    text-shadow: 0 0 10px rgba(255, 80, 100, 0.45);
+    color: rgba(255, 220, 170, 0.98);
+    text-shadow: 0 0 10px rgba(255, 170, 70, 0.45);
     letter-spacing: 0.06em;
 }
 .location-info .loc-meta {
@@ -319,7 +335,7 @@ h1 .h1-sub {
     font-size: 0.6rem;
     letter-spacing: 0.32em;
     text-transform: uppercase;
-    color: rgba(255, 120, 140, 0.7);
+    color: rgba(255, 190, 110, 0.7);
 }
 
 .controls {
@@ -537,10 +553,7 @@ body.idle-cursor, body.idle-cursor * { cursor: none !important; }
 
 <div class="overlay-text" id="overlayText">
     <div class="inner">
-        <p class="line">Bienvenue &agrave; bord de l&rsquo;ISS &mdash; la Station Spatiale Internationale. Vous &ecirc;tes en orbite, &agrave; 400 km au-dessus de la Terre.</p>
-        <p class="line">L&rsquo;ISS file &agrave; 28 000 km/h &mdash; un tour complet de la plan&egrave;te toutes les environ 90 minutes.</p>
-        <p class="line">&Agrave; chaque instant, un nouveau territoire d&eacute;file sous vos pieds : for&ecirc;ts, oc&eacute;ans, villes endormies.</p>
-        <p class="line"><span class="accent">Cette radio capte le son du lieu que vous survolez maintenant.</span></p>
+        <p class="line"><span class="accent">3615 TERRE</span></p>
         <p class="line">Mettez vos &eacute;couteurs. Voyagez sans bouger.</p>
     </div>
 </div>
@@ -551,6 +564,10 @@ body.idle-cursor, body.idle-cursor * { cursor: none !important; }
     <div class="about-rule" aria-hidden="true"></div>
     <p>Vous &ecirc;tes &agrave; bord de l&rsquo;ISS, &agrave; 400 km au-dessus de la Terre.</p>
     <p>Cette radio capte le son du lieu que la Station survole maintenant.</p>
+    <p class="about-credits">
+        Sons &middot; <a href="https://archive.org/details/radio-aporee-maps" target="_blank" rel="noopener">radio aporee</a>
+        &nbsp;&middot;&nbsp; ISS &middot; <a href="https://wheretheiss.at/" target="_blank" rel="noopener">wheretheiss.at</a>
+    </p>
 </aside>
 
 <!-- Spoiler reveal — toggled ONLY by H key. The whole point of the piece is to GUESS the location. -->
@@ -1145,7 +1162,7 @@ function showOverlay() {
     try { localStorage.setItem(SEEN_KEY, '1'); } catch(e) {}
     overlay.classList.add('show');
     const reduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
-    const autoHideMs = reduced ? 3500 : 8500;
+    const autoHideMs = reduced ? 2800 : 5200;
     let dismissed = false;
     let autoHideId = null;
 
