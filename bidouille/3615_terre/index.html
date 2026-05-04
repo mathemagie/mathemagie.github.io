@@ -182,39 +182,18 @@ h1 .h1-sub {
     opacity: calc(0.4 + 0.6 * var(--signal));
     transition: background 0.6s ease, box-shadow 0.6s ease, opacity 0.6s ease;
 }
-.sound-bars .bar.paused { background: #333; box-shadow: none; opacity: 0.4; height: 4px; }
-
-/* Location readout — toggled by H key (Maeda law #10: surface the meaningful)
-   Sits directly under the bars; space is RESERVED so toggling doesn't shift them. */
-.location-info {
-    margin-top: 4rem;
-    text-align: center;
-    color: rgba(0,255,255,0.95);
-    font-family: 'Share Tech Mono', monospace;
-    visibility: hidden;
-    min-height: 4em;
-    pointer-events: none;
+/* Muted: bar contracts into a single luminous dot that keeps gliding around the orbit */
+.sound-bars .bar.paused {
+    height: var(--bar-w);
+    border-radius: 50%;
+    background: hsl(calc(110deg + 70deg * var(--signal)), 100%, 70%);
+    box-shadow: 0 0 10px hsla(calc(110deg + 70deg * var(--signal)), 100%, 70%, 0.85);
+    opacity: 0.85;
+    animation: dotBreathe 2.4s ease-in-out infinite;
 }
-.location-info.visible {
-    visibility: visible;
-    animation: locFadeIn 0.5s ease;
-}
-.location-info .loc-name {
-    font-size: 1.4rem;
-    font-weight: normal;
-    text-transform: uppercase;
-    letter-spacing: 0.22em;
-    text-shadow: 0 0 18px rgba(0,255,255,0.55);
-}
-.location-info .loc-meta {
-    font-size: 0.95rem;
-    opacity: 0.7;
-    margin-top: 0.75rem;
-    letter-spacing: 0.22em;
-}
-@keyframes locFadeIn {
-    from { opacity: 0; transform: translateY(-6px); }
-    to   { opacity: 1; transform: none; }
+@keyframes dotBreathe {
+    0%, 100% { opacity: 0.55; transform: rotate(var(--angle, 0deg)) translateY(var(--inner-r)) scale(0.85); }
+    50%      { opacity: 1;    transform: rotate(var(--angle, 0deg)) translateY(var(--inner-r)) scale(1.15); }
 }
 
 /* About picto: tiny "i" in top-left, reveals title + 2-line intro on click/hover */
@@ -282,6 +261,66 @@ h1 .h1-sub {
     letter-spacing: 0.01em;
 }
 .about-panel p + p { color: rgba(190, 230, 245, 0.78); }
+.about-panel .about-loc {
+    margin-top: 1.1rem;
+    padding-top: 1rem;
+    border-top: 1px dashed rgba(0, 255, 255, 0.18);
+    display: grid; gap: 0.18rem;
+}
+.about-panel .about-loc-label {
+    font-size: 0.62rem;
+    letter-spacing: 0.32em;
+    text-transform: uppercase;
+    color: rgba(159, 245, 255, 0.55);
+}
+.about-panel .about-loc-name {
+    font-size: 1rem;
+    color: rgba(0, 255, 255, 0.95);
+    text-shadow: 0 0 8px rgba(0, 255, 255, 0.35);
+    letter-spacing: 0.04em;
+}
+.about-panel .about-loc-meta {
+    font-size: 0.78rem;
+    color: rgba(190, 230, 245, 0.6);
+}
+
+/* Spoiler readout — top-left, H key toggles. NOT part of the about panel. */
+.location-info {
+    position: fixed;
+    top: max(3.6rem, calc(env(safe-area-inset-top) + 2.5rem));
+    left: max(1.1rem, env(safe-area-inset-left));
+    width: min(320px, calc(100vw - 2.5rem));
+    padding: 0.9rem 1.1rem 1rem;
+    background: rgba(0, 0, 0, 0.78);
+    border: 1px solid rgba(255, 60, 80, 0.35);
+    border-radius: 4px;
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.5);
+    color: rgba(232, 248, 255, 0.95);
+    font-family: 'Share Tech Mono', monospace;
+    z-index: 24;
+    display: grid; gap: 0.18rem;
+    opacity: 0;
+    pointer-events: none;
+    transform: translateY(-4px);
+    transition: opacity 0.35s ease, transform 0.35s ease;
+}
+.location-info.visible { opacity: 1; pointer-events: auto; transform: none; }
+.location-info .loc-name {
+    font-size: 1.1rem;
+    color: rgba(255, 200, 210, 0.98);
+    text-shadow: 0 0 10px rgba(255, 80, 100, 0.45);
+    letter-spacing: 0.06em;
+}
+.location-info .loc-meta {
+    font-size: 0.78rem;
+    color: rgba(220, 245, 255, 0.6);
+}
+.location-info .about-loc-label {
+    font-size: 0.6rem;
+    letter-spacing: 0.32em;
+    text-transform: uppercase;
+    color: rgba(255, 120, 140, 0.7);
+}
 
 .controls {
     position: fixed;
@@ -289,12 +328,29 @@ h1 .h1-sub {
     left: 50%;
     transform: translateX(-50%);
     display: flex; align-items: center; justify-content: center;
-    gap: 1rem;
-    padding: 0.6rem 1rem;
+    padding: 0.6rem;
     z-index: 10;
     opacity: 1;
     transition: opacity 0.4s ease;
 }
+/* Fullscreen picto — bottom-right corner */
+.fs-toggle {
+    position: fixed;
+    bottom: max(1.1rem, env(safe-area-inset-bottom));
+    right: max(1.1rem, env(safe-area-inset-right));
+    width: 22px; height: 22px;
+    border: 1px solid rgba(159, 245, 255, 0.5);
+    border-radius: 50%;
+    background: transparent;
+    color: rgba(159, 245, 255, 0.85);
+    cursor: pointer;
+    z-index: 30;
+    padding: 0;
+    display: inline-flex; align-items: center; justify-content: center;
+    transition: opacity 0.3s ease, border-color 0.3s ease, color 0.3s ease;
+}
+.fs-toggle:hover, .fs-toggle:focus { border-color: rgba(0,255,255,0.9); color: #fff; outline: none; }
+.fs-toggle svg { width: 11px; height: 11px; display: block; }
 .controls.idle { opacity: 0; pointer-events: none; }
 body.idle-cursor, body.idle-cursor * { cursor: none !important; }
 .controls.idle:hover, .controls:focus-within { opacity: 1; pointer-events: auto; }
@@ -439,12 +495,8 @@ body.idle-cursor, body.idle-cursor * { cursor: none !important; }
     --size: 660px; --inner-r: 220px; --max-len: 110px; --bar-w: 9px;
     position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%); margin: 0;
 }
-:fullscreen .location-info {
-    position: fixed; bottom: 5.5rem; left: 0; right: 0; margin: 0;
-}
-:fullscreen .controls { gap: 1.5rem; }
 :fullscreen .mute-btn { font-size: 1.8rem; }
-:fullscreen #fullscreenBtn { display: none; }
+:fullscreen .fs-toggle { display: none; }
 
 /* Portrait mobile / Reels — fill the screen */
 @media (max-width: 768px), (orientation: portrait) {
@@ -457,8 +509,8 @@ body.idle-cursor, body.idle-cursor * { cursor: none !important; }
     }
     h1 { font-size: 1.3rem; letter-spacing: 0.32em; top: max(1rem, env(safe-area-inset-top)); left: max(1rem, env(safe-area-inset-left)); }
     .sound-bars { --size: 330px; --inner-r: 110px; --max-len: 55px; --bar-w: 5px; margin: 0 auto; }
-    #fullscreenBtn { display: none; }
-    .controls { gap: 1.4rem; padding: 0.5rem 1rem; }
+    .fs-toggle { display: none; }
+    .controls { padding: 0.5rem; }
     .mute-btn { font-size: 1.8rem; padding: 0.4rem; }
     .unlock p { font-size: 1.6rem; padding: 0 1.5rem; text-align: center; }
     .overlay-text { padding: 2.5rem 1.75rem 4rem; }
@@ -501,6 +553,13 @@ body.idle-cursor, body.idle-cursor * { cursor: none !important; }
     <p>Cette radio capte le son du lieu que la Station survole maintenant.</p>
 </aside>
 
+<!-- Spoiler reveal — toggled ONLY by H key. The whole point of the piece is to GUESS the location. -->
+<div class="location-info" id="locationInfo" aria-live="polite">
+    <span class="about-loc-label">Lieu &eacute;cout&eacute;</span>
+    <span class="loc-name about-loc-name">&mdash; En attente du signal &mdash;</span>
+    <span class="loc-meta about-loc-meta"></span>
+</div>
+
 <div class="container">
     <h1>
         3615 TERRE
@@ -510,11 +569,6 @@ body.idle-cursor, body.idle-cursor * { cursor: none !important; }
     <div class="sound-bars" id="soundBars"></div>
 
     <div class="status-text" id="statusText" role="status" aria-live="polite"></div>
-
-    <div class="location-info" id="locationInfo">
-        <div class="loc-name"></div>
-        <div class="loc-meta"></div>
-    </div>
 
     <div class="controls">
         <button class="mute-btn" id="muteBtn" aria-label="Mute">
@@ -529,8 +583,16 @@ body.idle-cursor, body.idle-cursor * { cursor: none !important; }
                 <line x1="22" y1="9" x2="16" y2="15"/>
             </svg>
         </button>
-        <button class="mute-btn" id="fullscreenBtn" aria-label="Fullscreen">⛶</button>
     </div>
+
+    <button class="fs-toggle" id="fullscreenBtn" aria-label="Plein écran">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+            <path d="M4 9V4h5"/>
+            <path d="M20 9V4h-5"/>
+            <path d="M4 15v5h5"/>
+            <path d="M20 15v5h-5"/>
+        </svg>
+    </button>
 </div>
 
 <audio id="audioPlayer1" crossorigin="anonymous"></audio>
@@ -606,7 +668,7 @@ function renderLocationInfo() {
 }
 
 document.addEventListener('keydown', (e) => {
-    // Only react to bare H/h (ignore if typing in an input or with modifiers)
+    // H reveals the listened location — this is the GAME's spoiler, intentional.
     if (e.key !== 'h' && e.key !== 'H') return;
     if (e.metaKey || e.ctrlKey || e.altKey) return;
     if (e.target && (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA')) return;
@@ -1025,8 +1087,20 @@ async function start() {
     document.addEventListener('visibilitychange', () => {
         if (document.hidden) {
             if (issPollIntervalId) { clearTimeout(issPollIntervalId); issPollIntervalId = null; }
+            // Suspend audio: silence the WebAudio graph and pause the active <audio>
+            // element so the tab stops drawing power in the background.
+            if (audioContext && audioContext.state === 'running') {
+                audioContext.suspend().catch(() => {});
+            }
+            [audioPlayer1, audioPlayer2].forEach(p => { if (!p.paused) p.pause(); });
         } else {
             poll();
+            if (audioContext && audioContext.state === 'suspended') {
+                audioContext.resume().catch(() => {});
+            }
+            // Resume only the active player — the other is idle (post-crossfade).
+            const player = activePlayer === 1 ? audioPlayer1 : audioPlayer2;
+            if (isPlaying && player.src) player.play().catch(() => {});
         }
     });
 }
@@ -1129,7 +1203,7 @@ fullscreenBtn.addEventListener('click', (e) => {
     if (e.detail !== 0) fullscreenBtn.blur();
 });
 document.addEventListener('fullscreenchange', () => {
-    fullscreenBtn.textContent = document.fullscreenElement ? '⛶' : '⛶';
+    fullscreenBtn.setAttribute('aria-label', document.fullscreenElement ? 'Quitter plein écran' : 'Plein écran');
 });
 
 // === About panel: open on hover/click, close when mouse leaves both toggle and panel ===
