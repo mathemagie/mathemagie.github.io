@@ -142,8 +142,8 @@ h1 .h1-sub {
 
 .sound-bars {
     --signal: 1;
-    --size: 280px;
-    --inner-r: 70px;
+    --size: 420px;
+    --inner-r: 140px;
     --max-len: 70px;
     --bar-w: 6px;
     position: relative;
@@ -379,7 +379,7 @@ h1 .h1-sub {
 @keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.4; } }
 
 :fullscreen h1 { font-size: 1.6rem; }
-:fullscreen .sound-bars { --size: 440px; --inner-r: 110px; --max-len: 110px; --bar-w: 9px; }
+:fullscreen .sound-bars { --size: 660px; --inner-r: 220px; --max-len: 110px; --bar-w: 9px; }
 :fullscreen .controls { gap: 1.5rem; }
 :fullscreen .controls input[type=range] { width: 220px; height: 6px; }
 :fullscreen .mute-btn { font-size: 1.8rem; }
@@ -395,7 +395,7 @@ h1 .h1-sub {
         min-height: 100dvh;
     }
     h1 { font-size: 1.3rem; letter-spacing: 0.32em; top: max(1rem, env(safe-area-inset-top)); left: max(1rem, env(safe-area-inset-left)); }
-    .sound-bars { --size: 220px; --inner-r: 55px; --max-len: 55px; --bar-w: 5px; margin: 0 auto; }
+    .sound-bars { --size: 330px; --inner-r: 110px; --max-len: 55px; --bar-w: 5px; margin: 0 auto; }
     #fullscreenBtn { display: none; }
     .controls { gap: 1.4rem; padding: 0.5rem 1rem; }
     .controls input[type=range] { width: 180px; max-width: 50vw; height: 6px; }
@@ -550,60 +550,42 @@ document.addEventListener('keydown', (e) => {
 });
 
 // === Visualizer ===
-const BAR_COUNT = 24;
+// Single bar orbits the disc once per ISS orbital period (~90 min); height pulses with audio level.
+const ORBIT_MS = 90 * 60 * 1000;
 let analyserNode = null;
 let freqData = null;
-const barLevels = new Float32Array(BAR_COUNT);
-let binRanges = [];
-let barEls = [];
+let barEl = null;
+let barLevel = 0;
 let visualizerRafId = null;
 
 function setupBars() {
     soundBars.innerHTML = '';
-    barEls = [];
-    for (let i = 0; i < BAR_COUNT; i++) {
-        const b = document.createElement('div');
-        b.className = 'bar paused';
-        // Spread bars evenly around the disc; offset -90° so bar 0 sits at 12 o'clock
-        b.style.setProperty('--angle', `${(i / BAR_COUNT) * 360 - 90}deg`);
-        soundBars.appendChild(b);
-        barEls.push(b);
-    }
-}
-
-function computeBinRanges(fftSize, sampleRate) {
-    // Log-distributed bin ranges from ~80Hz to ~10kHz — matches how we hear ambient sound
-    const bins = fftSize / 2;
-    const nyquist = sampleRate / 2;
-    const minHz = 80, maxHz = Math.min(10000, nyquist - 100);
-    const minBin = Math.max(1, Math.round(minHz / nyquist * bins));
-    const maxBin = Math.min(bins - 1, Math.round(maxHz / nyquist * bins));
-    binRanges = [];
-    for (let i = 0; i < BAR_COUNT; i++) {
-        const t1 = i / BAR_COUNT, t2 = (i + 1) / BAR_COUNT;
-        const s = Math.round(minBin * Math.pow(maxBin / minBin, t1));
-        const e = Math.max(s, Math.round(minBin * Math.pow(maxBin / minBin, t2)) - 1);
-        binRanges.push({ start: s, end: e });
-    }
+    barEl = document.createElement('div');
+    barEl.className = 'bar paused';
+    barEl.style.setProperty('--angle', '-90deg');
+    soundBars.appendChild(barEl);
 }
 
 function visualize() {
-    if (!analyserNode || !freqData) return;
-    analyserNode.getByteFrequencyData(freqData);
-    for (let i = 0; i < BAR_COUNT; i++) {
-        const r = binRanges[i];
-        let peak = 0;
-        for (let j = r.start; j <= r.end; j++) if (freqData[j] > peak) peak = freqData[j];
-        const target = peak / 255;
-        const prev = barLevels[i];
-        // Fast attack, slow release — VU-meter feel
-        barLevels[i] = target > prev ? prev * 0.4 + target * 0.6 : prev * 0.88 + target * 0.12;
-        barEls[i].style.setProperty('--h', barLevels[i].toFixed(3));
+    if (!barEl) return;
+    let target = 0;
+    if (analyserNode && freqData) {
+        analyserNode.getByteFrequencyData(freqData);
+        let sum = 0;
+        for (let j = 1; j < freqData.length; j++) sum += freqData[j];
+        target = sum / ((freqData.length - 1) * 255);
     }
+    // Fast attack, slow release — VU-meter feel
+    barLevel = target > barLevel ? barLevel * 0.4 + target * 0.6 : barLevel * 0.88 + target * 0.12;
+    barEl.style.setProperty('--h', barLevel.toFixed(3));
+    // Angle advances 360° / 90min. -90° offset puts t=0 at 12 o'clock.
+    const angle = ((Date.now() % ORBIT_MS) / ORBIT_MS) * 360 - 90;
+    barEl.style.setProperty('--angle', angle.toFixed(2) + 'deg');
     visualizerRafId = requestAnimationFrame(visualize);
 }
 
 setupBars();
+visualize();
 
 // === ISS ===
 async function fetchISS() {
@@ -845,7 +827,6 @@ function initWebAudio() {
         analyserNode.fftSize = 256;
         analyserNode.smoothingTimeConstant = 0.55;
         freqData = new Uint8Array(analyserNode.frequencyBinCount);
-        computeBinRanges(analyserNode.fftSize, audioContext.sampleRate);
         filterNode.connect(pannerNode);
         pannerNode.connect(analyserNode);
         analyserNode.connect(masterGainNode);
