@@ -162,7 +162,8 @@ h1 .h1-sub {
     transform: translateZ(0);
 }
 .sound-bars.muted { opacity: 0.85; }
-/* Earth disc — bars radiate outward from this glowing ring */
+/* Earth disc — glowing ring with a subtle "ocean" tint inside.
+   Static gradient (no time/data link) so it never leaks ISS state. */
 .sound-bars::before {
     content: '';
     position: absolute;
@@ -171,6 +172,12 @@ h1 .h1-sub {
     margin-left: calc(var(--inner-r) * -1);
     margin-top: calc(var(--inner-r) * -1);
     border-radius: 50%;
+    background: radial-gradient(
+        circle at 50% 50%,
+        rgba(20, 90, 140, 0.14) 0%,
+        rgba(0, 50, 90, 0.08) 55%,
+        rgba(0, 30, 60, 0.03) 100%
+    );
     border: 1px solid hsla(calc(110deg + 70deg * var(--signal)), 100%, 50%, calc((0.35 + 0.45 * var(--pulse)) * var(--signal)));
     box-shadow:
         0 0 calc((24px + 28px * var(--pulse)) * var(--signal)) hsla(calc(110deg + 70deg * var(--signal)), 100%, 60%, calc((0.25 + 0.35 * var(--pulse)) * var(--signal))),
