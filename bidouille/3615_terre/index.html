@@ -94,6 +94,7 @@ h1, .controls { z-index: 10; }
 }
 
 h1 {
+    display: none;
     position: fixed;
     top: max(1.25rem, env(safe-area-inset-top));
     left: max(1.25rem, env(safe-area-inset-left));
@@ -103,11 +104,11 @@ h1 {
     text-shadow: 0 0 14px rgba(0, 255, 255, 0.35);
     font-weight: normal;
     z-index: 10;
-    display: inline-flex;
     flex-direction: column;
     gap: 0.2rem;
 }
 h1 .h1-sub {
+    display: none;
     font-size: 0.6rem;
     letter-spacing: 0.2em;
     text-transform: uppercase;
@@ -184,7 +185,7 @@ h1 .h1-sub {
 /* Location readout — toggled by H key (Maeda law #10: surface the meaningful)
    Sits directly under the bars; space is RESERVED so toggling doesn't shift them. */
 .location-info {
-    margin-top: 1.75rem;
+    margin-top: 4rem;
     text-align: center;
     color: rgba(0,255,255,0.95);
     font-family: 'Share Tech Mono', monospace;
@@ -223,7 +224,11 @@ h1 .h1-sub {
     gap: 1rem;
     padding: 0.6rem 1rem;
     z-index: 10;
+    opacity: 1;
+    transition: opacity 0.4s ease;
 }
+.controls.idle { opacity: 0; pointer-events: none; }
+.controls.idle:hover, .controls:focus-within { opacity: 1; pointer-events: auto; }
 .controls label { font-size: 0.85rem; letter-spacing: 0.08em; }
 .controls input[type=range] {
     width: 120px; height: 4px;
@@ -379,8 +384,10 @@ h1 .h1-sub {
 @keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.4; } }
 
 :fullscreen h1 { font-size: 1.6rem; }
-:fullscreen .sound-bars { --size: 660px; --inner-r: 220px; --max-len: 110px; --bar-w: 9px; }
-:fullscreen .controls { gap: 1.5rem; }
+:fullscreen .sound-bars { --size: 660px; --inner-r: 220px; --max-len: 110px; --bar-w: 9px; margin: 0; }
+:fullscreen .container { min-height: 100vh; justify-content: space-evenly; padding: 2rem 2rem 0; }
+:fullscreen .location-info { margin-top: 0; }
+:fullscreen .controls { position: static; transform: none; gap: 1.5rem; }
 :fullscreen .controls input[type=range] { width: 220px; height: 6px; }
 :fullscreen .mute-btn { font-size: 1.8rem; }
 :fullscreen #fullscreenBtn { display: none; }
@@ -426,8 +433,8 @@ h1 .h1-sub {
 
 <div class="overlay-text" id="overlayText">
     <div class="inner">
-        <p class="line">Bienvenue &agrave; bord. Vous &ecirc;tes en orbite, &agrave; 400 km au-dessus de la Terre.</p>
-        <p class="line">La Station file &agrave; 28 000 km/h &mdash; un tour complet de la plan&egrave;te toutes les 90 minutes.</p>
+        <p class="line">Bienvenue &agrave; bord de l&rsquo;ISS &mdash; la Station Spatiale Internationale. Vous &ecirc;tes en orbite, &agrave; 400 km au-dessus de la Terre.</p>
+        <p class="line">L&rsquo;ISS file &agrave; 28 000 km/h &mdash; un tour complet de la plan&egrave;te toutes les environ 90 minutes.</p>
         <p class="line">&Agrave; chaque instant, un nouveau territoire d&eacute;file sous vos pieds : for&ecirc;ts, oc&eacute;ans, villes endormies.</p>
         <p class="line"><span class="accent">Cette radio capte le son du lieu que vous survolez maintenant.</span></p>
         <p class="line">Mettez vos &eacute;couteurs. Voyagez sans bouger.</p>
@@ -1073,6 +1080,19 @@ fullscreenBtn.addEventListener('click', () => {
 document.addEventListener('fullscreenchange', () => {
     fullscreenBtn.textContent = document.fullscreenElement ? '⛶' : '⛶';
 });
+
+// === Auto-hide controls after 2s of inactivity ===
+const controlsEl = document.querySelector('.controls');
+let controlsIdleTimer = null;
+function wakeControls() {
+    controlsEl.classList.remove('idle');
+    if (controlsIdleTimer) clearTimeout(controlsIdleTimer);
+    controlsIdleTimer = setTimeout(() => controlsEl.classList.add('idle'), 2000);
+}
+['mousemove', 'mousedown', 'touchstart', 'keydown'].forEach(ev =>
+    document.addEventListener(ev, wakeControls, { passive: true })
+);
+wakeControls();
 </script>
 </body>
 </html>
