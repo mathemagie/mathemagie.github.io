@@ -143,6 +143,7 @@ h1 .h1-sub {
 
 .sound-bars {
     --signal: 1;
+    --pulse: 0;
     --size: 420px;
     --inner-r: 140px;
     --max-len: 70px;
@@ -160,11 +161,12 @@ h1 .h1-sub {
     margin-left: calc(var(--inner-r) * -1);
     margin-top: calc(var(--inner-r) * -1);
     border-radius: 50%;
-    border: 1px solid hsla(calc(110deg + 70deg * var(--signal)), 100%, 50%, calc(0.35 * var(--signal)));
+    border: 1px solid hsla(calc(110deg + 70deg * var(--signal)), 100%, 50%, calc((0.35 + 0.45 * var(--pulse)) * var(--signal)));
     box-shadow:
-        0 0 calc(24px * var(--signal)) hsla(calc(110deg + 70deg * var(--signal)), 100%, 60%, calc(0.25 * var(--signal))),
-        inset 0 0 calc(36px * var(--signal)) hsla(calc(110deg + 70deg * var(--signal)), 100%, 40%, calc(0.18 * var(--signal)));
-    transition: border-color 0.6s ease, box-shadow 0.6s ease;
+        0 0 calc((24px + 28px * var(--pulse)) * var(--signal)) hsla(calc(110deg + 70deg * var(--signal)), 100%, 60%, calc((0.25 + 0.35 * var(--pulse)) * var(--signal))),
+        inset 0 0 calc((36px + 24px * var(--pulse)) * var(--signal)) hsla(calc(110deg + 70deg * var(--signal)), 100%, 40%, calc((0.18 + 0.25 * var(--pulse)) * var(--signal)));
+    transform: scale(calc(1 + 0.012 * var(--pulse)));
+    transition: border-color 0.6s ease;
 }
 .sound-bars .bar {
     position: absolute;
@@ -215,6 +217,72 @@ h1 .h1-sub {
     to   { opacity: 1; transform: none; }
 }
 
+/* About picto: tiny "i" in top-left, reveals title + 2-line intro on click/hover */
+.about-toggle {
+    position: fixed;
+    top: max(1.1rem, env(safe-area-inset-top));
+    left: max(1.1rem, env(safe-area-inset-left));
+    width: 22px; height: 22px;
+    border: 1px solid rgba(159, 245, 255, 0.5);
+    border-radius: 50%;
+    background: transparent;
+    color: rgba(159, 245, 255, 0.85);
+    font: 11px/1 'Share Tech Mono', monospace;
+    text-align: center;
+    cursor: pointer;
+    z-index: 30;
+    padding: 0;
+    transition: opacity 0.3s ease, border-color 0.3s ease, color 0.3s ease;
+}
+.about-toggle:hover, .about-toggle:focus { border-color: rgba(0,255,255,0.9); color: #fff; outline: none; }
+.about-panel {
+    position: fixed;
+    top: max(1.1rem, env(safe-area-inset-top));
+    left: max(1.1rem, env(safe-area-inset-left));
+    width: min(380px, calc(100vw - 2.5rem));
+    padding: 2.6rem 1.6rem 1.4rem;
+    background:
+        linear-gradient(180deg, rgba(0,30,40,0.55) 0%, rgba(0,0,0,0.88) 100%),
+        rgba(0, 0, 0, 0.85);
+    border: 1px solid rgba(0, 255, 255, 0.22);
+    border-radius: 4px;
+    box-shadow:
+        0 12px 40px rgba(0, 0, 0, 0.55),
+        0 0 0 1px rgba(0, 255, 255, 0.05),
+        inset 0 1px 0 rgba(159, 245, 255, 0.08);
+    backdrop-filter: blur(8px);
+    -webkit-backdrop-filter: blur(8px);
+    color: rgba(232, 248, 255, 0.95);
+    font-family: 'Share Tech Mono', monospace;
+    z-index: 25;
+    opacity: 0;
+    pointer-events: none;
+    transform: translateY(-6px);
+    transition: opacity 0.35s ease, transform 0.35s ease;
+}
+.about-panel.open { opacity: 1; pointer-events: auto; transform: none; }
+.about-panel .about-title {
+    font-size: 1.25rem;
+    letter-spacing: 0.32em;
+    color: rgba(180, 250, 255, 1);
+    text-shadow: 0 0 14px rgba(0, 255, 255, 0.45);
+    margin: 0 0 0.4rem;
+    font-weight: normal;
+}
+.about-panel .about-rule {
+    height: 1px;
+    background: linear-gradient(90deg, rgba(0,255,255,0.55), rgba(0,255,255,0));
+    margin: 0.3rem 0 1.1rem;
+}
+.about-panel p {
+    font-size: 0.92rem;
+    line-height: 1.65;
+    margin: 0.55rem 0;
+    color: rgba(220, 245, 255, 0.92);
+    letter-spacing: 0.01em;
+}
+.about-panel p + p { color: rgba(190, 230, 245, 0.78); }
+
 .controls {
     position: fixed;
     bottom: max(1.25rem, env(safe-area-inset-bottom));
@@ -228,17 +296,8 @@ h1 .h1-sub {
     transition: opacity 0.4s ease;
 }
 .controls.idle { opacity: 0; pointer-events: none; }
+body.idle-cursor, body.idle-cursor * { cursor: none !important; }
 .controls.idle:hover, .controls:focus-within { opacity: 1; pointer-events: auto; }
-.controls label { font-size: 0.85rem; letter-spacing: 0.08em; }
-.controls input[type=range] {
-    width: 120px; height: 4px;
-    -webkit-appearance: none; appearance: none;
-    background: #333; border-radius: 2px; cursor: pointer;
-}
-.controls input[type=range]::-webkit-slider-thumb {
-    -webkit-appearance: none; width: 12px; height: 12px;
-    background: #00FFFF; border-radius: 50%; cursor: pointer;
-}
 .mute-btn {
     background: none; border: none; color: #00FFFF;
     padding: 0.3rem; font-size: 1.2rem;
@@ -250,14 +309,6 @@ h1 .h1-sub {
 .mute-btn .icon-mute { display: none; }
 .mute-btn.muted .icon-vol { display: none; }
 .mute-btn.muted .icon-mute { display: block; }
-
-/* When muted, fade the volume slider so the visual matches the audible state */
-.controls:has(.mute-btn.muted) input[type=range] {
-    opacity: 0.35;
-    filter: grayscale(1);
-    transition: opacity 0.2s ease, filter 0.2s ease;
-}
-.controls input[type=range] { transition: opacity 0.2s ease, filter 0.2s ease; }
 
 .unlock {
     position: fixed; inset: 0; background: rgba(0,0,0,0.95);
@@ -392,7 +443,6 @@ h1 .h1-sub {
     position: fixed; bottom: 5.5rem; left: 0; right: 0; margin: 0;
 }
 :fullscreen .controls { gap: 1.5rem; }
-:fullscreen .controls input[type=range] { width: 220px; height: 6px; }
 :fullscreen .mute-btn { font-size: 1.8rem; }
 :fullscreen #fullscreenBtn { display: none; }
 
@@ -409,8 +459,6 @@ h1 .h1-sub {
     .sound-bars { --size: 330px; --inner-r: 110px; --max-len: 55px; --bar-w: 5px; margin: 0 auto; }
     #fullscreenBtn { display: none; }
     .controls { gap: 1.4rem; padding: 0.5rem 1rem; }
-    .controls input[type=range] { width: 180px; max-width: 50vw; height: 6px; }
-    .controls input[type=range]::-webkit-slider-thumb { width: 18px; height: 18px; }
     .mute-btn { font-size: 1.8rem; padding: 0.4rem; }
     .unlock p { font-size: 1.6rem; padding: 0 1.5rem; text-align: center; }
     .overlay-text { padding: 2.5rem 1.75rem 4rem; }
@@ -445,6 +493,14 @@ h1 .h1-sub {
     </div>
 </div>
 
+<button class="about-toggle" id="aboutToggle" aria-label="À propos" aria-expanded="false" aria-controls="aboutPanel">i</button>
+<aside class="about-panel" id="aboutPanel" role="dialog" aria-labelledby="aboutTitle">
+    <h2 class="about-title" id="aboutTitle">3615 TERRE</h2>
+    <div class="about-rule" aria-hidden="true"></div>
+    <p>Vous &ecirc;tes &agrave; bord de l&rsquo;ISS, &agrave; 400 km au-dessus de la Terre.</p>
+    <p>Cette radio capte le son du lieu que la Station survole maintenant.</p>
+</aside>
+
 <div class="container">
     <h1>
         3615 TERRE
@@ -461,7 +517,6 @@ h1 .h1-sub {
     </div>
 
     <div class="controls">
-        <input type="range" id="volumeSlider" min="0" max="100" value="70" aria-label="Volume">
         <button class="mute-btn" id="muteBtn" aria-label="Mute">
             <svg class="icon-vol" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
                 <path d="M4 9v6h4l5 4V5L8 9H4z"/>
@@ -491,7 +546,7 @@ let issData = null;
 let soundLocations = [];
 let currentSoundLocation = null;
 let currentTrack = null;
-let volume = 0.7;
+let volume = 1;
 let isMuted = false;
 let activePlayer = 1;
 let isPlaying = false;
@@ -521,7 +576,6 @@ const audioPlayer1 = document.getElementById('audioPlayer1');
 const audioPlayer2 = document.getElementById('audioPlayer2');
 const soundBars = document.getElementById('soundBars');
 const muteBtn = document.getElementById('muteBtn');
-const volumeSlider = document.getElementById('volumeSlider');
 const locationEl = document.getElementById('locationInfo');
 const locNameEl = locationEl.querySelector('.loc-name');
 const locMetaEl = locationEl.querySelector('.loc-meta');
@@ -589,6 +643,7 @@ function visualize() {
     // Fast attack, slow release — VU-meter feel
     barLevel = target > barLevel ? barLevel * 0.4 + target * 0.6 : barLevel * 0.88 + target * 0.12;
     barEl.style.setProperty('--h', barLevel.toFixed(3));
+    soundBars.style.setProperty('--pulse', Math.min(1, barLevel * 1.5).toFixed(3));
     // Angle advances 360° / 90min. -90° offset puts t=0 at 12 o'clock.
     const angle = ((Date.now() % ORBIT_MS) / ORBIT_MS) * 360 - 90;
     barEl.style.setProperty('--angle', angle.toFixed(2) + 'deg');
@@ -941,18 +996,7 @@ function crossfade(fadeOut, fadeIn) {
 }
 
 // === Controls ===
-volumeSlider.addEventListener('input', e => {
-    volume = e.target.value / 100;
-    if (audioContext && gainNode1 && gainNode2) {
-        const g = activePlayer === 1 ? gainNode1 : gainNode2;
-        g.gain.setTargetAtTime(isMuted ? 0 : volume, audioContext.currentTime, 0.05);
-    } else {
-        const p = activePlayer === 1 ? audioPlayer1 : audioPlayer2;
-        if (!isMuted) p.volume = volume;
-    }
-});
-
-muteBtn.addEventListener('click', () => {
+muteBtn.addEventListener('click', (e) => {
     isMuted = !isMuted;
     muteBtn.classList.toggle('muted', isMuted);
     muteBtn.setAttribute('aria-label', isMuted ? 'Unmute' : 'Mute');
@@ -962,6 +1006,8 @@ muteBtn.addEventListener('click', () => {
     audioPlayer1.muted = isMuted;
     audioPlayer2.muted = isMuted;
     updateSoundInfo();
+    // Blur on mouse click so :focus-within doesn't pin the controls visible
+    if (e.detail !== 0) muteBtn.blur();
 });
 
 // === Boot ===
@@ -1074,24 +1120,46 @@ if (_skipIntro) {
 
 // === Fullscreen ===
 const fullscreenBtn = document.getElementById('fullscreenBtn');
-fullscreenBtn.addEventListener('click', () => {
+fullscreenBtn.addEventListener('click', (e) => {
     if (!document.fullscreenElement) {
         document.documentElement.requestFullscreen().catch(() => {});
     } else {
         document.exitFullscreen();
     }
+    if (e.detail !== 0) fullscreenBtn.blur();
 });
 document.addEventListener('fullscreenchange', () => {
     fullscreenBtn.textContent = document.fullscreenElement ? '⛶' : '⛶';
 });
 
-// === Auto-hide controls after 2s of inactivity ===
+// === About panel: open on hover/click, close when mouse leaves both toggle and panel ===
+const aboutToggle = document.getElementById('aboutToggle');
+const aboutPanel = document.getElementById('aboutPanel');
+let aboutCloseTimer = null;
+function setAbout(open) {
+    aboutPanel.classList.toggle('open', open);
+    aboutToggle.setAttribute('aria-expanded', open ? 'true' : 'false');
+}
+function aboutEnter() { if (aboutCloseTimer) { clearTimeout(aboutCloseTimer); aboutCloseTimer = null; } setAbout(true); }
+function aboutLeave() { aboutCloseTimer = setTimeout(() => setAbout(false), 120); }
+[aboutToggle, aboutPanel].forEach(el => {
+    el.addEventListener('mouseenter', aboutEnter);
+    el.addEventListener('mouseleave', aboutLeave);
+});
+aboutToggle.addEventListener('click', (e) => { e.stopPropagation(); setAbout(!aboutPanel.classList.contains('open')); });
+document.addEventListener('keydown', (e) => { if (e.key === 'Escape') setAbout(false); });
+
+// === Auto-hide controls + cursor after inactivity ===
 const controlsEl = document.querySelector('.controls');
 let controlsIdleTimer = null;
+let cursorIdleTimer = null;
 function wakeControls() {
     controlsEl.classList.remove('idle');
+    document.body.classList.remove('idle-cursor');
     if (controlsIdleTimer) clearTimeout(controlsIdleTimer);
+    if (cursorIdleTimer) clearTimeout(cursorIdleTimer);
     controlsIdleTimer = setTimeout(() => controlsEl.classList.add('idle'), 2000);
+    cursorIdleTimer = setTimeout(() => document.body.classList.add('idle-cursor'), 2000);
 }
 ['mousemove', 'mousedown', 'touchstart', 'keydown'].forEach(ev =>
     document.addEventListener(ev, wakeControls, { passive: true })
