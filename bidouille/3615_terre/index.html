@@ -495,6 +495,7 @@ let filterNode = null;
 let noiseGainNode = null;
 let noiseSource = null;
 let masterGainNode = null;
+let pannerNode = null;
 let crossfadeIntervalId = null;
 let isFindingSound = false;
 let issPollIntervalId = null;
@@ -751,6 +752,7 @@ async function findAndPlayNearestSound() {
         signalQuality = calculateSignalQuality(nearest.distance);
         soundBars.style.setProperty('--signal', signalQuality.toFixed(3));
         updateAudioSignalQuality(signalQuality);
+        updateSpatialPosition();
 
         if (!currentSoundLocation || currentSoundLocation.identifier !== nearest.identifier) {
             currentSoundLocation = nearest;
@@ -806,6 +808,34 @@ function initWebAudio() {
         noiseSource.connect(noiseGainNode);
         noiseGainNode.connect(masterGainNode);
         noiseSource.start();
+        // Binaural spatialization (HRTF) — places the source on a unit sphere
+        // around the listener using bearing(ISS → sound). Distance attenuation
+        // is disabled (rolloffFactor=0) because the low-pass + noise chain
+        // already encodes distance as "signal quality".
+        pannerNode = audioContext.createPanner();
+        pannerNode.panningModel = 'HRTF';
+        pannerNode.distanceModel = 'inverse';
+        pannerNode.refDistance = 1;
+        pannerNode.maxDistance = 10000;
+        pannerNode.rolloffFactor = 0;
+        pannerNode.coneInnerAngle = 360;
+        pannerNode.coneOuterAngle = 0;
+        pannerNode.coneOuterGain = 0;
+        // Listener faces -Z (north), up is +Y. Source defaults to in-front-and-below.
+        const listener = audioContext.listener;
+        if (listener.forwardX) {
+            listener.forwardX.value = 0; listener.forwardY.value = 0; listener.forwardZ.value = -1;
+            listener.upX.value = 0; listener.upY.value = 1; listener.upZ.value = 0;
+        } else if (listener.setOrientation) {
+            listener.setOrientation(0, 0, -1, 0, 1, 0);
+        }
+        if (pannerNode.positionX) {
+            pannerNode.positionX.value = 0;
+            pannerNode.positionY.value = -0.3;
+            pannerNode.positionZ.value = -1;
+        } else if (pannerNode.setPosition) {
+            pannerNode.setPosition(0, -0.3, -1);
+        }
         const s1 = audioContext.createMediaElementSource(audioPlayer1);
         const s2 = audioContext.createMediaElementSource(audioPlayer2);
         s1.connect(gainNode1); s2.connect(gainNode2);
@@ -816,9 +846,11 @@ function initWebAudio() {
         analyserNode.smoothingTimeConstant = 0.55;
         freqData = new Uint8Array(analyserNode.frequencyBinCount);
         computeBinRanges(analyserNode.fftSize, audioContext.sampleRate);
-        filterNode.connect(analyserNode);
+        filterNode.connect(pannerNode);
+        pannerNode.connect(analyserNode);
         analyserNode.connect(masterGainNode);
         masterGainNode.connect(audioContext.destination);
+        updateSpatialPosition();
         if (visualizerRafId === null) visualize();
     } catch (e) {
         console.error('WebAudio init failed:', e);
@@ -831,6 +863,27 @@ function updateAudioSignalQuality(quality) {
     const now = audioContext.currentTime;
     filterNode.frequency.setTargetAtTime(800 + quality * 21200, now, 0.3);
     noiseGainNode.gain.setTargetAtTime((1 - quality) * 0.08, now, 0.3);
+}
+
+function updateSpatialPosition() {
+    if (!audioContext || !pannerNode || !issData || !currentSoundLocation) return;
+    const φ1 = issData.latitude * Math.PI / 180;
+    const φ2 = currentSoundLocation.lat * Math.PI / 180;
+    const Δλ = (currentSoundLocation.lng - issData.longitude) * Math.PI / 180;
+    const y = Math.sin(Δλ) * Math.cos(φ2);
+    const x = Math.cos(φ1) * Math.sin(φ2) - Math.sin(φ1) * Math.cos(φ2) * Math.cos(Δλ);
+    const θ = Math.atan2(y, x);
+    const px = Math.sin(θ);
+    const pz = -Math.cos(θ);
+    const py = -0.3;
+    const now = audioContext.currentTime;
+    if (pannerNode.positionX) {
+        pannerNode.positionX.setTargetAtTime(px, now, 0.5);
+        pannerNode.positionY.setTargetAtTime(py, now, 0.5);
+        pannerNode.positionZ.setTargetAtTime(pz, now, 0.5);
+    } else if (pannerNode.setPosition) {
+        pannerNode.setPosition(px, py, pz);
+    }
 }
 
 async function playTrack(track, signal) {
