@@ -668,12 +668,28 @@ function renderLocationInfo() {
 }
 
 document.addEventListener('keydown', (e) => {
-    // H reveals the listened location — this is the GAME's spoiler, intentional.
-    if (e.key !== 'h' && e.key !== 'H') return;
     if (e.metaKey || e.ctrlKey || e.altKey) return;
     if (e.target && (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA')) return;
-    locationEl.classList.toggle('visible');
-    if (locationEl.classList.contains('visible')) renderLocationInfo();
+    const key = e.key.toLowerCase();
+    // H reveals the listened location — this is the GAME's spoiler, intentional.
+    if (key === 'h') {
+        locationEl.classList.toggle('visible');
+        if (locationEl.classList.contains('visible')) renderLocationInfo();
+    } else if (key === 'f') {
+        if (!document.fullscreenElement) {
+            document.documentElement.requestFullscreen().catch(() => {});
+        } else {
+            document.exitFullscreen();
+        }
+    } else if (key === 'i') {
+        const panel = document.getElementById('aboutPanel');
+        const toggle = document.getElementById('aboutToggle');
+        const open = !panel.classList.contains('open');
+        panel.classList.toggle('open', open);
+        toggle.setAttribute('aria-expanded', open ? 'true' : 'false');
+    } else if (key === 'm') {
+        muteBtn.click();
+    }
 });
 
 // === Visualizer ===
