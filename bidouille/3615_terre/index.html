@@ -162,6 +162,8 @@ h1 .h1-sub {
     transform: translateZ(0);
 }
 .sound-bars.muted { opacity: 0.85; }
+.sound-bars:focus { outline: none; }
+.sound-bars:focus-visible { outline: 1px dotted rgba(0,255,255,0.5); outline-offset: 8px; }
 /* Earth disc — glowing ring with a subtle "ocean" tint inside.
    Static gradient (no time/data link) so it never leaks ISS state. */
 .sound-bars::before {
