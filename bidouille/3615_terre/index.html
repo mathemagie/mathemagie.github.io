@@ -483,7 +483,7 @@ body.idle-cursor, body.idle-cursor * { cursor: none !important; }
     transition: opacity 0.8s ease-out, backdrop-filter 0.8s ease-out;
 }
 .overlay-text::after {
-    content: 'Touchez pour passer';
+    content: 'Tap to skip';
     position: absolute;
     bottom: max(1.25rem, env(safe-area-inset-bottom));
     left: 50%;
@@ -707,7 +707,7 @@ function setStatus(text) {
 
 function renderLocationInfo() {
     if (!currentSoundLocation) {
-        locNameEl.textContent = '— En attente du signal —';
+        locNameEl.textContent = '— Waiting for signal —';
         locMetaEl.textContent = '';
         return;
     }
