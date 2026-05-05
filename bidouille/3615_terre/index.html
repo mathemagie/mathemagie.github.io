@@ -171,9 +171,9 @@ h1 .h1-sub {
     transform: translateZ(0);
 }
 .sound-bars.muted { opacity: 0.85; }
-.sound-bars:focus, .sound-bars:focus-visible { outline: none; }
-/* Earth disc — glowing ring with a subtle "ocean" tint inside.
-   Static gradient (no time/data link) so it never leaks ISS state. */
+/* Earth disc — glowing ring with an ocean tint whose lit center tracks
+   ISS latitude (--lat-norm: 0 = south extreme, 1 = north extreme).
+   No location-name spoiler; lat alone is harmless. */
 .sound-bars::before {
     content: '';
     position: absolute;
@@ -183,8 +183,8 @@ h1 .h1-sub {
     margin-top: calc(var(--inner-r) * -1);
     border-radius: 50%;
     background: radial-gradient(
-        circle at 50% 50%,
-        rgba(20, 90, 140, 0.14) 0%,
+        circle at 50% calc(85% - 70% * var(--lat-norm, 0.5)),
+        rgba(20, 90, 140, 0.18) 0%,
         rgba(0, 50, 90, 0.08) 55%,
         rgba(0, 30, 60, 0.03) 100%
     );
@@ -193,26 +193,9 @@ h1 .h1-sub {
         0 0 calc((24px + 28px * var(--pulse)) * var(--signal)) hsla(calc(110deg + 70deg * var(--signal)), 100%, 60%, calc((0.25 + 0.35 * var(--pulse)) * var(--signal))),
         inset 0 0 calc((36px + 24px * var(--pulse)) * var(--signal)) hsla(calc(110deg + 70deg * var(--signal)), 100%, 40%, calc((0.18 + 0.25 * var(--pulse)) * var(--signal)));
     transform: scale(calc(1 + 0.012 * var(--pulse))) translateZ(0);
-    transition: border-color 0.6s ease;
+    transition: border-color 0.6s ease, background 1.2s ease;
     will-change: box-shadow, border-color, transform;
 }
-/* 12 o'clock reference notch — gives the orbital bar a frame of comparison
-   without adding chrome. A tiny dotted radial mark, barely there. */
-.sound-bars > .ref-notch {
-    position: absolute;
-    left: 50%; top: 50%;
-    width: 1px; height: 16px;
-    margin-left: -0.5px;
-    transform-origin: 50% 0;
-    transform: translateY(calc(var(--inner-r) * -1 - 14px));
-    background: repeating-linear-gradient(to bottom,
-        rgba(159, 245, 255, 0.15) 0,
-        rgba(159, 245, 255, 0.15) 2px,
-        transparent 2px,
-        transparent 4px);
-    pointer-events: none;
-}
-
 /* Border-crossing flash — amber halo overlay when ISS reaches a new sound location */
 .sound-bars::after {
     content: '';
@@ -783,10 +766,6 @@ let lastTrailSample = 0;
 
 function setupBars() {
     soundBars.innerHTML = '';
-    const notch = document.createElement('div');
-    notch.className = 'ref-notch';
-    notch.setAttribute('aria-hidden', 'true');
-    soundBars.appendChild(notch);
     // Ghost trail dots — fade behind the main bar when muted
     trailEls = [];
     for (let i = 0; i < TRAIL_COUNT; i++) {
@@ -805,7 +784,7 @@ function setupBars() {
 }
 
 // Caches to skip redundant style writes — saves repaints on idle/static frames
-let lastH = -1, lastPulse = -1, lastAngleSet = -999;
+let lastH = -1, lastPulse = -1, lastAngleSet = -999, lastLatNorm = -1;
 
 function visualize() {
     if (!barEl) return;
@@ -832,6 +811,11 @@ function visualize() {
     let angle;
     if (issData) {
         angle = Math.atan2(issData.latitude, issData.longitude) * 180 / Math.PI - 90;
+        const latNorm = Math.max(0, Math.min(1, (issData.latitude + 51.6) / 103.2));
+        if (Math.abs(latNorm - lastLatNorm) > 0.01) {
+            soundBars.style.setProperty('--lat-norm', latNorm.toFixed(3));
+            lastLatNorm = latNorm;
+        }
     } else {
         angle = ((Date.now() % ORBIT_MS) / ORBIT_MS) * 360 - 90;
     }
@@ -1219,11 +1203,7 @@ function toggleMute() {
 }
 soundBars.setAttribute('role', 'button');
 soundBars.setAttribute('aria-label', 'Couper le son');
-soundBars.setAttribute('tabindex', '0');
 soundBars.addEventListener('click', toggleMute);
-soundBars.addEventListener('keydown', (e) => {
-    if (e.key === ' ' || e.key === 'Enter') { e.preventDefault(); toggleMute(); }
-});
 
 // === Boot ===
 async function start() {
