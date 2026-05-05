@@ -506,8 +506,7 @@ body.idle-cursor, body.idle-cursor * { cursor: none !important; }
     transform: translateY(-10px) !important;
     filter: blur(4px);
 }
-.overlay-text.fade-out .line:nth-child(1) { transition-delay: 0s; }
-.overlay-text.fade-out .line:nth-child(2) { transition-delay: 0.15s; }
+.overlay-text.fade-out .line { transition-delay: 0s; }
 .overlay-text.gone { display: none; }
 
 .overlay-text .inner {
@@ -530,10 +529,8 @@ body.idle-cursor, body.idle-cursor * { cursor: none !important; }
     display: block;
     text-wrap: balance;
 }
-.overlay-text.show .inner .line { animation: lineIn 0.8s ease forwards; }
+.overlay-text.show .inner .line { animation: lineIn 0.8s ease forwards; animation-delay: 0.3s; }
 .overlay-text .inner .line:last-child { margin-bottom: 0; }
-.overlay-text.show .inner .line:nth-child(1) { animation-delay: 0.3s; }
-.overlay-text.show .inner .line:nth-child(2) { animation-delay: 1.6s; }
 
 @media (prefers-reduced-motion: reduce) {
     .overlay-text, .overlay-text.fade-out .line { transition-duration: 0.2s !important; }
@@ -607,7 +604,10 @@ body.idle-cursor, body.idle-cursor * { cursor: none !important; }
 <div class="overlay-text" id="overlayText">
     <div class="inner">
         <p class="line"><span class="accent">3615 TERRE</span></p>
-        <p class="line">Mettez vos &eacute;couteurs. Voyagez sans bouger.</p>
+        <p class="line">Welcome aboard the ISS &mdash; in orbit, 400 km above Earth.</p>
+        <p class="line">Every moment, a new land drifts beneath you: forests, oceans, sleeping cities.</p>
+        <p class="line"><span class="accent">This radio tunes into the sound of wherever you&rsquo;re flying over right now.</span></p>
+        <p class="line">Put on your headphones. Travel without moving.</p>
     </div>
 </div>
 
@@ -1262,7 +1262,7 @@ function showOverlay() {
     try { localStorage.setItem(SEEN_KEY, '1'); } catch(e) {}
     overlay.classList.add('show');
     const reduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
-    const autoHideMs = reduced ? 2800 : 5200;
+    const autoHideMs = reduced ? 3500 : 8500;
     let dismissed = false;
     let autoHideId = null;
 
