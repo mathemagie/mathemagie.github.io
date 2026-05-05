@@ -295,8 +295,8 @@ h1 .h1-sub {
     position: fixed;
     top: max(1.1rem, env(safe-area-inset-top));
     left: max(1.1rem, env(safe-area-inset-left));
-    width: min(380px, calc(100vw - 2.5rem));
-    padding: 2.6rem 1.6rem 1.4rem;
+    width: min(420px, calc(100vw - 2.5rem));
+    padding: 2.6rem 1.8rem 1.6rem;
     background:
         linear-gradient(180deg, rgba(0,30,40,0.55) 0%, rgba(0,0,0,0.88) 100%),
         rgba(0, 0, 0, 0.85);
@@ -331,26 +331,31 @@ h1 .h1-sub {
     margin: 0.3rem 0 1.1rem;
 }
 .about-panel p {
-    font-size: 0.92rem;
-    line-height: 1.65;
-    margin: 0.55rem 0;
-    color: rgba(220, 245, 255, 0.92);
-    letter-spacing: 0.01em;
+    font-size: 1rem;
+    line-height: 1.7;
+    margin: 0.7rem 0;
+    color: rgba(232, 248, 255, 0.96);
+    letter-spacing: 0.005em;
+    text-wrap: pretty;
+    -webkit-font-smoothing: antialiased;
 }
-.about-panel p + p { color: rgba(190, 230, 245, 0.78); }
+.about-panel p + p { color: rgba(220, 245, 255, 0.92); }
 .about-panel .about-hint {
-    margin-top: 0.9rem;
-    font-size: 0.78rem;
-    color: rgba(159, 245, 255, 0.65) !important;
-    font-style: italic;
+    margin-top: 1.1rem;
+    padding-top: 0.7rem;
+    border-top: 1px dashed rgba(0, 255, 255, 0.12);
+    font-size: 0.85rem !important;
+    color: rgba(159, 245, 255, 0.78) !important;
+    letter-spacing: 0.02em;
+    font-style: normal;
 }
 .about-panel .about-credits {
-    margin-top: 1.1rem;
-    padding-top: 0.8rem;
+    margin-top: 1.2rem;
+    padding-top: 0.9rem;
     border-top: 1px dashed rgba(0, 255, 255, 0.18);
-    font-size: 0.7rem;
-    color: rgba(159, 245, 255, 0.5) !important;
-    letter-spacing: 0.04em;
+    font-size: 0.78rem;
+    color: rgba(180, 230, 245, 0.7) !important;
+    letter-spacing: 0.03em;
 }
 .about-panel .about-credits a {
     color: rgba(0, 255, 255, 0.75);
