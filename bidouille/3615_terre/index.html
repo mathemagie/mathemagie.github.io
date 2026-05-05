@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="fr">
+<html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -611,37 +611,37 @@ body.idle-cursor, body.idle-cursor * { cursor: none !important; }
     </div>
 </div>
 
-<button class="about-toggle" id="aboutToggle" aria-label="À propos" aria-expanded="false" aria-controls="aboutPanel">i</button>
+<button class="about-toggle" id="aboutToggle" aria-label="About" aria-expanded="false" aria-controls="aboutPanel">i</button>
 <aside class="about-panel" id="aboutPanel" role="dialog" aria-labelledby="aboutTitle">
     <h2 class="about-title" id="aboutTitle">3615 TERRE</h2>
     <div class="about-rule" aria-hidden="true"></div>
-    <p>Vous &ecirc;tes &agrave; bord de l&rsquo;ISS, &agrave; 400 km au-dessus de la Terre.</p>
-    <p>Cette radio capte le son du lieu que la Station survole maintenant.</p>
-    <p class="about-hint">Cliquez la Terre pour couper le son.</p>
+    <p>You are aboard the ISS, 400 km above Earth.</p>
+    <p>This radio tunes into the sound of the place the Station is flying over right now.</p>
+    <p class="about-hint">Click the Earth to mute.</p>
     <p class="about-credits">
-        Sons &middot; <a href="https://archive.org/details/radio-aporee-maps" target="_blank" rel="noopener">radio aporee</a>
+        Sounds &middot; <a href="https://archive.org/details/radio-aporee-maps" target="_blank" rel="noopener">radio aporee</a>
         &nbsp;&middot;&nbsp; ISS &middot; <a href="https://wheretheiss.at/" target="_blank" rel="noopener">wheretheiss.at</a>
     </p>
 </aside>
 
 <!-- Spoiler reveal — toggled ONLY by H key. The whole point of the piece is to GUESS the location. -->
 <div class="location-info" id="locationInfo" aria-live="polite">
-    <span class="about-loc-label">Lieu &eacute;cout&eacute;</span>
-    <span class="loc-name about-loc-name">&mdash; En attente du signal &mdash;</span>
+    <span class="about-loc-label">Now listening</span>
+    <span class="loc-name about-loc-name">&mdash; Waiting for signal &mdash;</span>
     <span class="loc-meta about-loc-meta"></span>
 </div>
 
 <div class="container">
     <h1>
         3615 TERRE
-        <span class="h1-sub">qu'est-ce que c'est ?</span>
+        <span class="h1-sub">what is this?</span>
     </h1>
 
     <div class="sound-bars" id="soundBars"></div>
 
     <div class="status-text" id="statusText" role="status" aria-live="polite"></div>
 
-    <button class="fs-toggle" id="fullscreenBtn" aria-label="Plein écran">
+    <button class="fs-toggle" id="fullscreenBtn" aria-label="Fullscreen">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
             <path d="M4 9V4h5"/>
             <path d="M20 9V4h-5"/>
@@ -1006,7 +1006,7 @@ async function findAndPlayNearestSound() {
             currentLocationInfo = locationInfo;
             updateSoundInfo();
 
-            setStatus('Réception en cours…');
+            setStatus('Receiving…');
             const track = { identifier: nearest.identifier, title: nearest.title, artist: nearest.creator };
             await playTrack(track, controller.signal);
         } else {
@@ -1155,7 +1155,7 @@ async function playTrack(track, signal) {
         currentPlayer.volume = isMuted ? 0 : volume;
         currentPlayer.loop = true;
         try { await currentPlayer.play(); isPlaying = true; updateSoundInfo(); setStatus(''); }
-        catch (e) { console.error("Fallback error:", e); setStatus('Signal perdu'); }
+        catch (e) { console.error("Fallback error:", e); setStatus('Signal lost'); }
     }
 }
 
@@ -1193,7 +1193,7 @@ function crossfade(fadeOut, fadeIn) {
 function toggleMute() {
     isMuted = !isMuted;
     soundBars.classList.toggle('muted', isMuted);
-    soundBars.setAttribute('aria-label', isMuted ? 'Couper le son · activé' : 'Couper le son');
+    soundBars.setAttribute('aria-label', isMuted ? 'Mute · on' : 'Mute');
     if (audioContext && masterGainNode) {
         masterGainNode.gain.setTargetAtTime(isMuted ? 0 : 1, audioContext.currentTime, 0.05);
     }
@@ -1202,12 +1202,12 @@ function toggleMute() {
     updateSoundInfo();
 }
 soundBars.setAttribute('role', 'button');
-soundBars.setAttribute('aria-label', 'Couper le son');
+soundBars.setAttribute('aria-label', 'Mute');
 soundBars.addEventListener('click', toggleMute);
 
 // === Boot ===
 async function start() {
-    setStatus('Connexion à la Station Spatiale…');
+    setStatus('Connecting to the Space Station…');
     await Promise.all([fetchSoundLocations(), fetchISS()]);
 
     function poll() {
@@ -1336,7 +1336,7 @@ fullscreenBtn.addEventListener('click', (e) => {
     if (e.detail !== 0) fullscreenBtn.blur();
 });
 document.addEventListener('fullscreenchange', () => {
-    fullscreenBtn.setAttribute('aria-label', document.fullscreenElement ? 'Quitter plein écran' : 'Plein écran');
+    fullscreenBtn.setAttribute('aria-label', document.fullscreenElement ? 'Exit fullscreen' : 'Fullscreen');
 });
 
 // === About panel: open on hover/click, close when mouse leaves both toggle and panel ===
