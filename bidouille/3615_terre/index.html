@@ -259,6 +259,54 @@ h1 .h1-sub {
     .earth-atmosphere { animation: none; }
 }
 
+/* E — ISS position dot inside the disc (real lat/lng projected via cosine-tapered equirect).
+   The whole point of the site is "the radio listens where the Station is" — finally show it. */
+.iss-dot {
+    position: absolute;
+    left: 50%; top: 50%;
+    width: 6px; height: 6px;
+    margin-left: -3px; margin-top: -3px;
+    border-radius: 50%;
+    background: rgba(255, 230, 140, 1);
+    box-shadow:
+        0 0 6px rgba(255, 230, 140, 0.95),
+        0 0 14px rgba(255, 200, 80, 0.55),
+        0 0 24px rgba(255, 170, 40, 0.25);
+    transform: translate(var(--iss-x, 0px), var(--iss-y, 0px));
+    transition: transform 3s linear;
+    z-index: 2;
+    pointer-events: none;
+    animation: issBlink 2.2s ease-in-out infinite;
+}
+@keyframes issBlink {
+    0%, 100% { opacity: 0.85; filter: brightness(0.95); }
+    50%      { opacity: 1;    filter: brightness(1.4); }
+}
+@media (prefers-reduced-motion: reduce) {
+    .iss-dot { animation: none; }
+}
+
+/* H — Shooting star: a wispy diagonal streak that flashes occasionally.
+   Pure ambience (Loi 7) — adds aichaku without saying anything. */
+.shooting-star {
+    position: fixed;
+    top: 0; left: 0;
+    width: 110px;
+    height: 1px;
+    background: linear-gradient(to left, rgba(255,255,255,0.95), rgba(200,225,255,0.4) 35%, transparent 80%);
+    pointer-events: none;
+    opacity: 0;
+    z-index: 1;
+    filter: drop-shadow(0 0 3px rgba(200, 225, 255, 0.85));
+    will-change: transform, opacity;
+}
+@keyframes shoot {
+    0%   { opacity: 0; transform: var(--start-transform); }
+    12%  { opacity: 1; }
+    88%  { opacity: 1; }
+    100% { opacity: 0; transform: var(--end-transform); }
+}
+
 /* D — Anchored constellations: 5 fixed brighter stars near the disc orbit.
    Drifting starfield (body::before) gives motion; these give reference points. */
 .constellations {
@@ -728,6 +776,7 @@ body.idle-cursor, body.idle-cursor * { cursor: none !important; }
     <div class="sound-bars" id="soundBars">
         <div class="earth-atmosphere" aria-hidden="true"></div>
         <div class="earth-clouds" aria-hidden="true"></div>
+        <div class="iss-dot" id="issDot" aria-hidden="true"></div>
     </div>
 
     <div class="status-text" id="statusText" role="status" aria-live="polite"></div>
@@ -908,6 +957,14 @@ function visualize() {
             soundBars.style.setProperty('--lat-norm', latNorm.toFixed(3));
             lastLatNorm = latNorm;
         }
+        // Project ISS lat/lng onto the disc (cosine-tapered equirect, 90% of inner-r so it stays inside).
+        const innerR = 140; // matches CSS --inner-r
+        const R = innerR * 0.88;
+        const latRad = issData.latitude * Math.PI / 180;
+        const issX = (issData.longitude / 180) * R * Math.cos(latRad);
+        const issY = -(issData.latitude / 90) * R;
+        soundBars.style.setProperty('--iss-x', issX.toFixed(1) + 'px');
+        soundBars.style.setProperty('--iss-y', issY.toFixed(1) + 'px');
     } else {
         angle = ((Date.now() % ORBIT_MS) / ORBIT_MS) * 360 - 90;
     }
@@ -1427,6 +1484,32 @@ if (_skipIntro) {
     document.querySelectorAll('.sound-bars .bar').forEach(b => b.classList.remove('paused'));
     start();
 }
+
+// === Shooting stars (H) — sparse, ambient, never narrative. ===
+const _reducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)');
+function spawnShootingStar() {
+    if (document.hidden || _reducedMotion.matches) return;
+    const star = document.createElement('div');
+    star.className = 'shooting-star';
+    const vw = window.innerWidth, vh = window.innerHeight;
+    // Start somewhere in the upper-left to upper-middle off-screen-ish band.
+    const startX = -80 + Math.random() * vw * 0.5;
+    const startY = -40 + Math.random() * vh * 0.45;
+    // Diagonal down-right, distance scaled to viewport so it always exits.
+    const dx = vw * (0.55 + Math.random() * 0.35);
+    const dy = vh * (0.30 + Math.random() * 0.30);
+    const angleDeg = Math.atan2(dy, dx) * 180 / Math.PI;
+    star.style.setProperty('--start-transform', `translate(${startX}px, ${startY}px) rotate(${angleDeg}deg)`);
+    star.style.setProperty('--end-transform', `translate(${startX + dx}px, ${startY + dy}px) rotate(${angleDeg}deg)`);
+    star.style.animation = `shoot ${1.4 + Math.random() * 0.6}s ease-out forwards`;
+    document.body.appendChild(star);
+    setTimeout(() => star.remove(), 2500);
+}
+function scheduleShootingStar() {
+    const next = 22000 + Math.random() * 38000; // 22–60 s
+    setTimeout(() => { spawnShootingStar(); scheduleShootingStar(); }, next);
+}
+scheduleShootingStar();
 
 // === Fullscreen ===
 const fullscreenBtn = document.getElementById('fullscreenBtn');
