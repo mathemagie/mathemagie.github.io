@@ -409,6 +409,8 @@ h1 .h1-sub {
 @media (prefers-reduced-motion: reduce) {
     .iss-dot { animation: none; }
 }
+/* Hide ISS dot while the unlock screen is up — keep the cold-start frame text-only. */
+body:has(.unlock:not(.hidden)) .iss-dot { display: none; }
 
 /* H — Shooting star: a wispy diagonal streak that flashes occasionally.
    Pure ambience (Loi 7) — adds aichaku without saying anything. */
@@ -1245,7 +1247,7 @@ async function findAndPlayNearestSound() {
             currentLocationInfo = locationInfo;
             updateSoundInfo();
 
-            setStatus('Tuning radio…');
+            setStatus('RECEIVING SIGNAL...');
             const track = { identifier: nearest.identifier, title: nearest.title, artist: nearest.creator };
             await playTrack(track, controller.signal);
         } else {
@@ -1448,7 +1450,7 @@ soundBars.addEventListener('click', toggleMute);
 async function start() {
     setStatus('Locating ISS…');
     await Promise.all([fetchSoundLocations(), fetchISS()]);
-    setStatus('Tuning radio…');
+    setStatus('RECEIVING SIGNAL...');
 
     function poll() {
         issPollIntervalId = setTimeout(() => {
