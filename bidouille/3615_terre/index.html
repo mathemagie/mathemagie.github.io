@@ -204,6 +204,77 @@ h1 .h1-sub {
 @media (prefers-reduced-motion: reduce) {
     .sound-bars::before { animation: none; }
 }
+
+/* A — Atmosphere halo: a soft cyan-blue glow hugging the disc edge.
+   Reads as "Earth seen from space" instead of "tech ring". */
+.earth-atmosphere {
+    position: absolute;
+    left: 50%; top: 50%;
+    width: calc(var(--inner-r) * 2 + 14px);
+    height: calc(var(--inner-r) * 2 + 14px);
+    margin-left: calc((var(--inner-r) * -1) - 7px);
+    margin-top: calc((var(--inner-r) * -1) - 7px);
+    border-radius: 50%;
+    pointer-events: none;
+    box-shadow:
+        0 0 28px 6px rgba(80, 170, 240, 0.32),
+        0 0 70px 16px rgba(80, 170, 240, 0.16),
+        inset 0 0 18px rgba(160, 210, 255, 0.22);
+    z-index: 0;
+    animation: atmosphereBreathe 6s ease-in-out infinite;
+}
+@keyframes atmosphereBreathe {
+    0%, 100% { opacity: 0.85; }
+    50% { opacity: 1; }
+}
+
+/* C — Cloud band: wispy white radial-gradients slowly rotating inside the disc.
+   Adds aichaku without committing to any specific hemisphere. */
+.earth-clouds {
+    position: absolute;
+    left: 50%; top: 50%;
+    width: calc(var(--inner-r) * 2);
+    height: calc(var(--inner-r) * 2);
+    margin-left: calc(var(--inner-r) * -1);
+    margin-top: calc(var(--inner-r) * -1);
+    border-radius: 50%;
+    pointer-events: none;
+    overflow: hidden;
+    background:
+        radial-gradient(ellipse 38% 18% at 25% 32%, rgba(220, 235, 250, 0.22), transparent 70%),
+        radial-gradient(ellipse 46% 14% at 72% 55%, rgba(220, 235, 250, 0.16), transparent 70%),
+        radial-gradient(ellipse 32% 12% at 50% 78%, rgba(220, 235, 250, 0.18), transparent 70%),
+        radial-gradient(ellipse 26% 16% at 14% 68%, rgba(200, 220, 240, 0.12), transparent 70%),
+        radial-gradient(ellipse 22% 10% at 80% 22%, rgba(220, 235, 250, 0.14), transparent 70%);
+    mix-blend-mode: screen;
+    animation: cloudDrift 220s linear infinite;
+    z-index: 1;
+}
+@keyframes cloudDrift {
+    from { transform: rotate(0deg); }
+    to { transform: rotate(360deg); }
+}
+@media (prefers-reduced-motion: reduce) {
+    .earth-clouds { animation: none; }
+    .earth-atmosphere { animation: none; }
+}
+
+/* D — Anchored constellations: 5 fixed brighter stars near the disc orbit.
+   Drifting starfield (body::before) gives motion; these give reference points. */
+.constellations {
+    position: fixed;
+    inset: 0;
+    pointer-events: none;
+    z-index: 0;
+    background-repeat: no-repeat;
+    background-image:
+        radial-gradient(2px 2px at 12% 18%, rgba(255,255,255,0.95), transparent 55%),
+        radial-gradient(2.5px 2.5px at 84% 14%, rgba(220,240,255,0.92), transparent 55%),
+        radial-gradient(1.5px 1.5px at 90% 24%, rgba(180,220,255,0.85), transparent 55%),
+        radial-gradient(2px 2px at 16% 78%, rgba(255,255,255,0.9), transparent 55%),
+        radial-gradient(3px 3px at 82% 82%, rgba(230,245,255,0.95), transparent 55%),
+        radial-gradient(1.5px 1.5px at 8% 50%, rgba(200,230,255,0.8), transparent 55%);
+}
 /* Border-crossing flash — amber halo overlay when ISS reaches a new sound location */
 .sound-bars::after {
     content: '';
@@ -612,6 +683,8 @@ body.idle-cursor, body.idle-cursor * { cursor: none !important; }
 </head>
 <body>
 
+<div class="constellations" aria-hidden="true"></div>
+
 <div class="unlock" id="unlockScreen">
     <p>CLICK TO LISTEN TO EARTH</p>
 </div>
@@ -652,7 +725,10 @@ body.idle-cursor, body.idle-cursor * { cursor: none !important; }
         <span class="h1-sub">what is this?</span>
     </h1>
 
-    <div class="sound-bars" id="soundBars"></div>
+    <div class="sound-bars" id="soundBars">
+        <div class="earth-atmosphere" aria-hidden="true"></div>
+        <div class="earth-clouds" aria-hidden="true"></div>
+    </div>
 
     <div class="status-text" id="statusText" role="status" aria-live="polite"></div>
 
@@ -780,7 +856,8 @@ let trailAngles = [];
 let lastTrailSample = 0;
 
 function setupBars() {
-    soundBars.innerHTML = '';
+    // Keep .earth-* layers (atmosphere, clouds); only clear dynamic bars/ghosts.
+    soundBars.querySelectorAll('.bar').forEach(b => b.remove());
     // Ghost trail dots — fade behind the main bar when muted
     trailEls = [];
     for (let i = 0; i < TRAIL_COUNT; i++) {
