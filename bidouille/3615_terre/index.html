@@ -182,12 +182,16 @@ h1 .h1-sub {
     margin-left: calc(var(--inner-r) * -1);
     margin-top: calc(var(--inner-r) * -1);
     border-radius: 50%;
-    background: radial-gradient(
-        circle at 50% calc(85% - 70% * var(--lat-norm, 0.5)),
-        rgba(20, 90, 140, 0.18) 0%,
-        rgba(0, 50, 90, 0.08) 55%,
-        rgba(0, 30, 60, 0.03) 100%
-    );
+    background:
+        /* F — Polar caps: two faint frosts at the top/bottom of the disc, just enough to read "globe with axis". */
+        radial-gradient(ellipse 38% 14% at 50% 4%, rgba(225, 240, 250, 0.20), transparent 75%),
+        radial-gradient(ellipse 42% 16% at 50% 96%, rgba(225, 240, 250, 0.16), transparent 75%),
+        radial-gradient(
+            circle at 50% calc(85% - 70% * var(--lat-norm, 0.5)),
+            rgba(20, 90, 140, 0.18) 0%,
+            rgba(0, 50, 90, 0.08) 55%,
+            rgba(0, 30, 60, 0.03) 100%
+        );
     border: 1px solid hsla(calc(110deg + 70deg * var(--signal)), 100%, 55%, calc((0.55 + 0.35 * var(--pulse)) * var(--signal)));
     box-shadow:
         0 0 calc((32px + 24px * var(--pulse)) * var(--signal)) hsla(calc(110deg + 70deg * var(--signal)), 100%, 60%, calc((0.35 + 0.3 * var(--pulse)) * var(--signal))),
@@ -230,6 +234,44 @@ h1 .h1-sub {
 
 @media (prefers-reduced-motion: reduce) {
     .earth-atmosphere { animation: none; }
+}
+
+/* J — City lights: warm pinpoints scattered on the lower-right "night" side of the disc.
+   The radio listens to the world; let the world be visibly inhabited. (Loi 10) */
+.earth-cities {
+    position: absolute;
+    left: 50%; top: 50%;
+    width: calc(var(--inner-r) * 2);
+    height: calc(var(--inner-r) * 2);
+    margin-left: calc(var(--inner-r) * -1);
+    margin-top: calc(var(--inner-r) * -1);
+    border-radius: 50%;
+    pointer-events: none;
+    overflow: hidden;
+    background:
+        radial-gradient(1.2px 1.2px at 70% 60%, rgba(255, 200, 110, 0.55), transparent 60%),
+        radial-gradient(1px 1px   at 78% 68%, rgba(255, 210, 130, 0.45), transparent 60%),
+        radial-gradient(1px 1px   at 65% 75%, rgba(255, 195, 100, 0.50), transparent 60%),
+        radial-gradient(1.5px 1.5px at 82% 55%, rgba(255, 215, 140, 0.45), transparent 60%),
+        radial-gradient(1px 1px   at 73% 82%, rgba(255, 200, 110, 0.45), transparent 60%),
+        radial-gradient(1px 1px   at 60% 65%, rgba(255, 210, 130, 0.40), transparent 60%),
+        radial-gradient(1.2px 1.2px at 85% 70%, rgba(255, 220, 140, 0.50), transparent 60%),
+        radial-gradient(1px 1px   at 68% 88%, rgba(255, 195, 110, 0.42), transparent 60%),
+        radial-gradient(1px 1px   at 80% 82%, rgba(255, 205, 115, 0.45), transparent 60%),
+        radial-gradient(1.2px 1.2px at 88% 62%, rgba(255, 215, 130, 0.48), transparent 60%),
+        radial-gradient(0.8px 0.8px at 64% 70%, rgba(255, 190, 100, 0.35), transparent 60%),
+        radial-gradient(0.8px 0.8px at 76% 90%, rgba(255, 200, 115, 0.38), transparent 60%);
+    mix-blend-mode: screen;
+    z-index: 1;
+    animation: cityTwinkle 5.5s ease-in-out infinite;
+    opacity: 0.85;
+}
+@keyframes cityTwinkle {
+    0%, 100% { opacity: 0.7; }
+    50%      { opacity: 0.95; }
+}
+@media (prefers-reduced-motion: reduce) {
+    .earth-cities { animation: none; }
 }
 
 /* E — ISS position dot inside the disc (real lat/lng projected via cosine-tapered equirect).
@@ -748,6 +790,7 @@ body.idle-cursor, body.idle-cursor * { cursor: none !important; }
 
     <div class="sound-bars" id="soundBars">
         <div class="earth-atmosphere" aria-hidden="true"></div>
+        <div class="earth-cities" aria-hidden="true"></div>
         <div class="iss-dot" id="issDot" aria-hidden="true"></div>
     </div>
 
