@@ -12,14 +12,26 @@ function isMobileDevice() {
          window.innerWidth <= 768;
 }
 
-// Adjust particle count based on device type
 const numParticles = isMobileDevice() ? 75 : 150;
-const continentPoints = [];
-let particleGeoData = []; // Store original geographic data for particles
+let particleGeoData = [];
 let radioManager;
 let geographyManager;
-let audioVisualizer; // Audio visualization system
-let showContinentOutlines = false; // Toggle for continent outline visualization
+let audioVisualizer;
+let showContinentOutlines = false;
+let stars = [];
+
+function generateStars() {
+  const count = isMobileDevice() ? 80 : 180;
+  stars = [];
+  for (let i = 0; i < count; i++) {
+    stars.push({
+      x: Math.random() * windowWidth,
+      y: Math.random() * windowHeight,
+      r: Math.random() * 1.2 + 0.3,
+      twinkle: Math.random() * Math.PI * 2
+    });
+  }
+}
 
 function setup() {
   // iOS Safari viewport height fix
@@ -32,6 +44,7 @@ function setup() {
   window.addEventListener('orientationchange', setVh);
 
   createCanvas(windowWidth, windowHeight);
+  generateStars();
 
   // Initialize managers
   radioManager = new RadioManager();
@@ -137,20 +150,13 @@ function setup() {
 // Enhanced resize handling with debouncing - repositions all particles properly
 let resizeTimeout;
 function windowResized() {
-  console.log(`Window resized to: ${windowWidth}x${windowHeight}`);
   resizeCanvas(windowWidth, windowHeight);
+  generateStars();
 
-  // Debounce the repositioning to avoid excessive calls during resize
   window.clearTimeout(resizeTimeout);
   resizeTimeout = window.setTimeout(() => {
-    console.log('Debounce timeout reached, repositioning particles...');
-    // Try both local and global references
     const manager = window.geographyManager || geographyManager;
-    if (manager) {
-      manager.repositionParticlesAfterResize();
-    } else {
-      console.error('GeographyManager not available for resize - neither global nor local reference found');
-    }
+    if (manager) {manager.repositionParticlesAfterResize();}
   }, 150);
 }
 
@@ -185,11 +191,19 @@ function draw() {
 
   // Background with subtle audio-reactive effect
   if (audioVisualizer && audioVisualizer.isActive()) {
-    // Subtle background glow based on bass
     const bassGlow = audioVisualizer.bassLevel * 15;
     background(bassGlow, 0, bassGlow * 0.3);
   } else {
     background(0);
+  }
+
+  // Ambient starfield — Law #6 Context: "nothing is something."
+  noStroke();
+  const t = millis() * 0.001;
+  for (const s of stars) {
+    const a = 80 + Math.sin(t + s.twinkle) * 60;
+    fill(200, 220, 255, a);
+    circle(s.x, s.y, s.r);
   }
 
   // Draw continent outline points as tiny dots (press 'm' to toggle)
@@ -269,10 +283,3 @@ function draw() {
 
 }
 
-// Make variables global for module access
-window.particles = particles;
-window.continentPoints = continentPoints;
-window.particleGeoData = particleGeoData;
-window.geographyManager = geographyManager;
-window.radioManager = radioManager;
-window.audioVisualizer = audioVisualizer;

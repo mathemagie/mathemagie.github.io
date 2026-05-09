@@ -290,34 +290,28 @@ class Particle {
 
     push();
     translate(this.pos.x, this.pos.y);
+    colorMode(HSB, 360, 100, 100, 255);
+    strokeWeight(3);
 
     for (let i = 0; i < numBars; i++) {
-      const angle = (i / numBars) * TWO_PI - HALF_PI;
       const barHeight = spectrum[i] * maxBarHeight;
+      if (barHeight < 2) {continue;}
 
-      if (barHeight < 2) {continue;} // Skip very small bars
-
-      // Calculate bar position
+      const angle = (i / numBars) * TWO_PI - HALF_PI;
       const x1 = cos(angle) * innerRadius;
       const y1 = sin(angle) * innerRadius;
       const x2 = cos(angle) * (innerRadius + barHeight);
       const y2 = sin(angle) * (innerRadius + barHeight);
 
-      // Color based on frequency (bass = red, mid = orange, high = yellow)
-      const hue = map(i, 0, numBars, 0, 60); // Red to yellow
-      const saturation = 100;
+      const hue = map(i, 0, numBars, 0, 60);
       const brightness = 80 + spectrum[i] * 20;
       const alpha = 150 + spectrum[i] * 100;
 
-      // Convert HSB to RGB for p5.js
-      colorMode(HSB, 360, 100, 100, 255);
-      stroke(hue, saturation, brightness, alpha);
-      colorMode(RGB, 255, 255, 255, 255);
-
-      strokeWeight(3);
+      stroke(hue, 100, brightness, alpha);
       line(x1, y1, x2, y2);
     }
 
+    colorMode(RGB, 255, 255, 255, 255);
     pop();
   }
 }

@@ -19,13 +19,14 @@ class RadioManager {
     // ISS Context overlay properties
     this.issContextOverlay = null;
     this.issLatLonElement = null;
-    this.issCurrentRegionElement = null;
-    this.issNextEtaElement = null;
+    this.issPlaceElement = null;
     this.pathTraceToggle = null;
     this.isIssContextVisible = false;
     this.pathTraceEnabled = false;
     this.lastIssPosition = { lat: 0, lon: 0 };
-    this.nextRegionEta = null;
+    this.placeName = null;
+    this.geocodeCache = new Map();
+    this.lastGeocodeKey = null;
 
     this.regionStations = {
       // Americas (6 regions)
@@ -190,9 +191,9 @@ class RadioManager {
     // Wire ISS context overlay elements
     this.issContextOverlay = document.getElementById('iss-context-overlay');
     this.issLatLonElement = document.getElementById('iss-lat-lon');
-    this.issCurrentRegionElement = document.getElementById('iss-current-region');
-    this.issNextEtaElement = document.getElementById('iss-next-eta');
+    this.issPlaceElement = document.getElementById('iss-place');
     this.pathTraceToggle = document.getElementById('path-trace-toggle');
+    this.infoBtn = document.getElementById('info-btn');
 
     this.setupEventListeners();
     this.setStationForRegion('Ocean'); // Initial default
@@ -224,6 +225,10 @@ class RadioManager {
       this.playBtn.addEventListener('click', () => this.togglePlayback());
     }
 
+    if (this.infoBtn) {
+      this.infoBtn.addEventListener('click', () => this.toggleIssContext());
+    }
+
     // ISS Context overlay event listeners
     if (this.issContextOverlay) {
       const closeBtn = this.issContextOverlay.querySelector('.iss-context-close');
@@ -243,36 +248,7 @@ class RadioManager {
       this.pathTraceToggle.addEventListener('click', () => this.togglePathTrace());
     }
 
-    if (this.radioPlayer) {
-      this.radioPlayer.addEventListener('play', () => {
-        this.isPlaying = true;
-        this.playBtn.textContent = '⏸';
-      });
-      this.radioPlayer.addEventListener('pause', () => {
-        this.isPlaying = false;
-        this.playBtn.textContent = '▶';
-      });
-      this.radioPlayer.addEventListener('ended', () => {
-        this.isPlaying = false;
-        this.playBtn.textContent = '▶';
-      });
-    }
-
-    // Setup second audio player events
-    if (this.radioPlayerB) {
-      this.radioPlayerB.addEventListener('play', () => {
-        this.isPlaying = true;
-        this.playBtn.textContent = '⏸';
-      });
-      this.radioPlayerB.addEventListener('pause', () => {
-        this.isPlaying = false;
-        this.playBtn.textContent = '▶';
-      });
-      this.radioPlayerB.addEventListener('ended', () => {
-        this.isPlaying = false;
-        this.playBtn.textContent = '▶';
-      });
-    }
+    [this.radioPlayer, this.radioPlayerB].forEach(p => p && this.wirePlayerEvents(p));
 
     // Fullscreen change events
     document.addEventListener('fullscreenchange', () => {
@@ -281,6 +257,30 @@ class RadioManager {
     document.addEventListener('webkitfullscreenchange', () => {
       this.updateFullscreenUI();
     });
+  }
+
+  wirePlayerEvents(player) {
+    player.addEventListener('play', () => {
+      this.isPlaying = true;
+      if (this.playBtn) {this.playBtn.textContent = '⏸';}
+    });
+    player.addEventListener('pause', () => {
+      this.isPlaying = false;
+      if (this.playBtn) {this.playBtn.textContent = '▶';}
+    });
+    player.addEventListener('ended', () => {
+      this.isPlaying = false;
+      if (this.playBtn) {this.playBtn.textContent = '▶';}
+    });
+    // Auto-skip dead/silent streams: pick another station for the same region.
+    const tryAnother = () => {
+      if (!this.isPlaying || !this.currentRegion) {return;}
+      if (this.stationLabel) {
+        this.stationLabel.textContent = 'Stream silent — trying another…';
+      }
+      this.setStationForRegion(this.currentRegion);
+    };
+    player.addEventListener('error', tryAnother);
   }
 
   getRegion(lat, lon) {
@@ -366,11 +366,52 @@ class RadioManager {
       this.setStationForRegion(region);
     }
 
-    // Update ISS context overlay data
+    if (this.stationLabel && this.stationLabel.classList.contains('pulsing')) {
+      this.stationLabel.classList.remove('pulsing');
+    }
+
     this.lastIssPosition.lat = lat;
     this.lastIssPosition.lon = lon;
     this.updateIssContextData();
-    this.calculateNextRegionEta();
+    this.refreshPlaceName(lat, lon);
+  }
+
+  // Reverse-geocode ISS coords into a human place name; cached at ~110 km granularity.
+  async refreshPlaceName(lat, lon) {
+    const key = `${lat.toFixed(0)},${lon.toFixed(0)}`;
+    if (key === this.lastGeocodeKey) {return;}
+    this.lastGeocodeKey = key;
+
+    if (this.geocodeCache.has(key)) {
+      this.placeName = this.geocodeCache.get(key);
+      this.updateIssContextData();
+      return;
+    }
+
+    try {
+      const res = await fetch(`https://api.bigdatacloud.net/data/reverse-geocode-client?latitude=${lat}&longitude=${lon}&localityLanguage=en`);
+      if (!res.ok) {throw new Error(`HTTP ${res.status}`);}
+      const data = await res.json();
+      const country = data.countryName;
+      const city = data.city || data.locality;
+      let place;
+      if (city && country) {
+        place = `${city}, ${country}`;
+      } else if (country) {
+        place = country;
+      } else {
+        place = 'open ocean';
+      }
+      this.placeName = place;
+      this.geocodeCache.set(key, place);
+      if (this.geocodeCache.size > 200) {
+        this.geocodeCache.delete(this.geocodeCache.keys().next().value);
+      }
+      this.updateIssContextData();
+    } catch {
+      this.placeName = this.currentRegion || 'unknown';
+      this.updateIssContextData();
+    }
   }
 
   // Crossfade between stations
@@ -473,15 +514,6 @@ class RadioManager {
     }
   }
 
-  toggleMute() {
-    const currentPlayer = this.activePlayer === 'A' ? this.radioPlayer : this.radioPlayerB;
-    if (!currentPlayer) {return;}
-
-    currentPlayer.muted = !currentPlayer.muted;
-    // Volume button removed from UI
-  }
-
-
   // Fullscreen helpers
   isFullscreen() {
     return !!(document.fullscreenElement || document.webkitFullscreenElement);
@@ -490,7 +522,6 @@ class RadioManager {
   updateFullscreenUI() {
     const active = this.isFullscreen();
     if (this.fullscreenBtn) {
-      this.fullscreenBtn.textContent = '⛶';
       this.fullscreenBtn.setAttribute('aria-pressed', active ? 'true' : 'false');
       this.fullscreenBtn.title = active ? 'Exit fullscreen' : 'Enter fullscreen';
     }
@@ -513,24 +544,11 @@ class RadioManager {
   }
 
   toggleFullscreen() {
+    // Reposition is handled centrally by the fullscreenchange listener in main.js.
     if (this.isFullscreen()) {
-      this.exitFullscreen().then(() => {
-        // Delay to allow DOM to update before resize
-        window.setTimeout(() => {
-          if (window.geographyManager) {
-            window.geographyManager.repositionParticlesAfterResize();
-          }
-        }, 100);
-      }).catch(() => {});
+      this.exitFullscreen().catch(() => {});
     } else {
-      this.enterFullscreen().then(() => {
-        // Delay to allow DOM to update before resize
-        window.setTimeout(() => {
-          if (window.geographyManager) {
-            window.geographyManager.repositionParticlesAfterResize();
-          }
-        }, 100);
-      }).catch(() => {});
+      this.enterFullscreen().catch(() => {});
     }
   }
 
@@ -563,50 +581,14 @@ class RadioManager {
   updateIssContextData() {
     if (!this.isIssContextVisible) {return;}
 
-    // Update position
+    if (this.issPlaceElement) {
+      this.issPlaceElement.textContent = this.placeName || 'locating…';
+    }
+
     if (this.issLatLonElement) {
-      const lat = this.lastIssPosition.lat.toFixed(3);
-      const lon = this.lastIssPosition.lon.toFixed(3);
+      const lat = this.lastIssPosition.lat.toFixed(2);
+      const lon = this.lastIssPosition.lon.toFixed(2);
       this.issLatLonElement.textContent = `${lat}°, ${lon}°`;
-    }
-
-    // Update current region
-    if (this.issCurrentRegionElement) {
-      this.issCurrentRegionElement.textContent = this.currentRegion || 'Ocean';
-    }
-
-    // Update next ETA (placeholder - will be calculated)
-    if (this.issNextEtaElement) {
-      if (this.nextRegionEta) {
-        this.issNextEtaElement.textContent = this.nextRegionEta;
-      } else {
-        this.issNextEtaElement.textContent = 'Calculating...';
-      }
-    }
-  }
-
-  calculateNextRegionEta() {
-    // Simple ETA calculation based on ISS orbital speed (~7.66 km/s)
-    // This is a simplified estimation for UX purposes
-
-    // Get all possible regions and find the next one
-    const allRegions = Object.keys(this.regionStations);
-    const currentRegionIndex = allRegions.indexOf(this.currentRegion || 'Ocean');
-    const nextRegionIndex = (currentRegionIndex + 1) % allRegions.length;
-    const nextRegion = allRegions[nextRegionIndex];
-
-    // Estimate time to next region (simplified - assumes uniform distribution)
-    // ISS completes one orbit in ~92 minutes, with roughly 21 regions
-    const averageTimePerRegion = (92 * 60) / 21; // seconds
-    const etaSeconds = Math.floor(averageTimePerRegion + (Math.random() * 300 - 150)); // Add some variance
-
-    const minutes = Math.floor(etaSeconds / 60);
-    const seconds = etaSeconds % 60;
-
-    this.nextRegionEta = `${nextRegion} in ${minutes}m ${seconds}s`;
-
-    if (this.issNextEtaElement && this.isIssContextVisible) {
-      this.issNextEtaElement.textContent = this.nextRegionEta;
     }
   }
 

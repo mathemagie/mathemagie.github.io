@@ -38,22 +38,36 @@ class GeographyManager {
     return {lat: lat, lon: lon};
   }
 
+  // Returns radio UI bounding box; particles steer clear of this area.
+  getRadioUIBounds() {
+    const isMobile = window.innerWidth <= 768;
+    const w = isMobile ? Math.min(window.innerWidth - 16, 360) : Math.min(window.innerWidth * 0.7, 420);
+    const left = isMobile ? 6 : 12;
+    const top = isMobile ? 6 : 12;
+    return { left, top, right: left + w, bottom: top + 80 };
+  }
+
+  // Nudge an (x, y) point outside the radio UI rectangle, keeping it on-canvas.
+  avoidRadioUI(x, y) {
+    const b = this.getRadioUIBounds();
+    if (x < b.left || x > b.right || y < b.top || y > b.bottom) {
+      return { x, y };
+    }
+    let ny = b.bottom + 20;
+    let nx = x;
+    if (ny > height) {
+      nx = b.right + 20;
+      ny = y;
+    }
+    return {
+      x: Math.max(0, Math.min(width, nx)),
+      y: Math.max(0, Math.min(height, ny))
+    };
+  }
+
   generateContinentPoints() {
     window.continentPoints = [];
-    window.continentGroups = {}; // Store separate arrays for each continent
-
-    // Calculate radio UI exclusion area
-    const radioUIWidth = window.innerWidth <= 768 ? Math.max(260, window.innerWidth * 0.92) : Math.min(window.innerWidth * 0.85, 500);
-    const radioUIHeight = 120; // Estimated height including padding and content
-    const radioUILeft = window.innerWidth <= 768 ? Math.max(6, 0) : Math.max(12, 0);
-    const radioUITop = window.innerWidth <= 768 ? Math.max(6, 0) : Math.max(12, 0);
-    const radioUIRight = radioUILeft + radioUIWidth;
-    const radioUIBottom = radioUITop + radioUIHeight;
-
-    // Helper function to check if a point overlaps with radio UI
-    const isInRadioUIArea = (x, y) => {
-      return x >= radioUILeft && x <= radioUIRight && y >= radioUITop && y <= radioUIBottom;
-    };
+    window.continentGroups = {};
 
     // Define continent outlines with their names
     const continentDefinitions = {
@@ -114,30 +128,11 @@ class GeographyManager {
           const offsetX = (Math.random() - 0.5) * 6;
           const offsetY = (Math.random() - 0.5) * 6;
 
-          let pointX = Math.max(0, Math.min(width, x + offsetX));
-          let pointY = Math.max(0, Math.min(height, y + offsetY));
-
-          // If point overlaps with radio UI, try to move it outside
-          if (isInRadioUIArea(pointX, pointY)) {
-            // Try moving below the radio UI first
-            if (pointY < radioUIBottom + 20) {
-              pointY = radioUIBottom + 20;
-            }
-            // If still in bounds, otherwise try moving to the right
-            if (pointY > height && pointX < radioUIRight + 20) {
-              pointX = radioUIRight + 20;
-              pointY = Math.max(0, Math.min(height, y + offsetY));
-            }
-            // Ensure final position is within canvas bounds
-            pointX = Math.max(0, Math.min(width, pointX));
-            pointY = Math.max(0, Math.min(height, pointY));
-          }
-
-          const point = {
-            x: pointX,
-            y: pointY,
-            continent: continentName
-          };
+          const safe = this.avoidRadioUI(
+            Math.max(0, Math.min(width, x + offsetX)),
+            Math.max(0, Math.min(height, y + offsetY))
+          );
+          const point = { x: safe.x, y: safe.y, continent: continentName };
 
           window.continentGroups[continentName].push(point);
           window.continentPoints.push(point);
@@ -155,30 +150,11 @@ class GeographyManager {
           const offsetX = Math.cos(offsetAngle) * offsetDistance;
           const offsetY = Math.sin(offsetAngle) * offsetDistance;
 
-          let inlandX = Math.max(0, Math.min(width, point.x + offsetX));
-          let inlandY = Math.max(0, Math.min(height, point.y + offsetY));
-
-          // If point overlaps with radio UI, try to move it outside
-          if (isInRadioUIArea(inlandX, inlandY)) {
-            // Try moving below the radio UI first
-            if (inlandY < radioUIBottom + 20) {
-              inlandY = radioUIBottom + 20;
-            }
-            // If still in bounds, otherwise try moving to the right
-            if (inlandY > height && inlandX < radioUIRight + 20) {
-              inlandX = radioUIRight + 20;
-              inlandY = Math.max(0, Math.min(height, point.y + offsetY));
-            }
-            // Ensure final position is within canvas bounds
-            inlandX = Math.max(0, Math.min(width, inlandX));
-            inlandY = Math.max(0, Math.min(height, inlandY));
-          }
-
-          const inlandPoint = {
-            x: inlandX,
-            y: inlandY,
-            continent: continentName
-          };
+          const safe = this.avoidRadioUI(
+            Math.max(0, Math.min(width, point.x + offsetX)),
+            Math.max(0, Math.min(height, point.y + offsetY))
+          );
+          const inlandPoint = { x: safe.x, y: safe.y, continent: continentName };
 
           window.continentGroups[continentName].push(inlandPoint);
           window.continentPoints.push(inlandPoint);
@@ -194,56 +170,24 @@ class GeographyManager {
         const shelfX = Math.cos(shelfAngle) * shelfDistance;
         const shelfY = Math.sin(shelfAngle) * shelfDistance;
 
-        let shelfPointX = Math.max(0, Math.min(width, point.x + shelfX));
-        let shelfPointY = Math.max(0, Math.min(height, point.y + shelfY));
-
-        // If point overlaps with radio UI, try to move it outside
-        if (isInRadioUIArea(shelfPointX, shelfPointY)) {
-          // Try moving below the radio UI first
-          if (shelfPointY < radioUIBottom + 20) {
-            shelfPointY = radioUIBottom + 20;
-          }
-          // If still in bounds, otherwise try moving to the right
-          if (shelfPointY > height && shelfPointX < radioUIRight + 20) {
-            shelfPointX = radioUIRight + 20;
-            shelfPointY = Math.max(0, Math.min(height, point.y + shelfY));
-          }
-          // Ensure final position is within canvas bounds
-          shelfPointX = Math.max(0, Math.min(width, shelfPointX));
-          shelfPointY = Math.max(0, Math.min(height, shelfPointY));
-        }
-
-        const shelfPoint = {
-          x: shelfPointX,
-          y: shelfPointY,
-          continent: continentName
-        };
+        const safe = this.avoidRadioUI(
+          Math.max(0, Math.min(width, point.x + shelfX)),
+          Math.max(0, Math.min(height, point.y + shelfY))
+        );
+        const shelfPoint = { x: safe.x, y: safe.y, continent: continentName };
 
         window.continentGroups[continentName].push(shelfPoint);
         window.continentPoints.push(shelfPoint);
       }
     }
 
-    console.log('Continent point distribution:');
-    for (const [name, points] of Object.entries(window.continentGroups)) {
-      console.log(`${name}: ${points.length} points`);
-    }
   }
 
   // Reposition all particles based on their stored geographic data
   repositionParticlesAfterResize() {
-    console.log(`Repositioning particles after resize... Canvas: ${width}x${height}`);
-
-    // Regenerate continent points with new canvas dimensions
     this.generateContinentPoints();
 
-    // Check if we have the necessary data
-    if (!window.particles || !window.particleGeoData) {
-      console.warn('Missing particles or geographic data for resize');
-      return;
-    }
-
-    console.log(`Repositioning ${window.particles.length} particles using ${window.particleGeoData.length} geo data points`);
+    if (!window.particles || !window.particleGeoData) {return;}
 
     // Reposition continent-based particles
     const regularParticleCount = window.particles.length - 1; // All particles except ISS
@@ -253,61 +197,23 @@ class GeographyManager {
 
       if (particle && geoData) {
         // Store old position for comparison
-        const oldX = particle.pos.x;
-        const oldY = particle.pos.y;
-
-        // Convert geographic coordinates back to new screen coordinates
         const newPos = this.latLonToXY(geoData.lat, geoData.lon);
         particle.pos.set(newPos.x, newPos.y);
         particle.originalPos.set(newPos.x, newPos.y);
 
-        // Ensure particle stays within canvas bounds and avoids radio UI
-        particle.pos.x = constrain(particle.pos.x, particle.r || 10, width - (particle.r || 10));
-        particle.pos.y = constrain(particle.pos.y, particle.r || 10, height - (particle.r || 10));
+        const r = particle.r || 10;
+        particle.pos.x = constrain(particle.pos.x, r, width - r);
+        particle.pos.y = constrain(particle.pos.y, r, height - r);
 
-        // Calculate radio UI exclusion area for resize
-        const radioUIWidth = window.innerWidth <= 768 ? Math.max(260, window.innerWidth * 0.92) : Math.min(window.innerWidth * 0.85, 500);
-        const radioUIHeight = 120;
-        const radioUILeft = window.innerWidth <= 768 ? Math.max(6, 0) : Math.max(12, 0);
-        const radioUITop = window.innerWidth <= 768 ? Math.max(6, 0) : Math.max(12, 0);
-        const radioUIRight = radioUILeft + radioUIWidth;
-        const radioUIBottom = radioUITop + radioUIHeight;
-
-        // If particle overlaps with radio UI, move it outside
-        if (particle.pos.x >= radioUILeft && particle.pos.x <= radioUIRight &&
-            particle.pos.y >= radioUITop && particle.pos.y <= radioUIBottom) {
-          // Try moving below the radio UI first
-          if (particle.pos.y < radioUIBottom + 20) {
-            particle.pos.y = radioUIBottom + 20;
-          }
-          // If still in bounds, otherwise try moving to the right
-          if (particle.pos.y > height && particle.pos.x < radioUIRight + 20) {
-            particle.pos.x = radioUIRight + 20;
-            particle.pos.y = constrain(particle.pos.y, particle.r || 10, height - (particle.r || 10));
-          }
-          // Ensure final position is within canvas bounds
-          particle.pos.x = constrain(particle.pos.x, particle.r || 10, width - (particle.r || 10));
-          particle.pos.y = constrain(particle.pos.y, particle.r || 10, height - (particle.r || 10));
-        }
+        const safe = this.avoidRadioUI(particle.pos.x, particle.pos.y);
+        particle.pos.x = constrain(safe.x, r, width - r);
+        particle.pos.y = constrain(safe.y, r, height - r);
 
         particle.originalPos.x = particle.pos.x;
         particle.originalPos.y = particle.pos.y;
 
-        // Log position change for debugging
-        if (i < 3) { // Only log first 3 particles to avoid spam
-          console.log(`Particle ${i}: (${oldX.toFixed(1)}, ${oldY.toFixed(1)}) -> (${particle.pos.x.toFixed(1)}, ${particle.pos.y.toFixed(1)}) | Geo: ${geoData.lat.toFixed(2)}, ${geoData.lon.toFixed(2)}`);
-        }
-
-
-        // If particle was resetting, recalculate reset animation with new positions
-        if (particle.isResetting) {
-          // Reset animation will continue to the new originalPos
-          // No additional action needed as originalPos has been updated above
-        }
-
-        // Constrain moving particles to new canvas bounds
         if (particle.isMoving && !particle.isResetting) {
-          particle.vel.limit(3); // Ensure velocity doesn't get too high during resize
+          particle.vel.limit(3);
         }
       }
     }
