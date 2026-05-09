@@ -12,7 +12,7 @@ function isMobileDevice() {
          window.innerWidth <= 768;
 }
 
-const numParticles = isMobileDevice() ? 180 : 360;
+const numParticles = isMobileDevice() ? 280 : 600;
 let particleGeoData = [];
 let radioManager;
 let geographyManager;
@@ -51,6 +51,80 @@ function recomputeCentroids() {
     let sx = 0, sy = 0;
     for (const p of points) { sx += p.x; sy += p.y; }
     continentCentroids[name] = { x: sx / points.length, y: sy / points.length };
+  }
+}
+
+// Iconic cities — Maeda Law #4 (Relate) + #10. Reveal label only when ISS is close.
+const ICONIC_CITIES = [
+  { name: 'New York', lat: 40.71, lon: -74.01 },
+  { name: 'Los Angeles', lat: 34.05, lon: -118.24 },
+  { name: 'Mexico City', lat: 19.43, lon: -99.13 },
+  { name: 'Vancouver', lat: 49.28, lon: -123.12 },
+  { name: 'São Paulo', lat: -23.55, lon: -46.63 },
+  { name: 'Buenos Aires', lat: -34.61, lon: -58.38 },
+  { name: 'Lima', lat: -12.05, lon: -77.04 },
+  { name: 'Bogotá', lat: 4.71, lon: -74.07 },
+  { name: 'London', lat: 51.51, lon: -0.13 },
+  { name: 'Paris', lat: 48.86, lon: 2.35 },
+  { name: 'Berlin', lat: 52.52, lon: 13.40 },
+  { name: 'Madrid', lat: 40.42, lon: -3.70 },
+  { name: 'Rome', lat: 41.90, lon: 12.50 },
+  { name: 'Moscow', lat: 55.76, lon: 37.62 },
+  { name: 'Istanbul', lat: 41.01, lon: 28.98 },
+  { name: 'Cairo', lat: 30.04, lon: 31.24 },
+  { name: 'Lagos', lat: 6.52, lon: 3.38 },
+  { name: 'Nairobi', lat: -1.29, lon: 36.82 },
+  { name: 'Cape Town', lat: -33.92, lon: 18.42 },
+  { name: 'Tokyo', lat: 35.68, lon: 139.65 },
+  { name: 'Beijing', lat: 39.90, lon: 116.41 },
+  { name: 'Shanghai', lat: 31.23, lon: 121.47 },
+  { name: 'Delhi', lat: 28.61, lon: 77.21 },
+  { name: 'Mumbai', lat: 19.08, lon: 72.88 },
+  { name: 'Bangkok', lat: 13.76, lon: 100.50 },
+  { name: 'Seoul', lat: 37.57, lon: 126.98 },
+  { name: 'Jakarta', lat: -6.21, lon: 106.85 },
+  { name: 'Sydney', lat: -33.87, lon: 151.21 },
+  { name: 'Auckland', lat: -36.85, lon: 174.76 },
+  { name: 'Dubai', lat: 25.20, lon: 55.27 }
+];
+
+function drawGraticule() {
+  // Five reference lines: prime meridian, ±90° meridians, two tropics. All ghostly.
+  stroke(255, 255, 255, 14);
+  strokeWeight(1);
+  // Prime meridian (lon 0)
+  const x0 = width * 0.5;
+  line(x0, 0, x0, height);
+  // ±90° meridians
+  line(width * 0.25, 0, width * 0.25, height);
+  line(width * 0.75, 0, width * 0.75, height);
+  // Equator already drawn elsewhere; tropics:
+  const tropicY = (lat) => (90 - lat) / 180 * height;
+  line(0, tropicY(23.4), width, tropicY(23.4));
+  line(0, tropicY(-23.4), width, tropicY(-23.4));
+  noStroke();
+}
+
+function drawCities() {
+  if (!geographyManager) {return;}
+  const issList = window.particles;
+  const iss = issList && issList.length ? issList[issList.length - 1] : null;
+  const issX = iss && iss.isIss ? iss.pos.x : -1e9;
+  const issY = iss && iss.isIss ? iss.pos.y : -1e9;
+  const proximityPx = Math.min(width, height) * 0.08;
+
+  for (const c of ICONIC_CITIES) {
+    const xy = geographyManager.latLonToXY(c.lat, c.lon);
+    fill(255, 255, 255, 110);
+    noStroke();
+    circle(xy.x, xy.y, 2.5);
+    const dx = xy.x - issX;
+    const dy = xy.y - issY;
+    if (dx * dx + dy * dy < proximityPx * proximityPx) {
+      fill(255, 255, 255, 200);
+      textSize(10);
+      text(c.name, xy.x + 6, xy.y - 4);
+    }
   }
 }
 
@@ -173,73 +247,79 @@ function setup() {
   // Generate continent outline points
   geographyManager.generateContinentPoints();
   recomputeCentroids();
-  console.log(`Generated ${window.continentPoints.length} continent points`);
 
-  // Create regular particles positioned on continents
-  particleGeoData = []; // Reset geographic data array
-  window.particleGeoData = particleGeoData; // Make it global immediately
-  window.particles = particles; // Make particles global immediately
+  particleGeoData = [];
+  window.particleGeoData = particleGeoData;
+  window.particles = particles;
 
-  if (window.continentPoints.length === 0) {
-    console.error('No continent points generated! Creating fallback particles...');
-    // Fallback: create particles at random positions
-    for (let i = 0; i < numParticles; i++) {
-      const x = random(width);
-      const y = random(height);
-      particles.push(new Particle(x, y, false));
-      const geoCoords = geographyManager.xyToLatLon(x, y);
-      particleGeoData.push(geoCoords);
-    }
-  } else {
-    // Distribute particles equally across continents
-    const continentNames = Object.keys(window.continentGroups);
-    const particlesPerContinent = Math.floor(numParticles / continentNames.length);
-    const remainder = numParticles % continentNames.length;
-
-    console.log(`Distributing ${numParticles} particles across ${continentNames.length} continents:`);
-    console.log(`${particlesPerContinent} particles per continent, ${remainder} extra particles`);
-
-    let totalCreated = 0;
-    continentNames.forEach((continentName, index) => {
-      const continentPoints = window.continentGroups[continentName];
-      let particlesToCreate = particlesPerContinent;
-
-      // Add extra particles to first few continents to handle remainder
-      if (index < remainder) {
-        particlesToCreate += 1;
-      }
-
-      if (continentPoints.length === 0) {
-        console.warn(`No points available for ${continentName}, skipping...`);
-        return;
-      }
-
-      console.log(`Creating ${particlesToCreate} particles for ${continentName} (${continentPoints.length} points available)`);
-
-      for (let i = 0; i < particlesToCreate; i++) {
-        const point = random(continentPoints);
-        particles.push(new Particle(point.x, point.y, false, continentName));
-
-        const geoCoords = geographyManager.xyToLatLon(point.x, point.y);
-        particleGeoData.push(geoCoords);
-        totalCreated++;
-      }
-    });
-
-    console.log(`Total particles created: ${totalCreated}`);
-  }
-
-  console.log(`Created ${particleGeoData.length} particles with geographic data`);
+  buildContinentParticles();
 
   // Create ISS particle
   const iss = new Particle(width / 2, height / 2, true);
   particles.push(iss);
 
-  // Initialize ISS geographic data
   geographyManager.issGeoData = geographyManager.xyToLatLon(width / 2, height / 2);
-
-  // Start ISS tracking
   geographyManager.initTracking(radioManager);
+
+  // Asynchronously upgrade to real Natural Earth coastlines.
+  geographyManager.loadHighPrecisionCoastline(numParticles)
+    .then(() => {
+      recomputeCentroids();
+      buildContinentParticles();
+      // Re-pin ISS to end of array so all the "last particle is ISS" code keeps working.
+      const issIdx = particles.indexOf(iss);
+      if (issIdx >= 0 && issIdx !== particles.length - 1) {
+        particles.splice(issIdx, 1);
+        particles.push(iss);
+      } else if (issIdx < 0) {
+        particles.push(iss);
+      }
+    })
+    .catch(err => console.warn('coastline upgrade skipped:', err.message));
+}
+
+// Build continent particles from window.continentGroups. Drops any existing
+// non-ISS particles first. The ISS particle (if present) is preserved.
+function buildContinentParticles() {
+  const iss = particles.find(p => p.isIss) || null;
+  particles.length = 0;
+  particleGeoData.length = 0;
+
+  const groupNames = Object.keys(window.continentGroups || {});
+  if (groupNames.length === 0 || !window.continentPoints || window.continentPoints.length === 0) {
+    for (let i = 0; i < numParticles; i++) {
+      const x = random(width);
+      const y = random(height);
+      particles.push(new Particle(x, y, false));
+      particleGeoData.push(geographyManager.xyToLatLon(x, y));
+    }
+  } else {
+    const totalPoints = window.continentPoints.length;
+    let created = 0;
+    for (const name of groupNames) {
+      const pts = window.continentGroups[name];
+      if (!pts || pts.length === 0) {continue;}
+      const share = Math.round(numParticles * pts.length / totalPoints);
+      for (let i = 0; i < share; i++) {
+        const p = pts[Math.floor(Math.random() * pts.length)];
+        particles.push(new Particle(p.x, p.y, false, name));
+        particleGeoData.push(geographyManager.xyToLatLon(p.x, p.y));
+        created++;
+      }
+    }
+    // Fill any rounding gap from the largest group.
+    while (created < numParticles) {
+      const biggest = groupNames.reduce((a, b) =>
+        (window.continentGroups[a]?.length || 0) > (window.continentGroups[b]?.length || 0) ? a : b);
+      const pts = window.continentGroups[biggest];
+      const p = pts[Math.floor(Math.random() * pts.length)];
+      particles.push(new Particle(p.x, p.y, false, biggest));
+      particleGeoData.push(geographyManager.xyToLatLon(p.x, p.y));
+      created++;
+    }
+  }
+
+  if (iss) {particles.push(iss);}
 }
 
 // Enhanced resize handling with debouncing - repositions all particles properly
@@ -307,11 +387,8 @@ function draw() {
   // Day/night terminator — the meaningful "is the ISS in sunlight?" answer.
   drawNightShade();
 
-  // Faint equator — Law #6: a single reference line so the user is never lost.
-  stroke(255, 255, 255, 14);
-  strokeWeight(1);
-  line(0, height / 2, width, height / 2);
-  noStroke();
+  // Ghostly graticule for spatial reference (Law #6 Context).
+  drawGraticule();
 
   updateIssContinent();
 
@@ -389,6 +466,9 @@ function draw() {
     particle.update();
     particle.show();
   }
+
+  // Iconic city markers — minimal until the ISS approaches.
+  drawCities();
 
   // Only label the continent the ISS is over — answer to "where am I?", not decor.
   const hot = window.currentIssContinent;

@@ -1,4 +1,22 @@
+/* eslint-env browser */
+/* global map, width, height, constrain, fetch, localStorage, setInterval */
+
 // Geography and ISS tracking functionality
+
+// Pick a continent bucket for a (lat, lon) point — heuristic by bbox.
+// Order matters: more specific regions (Europe, Mediterranean) come before
+// the broader Africa / Asia bands they overlap with.
+function continentForLatLon(lat, lon) {
+  if (lat >= 36 && lat <= 71 && lon >= -10 && lon <= 60) {return 'europe';}
+  if (lat >= 13 && lon >= -170 && lon <= -52) {return 'northAmerica';}
+  if (lat < 13 && lat >= -56 && lon >= -82 && lon <= -34) {return 'southAmerica';}
+  if (lat < 36 && lat >= -35 && lon >= -18 && lon <= 52) {return 'africa';}
+  if (lat >= -10 && lon >= 26 && lon <= 180) {return 'asia';}
+  if (lat < -10 && lon >= 110) {return 'oceania';}
+  if (lat >= 60 && lon >= -170 && lon <= -52) {return 'northAmerica';}
+  return null;
+}
+
 class GeographyManager {
   constructor() {
     this.issGeoData = { lat: 0, lon: 0 }; // Current ISS geographic coordinates
@@ -63,6 +81,116 @@ class GeographyManager {
       x: Math.max(0, Math.min(width, nx)),
       y: Math.max(0, Math.min(height, ny))
     };
+  }
+
+  // Fetch real coastlines (Natural Earth 110m, ~88KB) and rebuild continent
+  // points along the actual world coastline. Public-domain dataset.
+  async loadHighPrecisionCoastline(targetCount) {
+    const URL = 'https://cdn.jsdelivr.net/gh/nvkelso/natural-earth-vector@master/geojson/ne_110m_land.geojson';
+    const CACHE_KEY = 'ne110mLand';
+    const CACHE_DAYS = 30;
+
+    let geo;
+    try {
+      const cached = localStorage.getItem(CACHE_KEY);
+      if (cached) {
+        const parsed = JSON.parse(cached);
+        const ageDays = (Date.now() - parsed.t) / 86400000;
+        if (ageDays < CACHE_DAYS) {geo = parsed.d;}
+      }
+    } catch { /* ignore parse errors */ }
+
+    if (!geo) {
+      const r = await fetch(URL);
+      if (!r.ok) {throw new Error(`coastline fetch ${r.status}`);}
+      geo = await r.json();
+      try {
+        localStorage.setItem(CACHE_KEY, JSON.stringify({ t: Date.now(), d: geo }));
+      } catch { /* quota — skip cache */ }
+    }
+
+    this.rebuildContinentsFromGeoJSON(geo, targetCount);
+  }
+
+  // Sample arc-length-uniform points along every polygon ring in a GeoJSON
+  // FeatureCollection or single Feature. Filters out tiny (Antarctica too big
+  // to read) and assigns each point to a continent bucket.
+  rebuildContinentsFromGeoJSON(geo, targetCount) {
+    const features = geo.features || [{ geometry: geo.geometry || geo }];
+    const rings = []; // {coords, perim, continentHint}
+
+    const collectRings = (coords) => {
+      // coords is array of rings; each ring is array of [lon, lat]
+      for (const ring of coords) {
+        if (!ring || ring.length < 4) {continue;}
+        // Skip Antarctica (too far south, fills the bottom)
+        const meanLat = ring.reduce((s, p) => s + p[1], 0) / ring.length;
+        if (meanLat < -55) {continue;}
+        let perim = 0;
+        for (let i = 0; i < ring.length - 1; i++) {
+          const dx = ring[i + 1][0] - ring[i][0];
+          const dy = ring[i + 1][1] - ring[i][1];
+          perim += Math.sqrt(dx * dx + dy * dy);
+        }
+        if (perim < 4) {continue;} // skip tiny islands
+        rings.push({ ring, perim });
+      }
+    };
+
+    for (const f of features) {
+      const g = f.geometry || f;
+      if (g.type === 'Polygon') {collectRings(g.coordinates);}
+      else if (g.type === 'MultiPolygon') {
+        for (const poly of g.coordinates) {collectRings(poly);}
+      }
+    }
+
+    const totalPerim = rings.reduce((s, r) => s + r.perim, 0);
+    if (totalPerim === 0) {return;}
+
+    window.continentPoints = [];
+    window.continentGroups = { northAmerica: [], southAmerica: [], europe: [], africa: [], asia: [], oceania: [] };
+
+    for (const { ring, perim } of rings) {
+      const samples = Math.max(3, Math.round(targetCount * perim / totalPerim));
+      const step = perim / samples;
+      let traveled = 0;
+      let nextSample = step / 2;
+      let segIdx = 0;
+      let segLen = 0;
+      let segStart = ring[0];
+      let segEnd = ring[1];
+      const measureSeg = () => {
+        const dx = segEnd[0] - segStart[0];
+        const dy = segEnd[1] - segStart[1];
+        segLen = Math.sqrt(dx * dx + dy * dy);
+      };
+      measureSeg();
+
+      while (nextSample <= perim && segIdx < ring.length - 1) {
+        if (nextSample <= traveled + segLen) {
+          const t = (nextSample - traveled) / segLen;
+          const lon = segStart[0] + (segEnd[0] - segStart[0]) * t;
+          const lat = segStart[1] + (segEnd[1] - segStart[1]) * t;
+          const continent = continentForLatLon(lat, lon);
+          if (continent) {
+            const xy = this.latLonToXY(lat, lon);
+            const safe = this.avoidRadioUI(xy.x, xy.y);
+            const point = { x: safe.x, y: safe.y, continent, lat, lon };
+            window.continentGroups[continent].push(point);
+            window.continentPoints.push(point);
+          }
+          nextSample += step;
+        } else {
+          traveled += segLen;
+          segIdx++;
+          if (segIdx >= ring.length - 1) {break;}
+          segStart = ring[segIdx];
+          segEnd = ring[segIdx + 1];
+          measureSeg();
+        }
+      }
+    }
   }
 
   generateContinentPoints() {
