@@ -1,5 +1,5 @@
 /* eslint-env browser */
-/* global setup, draw, windowResized, keyPressed, createCanvas, background, fill, noStroke, stroke, strokeWeight, line, circle, text, textSize, key, keyIsPressed, width, height, random, constrain, lerp, dist, cos, sin, TWO_PI, rect, millis, navigator, windowWidth, windowHeight, resizeCanvas, RadioManager, GeographyManager, Particle, AudioVisualizer */
+/* global setup, draw, windowResized, keyPressed, createCanvas, createGraphics, image, background, fill, noStroke, stroke, strokeWeight, line, circle, text, textSize, key, keyIsPressed, width, height, random, constrain, lerp, dist, cos, sin, TWO_PI, rect, millis, navigator, windowWidth, windowHeight, resizeCanvas, RadioManager, GeographyManager, Particle, AudioVisualizer, CONTINENT_PALETTE, DEFAULT_CONTINENT_COLOR */
 
 // Main application for 25544.fm (ISS Orbital Radio)
 // Global variables
@@ -12,7 +12,7 @@ function isMobileDevice() {
          window.innerWidth <= 768;
 }
 
-const numParticles = isMobileDevice() ? 500 : 1200;
+const numParticles = isMobileDevice() ? 600 : 1200;
 let particleGeoData = [];
 let radioManager;
 let geographyManager;
@@ -128,13 +128,14 @@ function drawCities() {
   }
 }
 
-// Day/night shading — Maeda Law #6 + #10. Cached every 60s, drawn every frame.
-let nightField = null;
-let nightFieldStamp = 0;
+// Day/night shading — pre-rendered into an offscreen buffer, refreshed every
+// minute. Per-frame cost drops from 3200 rect() calls to one image() blit.
+let nightBuffer = null;
+let nightBufferStamp = 0;
 const NIGHT_COLS = 80;
 const NIGHT_ROWS = 40;
 
-function recomputeNightField() {
+function repaintNightBuffer() {
   const now = new Date();
   const start = new Date(now.getFullYear(), 0, 0);
   const dayOfYear = Math.floor((now - start) / 86400000);
@@ -144,40 +145,34 @@ function recomputeNightField() {
   const sinD = Math.sin(declR);
   const cosD = Math.cos(declR);
 
-  if (!nightField) {
-    nightField = new Array(NIGHT_COLS);
-    for (let i = 0; i < NIGHT_COLS; i++) {nightField[i] = new Float32Array(NIGHT_ROWS);}
-  }
-
+  const cw = width / NIGHT_COLS;
+  const ch = height / NIGHT_ROWS;
+  nightBuffer.clear();
+  nightBuffer.noStroke();
   for (let i = 0; i < NIGHT_COLS; i++) {
     const lon = -180 + (360 * (i + 0.5) / NIGHT_COLS);
-    const lonR = lon * Math.PI / 180;
-    const cosDH = cosD * Math.cos(lonR - subR);
-    const col = nightField[i];
+    const cosDH = cosD * Math.cos(lon * Math.PI / 180 - subR);
     for (let j = 0; j < NIGHT_ROWS; j++) {
       const lat = 90 - (180 * (j + 0.5) / NIGHT_ROWS);
       const latR = lat * Math.PI / 180;
       const cosZ = Math.sin(latR) * sinD + Math.cos(latR) * cosDH;
-      col[j] = cosZ < 0 ? Math.min(1, -cosZ * 1.6) : 0;
+      const a = cosZ < 0 ? Math.min(1, -cosZ * 1.6) : 0;
+      if (a <= 0.05) {continue;}
+      nightBuffer.fill(0, 2, 10, a * 190);
+      nightBuffer.rect(i * cw, j * ch, cw + 1, ch + 1);
     }
   }
-  nightFieldStamp = Date.now();
+  nightBufferStamp = Date.now();
 }
 
 function drawNightShade() {
-  if (!nightField || Date.now() - nightFieldStamp > 60000) {recomputeNightField();}
-  const w = width / NIGHT_COLS;
-  const h = height / NIGHT_ROWS;
-  noStroke();
-  for (let i = 0; i < NIGHT_COLS; i++) {
-    const col = nightField[i];
-    for (let j = 0; j < NIGHT_ROWS; j++) {
-      const a = col[j];
-      if (a <= 0.05) {continue;}
-      fill(0, 2, 10, a * 190);
-      rect(i * w, j * h, w + 1, h + 1);
-    }
+  if (!nightBuffer || nightBuffer.width !== width || nightBuffer.height !== height) {
+    nightBuffer = createGraphics(width, height);
+    repaintNightBuffer();
+  } else if (Date.now() - nightBufferStamp > 60000) {
+    repaintNightBuffer();
   }
+  image(nightBuffer, 0, 0);
 }
 
 let issContinentCheckTick = 0;
@@ -473,11 +468,47 @@ function draw() {
     }
   }
 
-  // Update and show particles
-  for (const particle of particles) {
-    particle.update();
-    particle.show();
+  // Per-frame pulse amp (heartbeat) — computed ONCE, read by all batched
+  // particles instead of recomputing 1200 times.
+  const tt = (millis() % 1100) / 1100;
+  const pulseAmp =
+    Math.exp(-Math.pow((tt - 0.06) / 0.08, 2)) +
+    0.6 * Math.exp(-Math.pow((tt - 0.26) / 0.08, 2));
+  window.currentPulseAmp = pulseAmp;
+
+  // Group particles: batched static dots vs individually-drawn dynamics.
+  const staticByContinent = {};
+  const dynamicParticles = [];
+  let issParticle = null;
+  for (const p of particles) {
+    if (p.isIss) {issParticle = p; continue;}
+    if (p.isResetting || p.isMoving) {dynamicParticles.push(p); continue;}
+    const key = p.continent || '_';
+    if (!staticByContinent[key]) {staticByContinent[key] = [];}
+    staticByContinent[key].push(p);
   }
+
+  // Update only what actually moves.
+  for (const p of dynamicParticles) {p.update();}
+  if (issParticle) {issParticle.update();}
+
+  // Batch-draw static coastline dots: one fill() per continent, then all circles.
+  noStroke();
+  for (const continent in staticByContinent) {
+    const list = staticByContinent[continent];
+    const rgb = CONTINENT_PALETTE[continent] || DEFAULT_CONTINENT_COLOR;
+    const isHot = continent === window.currentIssContinent;
+    const alpha = 140 + (isHot ? pulseAmp * 90 : 0);
+    const rBoost = isHot ? (1 + pulseAmp * 0.18) : 1;
+    fill(rgb[0], rgb[1], rgb[2], alpha);
+    for (const p of list) {
+      circle(p.pos.x, p.pos.y, p.r * 2 * rBoost);
+    }
+  }
+
+  // Dynamics & ISS still draw individually (soap-bubble effect, heartbeat ring).
+  for (const p of dynamicParticles) {p.show();}
+  if (issParticle) {issParticle.show();}
 
   // Iconic city markers — minimal until the ISS approaches.
   drawCities();

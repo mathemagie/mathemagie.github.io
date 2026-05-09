@@ -346,3 +346,5 @@ class Particle {
 
 // Export for use in main application
 window.Particle = Particle;
+window.CONTINENT_PALETTE = CONTINENT_PALETTE;
+window.DEFAULT_CONTINENT_COLOR = DEFAULT_CONTINENT_COLOR;
