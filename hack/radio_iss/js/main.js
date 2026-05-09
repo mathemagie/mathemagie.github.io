@@ -54,6 +54,58 @@ function recomputeCentroids() {
   }
 }
 
+// Day/night shading — Maeda Law #6 + #10. Cached every 60s, drawn every frame.
+let nightField = null;
+let nightFieldStamp = 0;
+const NIGHT_COLS = 80;
+const NIGHT_ROWS = 40;
+
+function recomputeNightField() {
+  const now = new Date();
+  const start = new Date(now.getFullYear(), 0, 0);
+  const dayOfYear = Math.floor((now - start) / 86400000);
+  const declR = (23.45 * Math.sin(2 * Math.PI * (dayOfYear - 81) / 365)) * Math.PI / 180;
+  const utcH = now.getUTCHours() + now.getUTCMinutes() / 60 + now.getUTCSeconds() / 3600;
+  const subR = ((12 - utcH) * 15) * Math.PI / 180;
+  const sinD = Math.sin(declR);
+  const cosD = Math.cos(declR);
+
+  if (!nightField) {
+    nightField = new Array(NIGHT_COLS);
+    for (let i = 0; i < NIGHT_COLS; i++) {nightField[i] = new Float32Array(NIGHT_ROWS);}
+  }
+
+  for (let i = 0; i < NIGHT_COLS; i++) {
+    const lon = -180 + (360 * (i + 0.5) / NIGHT_COLS);
+    const lonR = lon * Math.PI / 180;
+    const cosDH = cosD * Math.cos(lonR - subR);
+    const col = nightField[i];
+    for (let j = 0; j < NIGHT_ROWS; j++) {
+      const lat = 90 - (180 * (j + 0.5) / NIGHT_ROWS);
+      const latR = lat * Math.PI / 180;
+      const cosZ = Math.sin(latR) * sinD + Math.cos(latR) * cosDH;
+      col[j] = cosZ < 0 ? Math.min(1, -cosZ * 1.6) : 0;
+    }
+  }
+  nightFieldStamp = Date.now();
+}
+
+function drawNightShade() {
+  if (!nightField || Date.now() - nightFieldStamp > 60000) {recomputeNightField();}
+  const w = width / NIGHT_COLS;
+  const h = height / NIGHT_ROWS;
+  noStroke();
+  for (let i = 0; i < NIGHT_COLS; i++) {
+    const col = nightField[i];
+    for (let j = 0; j < NIGHT_ROWS; j++) {
+      const a = col[j];
+      if (a <= 0.05) {continue;}
+      fill(0, 2, 10, a * 190);
+      rect(i * w, j * h, w + 1, h + 1);
+    }
+  }
+}
+
 let issContinentCheckTick = 0;
 function updateIssContinent() {
   // Cheap polling: every ~20 frames find which continent has a point closest to the ISS.
@@ -252,13 +304,15 @@ function draw() {
     circle(s.x, s.y, s.r);
   }
 
+  // Day/night terminator — the meaningful "is the ISS in sunlight?" answer.
+  drawNightShade();
+
   // Faint equator — Law #6: a single reference line so the user is never lost.
   stroke(255, 255, 255, 14);
   strokeWeight(1);
   line(0, height / 2, width, height / 2);
   noStroke();
 
-  // Track which continent the ISS is currently above (for the heartbeat pulse).
   updateIssContinent();
 
   // Draw continent outline points as tiny dots (press 'm' to toggle)
@@ -336,13 +390,14 @@ function draw() {
     particle.show();
   }
 
-  // Tiny continent labels — Law #4 (Relate): help the eye recognize the map.
-  noStroke();
-  textSize(10);
-  for (const [name, c] of Object.entries(continentCentroids)) {
-    const isHot = name === window.currentIssContinent;
-    fill(255, 255, 255, isHot ? 140 : 60);
-    text(CONTINENT_LABELS[name] || name, c.x, c.y);
+  // Only label the continent the ISS is over — answer to "where am I?", not decor.
+  const hot = window.currentIssContinent;
+  if (hot && continentCentroids[hot]) {
+    const c = continentCentroids[hot];
+    noStroke();
+    textSize(11);
+    fill(255, 255, 255, 170);
+    text(CONTINENT_LABELS[hot] || hot, c.x, c.y);
   }
 }
 

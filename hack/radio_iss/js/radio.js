@@ -20,9 +20,7 @@ class RadioManager {
     this.issContextOverlay = null;
     this.issLatLonElement = null;
     this.issPlaceElement = null;
-    this.pathTraceToggle = null;
     this.isIssContextVisible = false;
-    this.pathTraceEnabled = false;
     this.lastIssPosition = { lat: 0, lon: 0 };
     this.placeName = null;
     this.geocodeCache = new Map();
@@ -197,26 +195,14 @@ class RadioManager {
     this.issPlaceElement = document.getElementById('iss-place');
     this.issPlaceRow = document.getElementById('iss-place-row');
     this.issCoordsRow = document.getElementById('iss-coords-row');
-    this.pathTraceToggle = document.getElementById('path-trace-toggle');
     this.infoBtn = document.getElementById('info-btn');
 
     this.setupEventListeners();
     this.setStationForRegion('Ocean'); // Initial default
 
-    // Load ISS context visibility preference from localStorage
     const issContextPref = localStorage.getItem('issContextVisible');
     if (issContextPref === 'true') {
       this.showIssContext();
-    }
-
-    // Load path trace preference from localStorage
-    const pathTracePref = localStorage.getItem('pathTraceEnabled');
-    if (pathTracePref === 'true') {
-      this.pathTraceEnabled = true;
-      if (this.pathTraceToggle) {
-        this.pathTraceToggle.textContent = 'Path Trace: ON';
-        this.pathTraceToggle.classList.add('active');
-      }
     }
   }
 
@@ -255,10 +241,6 @@ class RadioManager {
           this.hideIssContext();
         }
       });
-    }
-
-    if (this.pathTraceToggle) {
-      this.pathTraceToggle.addEventListener('click', () => this.togglePathTrace());
     }
 
     [this.radioPlayer, this.radioPlayerB].forEach(p => p && this.wirePlayerEvents(p));
@@ -649,30 +631,6 @@ class RadioManager {
     }
   }
 
-  togglePathTrace() {
-    this.pathTraceEnabled = !this.pathTraceEnabled;
-    localStorage.setItem('pathTraceEnabled', this.pathTraceEnabled.toString());
-
-    if (this.pathTraceToggle) {
-      this.pathTraceToggle.textContent = `Path Trace: ${this.pathTraceEnabled ? 'ON' : 'OFF'}`;
-
-      if (this.pathTraceEnabled) {
-        this.pathTraceToggle.classList.add('active');
-      } else {
-        this.pathTraceToggle.classList.remove('active');
-      }
-    }
-
-    // Notify main app about path trace toggle if needed
-    if (window.geographyManager && typeof window.geographyManager.setPathTraceEnabled === 'function') {
-      window.geographyManager.setPathTraceEnabled(this.pathTraceEnabled);
-    }
-  }
-
-  // Method to be called from help overlay
-  getIssContextToggleHandler() {
-    return () => this.toggleIssContext();
-  }
 }
 
 // Export for use in main application
