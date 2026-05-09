@@ -2,23 +2,39 @@
 /* global createVector, p5, dist, sqrt, map, millis, sin, noStroke, stroke, strokeWeight, fill, noFill, ellipse, red, green, blue, push, pop, translate, TWO_PI, HALF_PI, cos, colorMode, HSB, RGB, line */
 
 // Particle system for 25544.fm (ISS Orbital Radio)
+// Muted, harmonious palette per continent — Maeda Law #1 (Reduce) + #2 (Organize/SLIP).
+// One soft hue per landmass so groups read at a glance, none competes with the red ISS.
+const CONTINENT_PALETTE = {
+  northAmerica: [120, 180, 220], // soft blue
+  southAmerica: [180, 200, 130], // soft sage
+  europe: [200, 160, 220],       // soft mauve
+  africa: [220, 180, 130],       // soft sand
+  asia: [220, 140, 160],         // soft coral
+  oceania: [130, 200, 200]       // soft teal
+};
+const DEFAULT_CONTINENT_COLOR = [140, 180, 210];
+
 class Particle {
-  constructor(x, y, isIss) {
+  constructor(x, y, isIss, continent) {
     this.pos = createVector(x, y);
-    this.originalPos = createVector(x, y); // Store original continent position
+    this.originalPos = createVector(x, y);
     this.isIss = isIss;
-    this.isMoving = isIss; // Only ISS moves initially
+    this.isMoving = isIss;
     this.vel = createVector(0, 0);
-    this.isResetting = false; // Track if particle is resetting to original position
-    this.resetProgress = 0; // Progress of reset animation (0-1)
-    this.baseRadius = this.isIss ? 40 : random(10, 30); // Store base radius for size animation
+    this.isResetting = false;
+    this.resetProgress = 0;
+    this.baseRadius = this.isIss ? 40 : random(8, 22);
+    this.continent = continent || null;
     if (this.isIss) {
       this.target = createVector(x, y);
       this.vel = p5.Vector.random2D().mult(random(1, 3));
     }
     this.r = this.baseRadius;
     this.m = this.r * 0.1;
-    this.color = this.isIss ? color(255, 0, 0) : color(random(255), random(255), random(255));
+    const rgb = this.isIss
+      ? [255, 0, 0]
+      : (CONTINENT_PALETTE[continent] || DEFAULT_CONTINENT_COLOR);
+    this.color = color(rgb[0], rgb[1], rgb[2]);
   }
 
   collides(other) {
@@ -264,10 +280,19 @@ class Particle {
       fill(red(this.color), green(this.color), blue(this.color), 220);
       ellipse(this.pos.x, this.pos.y, drawR * 2);
     } else {
-      // Normal particle rendering - subtle glow when audio is active
       const visualizer = window.audioVisualizer;
+      const isUnderIss = this.continent && this.continent === window.currentIssContinent;
+
+      // Heartbeat-synced pulse for the continent the ISS is currently flying over.
+      let pulseBoost = 0;
+      if (isUnderIss) {
+        const t = (millis() % 1100) / 1100;
+        const p1 = Math.exp(-Math.pow((t - 0.06) / 0.08, 2));
+        const p2 = Math.exp(-Math.pow((t - 0.26) / 0.08, 2));
+        pulseBoost = p1 + 0.6 * p2;
+      }
+
       if (visualizer && visualizer.isActive() && visualizer.currentLevel > 0.1) {
-        // Add subtle audio-reactive glow to particles
         const glowAlpha = visualizer.currentLevel * 60;
         noFill();
         stroke(red(this.color), green(this.color), blue(this.color), glowAlpha);
@@ -276,8 +301,11 @@ class Particle {
         noStroke();
       }
 
-      fill(this.color);
-      ellipse(this.pos.x, this.pos.y, this.r * 2);
+      const baseAlpha = 140;
+      const alpha = baseAlpha + pulseBoost * 90;
+      const r = this.r * (1 + pulseBoost * 0.18);
+      fill(red(this.color), green(this.color), blue(this.color), alpha);
+      ellipse(this.pos.x, this.pos.y, r * 2);
     }
   }
 

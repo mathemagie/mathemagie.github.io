@@ -1,5 +1,5 @@
 /* eslint-env browser */
-/* global setup, draw, windowResized, keyPressed, createCanvas, background, fill, noStroke, circle, text, textSize, key, keyIsPressed, width, height, random, constrain, lerp, dist, cos, sin, TWO_PI, rect, navigator, windowWidth, windowHeight, resizeCanvas, RadioManager, GeographyManager, Particle, AudioVisualizer */
+/* global setup, draw, windowResized, keyPressed, createCanvas, background, fill, noStroke, stroke, strokeWeight, line, circle, text, textSize, key, keyIsPressed, width, height, random, constrain, lerp, dist, cos, sin, TWO_PI, rect, millis, navigator, windowWidth, windowHeight, resizeCanvas, RadioManager, GeographyManager, Particle, AudioVisualizer */
 
 // Main application for 25544.fm (ISS Orbital Radio)
 // Global variables
@@ -31,6 +31,49 @@ function generateStars() {
       twinkle: Math.random() * Math.PI * 2
     });
   }
+}
+
+const CONTINENT_LABELS = {
+  northAmerica: 'north america',
+  southAmerica: 'south america',
+  europe: 'europe',
+  africa: 'africa',
+  asia: 'asia',
+  oceania: 'oceania'
+};
+let continentCentroids = {};
+
+function recomputeCentroids() {
+  continentCentroids = {};
+  if (!window.continentGroups) {return;}
+  for (const [name, points] of Object.entries(window.continentGroups)) {
+    if (!points.length) {continue;}
+    let sx = 0, sy = 0;
+    for (const p of points) { sx += p.x; sy += p.y; }
+    continentCentroids[name] = { x: sx / points.length, y: sy / points.length };
+  }
+}
+
+let issContinentCheckTick = 0;
+function updateIssContinent() {
+  // Cheap polling: every ~20 frames find which continent has a point closest to the ISS.
+  if (issContinentCheckTick++ % 20 !== 0) {return;}
+  const list = window.particles;
+  if (!list || !list.length) {return;}
+  const iss = list[list.length - 1];
+  if (!iss || !iss.isIss) {return;}
+  let best = null;
+  let bestD = Infinity;
+  const points = window.continentPoints || [];
+  for (const p of points) {
+    const dx = p.x - iss.pos.x;
+    const dy = p.y - iss.pos.y;
+    const d = dx * dx + dy * dy;
+    if (d < bestD) { bestD = d; best = p.continent; }
+  }
+  // Only highlight if the ISS is reasonably close (within ~12% of viewport diag).
+  const threshold = Math.pow(Math.min(width, height) * 0.18, 2);
+  window.currentIssContinent = bestD < threshold ? best : null;
 }
 
 function setup() {
@@ -77,6 +120,7 @@ function setup() {
 
   // Generate continent outline points
   geographyManager.generateContinentPoints();
+  recomputeCentroids();
   console.log(`Generated ${window.continentPoints.length} continent points`);
 
   // Create regular particles positioned on continents
@@ -122,9 +166,8 @@ function setup() {
 
       for (let i = 0; i < particlesToCreate; i++) {
         const point = random(continentPoints);
-        particles.push(new Particle(point.x, point.y, false));
+        particles.push(new Particle(point.x, point.y, false, continentName));
 
-        // Store geographic coordinates for this particle
         const geoCoords = geographyManager.xyToLatLon(point.x, point.y);
         particleGeoData.push(geoCoords);
         totalCreated++;
@@ -156,7 +199,10 @@ function windowResized() {
   window.clearTimeout(resizeTimeout);
   resizeTimeout = window.setTimeout(() => {
     const manager = window.geographyManager || geographyManager;
-    if (manager) {manager.repositionParticlesAfterResize();}
+    if (manager) {
+      manager.repositionParticlesAfterResize();
+      recomputeCentroids();
+    }
   }, 150);
 }
 
@@ -189,12 +235,12 @@ function draw() {
     audioVisualizer.update();
   }
 
-  // Background with subtle audio-reactive effect
+  // Deep-space background — slight blue tint reads as orbit, not arcade.
   if (audioVisualizer && audioVisualizer.isActive()) {
     const bassGlow = audioVisualizer.bassLevel * 15;
-    background(bassGlow, 0, bassGlow * 0.3);
+    background(2 + bassGlow, 6, 17 + bassGlow * 0.3);
   } else {
-    background(0);
+    background(2, 6, 17);
   }
 
   // Ambient starfield — Law #6 Context: "nothing is something."
@@ -205,6 +251,15 @@ function draw() {
     fill(200, 220, 255, a);
     circle(s.x, s.y, s.r);
   }
+
+  // Faint equator — Law #6: a single reference line so the user is never lost.
+  stroke(255, 255, 255, 14);
+  strokeWeight(1);
+  line(0, height / 2, width, height / 2);
+  noStroke();
+
+  // Track which continent the ISS is currently above (for the heartbeat pulse).
+  updateIssContinent();
 
   // Draw continent outline points as tiny dots (press 'm' to toggle)
   if (showContinentOutlines && window.continentPoints) {
@@ -281,5 +336,13 @@ function draw() {
     particle.show();
   }
 
+  // Tiny continent labels — Law #4 (Relate): help the eye recognize the map.
+  noStroke();
+  textSize(10);
+  for (const [name, c] of Object.entries(continentCentroids)) {
+    const isHot = name === window.currentIssContinent;
+    fill(255, 255, 255, isHot ? 140 : 60);
+    text(CONTINENT_LABELS[name] || name, c.x, c.y);
+  }
 }
 
