@@ -12,7 +12,7 @@ function isMobileDevice() {
          window.innerWidth <= 768;
 }
 
-const numParticles = isMobileDevice() ? 280 : 600;
+const numParticles = isMobileDevice() ? 500 : 1200;
 let particleGeoData = [];
 let radioManager;
 let geographyManager;
@@ -454,10 +454,22 @@ function draw() {
     text('Press M to toggle outlines', debugInfoX, currentY);
   }
 
-  // Handle collisions
-  for (let i = 0; i < particles.length; i++) {
-    for (let j = i + 1; j < particles.length; j++) {
-      particles[i].collides(particles[j]);
+  // Collisions: only ISS-vs-others (for the bubble reset effect) plus
+  // moving-vs-moving among non-ISS particles. Static-vs-static is a no-op,
+  // so skipping it cuts the cost from O(n²) to roughly O(n).
+  const iss = particles[particles.length - 1];
+  if (iss && iss.isIss) {
+    for (let i = 0; i < particles.length - 1; i++) {
+      iss.collides(particles[i]);
+    }
+  }
+  const moving = [];
+  for (const p of particles) {
+    if (!p.isIss && p.isMoving && !p.isResetting) {moving.push(p);}
+  }
+  for (let i = 0; i < moving.length; i++) {
+    for (let j = i + 1; j < moving.length; j++) {
+      moving[i].collides(moving[j]);
     }
   }
 
