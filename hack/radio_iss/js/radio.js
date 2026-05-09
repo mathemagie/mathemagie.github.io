@@ -1,5 +1,5 @@
 /* eslint-env browser */
-/* global localStorage, performance, requestAnimationFrame */
+/* global localStorage, performance, requestAnimationFrame, setInterval, clearInterval, setTimeout, fetch */
 
 // Radio functionality for 25544.fm (ISS Orbital Radio)
 class RadioManager {
@@ -27,6 +27,9 @@ class RadioManager {
     this.placeName = null;
     this.geocodeCache = new Map();
     this.lastGeocodeKey = null;
+    this.currentStation = null;
+    this.nowPlaying = null;
+    this.nowPlayingTimer = null;
 
     this.regionStations = {
       // Americas (6 regions)
@@ -192,6 +195,8 @@ class RadioManager {
     this.issContextOverlay = document.getElementById('iss-context-overlay');
     this.issLatLonElement = document.getElementById('iss-lat-lon');
     this.issPlaceElement = document.getElementById('iss-place');
+    this.issPlaceRow = document.getElementById('iss-place-row');
+    this.issCoordsRow = document.getElementById('iss-coords-row');
     this.pathTraceToggle = document.getElementById('path-trace-toggle');
     this.infoBtn = document.getElementById('info-btn');
 
@@ -227,6 +232,14 @@ class RadioManager {
 
     if (this.infoBtn) {
       this.infoBtn.addEventListener('click', () => this.toggleIssContext());
+    }
+
+    if (this.issPlaceRow) {
+      this.issPlaceRow.addEventListener('click', () => {
+        const wasHidden = this.issCoordsRow.hidden;
+        this.issCoordsRow.hidden = !wasHidden;
+        this.issPlaceRow.setAttribute('aria-expanded', wasHidden ? 'true' : 'false');
+      });
     }
 
     // ISS Context overlay event listeners
@@ -338,8 +351,10 @@ class RadioManager {
     const currentSrc = currentPlayer.currentSrc || currentPlayer.src;
     const isDifferent = !currentSrc || !currentSrc.includes(newSrc);
 
-    // Update label with compact format
-    this.stationLabel.textContent = `Over ${region} • ${station.name}`;
+    this.currentRegion = region;
+    this.currentStation = station;
+    this.renderStationLabel();
+    this.startNowPlayingPolling(station);
     if (!isDifferent) {return;}
 
     if (wasPlaying && this.radioPlayerB) {
@@ -408,10 +423,52 @@ class RadioManager {
         this.geocodeCache.delete(this.geocodeCache.keys().next().value);
       }
       this.updateIssContextData();
+      this.renderStationLabel();
     } catch {
       this.placeName = this.currentRegion || 'unknown';
       this.updateIssContextData();
     }
+  }
+
+  // Best-known location for the radio label: prefer geocoded place, fall back to region.
+  bestLocationName() {
+    if (this.placeName && this.placeName !== 'unknown') {return this.placeName;}
+    return this.currentRegion || 'Ocean';
+  }
+
+  renderStationLabel() {
+    if (!this.stationLabel || !this.currentStation) {return;}
+    const where = this.bestLocationName();
+    const what = this.nowPlaying || this.currentStation.name;
+    this.stationLabel.textContent = `Over ${where} • ${what}`;
+  }
+
+  // Poll now-playing metadata. Currently supports SomaFM via their per-channel JSON endpoint.
+  startNowPlayingPolling(station) {
+    if (this.nowPlayingTimer) {
+      clearInterval(this.nowPlayingTimer);
+      this.nowPlayingTimer = null;
+    }
+    this.nowPlaying = null;
+
+    const m = station.url.match(/somafm\.com\/([a-z0-9]+)-/i);
+    if (!m) {return;}
+    const channel = m[1].toLowerCase();
+
+    const fetchNow = async () => {
+      try {
+        const r = await fetch(`https://somafm.com/songs/${channel}.json`);
+        if (!r.ok) {return;}
+        const data = await r.json();
+        const song = data.songs && data.songs[0];
+        if (song && song.title && song.artist) {
+          this.nowPlaying = `${song.artist} — ${song.title}`;
+          this.renderStationLabel();
+        }
+      } catch { /* network blip — keep last value */ }
+    };
+    fetchNow();
+    this.nowPlayingTimer = setInterval(fetchNow, 30000);
   }
 
   // Crossfade between stations

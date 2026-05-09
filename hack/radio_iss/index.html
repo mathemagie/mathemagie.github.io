@@ -36,8 +36,8 @@
   <meta http-equiv="Pragma" content="no-cache">
   <meta http-equiv="Expires" content="0">
 
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/p5.js/1.4.0/p5.js?v=simplify3"></script>
-  <link rel="stylesheet" href="css/styles.css?v=simplify3">
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/p5.js/1.4.0/p5.js?v=simplify5"></script>
+  <link rel="stylesheet" href="css/styles.css?v=simplify5">
   <!-- Version: simplify pass 1 -->
 </head>
 <body>
@@ -59,19 +59,23 @@
       <button class="iss-context-close" type="button" aria-label="Close ISS context overlay">×</button>
     </div>
     <div class="iss-context-content">
-      <div class="iss-context-item">
-        <span class="iss-context-label">Over:</span>
-        <span class="iss-context-value" id="iss-place">Loading…</span>
+      <button class="iss-context-place" id="iss-place-row" type="button" aria-expanded="false">
+        <span class="iss-context-label">Over</span>
+        <span class="iss-context-value" id="iss-place">locating…</span>
+      </button>
+      <div class="iss-context-item iss-context-coords" id="iss-coords-row" hidden>
+        <span class="iss-context-label">Position</span>
+        <span class="iss-context-value" id="iss-lat-lon">—</span>
       </div>
-      <div class="iss-context-item">
-        <span class="iss-context-label">Position:</span>
-        <span class="iss-context-value" id="iss-lat-lon">Loading…</span>
-      </div>
-      <div class="iss-context-controls">
+      <details class="iss-context-controls">
+        <summary>Settings</summary>
         <button class="iss-context-toggle" id="path-trace-toggle" type="button">Path Trace: OFF</button>
-      </div>
+      </details>
     </div>
   </div>
+
+  <!-- Brand watermark -->
+  <div class="brand" aria-hidden="true">25544.fm</div>
 
   <!-- Fullscreen button positioned in bottom right -->
   <button id="fullscreen-btn" type="button" class="fullscreen-btn-floating" aria-pressed="false" aria-label="Toggle fullscreen">
@@ -79,11 +83,11 @@
       <span></span><span></span><span></span><span></span>
     </span>
   </button>
-  <script src="js/particles.js?v=simplify3"></script>
-  <script src="js/radio.js?v=simplify3"></script>
-  <script src="js/geography.js?v=simplify3"></script>
-  <script src="js/visualizer.js?v=simplify3"></script>
-  <script src="js/main.js?v=simplify3"></script>
+  <script src="js/particles.js?v=simplify5"></script>
+  <script src="js/radio.js?v=simplify5"></script>
+  <script src="js/geography.js?v=simplify5"></script>
+  <script src="js/visualizer.js?v=simplify5"></script>
+  <script src="js/main.js?v=simplify5"></script>
 </body>
 </html>
 

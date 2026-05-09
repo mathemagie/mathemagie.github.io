@@ -21,7 +21,7 @@ let showContinentOutlines = false;
 let stars = [];
 
 function generateStars() {
-  const count = isMobileDevice() ? 80 : 180;
+  const count = isMobileDevice() ? 40 : 80;
   stars = [];
   for (let i = 0; i < count; i++) {
     stars.push({
