@@ -12,7 +12,7 @@ function isMobileDevice() {
          window.innerWidth <= 768;
 }
 
-const numParticles = isMobileDevice() ? 75 : 150;
+const numParticles = isMobileDevice() ? 180 : 360;
 let particleGeoData = [];
 let radioManager;
 let geographyManager;
