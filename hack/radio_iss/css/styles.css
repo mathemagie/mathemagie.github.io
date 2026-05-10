@@ -210,6 +210,11 @@ body {
   }
 }
 
+/* Hide fullscreen button while in fullscreen mode */
+:fullscreen .fullscreen-btn-floating { display: none !important; }
+:-webkit-full-screen .fullscreen-btn-floating { display: none !important; }
+body.is-fullscreen .fullscreen-btn-floating { display: none !important; }
+
 .play-btn {
   width: 32px;
   height: 32px;
