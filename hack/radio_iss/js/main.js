@@ -498,11 +498,10 @@ function draw() {
     const list = staticByContinent[continent];
     const rgb = CONTINENT_PALETTE[continent] || DEFAULT_CONTINENT_COLOR;
     const isHot = continent === window.currentIssContinent;
-    const alpha = 140 + (isHot ? pulseAmp * 90 : 0);
-    const rBoost = isHot ? (1 + pulseAmp * 0.18) : 1;
+    const alpha = isHot ? 220 : 140;
     fill(rgb[0], rgb[1], rgb[2], alpha);
     for (const p of list) {
-      circle(p.pos.x, p.pos.y, p.r * 2 * rBoost);
+      circle(p.pos.x, p.pos.y, p.r * 2);
     }
   }
 
