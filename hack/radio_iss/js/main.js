@@ -88,23 +88,6 @@ const ICONIC_CITIES = [
   { name: 'Dubai', lat: 25.20, lon: 55.27 }
 ];
 
-function drawGraticule() {
-  // Five reference lines: prime meridian, ±90° meridians, two tropics. All ghostly.
-  stroke(255, 255, 255, 14);
-  strokeWeight(1);
-  // Prime meridian (lon 0)
-  const x0 = width * 0.5;
-  line(x0, 0, x0, height);
-  // ±90° meridians
-  line(width * 0.25, 0, width * 0.25, height);
-  line(width * 0.75, 0, width * 0.75, height);
-  // Equator already drawn elsewhere; tropics:
-  const tropicY = (lat) => (90 - lat) / 180 * height;
-  line(0, tropicY(23.4), width, tropicY(23.4));
-  line(0, tropicY(-23.4), width, tropicY(-23.4));
-  noStroke();
-}
-
 function drawCities() {
   if (!geographyManager) {return;}
   const issList = window.particles;
@@ -382,9 +365,6 @@ function draw() {
 
   // Day/night terminator — the meaningful "is the ISS in sunlight?" answer.
   drawNightShade();
-
-  // Ghostly graticule for spatial reference (Law #6 Context).
-  drawGraticule();
 
   updateIssContinent();
 

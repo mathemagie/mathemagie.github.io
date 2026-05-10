@@ -257,9 +257,15 @@ class Particle {
       }
       this.lastBeatLevel = beatLevel;
 
+      // Persistent halo so the ISS stays findable in the field of dots
+      // (Law #5: keep the one rich element legible).
+      noFill();
+      stroke(255, 70, 70, 80);
+      strokeWeight(1);
+      ellipse(this.pos.x, this.pos.y, drawR * 4.4);
+
       // Render rings oldest-first; cull expired.
       this.sonarRings = this.sonarRings.filter(ring => now - ring.t0 < RING_LIFE);
-      noFill();
       for (const ring of this.sonarRings) {
         const k = (now - ring.t0) / RING_LIFE; // 0 → 1
         const radius = drawR * (1.4 + k * 3.6);
