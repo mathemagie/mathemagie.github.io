@@ -109,8 +109,9 @@ function drawCities() {
   if (!geographyManager) {return;}
   const issList = window.particles;
   const iss = issList && issList.length ? issList[issList.length - 1] : null;
-  const issX = iss && iss.isIss ? iss.pos.x : -1e9;
-  const issY = iss && iss.isIss ? iss.pos.y : -1e9;
+  const issVisible = iss && iss.isIss && geographyManager.issLocated;
+  const issX = issVisible ? iss.pos.x : -1e9;
+  const issY = issVisible ? iss.pos.y : -1e9;
   const proximityPx = Math.min(width, height) * 0.08;
 
   for (const c of ICONIC_CITIES) {
@@ -453,7 +454,7 @@ function draw() {
   // moving-vs-moving among non-ISS particles. Static-vs-static is a no-op,
   // so skipping it cuts the cost from O(n²) to roughly O(n).
   const iss = particles[particles.length - 1];
-  if (iss && iss.isIss) {
+  if (iss && iss.isIss && geographyManager.issLocated) {
     for (let i = 0; i < particles.length - 1; i++) {
       iss.collides(particles[i]);
     }
@@ -490,7 +491,7 @@ function draw() {
 
   // Update only what actually moves.
   for (const p of dynamicParticles) {p.update();}
-  if (issParticle) {issParticle.update();}
+  if (issParticle && geographyManager.issLocated) {issParticle.update();}
 
   // Batch-draw static coastline dots: one fill() per continent, then all circles.
   noStroke();
@@ -507,7 +508,7 @@ function draw() {
 
   // Dynamics & ISS still draw individually (soap-bubble effect, heartbeat ring).
   for (const p of dynamicParticles) {p.show();}
-  if (issParticle) {issParticle.show();}
+  if (issParticle && geographyManager.issLocated) {issParticle.show();}
 
   // Iconic city markers — minimal until the ISS approaches.
   drawCities();

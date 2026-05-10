@@ -20,6 +20,7 @@ function continentForLatLon(lat, lon) {
 class GeographyManager {
   constructor() {
     this.issGeoData = { lat: 0, lon: 0 }; // Current ISS geographic coordinates
+    this.issLocated = false; // True once we've placed the ISS at a real position
     this.simulateMode = false;
     this.simIndex = 0;
     this.simTrack = [
@@ -393,10 +394,16 @@ class GeographyManager {
           const x = map(lon, -180, 180, 0, width);
           const y = map(lat, 90, -90, 0, height);
 
-          // Update ISS particle target
+          // Update ISS particle target — snap on first fix so it appears
+          // at its real location instead of drifting in from center.
           const issParticle = window.particles[window.particles.length - 1];
           if (issParticle && issParticle.isIss) {
             issParticle.target.set(x, y);
+            if (!this.issLocated) {
+              issParticle.pos.set(x, y);
+              issParticle.vel.set(0, 0);
+              this.issLocated = true;
+            }
           }
 
           radioManager.updateRadioForLocation(lat, lon);
@@ -420,10 +427,15 @@ class GeographyManager {
       const x = map(lon, -180, 180, 0, width);
       const y = map(lat, 90, -90, 0, height);
 
-      // Update ISS particle target
+      // Update ISS particle target — snap on first fix in sim mode too.
       const issParticle = window.particles[window.particles.length - 1];
       if (issParticle && issParticle.isIss) {
         issParticle.target.set(x, y);
+        if (!this.issLocated) {
+          issParticle.pos.set(x, y);
+          issParticle.vel.set(0, 0);
+          this.issLocated = true;
+        }
       }
 
       radioManager.updateRadioForLocation(lat, lon);

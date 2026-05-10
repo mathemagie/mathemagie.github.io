@@ -23,11 +23,14 @@ class Particle {
     this.vel = createVector(0, 0);
     this.isResetting = false;
     this.resetProgress = 0;
-    this.baseRadius = this.isIss ? 40 : random(2.5, 5.5);
+    this.baseRadius = this.isIss ? 7 : random(2.5, 5.5);
     this.continent = continent || null;
     if (this.isIss) {
       this.target = createVector(x, y);
       this.vel = p5.Vector.random2D().mult(random(1, 3));
+      // Sonar-ping state: rings spawned on rising audio beats.
+      this.sonarRings = [];
+      this.lastBeatLevel = 0;
     }
     this.r = this.baseRadius;
     this.m = this.r * 0.1;
@@ -238,44 +241,40 @@ class Particle {
       fill(255, 255, 255, highlightAlpha * 0.7);
       ellipse(this.pos.x + this.r * 0.3, this.pos.y + this.r * 0.1, this.r * 0.2);
     } else if (this.isIss) {
-      // Get audio visualizer data if available
       const visualizer = window.audioVisualizer;
       const hasAudio = visualizer && visualizer.isActive();
+      const drawR = this.baseRadius;
 
-      // Heartbeat visual for ISS (double-beat pulse)
-      // When audio is active, sync with beat detection
-      let amp;
-      if (hasAudio && visualizer.beatIntensity > 0.1) {
-        // Use beat intensity for pulse when music is playing
-        amp = visualizer.beatIntensity * 1.5;
-      } else {
-        // Default heartbeat animation
-        const periodMs = 1100;
-        const t = (millis() % periodMs) / periodMs;
-        const pulse1 = Math.exp(-Math.pow((t - 0.06) / 0.06, 2));
-        const pulse2 = Math.exp(-Math.pow((t - 0.26) / 0.06, 2));
-        amp = pulse1 + 0.75 * pulse2;
+      // Sonar ping: rising-edge beat detection spawns one expanding ring.
+      // The music animates the ISS — no fake heartbeat.
+      const now = millis();
+      const BEAT_THRESHOLD = 0.42;
+      const RING_LIFE = 720;
+      const beatLevel = hasAudio ? visualizer.beatIntensity : 0;
+      if (beatLevel > BEAT_THRESHOLD && this.lastBeatLevel <= BEAT_THRESHOLD) {
+        this.sonarRings.push({ t0: now });
+        if (this.sonarRings.length > 3) {this.sonarRings.shift();}
+      }
+      this.lastBeatLevel = beatLevel;
+
+      // Render rings oldest-first; cull expired.
+      this.sonarRings = this.sonarRings.filter(ring => now - ring.t0 < RING_LIFE);
+      noFill();
+      for (const ring of this.sonarRings) {
+        const k = (now - ring.t0) / RING_LIFE; // 0 → 1
+        const radius = drawR * (1.4 + k * 3.6);
+        const alpha = 200 * (1 - k) * (1 - k); // ease-out fade
+        stroke(255, 70, 70, alpha);
+        strokeWeight(2);
+        ellipse(this.pos.x, this.pos.y, radius * 2);
       }
 
-      const drawR = this.baseRadius * (1 + 0.22 * amp);
-
-      // Audio visualization: frequency spectrum around ISS
+      // Frequency bars (kept — separate audio data, low-noise).
       if (hasAudio) {
         this.drawAudioSpectrum(visualizer, drawR);
       }
 
-      // Outer glow rings - enhanced with audio
-      const baseAlpha = 180;
-      const audioBoost = hasAudio ? (1 + visualizer.currentLevel * 0.5) : 1;
-      noFill();
-      stroke(255, 70, 70, baseAlpha * 0.35 * (0.6 + 0.4 * amp) * audioBoost);
-      strokeWeight(3);
-      ellipse(this.pos.x, this.pos.y, drawR * 2.6);
-      stroke(255, 70, 70, baseAlpha * 0.25 * (0.6 + 0.4 * amp) * audioBoost);
-      strokeWeight(6);
-      ellipse(this.pos.x, this.pos.y, drawR * 3.2);
-
-      // Core
+      // Still red dot — the quiet anchor.
       noStroke();
       fill(red(this.color), green(this.color), blue(this.color), 220);
       ellipse(this.pos.x, this.pos.y, drawR * 2);
