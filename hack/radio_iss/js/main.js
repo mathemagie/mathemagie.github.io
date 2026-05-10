@@ -233,11 +233,10 @@ function setup() {
 
   buildContinentParticles();
 
-  // Create ISS particle
+  // Create ISS particle (hidden until first real fix; see geography.issLocated)
   const iss = new Particle(width / 2, height / 2, true);
   particles.push(iss);
 
-  geographyManager.issGeoData = geographyManager.xyToLatLon(width / 2, height / 2);
   geographyManager.initTracking(radioManager);
 
   // Asynchronously upgrade to real Natural Earth coastlines.
