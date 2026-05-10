@@ -1,0 +1,696 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate" />
+<meta http-equiv="Pragma" content="no-cache" />
+<meta http-equiv="Expires" content="0" />
+<title>Rotary Phone × Raspberry Pi — Physical Computing Explainer</title>
+<style>
+  :root {
+    --bg: #f4efe6;
+    --ink: #1a1a1a;
+    --muted: #6b6358;
+    --accent: #c2410c;
+    --accent-2: #1e40af;
+    --paper: #fffaf0;
+    --rule: #d9d0bf;
+    --code-bg: #1a1a1a;
+    --code-ink: #f4efe6;
+  }
+  * { box-sizing: border-box; }
+  html, body { margin: 0; padding: 0; }
+  body {
+    font-family: "Iowan Old Style", "Palatino Linotype", Palatino, Georgia, serif;
+    background: var(--bg);
+    color: var(--ink);
+    line-height: 1.55;
+    font-size: 17px;
+  }
+  .wrap { max-width: 780px; margin: 0 auto; padding: 56px 28px 96px; }
+
+  header.hero {
+    border-top: 4px double var(--ink);
+    border-bottom: 1px solid var(--ink);
+    padding: 28px 0 24px;
+    margin-bottom: 36px;
+  }
+  .kicker {
+    font-family: ui-monospace, "SF Mono", Menlo, monospace;
+    font-size: 11px;
+    letter-spacing: .22em;
+    text-transform: uppercase;
+    color: var(--accent);
+    margin-bottom: 12px;
+  }
+  h1 {
+    font-size: 44px;
+    line-height: 1.05;
+    margin: 0 0 12px;
+    letter-spacing: -0.02em;
+  }
+  .dek { color: var(--muted); font-style: italic; font-size: 19px; margin: 0; }
+  .meta {
+    margin-top: 20px;
+    font-family: ui-monospace, "SF Mono", Menlo, monospace;
+    font-size: 11px;
+    letter-spacing: .12em;
+    color: var(--muted);
+    display: flex;
+    gap: 20px;
+    flex-wrap: wrap;
+  }
+
+  h2 {
+    font-size: 13px;
+    letter-spacing: .25em;
+    text-transform: uppercase;
+    font-family: ui-monospace, "SF Mono", Menlo, monospace;
+    color: var(--accent);
+    margin: 56px 0 14px;
+    padding-bottom: 8px;
+    border-bottom: 1px solid var(--rule);
+  }
+  h3 {
+    font-size: 22px;
+    margin: 28px 0 8px;
+    letter-spacing: -0.01em;
+  }
+  p { margin: 0 0 14px; }
+  p + p { text-indent: 1.4em; margin-top: -10px; }
+
+  .lede::first-letter {
+    font-size: 56px;
+    float: left;
+    line-height: 0.9;
+    padding: 6px 8px 0 0;
+    font-weight: 700;
+    color: var(--accent);
+  }
+
+  /* Pull-quote / mental model */
+  aside.aside {
+    background: var(--paper);
+    border-left: 3px solid var(--accent);
+    padding: 16px 20px;
+    margin: 24px 0;
+    font-size: 16px;
+  }
+  aside.aside .label {
+    font-family: ui-monospace, "SF Mono", Menlo, monospace;
+    font-size: 10px;
+    letter-spacing: .22em;
+    text-transform: uppercase;
+    color: var(--accent);
+    margin-bottom: 6px;
+    display: block;
+  }
+
+  /* Diagram card */
+  figure {
+    margin: 28px 0;
+    border: 1px solid var(--rule);
+    background: var(--paper);
+    padding: 20px;
+    border-radius: 2px;
+  }
+  figcaption {
+    font-family: ui-monospace, "SF Mono", Menlo, monospace;
+    font-size: 11px;
+    letter-spacing: .12em;
+    color: var(--muted);
+    margin-top: 12px;
+    text-align: center;
+  }
+  svg { display: block; margin: 0 auto; max-width: 100%; height: auto; }
+
+  /* GPIO pin diagram */
+  .pin-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-family: ui-monospace, "SF Mono", Menlo, monospace;
+    font-size: 13px;
+    margin: 16px 0;
+  }
+  .pin-table th, .pin-table td {
+    text-align: left;
+    padding: 8px 10px;
+    border-bottom: 1px solid var(--rule);
+  }
+  .pin-table th {
+    text-transform: uppercase;
+    letter-spacing: .14em;
+    font-size: 10px;
+    color: var(--muted);
+  }
+  .pin-table td:first-child { color: var(--accent); font-weight: 600; }
+
+  /* Code block */
+  pre {
+    background: var(--code-bg);
+    color: var(--code-ink);
+    padding: 18px 20px;
+    overflow-x: auto;
+    font-family: ui-monospace, "SF Mono", Menlo, monospace;
+    font-size: 13.5px;
+    line-height: 1.5;
+    border-radius: 2px;
+    margin: 16px 0;
+  }
+  pre .c { color: #8a8175; font-style: italic; }
+  pre .k { color: #f59e0b; }
+  pre .s { color: #a3e635; }
+  pre .n { color: #60a5fa; }
+  code:not(pre code) {
+    background: var(--paper);
+    padding: 1px 5px;
+    border: 1px solid var(--rule);
+    font-family: ui-monospace, "SF Mono", Menlo, monospace;
+    font-size: 0.88em;
+    border-radius: 2px;
+  }
+
+  /* Step list */
+  ol.steps { list-style: none; padding: 0; margin: 16px 0; counter-reset: s; }
+  ol.steps li {
+    counter-increment: s;
+    padding: 12px 0 12px 48px;
+    position: relative;
+    border-bottom: 1px dashed var(--rule);
+  }
+  ol.steps li::before {
+    content: counter(s, decimal-leading-zero);
+    position: absolute;
+    left: 0; top: 12px;
+    font-family: ui-monospace, "SF Mono", Menlo, monospace;
+    font-size: 11px;
+    letter-spacing: .1em;
+    color: var(--accent);
+    background: var(--paper);
+    border: 1px solid var(--accent);
+    padding: 2px 8px;
+    border-radius: 2px;
+  }
+
+  /* Two column for dial 01 / 02 */
+  .two-col {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 16px;
+    margin: 20px 0;
+  }
+  .two-col .card {
+    background: var(--paper);
+    border: 1px solid var(--rule);
+    padding: 18px;
+    border-radius: 2px;
+  }
+  .two-col .card h4 {
+    margin: 0 0 8px;
+    font-family: ui-monospace, "SF Mono", Menlo, monospace;
+    font-size: 12px;
+    letter-spacing: .2em;
+    text-transform: uppercase;
+    color: var(--accent-2);
+  }
+  .two-col .card .num {
+    font-size: 56px;
+    font-weight: 700;
+    line-height: 1;
+    letter-spacing: -0.04em;
+    color: var(--ink);
+    font-family: "Iowan Old Style", Georgia, serif;
+  }
+  @media (max-width: 600px) {
+    .two-col { grid-template-columns: 1fr; }
+    h1 { font-size: 34px; }
+  }
+
+  footer {
+    margin-top: 64px;
+    padding-top: 20px;
+    border-top: 1px solid var(--rule);
+    font-family: ui-monospace, "SF Mono", Menlo, monospace;
+    font-size: 11px;
+    color: var(--muted);
+    letter-spacing: .1em;
+  }
+
+  /* ---- Animations ---- */
+
+  /* Spinning dial (hero diagram) */
+  @keyframes dial-spin {
+    0%   { transform: rotate(0deg); }
+    35%  { transform: rotate(180deg); animation-timing-function: cubic-bezier(.2,.8,.2,1); }
+    100% { transform: rotate(0deg); }
+  }
+  #dial-rotor {
+    transform-origin: 130px 140px;
+    animation: dial-spin 4s ease-in-out infinite;
+  }
+  /* Pulses traveling along wires */
+  @keyframes pulse-travel {
+    0%   { offset-distance: 0%;   opacity: 0; }
+    8%   { opacity: 1; }
+    92%  { opacity: 1; }
+    100% { offset-distance: 100%; opacity: 0; }
+  }
+  .pulse-dot {
+    offset-rotate: 0deg;
+    animation: pulse-travel 1.6s linear infinite;
+  }
+  .pulse-dot.delay-1 { animation-delay: .2s; }
+  .pulse-dot.delay-2 { animation-delay: .4s; }
+  .pulse-dot.delay-3 { animation-delay: .6s; }
+
+  /* Speaker waves */
+  @keyframes wave-out {
+    0%   { transform: scale(.8); opacity: 0; }
+    30%  { opacity: .9; }
+    100% { transform: scale(1.6); opacity: 0; }
+  }
+  .speaker-wave {
+    transform-origin: 632px 144px;
+    animation: wave-out 1.6s ease-out infinite;
+  }
+  .speaker-wave.w2 { animation-delay: .53s; }
+  .speaker-wave.w3 { animation-delay: 1.06s; }
+
+  /* Pi modules light up sequentially */
+  @keyframes module-flash {
+    0%, 100% { fill: #f4efe6; }
+    50%      { fill: #fbbf24; }
+  }
+  .pi-module { animation: module-flash 4s linear infinite; }
+  .pi-module.m2 { animation-delay: .8s; }
+  .pi-module.m3 { animation-delay: 1.6s; }
+  .pi-module.m4 { animation-delay: 2.4s; }
+  .pi-module.m5 { animation-delay: 3.2s; }
+
+  /* Live oscilloscope sweep */
+  @keyframes scope-sweep {
+    0%   { transform: translateX(0); }
+    100% { transform: translateX(-300px); }
+  }
+  #scope-train { animation: scope-sweep 6s linear infinite; }
+  @keyframes scope-glow {
+    0%, 100% { opacity: .55; }
+    50%      { opacity: 1; }
+  }
+  #scope-line { animation: scope-glow 2s ease-in-out infinite; }
+
+  /* Interactive demo */
+  .demo {
+    background: var(--paper);
+    border: 1px solid var(--rule);
+    padding: 22px;
+    border-radius: 2px;
+    margin: 24px 0;
+  }
+  .demo h4 {
+    margin: 0 0 14px;
+    font-family: ui-monospace, "SF Mono", Menlo, monospace;
+    font-size: 12px;
+    letter-spacing: .2em;
+    text-transform: uppercase;
+    color: var(--accent-2);
+  }
+  .demo-stage {
+    display: grid;
+    grid-template-columns: 140px 1fr;
+    gap: 20px;
+    align-items: center;
+  }
+  @media (max-width: 600px) {
+    .demo-stage { grid-template-columns: 1fr; }
+  }
+  .demo-buttons {
+    display: flex;
+    gap: 10px;
+    flex-wrap: wrap;
+    margin-top: 14px;
+  }
+  .demo-btn {
+    font-family: "Iowan Old Style", Georgia, serif;
+    font-size: 26px;
+    font-weight: 700;
+    background: var(--bg);
+    border: 2px solid var(--ink);
+    color: var(--ink);
+    padding: 10px 22px;
+    border-radius: 2px;
+    cursor: pointer;
+    letter-spacing: -0.02em;
+    transition: transform .15s ease, background .15s ease;
+  }
+  .demo-btn:hover { background: var(--accent); color: var(--paper); transform: translateY(-2px); }
+  .demo-btn:active { transform: translateY(0); }
+  .demo-readout {
+    font-family: ui-monospace, "SF Mono", Menlo, monospace;
+    font-size: 12px;
+    color: var(--muted);
+    background: var(--code-bg);
+    color: var(--code-ink);
+    padding: 12px 14px;
+    border-radius: 2px;
+    min-height: 64px;
+    margin-top: 14px;
+    white-space: pre-wrap;
+    line-height: 1.6;
+  }
+  .demo-readout .ok { color: #a3e635; }
+  .demo-readout .blue { color: #60a5fa; }
+  .demo-readout .red { color: #fb923c; }
+
+  .demo-dial {
+    width: 130px; height: 130px;
+    border-radius: 50%;
+    border: 4px solid var(--ink);
+    background: radial-gradient(circle at 50% 50%, #fffaf0 0 56%, #d9d0bf 56% 60%, #fffaf0 60%);
+    position: relative;
+    transition: transform 1.4s cubic-bezier(.2,.8,.2,1);
+    margin: 0 auto;
+  }
+  .demo-dial::after {
+    content: "";
+    position: absolute;
+    width: 14px; height: 14px;
+    background: var(--accent);
+    border-radius: 50%;
+    top: 12px; left: 50%;
+    transform: translateX(-50%);
+  }
+  .demo-dial.spin-0 { transform: rotate(300deg); }
+  .demo-dial.spin-1 { transform: rotate(30deg); }
+  .demo-dial.spin-2 { transform: rotate(60deg); }
+
+  /* Reduced motion */
+  @media (prefers-reduced-motion: reduce) {
+    #dial-rotor, .pulse-dot, .speaker-wave, .pi-module,
+    #scope-train, #scope-line { animation: none !important; }
+    .demo-dial { transition: none; }
+  }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+<header class="hero">
+  <div class="kicker">Concept explainer · Physical computing</div>
+  <h1>Dialing the past into the present</h1>
+  <p class="dek">A rotary phone, a Raspberry Pi, and two numbers — <b>01</b> plays a sound, <b>02</b> opens a stream. Here's how the wires, pulses, and code conspire.</p>
+  <div class="meta">
+    <span>~7 min read</span>
+    <span>Hardware + Python</span>
+    <span>Rev. 2026-05-10</span>
+  </div>
+</header>
+
+<p class="lede">A rotary phone doesn't speak USB. It speaks <em>pulses</em>. When you spin the dial to <b>3</b> and let it return, the receiver clicks the line three times — open, close, open, close, open, close. That tiny rhythm is all you need. The Raspberry Pi listens to those clicks on a GPIO pin, counts them, and decides what to do. Dial <b>01</b>, hear a recorded voice. Dial <b>02</b>, fall into a live audio stream. The phone becomes a remote for invisible things.</p>
+
+<aside class="aside">
+  <span class="label">Mental model</span>
+  The phone is a <b>switch that blinks Morse code in your hand</b>. The Pi is a <b>patient ear</b>: it counts blinks per dial, and once you hang up the receiver, the number is "submitted" — like pressing Enter on a tiny mechanical keypad with one key.
+</aside>
+
+<h2>01 · The two signals you need</h2>
+
+<p>An old rotary phone (think French <em>Socotel S63</em> or US <em>Western Electric 500</em>) hides two switches that matter:</p>
+
+<ol class="steps">
+  <li><b>The hook switch</b> — closed when the receiver is on the cradle, open when you pick it up. This is your "start / hang up" signal.</li>
+  <li><b>The dial pulse switch</b> — opens and closes once per digit when the dial returns to rest. Dial <b>5</b> → 5 pulses. Dial <b>0</b> → 10 pulses (zero is treated as ten).</li>
+</ol>
+
+<p>That's it. Two switches, two GPIO pins, and the rest is software.</p>
+
+<figure>
+<svg viewBox="0 0 640 280" role="img" aria-label="Wiring diagram">
+  <defs>
+    <marker id="arr" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto">
+      <path d="M0,0 L10,5 L0,10 z" fill="#1a1a1a"/>
+    </marker>
+  </defs>
+  <!-- Phone -->
+  <rect x="30" y="60" width="200" height="160" rx="14" fill="#fffaf0" stroke="#1a1a1a" stroke-width="1.5"/>
+  <g id="dial-rotor">
+    <circle cx="130" cy="140" r="56" fill="none" stroke="#1a1a1a" stroke-width="1.5"/>
+    <circle cx="130" cy="140" r="6" fill="#c2410c"/>
+    <!-- finger holes -->
+    <g fill="#d9d0bf" stroke="#1a1a1a" stroke-width="1">
+      <circle cx="130" cy="92" r="7"/><circle cx="160" cy="100" r="7"/>
+      <circle cx="180" cy="124" r="7"/><circle cx="180" cy="154" r="7"/>
+      <circle cx="160" cy="178" r="7"/><circle cx="130" cy="186" r="7"/>
+      <circle cx="100" cy="178" r="7"/><circle cx="80" cy="154" r="7"/>
+      <circle cx="80" cy="124" r="7"/><circle cx="100" cy="100" r="7"/>
+    </g>
+  </g>
+  <!-- finger stop -->
+  <circle cx="186" cy="92" r="4" fill="#1a1a1a"/>
+  <text x="130" y="46" text-anchor="middle" font-family="ui-monospace,Menlo,monospace" font-size="11" letter-spacing="2" fill="#6b6358">ROTARY PHONE</text>
+
+  <!-- Wires -->
+  <path id="wireA" d="M230,110 C300,110 320,90 400,90" stroke="#c2410c" stroke-width="2" fill="none" marker-end="url(#arr)"/>
+  <path id="wireB" d="M230,170 C300,170 320,190 400,190" stroke="#1e40af" stroke-width="2" fill="none" marker-end="url(#arr)"/>
+  <!-- traveling pulses on wire A -->
+  <circle class="pulse-dot" r="4" fill="#c2410c" style="offset-path: path('M230,110 C300,110 320,90 400,90');"/>
+  <circle class="pulse-dot delay-1" r="4" fill="#c2410c" style="offset-path: path('M230,110 C300,110 320,90 400,90');"/>
+  <circle class="pulse-dot delay-2" r="4" fill="#c2410c" style="offset-path: path('M230,110 C300,110 320,90 400,90');"/>
+  <!-- traveling pulses on wire B -->
+  <circle class="pulse-dot delay-3" r="4" fill="#1e40af" style="offset-path: path('M230,170 C300,170 320,190 400,190');"/>
+  <text x="315" y="82" font-family="ui-monospace,Menlo,monospace" font-size="11" fill="#c2410c">dial pulses → GPIO 17</text>
+  <text x="315" y="208" font-family="ui-monospace,Menlo,monospace" font-size="11" fill="#1e40af">hook switch → GPIO 27</text>
+
+  <!-- Pi -->
+  <rect x="400" y="60" width="200" height="160" rx="6" fill="#1a1a1a"/>
+  <text x="500" y="46" text-anchor="middle" font-family="ui-monospace,Menlo,monospace" font-size="11" letter-spacing="2" fill="#6b6358">RASPBERRY PI</text>
+  <g font-family="ui-monospace,Menlo,monospace" font-size="10">
+    <text class="pi-module"    x="500" y="100" text-anchor="middle">┌─ pulse counter</text>
+    <text class="pi-module m2" x="500" y="120" text-anchor="middle">├─ debouncer</text>
+    <text class="pi-module m3" x="500" y="140" text-anchor="middle">├─ digit buffer</text>
+    <text class="pi-module m4" x="500" y="160" text-anchor="middle">├─ router</text>
+    <text class="pi-module m5" x="500" y="180" text-anchor="middle">└─ audio engine</text>
+  </g>
+  <!-- speaker -->
+  <path d="M610,140 l18,-12 l0,40 l-18,-12 z" fill="#1a1a1a"/>
+  <circle class="speaker-wave"    cx="632" cy="144" r="8"  fill="none" stroke="#c2410c" stroke-width="2"/>
+  <circle class="speaker-wave w2" cx="632" cy="144" r="14" fill="none" stroke="#c2410c" stroke-width="2"/>
+  <circle class="speaker-wave w3" cx="632" cy="144" r="20" fill="none" stroke="#c2410c" stroke-width="2"/>
+  <text x="620" y="208" text-anchor="middle" font-family="ui-monospace,Menlo,monospace" font-size="10" fill="#6b6358">audio out</text>
+</svg>
+<figcaption>Two wires from the phone, one Pi, one speaker. The whole rig.</figcaption>
+</figure>
+
+<h2>02 · What a "01" actually looks like in time</h2>
+
+<p>When you dial <b>0</b> then <b>1</b>, the GPIO line draws this signal — high when the circuit is closed, dropping low for each pulse:</p>
+
+<figure>
+<svg viewBox="0 0 640 160" role="img" aria-label="Pulse train timing">
+  <defs>
+    <clippath id="scope-clip"><rect x="20" y="20" width="600" height="130"/></clippath>
+  </defs>
+  <!-- baseline -->
+  <line x1="20" y1="120" x2="620" y2="120" stroke="#6b6358" stroke-width="1" stroke-dasharray="2 4"/>
+  <line x1="20" y1="60"  x2="620" y2="60"  stroke="#6b6358" stroke-width="1" stroke-dasharray="2 4"/>
+  <text x="14" y="124" text-anchor="end" font-family="ui-monospace,Menlo,monospace" font-size="10" fill="#6b6358">LOW</text>
+  <text x="14" y="64"  text-anchor="end" font-family="ui-monospace,Menlo,monospace" font-size="10" fill="#6b6358">HIGH</text>
+
+  <g clip-path="url(#scope-clip)">
+    <g id="scope-train">
+      <!-- 10 pulses for "0" -->
+      <path id="scope-line" d="M40,60 L50,60 L50,120 L60,120 L60,60 L70,60 L70,120 L80,120 L80,60 L90,60 L90,120 L100,120 L100,60 L110,60 L110,120 L120,120 L120,60 L130,60 L130,120 L140,120 L140,60 L150,60 L150,120 L160,120 L160,60 L170,60 L170,120 L180,120 L180,60 L190,60 L190,120 L200,120 L200,60 L210,60 L210,120 L220,120 L220,60 L230,60 L230,120 L240,120 L240,60 L250,60 L250,120 L260,120 L260,60 L360,60 L390,60 L390,120 L420,120 L420,60 L640,60 L640,120 L660,120 L660,60 L880,60" stroke="#c2410c" stroke-width="2.5" fill="none"/>
+      <!-- duplicate shifted right for seamless loop -->
+      <path d="M340,60 L350,60 L350,120 L360,120 L360,60 L370,60 L370,120 L380,120 L380,60 L390,60 L390,120 L400,120 L400,60 L410,60 L410,120 L420,120 L420,60 L430,60 L430,120 L440,120 L440,60 L450,60 L450,120 L460,120 L460,60 L470,60 L470,120 L480,120 L480,60 L490,60 L490,120 L500,120 L500,60 L510,60 L510,120 L520,120 L520,60 L530,60 L530,120 L540,120 L540,60 L550,60 L550,120 L560,120 L560,60" stroke="#c2410c" stroke-width="2.5" fill="none" opacity="0.25"/>
+    </g>
+  </g>
+
+  <text x="150" y="40" text-anchor="middle" font-family="ui-monospace,Menlo,monospace" font-size="11" fill="#c2410c">digit 0 → 10 pulses</text>
+  <text x="320" y="40" text-anchor="middle" font-family="ui-monospace,Menlo,monospace" font-size="10" fill="#6b6358">pause &gt; 200ms</text>
+  <text x="450" y="40" text-anchor="middle" font-family="ui-monospace,Menlo,monospace" font-size="11" fill="#1e40af">digit 1 → 1 pulse</text>
+  <text x="320" y="148" text-anchor="middle" font-family="ui-monospace,Menlo,monospace" font-size="10" fill="#6b6358">time →</text>
+</svg>
+<figcaption>Live signal sweeping past — like watching it on an oscilloscope. Each pulse ≈ 100 ms.</figcaption>
+</figure>
+
+<div class="demo">
+  <h4>▶ Try it · dial a number</h4>
+  <div class="demo-stage">
+    <div id="demoDial" class="demo-dial" aria-hidden="true"></div>
+    <div>
+      <p style="margin:0;color:var(--muted);font-size:15px">Click a digit. Watch the dial spin, the pulses count, and see what the Pi would do.</p>
+      <div class="demo-buttons">
+        <button class="demo-btn" data-num="0">0</button>
+        <button class="demo-btn" data-num="1">1</button>
+        <button class="demo-btn" data-num="2">2</button>
+        <button class="demo-btn" data-num="reset">↻</button>
+      </div>
+      <div id="demoOut" class="demo-readout">waiting for input…</div>
+    </div>
+  </div>
+</div>
+
+<script>
+(() => {
+  const dial = document.getElementById('demoDial');
+  const out  = document.getElementById('demoOut');
+  let digits = [];
+  let busy = false;
+
+  const lines = [];
+  const log = (msg, cls='') => {
+    lines.push(cls ? `<span class="${cls}">${msg}</span>` : msg);
+    if (lines.length > 6) lines.shift();
+    out.innerHTML = lines.join('\n');
+  };
+
+  const sleep = ms => new Promise(r => setTimeout(r, ms));
+
+  async function dialDigit(n) {
+    if (busy) return;
+    busy = true;
+    const pulses = n === 0 ? 10 : n;
+    log(`> dialing ${n} (${pulses} pulse${pulses>1?'s':''})`, 'blue');
+    dial.classList.remove('spin-0','spin-1','spin-2');
+    void dial.offsetWidth;
+    dial.classList.add(n === 0 ? 'spin-0' : (n === 1 ? 'spin-1' : 'spin-2'));
+    // simulate pulse counting
+    for (let i = 1; i <= pulses; i++) {
+      await sleep(90);
+      log(`  · pulse ${i}/${pulses}`);
+    }
+    await sleep(300);
+    log(`  ✓ digit registered: ${n}`, 'ok');
+    digits.push(n);
+    if (digits.length === 2) {
+      const num = digits.join('');
+      await sleep(200);
+      if (num === '01')      log(`  ♪ ROUTE: play welcome.mp3`, 'red');
+      else if (num === '02') log(`  ♫ ROUTE: open live stream`, 'red');
+      else                   log(`  ✗ no route for ${num}`, 'red');
+      digits = [];
+    }
+    setTimeout(() => { dial.classList.remove('spin-0','spin-1','spin-2'); }, 800);
+    await sleep(800);
+    busy = false;
+  }
+
+  document.querySelectorAll('.demo-btn').forEach(btn => {
+    btn.addEventListener('click', () => {
+      const v = btn.dataset.num;
+      if (v === 'reset') { digits = []; lines.length = 0; out.textContent = 'reset.'; return; }
+      dialDigit(parseInt(v, 10));
+    });
+  });
+})();
+</script>
+
+<aside class="aside">
+  <span class="label">Why pulses are messy</span>
+  Mechanical contacts <b>bounce</b>. A single click can register as 3-4 micro-pulses for a few milliseconds. So we don't count raw edges — we debounce: ignore any edge that arrives less than ~10 ms after the last one. Without debouncing, dialing "1" might look like "5".
+</aside>
+
+<h2>03 · Wiring</h2>
+
+<table class="pin-table">
+  <thead><tr><th>Phone wire</th><th>Goes to</th><th>Why</th></tr></thead>
+  <tbody>
+    <tr><td>Dial pulse (a)</td><td>GPIO 17</td><td>The pin we count edges on</td></tr>
+    <tr><td>Dial pulse (b)</td><td>GND</td><td>Closes the circuit when pulsing</td></tr>
+    <tr><td>Hook (a)</td><td>GPIO 27</td><td>Detect pick-up / hang-up</td></tr>
+    <tr><td>Hook (b)</td><td>GND</td><td>Same idea</td></tr>
+    <tr><td>Speaker (+/−)</td><td>Pi 3.5 mm jack</td><td>You can rewire the receiver's earpiece into the Pi's audio out</td></tr>
+  </tbody>
+</table>
+
+<p>Both inputs use the Pi's <b>internal pull-up resistors</b>: the line idles HIGH, and each pulse pulls it LOW. No external resistors needed for a simple build.</p>
+
+<h2>04 · The router: 01 vs 02</h2>
+
+<div class="two-col">
+  <div class="card">
+    <h4>Dial</h4>
+    <div class="num">01</div>
+    <p style="margin-top:10px">Plays a local audio file — say, <code>welcome.mp3</code>. Good for: greeting, voicemail, a poem. The Pi just calls <code>mpg123 welcome.mp3</code>.</p>
+  </div>
+  <div class="card">
+    <h4>Dial</h4>
+    <div class="num">02</div>
+    <p style="margin-top:10px">Opens a live <b>HTTP audio stream</b> — a webradio, an Icecast feed, or your own URL. The Pi runs <code>mpv https://stream.example/live.mp3</code> until you hang up.</p>
+  </div>
+</div>
+
+<h2>05 · The Python sketch</h2>
+
+<pre><span class="c"># phone.py — minimal rotary router on a Raspberry Pi</span>
+<span class="k">import</span> <span class="n">subprocess</span>, <span class="n">time</span>
+<span class="k">from</span> <span class="n">gpiozero</span> <span class="k">import</span> <span class="n">Button</span>
+
+<span class="n">DIAL</span> = <span class="n">Button</span>(<span class="s">17</span>, pull_up=<span class="s">True</span>, bounce_time=<span class="s">0.010</span>)
+<span class="n">HOOK</span> = <span class="n">Button</span>(<span class="s">27</span>, pull_up=<span class="s">True</span>, bounce_time=<span class="s">0.050</span>)
+
+<span class="n">pulses</span>, <span class="n">digits</span>, <span class="n">last_pulse</span> = <span class="s">0</span>, [], <span class="s">0</span>
+<span class="n">player</span> = <span class="s">None</span>
+
+<span class="k">def</span> on_pulse():
+    <span class="k">global</span> <span class="n">pulses</span>, <span class="n">last_pulse</span>
+    <span class="n">pulses</span> += <span class="s">1</span>
+    <span class="n">last_pulse</span> = <span class="n">time</span>.<span class="n">time</span>()
+
+<span class="k">def</span> flush_digit():
+    <span class="k">global</span> <span class="n">pulses</span>
+    <span class="k">if</span> <span class="n">pulses</span>:
+        <span class="n">d</span> = <span class="s">0</span> <span class="k">if</span> <span class="n">pulses</span> == <span class="s">10</span> <span class="k">else</span> <span class="n">pulses</span>
+        <span class="n">digits</span>.append(<span class="n">d</span>)
+        <span class="n">pulses</span> = <span class="s">0</span>
+
+<span class="k">def</span> route(num):
+    <span class="k">global</span> <span class="n">player</span>
+    <span class="k">if</span> <span class="n">num</span> == <span class="s">"01"</span>:
+        <span class="n">player</span> = <span class="n">subprocess</span>.<span class="n">Popen</span>([<span class="s">"mpg123"</span>, <span class="s">"-q"</span>, <span class="s">"welcome.mp3"</span>])
+    <span class="k">elif</span> <span class="n">num</span> == <span class="s">"02"</span>:
+        <span class="n">player</span> = <span class="n">subprocess</span>.<span class="n">Popen</span>([<span class="s">"mpv"</span>, <span class="s">"--no-video"</span>,
+                                   <span class="s">"https://stream.example/live.mp3"</span>])
+
+<span class="k">def</span> hang_up():
+    <span class="k">global</span> <span class="n">player</span>, <span class="n">digits</span>
+    <span class="k">if</span> <span class="n">player</span>: <span class="n">player</span>.terminate()
+    <span class="n">player</span>, <span class="n">digits</span>[:] = <span class="s">None</span>, []
+
+<span class="n">DIAL</span>.when_pressed = <span class="n">on_pulse</span>
+<span class="n">HOOK</span>.when_released = <span class="k">lambda</span>: <span class="n">print</span>(<span class="s">"📞 lifted"</span>)
+<span class="n">HOOK</span>.when_pressed  = <span class="n">hang_up</span>
+
+<span class="k">while</span> <span class="s">True</span>:
+    <span class="k">if</span> <span class="n">pulses</span> <span class="k">and</span> <span class="n">time</span>.<span class="n">time</span>() - <span class="n">last_pulse</span> &gt; <span class="s">0.25</span>:
+        flush_digit()
+        <span class="k">if</span> <span class="n">len</span>(<span class="n">digits</span>) == <span class="s">2</span>:
+            route(<span class="s">""</span>.join(<span class="n">str</span>(<span class="n">d</span>) <span class="k">for</span> <span class="n">d</span> <span class="k">in</span> <span class="n">digits</span>))
+            <span class="n">digits</span>.clear()
+    <span class="n">time</span>.sleep(<span class="s">0.02</span>)
+</pre>
+
+<p>Three small ideas hold this up: <b>count edges</b>, <b>flush after silence</b>, <b>kill the player on hang-up</b>. Everything else is decoration.</p>
+
+<h2>06 · Things that will surprise you</h2>
+
+<ol class="steps">
+  <li><b>Old phones use 48 V ringing voltage.</b> You don't need it for input — just the contacts. But never wire the phone to a live PSTN line and to the Pi at the same time.</li>
+  <li><b>Pulse rate varies by country.</b> Most phones pulse at 10 Hz, but some UK phones do 20 Hz. Tune your debounce window to taste.</li>
+  <li><b>The earpiece is a real speaker.</b> Cut the receiver cord, solder it to a 3.5 mm jack, and the Pi can play through the handset itself. That's when the magic clicks.</li>
+  <li><b>Latency is part of the charm.</b> Don't fight the dial's slowness. The 6-second journey from "lift receiver" to "audio plays" is what makes the object feel alive.</li>
+</ol>
+
+<aside class="aside">
+  <span class="label">Where to take it next</span>
+  Once <b>01</b> and <b>02</b> work, the design space opens up: <b>03</b> reads today's headlines via TTS, <b>04</b> calls a friend through SIP, <b>911</b> triggers a panic playlist. The phone becomes a <b>two-digit URL bar</b> for sound.
+</aside>
+
+<footer>
+  bidouille/rotary_phone · concept explainer · single-file HTML, no build step
+</footer>
+
+</div>
+</body>
+</html>
