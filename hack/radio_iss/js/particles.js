@@ -23,7 +23,7 @@ class Particle {
     this.vel = createVector(0, 0);
     this.isResetting = false;
     this.resetProgress = 0;
-    this.baseRadius = this.isIss ? 7 : random(2.5, 5.5);
+    this.baseRadius = this.isIss ? 11 : random(2.5, 5.5);
     this.continent = continent || null;
     if (this.isIss) {
       this.target = createVector(x, y);
