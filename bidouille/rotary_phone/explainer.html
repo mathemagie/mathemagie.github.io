@@ -31,10 +31,23 @@
   .wrap { max-width: 780px; margin: 0 auto; padding: 56px 28px 96px; }
 
   header.hero {
+    position: relative;
+    overflow: hidden;
     border-top: 4px double var(--ink);
     border-bottom: 1px solid var(--ink);
     padding: 28px 0 24px;
     margin-bottom: 36px;
+  }
+  header.hero::after {
+    content: "";
+    position: absolute;
+    left: -35%;
+    right: -35%;
+    bottom: 0;
+    height: 2px;
+    background: linear-gradient(90deg, transparent, rgba(194,65,12,.32), transparent);
+    animation: hero-sweep 7.5s ease-in-out infinite;
+    pointer-events: none;
   }
   .kicker {
     font-family: ui-monospace, "SF Mono", Menlo, monospace;
@@ -239,6 +252,23 @@
 
   /* ---- Animations ---- */
 
+  @keyframes hero-sweep {
+    0%   { transform: translateX(-18%); opacity: 0; }
+    20%  { opacity: .9; }
+    50%  { opacity: .35; }
+    100% { transform: translateX(18%); opacity: 0; }
+  }
+
+  @keyframes dot-bob {
+    0%, 100% { transform: translateY(0); opacity: .45; }
+    50%      { transform: translateY(-3px); opacity: 1; }
+  }
+
+  @keyframes dial-breathe {
+    0%, 100% { transform: scale(1); }
+    50%      { transform: scale(1.015); }
+  }
+
   /* Spinning dial (hero diagram) */
   @keyframes dial-spin {
     0%   { transform: rotate(0deg); }
@@ -287,6 +317,13 @@
   .pi-module.m3 { animation-delay: 1.6s; }
   .pi-module.m4 { animation-delay: 2.4s; }
   .pi-module.m5 { animation-delay: 3.2s; }
+  .pin-highlight {
+    transform-box: fill-box;
+    transform-origin: center;
+    animation: pin-pulse 2.4s ease-in-out infinite;
+  }
+  .pin-highlight-blue { animation-delay: .35s; }
+  .pin-highlight-gnd { animation-delay: .7s; }
 
   /* Live oscilloscope sweep */
   @keyframes scope-sweep {
@@ -299,6 +336,11 @@
     50%      { opacity: 1; }
   }
   #scope-line { animation: scope-glow 2s ease-in-out infinite; }
+
+  @keyframes pin-pulse {
+    0%, 100% { opacity: .55; transform: scale(.92); }
+    50%      { opacity: 1; transform: scale(1.1); }
+  }
 
   /* Interactive demo */
   .demo {
@@ -331,6 +373,30 @@
     flex-wrap: wrap;
     margin-top: 14px;
   }
+  .demo-status {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    font-family: ui-monospace, "SF Mono", Menlo, monospace;
+    font-size: 10px;
+    letter-spacing: .18em;
+    text-transform: uppercase;
+    color: var(--accent);
+    margin-bottom: 6px;
+  }
+  .demo-status .dots {
+    display: inline-flex;
+    gap: 4px;
+  }
+  .demo-status .dots span {
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    background: var(--accent);
+    animation: dot-bob 1.2s ease-in-out infinite;
+  }
+  .demo-status .dots span:nth-child(2) { animation-delay: .15s; }
+  .demo-status .dots span:nth-child(3) { animation-delay: .3s; }
   .demo-btn {
     font-family: "Iowan Old Style", Georgia, serif;
     font-size: 26px;
@@ -371,6 +437,8 @@
     position: relative;
     transition: transform 1.4s cubic-bezier(.2,.8,.2,1);
     margin: 0 auto;
+    box-shadow: 0 0 0 0 rgba(194,65,12,.0);
+    animation: dial-breathe 4.8s ease-in-out infinite;
   }
   .demo-dial::after {
     content: "";
@@ -384,11 +452,24 @@
   .demo-dial.spin-0 { transform: rotate(300deg); }
   .demo-dial.spin-1 { transform: rotate(30deg); }
   .demo-dial.spin-2 { transform: rotate(60deg); }
+  .demo.is-active .demo-dial {
+    box-shadow: 0 0 0 10px rgba(194,65,12,.08);
+    animation-play-state: paused;
+  }
+  .demo.is-active .demo-status {
+    color: var(--accent-2);
+  }
+  .demo.is-active .demo-status .dots span {
+    background: var(--accent-2);
+  }
+  .demo.is-active .demo-readout {
+    border-left: 3px solid var(--accent-2);
+  }
 
   /* Reduced motion */
   @media (prefers-reduced-motion: reduce) {
-    #dial-rotor, .pulse-dot, .speaker-wave, .pi-module,
-    #scope-train, #scope-line { animation: none !important; }
+    header.hero::after, #dial-rotor, .pulse-dot, .speaker-wave, .pi-module,
+    #scope-train, #scope-line, .pin-highlight, .demo-dial, .demo-status .dots span { animation: none !important; }
     .demo-dial { transition: none; }
   }
 </style>
@@ -413,6 +494,74 @@
   <span class="label">Mental model</span>
   The phone is a <b>switch that blinks Morse code in your hand</b>. The Pi is a <b>patient ear</b>: it counts blinks per dial, and once you hang up the receiver, the number is "submitted" — like pressing Enter on a tiny mechanical keypad with one key.
 </aside>
+
+<figure>
+<svg viewBox="0 0 760 320" role="img" aria-label="Rotary phone prototype concept sketch">
+  <defs>
+    <marker id="phone-arr" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto">
+      <path d="M0,0 L10,5 L0,10 z" fill="#1a1a1a"/>
+    </marker>
+  </defs>
+
+  <rect x="36" y="52" width="688" height="216" rx="16" fill="#fffaf0" stroke="#d9d0bf" stroke-width="1.5"/>
+  <text x="60" y="82" font-family="ui-monospace,Menlo,monospace" font-size="11" letter-spacing="2" fill="#6b6358">ROTARY PHONE PROTOTYPE</text>
+
+  <!-- handset -->
+  <g>
+    <rect x="78" y="112" width="166" height="38" rx="19" fill="#1a1a1a"/>
+    <rect x="92" y="100" width="20" height="62" rx="10" fill="#1a1a1a" transform="rotate(-20 102 131)"/>
+    <rect x="210" y="100" width="20" height="62" rx="10" fill="#1a1a1a" transform="rotate(20 220 131)"/>
+    <circle cx="90" cy="131" r="6" fill="#6b6358"/>
+    <circle cx="230" cy="131" r="6" fill="#6b6358"/>
+    <text x="160" y="178" text-anchor="middle" font-family="ui-monospace,Menlo,monospace" font-size="10" fill="#6b6358">receiver / speaker</text>
+  </g>
+
+  <!-- body -->
+  <rect x="84" y="172" width="220" height="78" rx="16" fill="#1a1a1a"/>
+  <rect x="104" y="184" width="180" height="54" rx="10" fill="#111827" stroke="#d9d0bf" stroke-width="1"/>
+
+  <!-- dial -->
+  <circle cx="194" cy="211" r="40" fill="none" stroke="#f4efe6" stroke-width="2"/>
+  <circle cx="194" cy="211" r="10" fill="#c2410c"/>
+  <g fill="none" stroke="#f4efe6" stroke-width="2">
+    <path d="M194,171 A40,40 0 0 1 232,199"/>
+    <path d="M234,211 A40,40 0 0 1 210,247"/>
+    <path d="M194,251 A40,40 0 0 1 158,233"/>
+    <path d="M154,211 A40,40 0 0 1 172,175"/>
+  </g>
+  <g fill="#d9d0bf">
+    <circle cx="194" cy="171" r="4"/>
+    <circle cx="232" cy="211" r="4"/>
+    <circle cx="194" cy="251" r="4"/>
+    <circle cx="156" cy="211" r="4"/>
+  </g>
+
+  <!-- hook switch -->
+  <rect x="248" y="182" width="34" height="28" rx="6" fill="#374151"/>
+  <rect x="248" y="182" width="34" height="12" rx="6" fill="#6b6358"/>
+  <circle cx="265" cy="218" r="7" fill="#c2410c"/>
+  <text x="266" y="233" text-anchor="middle" font-family="ui-monospace,Menlo,monospace" font-size="8" fill="#6b6358">hook</text>
+
+  <!-- simple callout labels -->
+  <path d="M248,88 C315,88 340,92 390,112" stroke="#1a1a1a" stroke-width="1.5" fill="none" marker-end="url(#phone-arr)"/>
+  <text x="398" y="116" font-family="ui-monospace,Menlo,monospace" font-size="10" fill="#c2410c">spin to generate pulses</text>
+
+  <path d="M284,198 C338,198 356,196 400,192" stroke="#1a1a1a" stroke-width="1.5" fill="none" marker-end="url(#phone-arr)"/>
+  <text x="410" y="196" font-family="ui-monospace,Menlo,monospace" font-size="10" fill="#1e40af">hook switch = pick up / hang up</text>
+
+  <path d="M205,136 C320,136 356,140 458,152" stroke="#1a1a1a" stroke-width="1.5" fill="none" marker-end="url(#phone-arr)"/>
+  <text x="466" y="156" font-family="ui-monospace,Menlo,monospace" font-size="10" fill="#6b6358">handset audio</text>
+
+  <!-- board note -->
+  <rect x="498" y="92" width="176" height="120" rx="12" fill="#fffaf0" stroke="#d9d0bf" stroke-width="1"/>
+  <text x="516" y="118" font-family="ui-monospace,Menlo,monospace" font-size="10" letter-spacing="1.5" fill="#1e40af">PROTOTYPE FLOW</text>
+  <text x="516" y="142" font-family="ui-monospace,Menlo,monospace" font-size="10" fill="#6b6358">1. lift handset</text>
+  <text x="516" y="160" font-family="ui-monospace,Menlo,monospace" font-size="10" fill="#6b6358">2. dial number</text>
+  <text x="516" y="178" font-family="ui-monospace,Menlo,monospace" font-size="10" fill="#6b6358">3. Pi counts pulses</text>
+  <text x="516" y="196" font-family="ui-monospace,Menlo,monospace" font-size="10" fill="#6b6358">4. route audio</text>
+</svg>
+<figcaption>Prototype sketch: the phone is a physical input, the Pi is the interpreter, and the audio output is the result.</figcaption>
+</figure>
 
 <h2>01 · The two signals you need</h2>
 
@@ -519,6 +668,7 @@
   <div class="demo-stage">
     <div id="demoDial" class="demo-dial" aria-hidden="true"></div>
     <div>
+      <div class="demo-status" aria-hidden="true">LISTENING <span class="dots"><span></span><span></span><span></span></span></div>
       <p style="margin:0;color:var(--muted);font-size:15px">Click a digit. Watch the dial spin, the pulses count, and see what the Pi would do.</p>
       <div class="demo-buttons">
         <button class="demo-btn" data-num="0">0</button>
@@ -533,6 +683,7 @@
 
 <script>
 (() => {
+  const demo = document.querySelector('.demo');
   const dial = document.getElementById('demoDial');
   const out  = document.getElementById('demoOut');
   let digits = [];
@@ -550,6 +701,7 @@
   async function dialDigit(n) {
     if (busy) return;
     busy = true;
+    demo.classList.add('is-active');
     const pulses = n === 0 ? 10 : n;
     log(`> dialing ${n} (${pulses} pulse${pulses>1?'s':''})`, 'blue');
     dial.classList.remove('spin-0','spin-1','spin-2');
@@ -574,12 +726,13 @@
     setTimeout(() => { dial.classList.remove('spin-0','spin-1','spin-2'); }, 800);
     await sleep(800);
     busy = false;
+    if (!busy) demo.classList.remove('is-active');
   }
 
   document.querySelectorAll('.demo-btn').forEach(btn => {
     btn.addEventListener('click', () => {
       const v = btn.dataset.num;
-      if (v === 'reset') { digits = []; lines.length = 0; out.textContent = 'reset.'; return; }
+      if (v === 'reset') { digits = []; lines.length = 0; out.textContent = 'reset.'; demo.classList.remove('is-active'); return; }
       dialDigit(parseInt(v, 10));
     });
   });
@@ -606,6 +759,73 @@
 
 <p>Both inputs use the Pi's <b>internal pull-up resistors</b>: the line idles HIGH, and each pulse pulls it LOW. No external resistors needed for a simple build.</p>
 
+<figure>
+<svg viewBox="0 0 760 280" role="img" aria-label="Raspberry Pi board sketch with GPIO pins highlighted">
+  <defs>
+    <marker id="pi-arr" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto">
+      <path d="M0,0 L10,5 L0,10 z" fill="#1a1a1a"/>
+    </marker>
+  </defs>
+
+  <!-- board -->
+  <rect x="280" y="34" width="420" height="212" rx="14" fill="#1a1a1a"/>
+  <rect x="294" y="48" width="392" height="184" rx="10" fill="#111827" stroke="#d9d0bf" stroke-width="1"/>
+  <text x="490" y="72" text-anchor="middle" font-family="ui-monospace,Menlo,monospace" font-size="13" letter-spacing="2" fill="#f4efe6">RASPBERRY PI BOARD</text>
+  <text x="490" y="88" text-anchor="middle" font-family="ui-monospace,Menlo,monospace" font-size="9" fill="#8a8175">header sketch for wiring</text>
+
+  <!-- header rail -->
+  <rect x="590" y="106" width="50" height="112" rx="4" fill="#0f172a" stroke="#d9d0bf" stroke-width="1"/>
+  <text x="615" y="100" text-anchor="middle" font-family="ui-monospace,Menlo,monospace" font-size="9" fill="#8a8175">40-pin header</text>
+
+  <!-- header pins -->
+  <g>
+    <!-- odd pins -->
+    <circle cx="602" cy="118" r="5" fill="#d9d0bf"/>
+    <circle cx="602" cy="134" r="5" fill="#d9d0bf"/>
+    <circle cx="602" cy="150" r="5" fill="#d9d0bf"/>
+    <circle cx="602" cy="166" r="5" fill="#d9d0bf"/>
+    <circle cx="602" cy="182" r="5" fill="#d9d0bf"/>
+    <circle cx="602" cy="198" r="5" fill="#d9d0bf"/>
+    <!-- even pins -->
+    <circle cx="628" cy="118" r="5" fill="#d9d0bf"/>
+    <circle cx="628" cy="134" r="5" fill="#d9d0bf"/>
+    <circle cx="628" cy="150" r="5" fill="#d9d0bf"/>
+    <circle cx="628" cy="166" r="5" fill="#d9d0bf"/>
+    <circle cx="628" cy="182" r="5" fill="#d9d0bf"/>
+    <circle cx="628" cy="198" r="5" fill="#d9d0bf"/>
+  </g>
+
+  <!-- highlighted pins -->
+  <circle cx="602" cy="150" r="8" fill="none" stroke="#c2410c" stroke-width="2.5" class="pin-highlight"/>
+  <circle cx="602" cy="182" r="8" fill="none" stroke="#1e40af" stroke-width="2.5" class="pin-highlight pin-highlight-blue"/>
+  <circle cx="602" cy="198" r="8" fill="none" stroke="#6b6358" stroke-width="2" class="pin-highlight pin-highlight-gnd"/>
+
+  <!-- labels -->
+  <g font-family="ui-monospace,Menlo,monospace" font-size="10">
+    <text x="340" y="126" fill="#c2410c">GPIO 17</text>
+    <text x="340" y="142" fill="#c2410c">physical pin 11</text>
+    <text x="340" y="174" fill="#1e40af">GPIO 27</text>
+    <text x="340" y="190" fill="#1e40af">physical pin 13</text>
+    <text x="340" y="222" fill="#6b6358">GND</text>
+    <text x="340" y="238" fill="#6b6358">physical pin 9 or 6</text>
+  </g>
+
+  <!-- pointers -->
+  <path d="M420,128 C500,128 540,140 585,150" stroke="#c2410c" stroke-width="2" fill="none" marker-end="url(#pi-arr)"/>
+  <path d="M420,180 C500,180 540,182 585,182" stroke="#1e40af" stroke-width="2" fill="none" marker-end="url(#pi-arr)"/>
+  <path d="M420,228 C500,228 540,210 585,198" stroke="#6b6358" stroke-width="2" fill="none" marker-end="url(#pi-arr)"/>
+
+  <!-- tiny board details -->
+  <rect x="314" y="104" width="82" height="50" rx="5" fill="#374151"/>
+  <rect x="316" y="108" width="34" height="16" rx="3" fill="#6b6358"/>
+  <circle cx="372" cy="116" r="7" fill="#c2410c"/>
+  <rect x="314" y="170" width="124" height="34" rx="5" fill="#374151"/>
+  <circle cx="458" cy="188" r="16" fill="#0f172a" stroke="#d9d0bf" stroke-width="1"/>
+  <text x="458" y="192" text-anchor="middle" font-family="ui-monospace,Menlo,monospace" font-size="7" fill="#d9d0bf">USB</text>
+</svg>
+<figcaption>Use GPIO 17 and GPIO 27 on the 40-pin header, then share ground with the Pi.</figcaption>
+</figure>
+
 <h2>04 · The router: 01 vs 02</h2>
 
 <div class="two-col">
@@ -623,55 +843,64 @@
 
 <h2>05 · The Python sketch</h2>
 
-<pre><span class="c"># phone.py — minimal rotary router on a Raspberry Pi</span>
-<span class="k">import</span> <span class="n">subprocess</span>, <span class="n">time</span>
+<pre><span class="c"># phone.py — rotary router on a Raspberry Pi (thread-safe)</span>
+<span class="k">import</span> <span class="n">subprocess</span>, <span class="n">time</span>, <span class="n">threading</span>
 <span class="k">from</span> <span class="n">gpiozero</span> <span class="k">import</span> <span class="n">Button</span>
 
-<span class="n">DIAL</span> = <span class="n">Button</span>(<span class="s">17</span>, pull_up=<span class="s">True</span>, bounce_time=<span class="s">0.010</span>)
-<span class="n">HOOK</span> = <span class="n">Button</span>(<span class="s">27</span>, pull_up=<span class="s">True</span>, bounce_time=<span class="s">0.050</span>)
+<span class="n">DIAL</span> = <span class="n">Button</span>(<span class="s">17</span>, pull_up=<span class="s">True</span>, bounce_time=<span class="s">0.020</span>)
+<span class="n">HOOK</span> = <span class="n">Button</span>(<span class="s">27</span>, pull_up=<span class="s">True</span>, bounce_time=<span class="s">0.080</span>)
 
-<span class="n">pulses</span>, <span class="n">digits</span>, <span class="n">last_pulse</span> = <span class="s">0</span>, [], <span class="s">0</span>
-<span class="n">player</span> = <span class="s">None</span>
+<span class="n">lock</span> = <span class="n">threading</span>.<span class="n">Lock</span>()      <span class="c"># on_pulse runs on a callback thread</span>
+<span class="n">pulses</span>, <span class="n">digits</span>, <span class="n">last_pulse</span>, <span class="n">player</span> = <span class="s">0</span>, [], <span class="s">0.0</span>, <span class="s">None</span>
 
 <span class="k">def</span> on_pulse():
     <span class="k">global</span> <span class="n">pulses</span>, <span class="n">last_pulse</span>
-    <span class="n">pulses</span> += <span class="s">1</span>
-    <span class="n">last_pulse</span> = <span class="n">time</span>.<span class="n">time</span>()
+    <span class="k">with</span> <span class="n">lock</span>:
+        <span class="n">pulses</span> += <span class="s">1</span>
+        <span class="n">last_pulse</span> = <span class="n">time</span>.<span class="n">time</span>()
 
-<span class="k">def</span> flush_digit():
-    <span class="k">global</span> <span class="n">pulses</span>
-    <span class="k">if</span> <span class="n">pulses</span>:
-        <span class="n">d</span> = <span class="s">0</span> <span class="k">if</span> <span class="n">pulses</span> == <span class="s">10</span> <span class="k">else</span> <span class="n">pulses</span>
-        <span class="n">digits</span>.append(<span class="n">d</span>)
+<span class="k">def</span> reset_state():
+    <span class="c"># lift OR hang-up: clean slate, kill any running player</span>
+    <span class="k">global</span> <span class="n">pulses</span>, <span class="n">player</span>
+    <span class="k">with</span> <span class="n">lock</span>:
         <span class="n">pulses</span> = <span class="s">0</span>
+        <span class="n">digits</span>.clear()
+    <span class="k">if</span> <span class="n">player</span> <span class="k">and</span> <span class="n">player</span>.poll() <span class="k">is</span> <span class="s">None</span>:
+        <span class="n">player</span>.terminate()
+        <span class="k">try</span>: <span class="n">player</span>.wait(timeout=<span class="s">1</span>)
+        <span class="k">except</span> <span class="n">subprocess</span>.<span class="n">TimeoutExpired</span>: <span class="n">player</span>.kill()
+    <span class="n">player</span> = <span class="s">None</span>
 
 <span class="k">def</span> route(num):
     <span class="k">global</span> <span class="n">player</span>
-    <span class="k">if</span> <span class="n">num</span> == <span class="s">"01"</span>:
-        <span class="n">player</span> = <span class="n">subprocess</span>.<span class="n">Popen</span>([<span class="s">"mpg123"</span>, <span class="s">"-q"</span>, <span class="s">"welcome.mp3"</span>])
-    <span class="k">elif</span> <span class="n">num</span> == <span class="s">"02"</span>:
-        <span class="n">player</span> = <span class="n">subprocess</span>.<span class="n">Popen</span>([<span class="s">"mpv"</span>, <span class="s">"--no-video"</span>,
-                                   <span class="s">"https://stream.example/live.mp3"</span>])
+    <span class="n">cmd</span> = {<span class="s">"01"</span>: [<span class="s">"mpg123"</span>, <span class="s">"-q"</span>, <span class="s">"welcome.mp3"</span>],
+           <span class="s">"02"</span>: [<span class="s">"mpv"</span>, <span class="s">"--no-video"</span>, <span class="s">"https://stream.example/live.mp3"</span>]}.get(<span class="n">num</span>)
+    <span class="k">if</span> <span class="k">not</span> <span class="n">cmd</span>: <span class="k">return</span>
+    <span class="k">try</span>:    <span class="n">player</span> = <span class="n">subprocess</span>.<span class="n">Popen</span>(<span class="n">cmd</span>)
+    <span class="k">except</span> <span class="n">FileNotFoundError</span> <span class="k">as</span> <span class="n">e</span>: <span class="n">print</span>(<span class="s">f"⚠ {e}"</span>)
 
-<span class="k">def</span> hang_up():
-    <span class="k">global</span> <span class="n">player</span>, <span class="n">digits</span>
-    <span class="k">if</span> <span class="n">player</span>: <span class="n">player</span>.terminate()
-    <span class="n">player</span>, <span class="n">digits</span>[:] = <span class="s">None</span>, []
-
-<span class="n">DIAL</span>.when_pressed = <span class="n">on_pulse</span>
-<span class="n">HOOK</span>.when_released = <span class="k">lambda</span>: <span class="n">print</span>(<span class="s">"📞 lifted"</span>)
-<span class="n">HOOK</span>.when_pressed  = <span class="n">hang_up</span>
+<span class="n">DIAL</span>.when_pressed  = <span class="n">on_pulse</span>
+<span class="n">HOOK</span>.when_released = <span class="n">reset_state</span>   <span class="c"># lift  → start fresh</span>
+<span class="n">HOOK</span>.when_pressed  = <span class="n">reset_state</span>   <span class="c"># cradle → stop &amp; clean</span>
 
 <span class="k">while</span> <span class="s">True</span>:
-    <span class="k">if</span> <span class="n">pulses</span> <span class="k">and</span> <span class="n">time</span>.<span class="n">time</span>() - <span class="n">last_pulse</span> &gt; <span class="s">0.25</span>:
-        flush_digit()
+    <span class="c"># 1. snapshot pulses if the dial has gone silent (digit complete)</span>
+    <span class="k">with</span> <span class="n">lock</span>:
+        <span class="n">idle</span> = <span class="n">pulses</span> <span class="k">and</span> (<span class="n">time</span>.<span class="n">time</span>() - <span class="n">last_pulse</span>) &gt; <span class="s">0.25</span>
+        <span class="n">snap</span> = <span class="n">pulses</span> <span class="k">if</span> <span class="n">idle</span> <span class="k">else</span> <span class="s">0</span>
+        <span class="k">if</span> <span class="n">idle</span>: <span class="n">pulses</span> = <span class="s">0</span>
+    <span class="k">if</span> <span class="n">snap</span>:
+        <span class="n">digits</span>.append(<span class="s">0</span> <span class="k">if</span> <span class="n">snap</span> == <span class="s">10</span> <span class="k">else</span> <span class="n">snap</span>)
         <span class="k">if</span> <span class="n">len</span>(<span class="n">digits</span>) == <span class="s">2</span>:
-            route(<span class="s">""</span>.join(<span class="n">str</span>(<span class="n">d</span>) <span class="k">for</span> <span class="n">d</span> <span class="k">in</span> <span class="n">digits</span>))
+            route(<span class="s">""</span>.join(<span class="n">map</span>(<span class="n">str</span>, <span class="n">digits</span>)))
             <span class="n">digits</span>.clear()
+    <span class="c"># 2. invalidate a partial dial that's gone stale (&gt;5 s with no new pulse)</span>
+    <span class="k">if</span> <span class="n">digits</span> <span class="k">and</span> <span class="n">time</span>.<span class="n">time</span>() - <span class="n">last_pulse</span> &gt; <span class="s">5.0</span>:
+        <span class="n">digits</span>.clear()
     <span class="n">time</span>.sleep(<span class="s">0.02</span>)
 </pre>
 
-<p>Three small ideas hold this up: <b>count edges</b>, <b>flush after silence</b>, <b>kill the player on hang-up</b>. Everything else is decoration.</p>
+<p>Four small ideas hold this up: <b>count edges under a lock</b>, <b>flush after silence</b>, <b>reset on hook events</b>, <b>drop stale partial dials</b>. Everything else is decoration.</p>
 
 <h2>06 · Things that will surprise you</h2>
 
