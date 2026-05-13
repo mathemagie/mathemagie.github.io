@@ -1,0 +1,15 @@
+{
+  "hooks": {
+    "PostToolUse": [
+      {
+        "matcher": "Edit|Write|MultiEdit",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "FP=$(jq -r '.tool_input.file_path // empty'); case \"$FP\" in */3615_terre/index.html|*/3615_terre/tests/*) cd /Users/mathemagie/mesprojets/perso/mathemagie.github.io/bidouille/3615_terre && node --test tests/ 2>&1 | tail -8 ;; esac"
+          }
+        ]
+      }
+    ]
+  }
+}
