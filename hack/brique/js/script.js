@@ -7,6 +7,8 @@ let faceMesh;
 let pose;
 let camera;
 let faces = [];
+let smoothedFaces = [];
+const FACE_SMOOTHING = 0.35; // 0 = frozen, 1 = no smoothing
 let bodyPose = null;
 let modelReady = false;
 let poseReady = false;
@@ -115,6 +117,12 @@ function keyPressed() {
             skeletonButton.hide();
         }
     }
+    if (key === 'f' || key === 'F') {
+        let fs = fullscreen();
+        fullscreen(!fs);
+        // Give the browser a tick to apply, then refit the canvas
+        setTimeout(() => resizeCanvas(windowWidth, windowHeight), 150);
+    }
 }
 
 function toggleMortarColor() {
@@ -149,9 +157,30 @@ function toggleSkeleton() {
 
 function onFaceResults(results) {
     if (results.multiFaceLandmarks && results.multiFaceLandmarks.length > 0) {
-        faces = results.multiFaceLandmarks;
+        let raw = results.multiFaceLandmarks;
+        // Drop smoothed faces that no longer have a counterpart
+        if (smoothedFaces.length > raw.length) {
+            smoothedFaces.length = raw.length;
+        }
+        for (let f = 0; f < raw.length; f++) {
+            let src = raw[f];
+            let dst = smoothedFaces[f];
+            if (!dst || dst.length !== src.length) {
+                // Seed with the first observation so we don't ease in from (0,0)
+                smoothedFaces[f] = src.map(pt => ({ x: pt.x, y: pt.y, z: pt.z }));
+                continue;
+            }
+            const a = FACE_SMOOTHING;
+            for (let i = 0; i < src.length; i++) {
+                dst[i].x += (src[i].x - dst[i].x) * a;
+                dst[i].y += (src[i].y - dst[i].y) * a;
+                dst[i].z += (src[i].z - dst[i].z) * a;
+            }
+        }
+        faces = smoothedFaces;
     } else {
         faces = [];
+        smoothedFaces = [];
     }
 }
 
@@ -784,73 +813,127 @@ function drawAnimatedSkeleton(landmarks, scaleX, scaleY, offsetX, offsetY) {
     pop();
 }
 
+function drawEye(keypoints, orderedIndices, scaleX, scaleY, offsetX, offsetY, sx, sy) {
+    // Collect points and compute center
+    let pts = [];
+    let cx = 0, cy = 0;
+    for (let idx of orderedIndices) {
+        if (idx >= keypoints.length || !keypoints[idx]) continue;
+        let pt = keypoints[idx];
+        let x = (1 - pt.x) * scaleX + offsetX;
+        let y = pt.y * scaleY + offsetY;
+        pts.push({ x, y });
+        cx += x; cy += y;
+    }
+    if (pts.length < 4) return;
+    cx /= pts.length;
+    cy /= pts.length;
+
+    // Scale around the eye's own center
+    let scaled = pts.map(p => ({
+        x: cx + (p.x - cx) * sx,
+        y: cy + (p.y - cy) * sy
+    }));
+
+    // Bounds for iris sizing
+    let minX = Infinity, maxX = -Infinity, minY = Infinity, maxY = -Infinity;
+    for (let p of scaled) {
+        if (p.x < minX) minX = p.x;
+        if (p.x > maxX) maxX = p.x;
+        if (p.y < minY) minY = p.y;
+        if (p.y > maxY) maxY = p.y;
+    }
+    let eyeW = maxX - minX;
+    let eyeH = maxY - minY;
+    let openness = eyeH / max(eyeW, 1); // ~0.15 closed, ~0.5 wide
+
+    // Smooth almond outline via curveVertex (closed loop)
+    function tracePath() {
+        beginShape();
+        // Wrap endpoints for smooth closure
+        curveVertex(scaled[scaled.length - 1].x, scaled[scaled.length - 1].y);
+        for (let p of scaled) curveVertex(p.x, p.y);
+        curveVertex(scaled[0].x, scaled[0].y);
+        curveVertex(scaled[1].x, scaled[1].y);
+        endShape(CLOSE);
+    }
+
+    push();
+    // Sclera (white of the eye) — slightly warm off-white to match brick tone
+    noStroke();
+    fill(whiteMortar ? 235 : 232, 226, 218);
+    tracePath();
+
+    // Clip subsequent drawing to the eye shape
+    drawingContext.save();
+    drawingContext.beginPath();
+    for (let i = 0; i < scaled.length; i++) {
+        let p = scaled[i];
+        if (i === 0) drawingContext.moveTo(p.x, p.y);
+        else drawingContext.lineTo(p.x, p.y);
+    }
+    drawingContext.closePath();
+    drawingContext.clip();
+
+    // Iris — sized to eye width, but mostly hidden under the upper lid
+    let irisD = eyeW * 0.55;
+    let irisX = cx;
+    let irisY = cy + eyeH * 0.05;
+
+    // Iris base (warm brown to harmonize with bricks)
+    fill(70, 40, 30);
+    ellipse(irisX, irisY, irisD, irisD);
+    // Iris rim
+    fill(35, 18, 12);
+    ellipse(irisX, irisY, irisD, irisD);
+    fill(95, 55, 38);
+    ellipse(irisX, irisY, irisD * 0.86, irisD * 0.86);
+
+    // Pupil
+    fill(8, 6, 6);
+    ellipse(irisX, irisY, irisD * 0.42, irisD * 0.42);
+
+    // Catchlight (subtle, top-left)
+    fill(255, 250, 240, 220);
+    ellipse(irisX - irisD * 0.18, irisY - irisD * 0.18, irisD * 0.18, irisD * 0.18);
+    fill(255, 250, 240, 140);
+    ellipse(irisX + irisD * 0.12, irisY + irisD * 0.12, irisD * 0.07, irisD * 0.07);
+
+    drawingContext.restore();
+
+    // Soft upper-lid shadow inside the eye
+    noFill();
+    stroke(0, 0, 0, openness < 0.25 ? 90 : 60);
+    strokeWeight(max(2, eyeH * 0.18));
+    beginShape();
+    curveVertex(scaled[scaled.length - 1].x, scaled[scaled.length - 1].y - eyeH * 0.05);
+    // top half of the eye (first ~half of ordered points covers the upper lid)
+    let topCount = floor(scaled.length / 2) + 1;
+    for (let i = 0; i < topCount; i++) {
+        curveVertex(scaled[i].x, scaled[i].y);
+    }
+    curveVertex(scaled[topCount - 1].x, scaled[topCount - 1].y);
+    endShape();
+
+    // Outer eyelid line for definition
+    noFill();
+    stroke(20, 12, 10, 200);
+    strokeWeight(1.5);
+    tracePath();
+    pop();
+}
+
 function drawEyeHoles(keypoints, scaleX, scaleY, offsetX, offsetY) {
     if (!keypoints || keypoints.length === 0) return;
 
-    let leftEyeIndices = [33, 133, 160, 159, 158, 144, 145, 153];
-    let rightEyeIndices = [362, 263, 387, 386, 385, 373, 374, 380];
-    let eyeScale = 1.8; // Scale factor to make eyes bigger
+    // Ordered around eye perimeter (outer corner → top lid → inner corner → bottom lid)
+    let leftEyeOrdered  = [33, 160, 159, 158, 133, 153, 145, 144];
+    let rightEyeOrdered = [263, 387, 386, 385, 362, 380, 374, 373];
+    let eyeScaleX = 1.35;
+    let eyeScaleY = 1.5;
 
-    if (whiteMortar) {
-        fill(220, 220, 215);
-    } else {
-        fill(10, 10, 15);
-    }
-    noStroke();
-
-    // Calculate left eye center and draw scaled
-    let leftCenterX = 0, leftCenterY = 0, leftCount = 0;
-    for (let idx of leftEyeIndices) {
-        if (idx < keypoints.length && keypoints[idx]) {
-            let pt = keypoints[idx];
-            leftCenterX += (1 - pt.x) * scaleX + offsetX;
-            leftCenterY += pt.y * scaleY + offsetY;
-            leftCount++;
-        }
-    }
-    leftCenterX /= leftCount;
-    leftCenterY /= leftCount;
-
-    beginShape();
-    for (let idx of leftEyeIndices) {
-        if (idx < keypoints.length && keypoints[idx]) {
-            let pt = keypoints[idx];
-            let x = (1 - pt.x) * scaleX + offsetX;
-            let y = pt.y * scaleY + offsetY;
-            // Scale from center
-            x = leftCenterX + (x - leftCenterX) * eyeScale;
-            y = leftCenterY + (y - leftCenterY) * eyeScale;
-            vertex(x, y);
-        }
-    }
-    endShape(CLOSE);
-
-    // Calculate right eye center and draw scaled
-    let rightCenterX = 0, rightCenterY = 0, rightCount = 0;
-    for (let idx of rightEyeIndices) {
-        if (idx < keypoints.length && keypoints[idx]) {
-            let pt = keypoints[idx];
-            rightCenterX += (1 - pt.x) * scaleX + offsetX;
-            rightCenterY += pt.y * scaleY + offsetY;
-            rightCount++;
-        }
-    }
-    rightCenterX /= rightCount;
-    rightCenterY /= rightCount;
-
-    beginShape();
-    for (let idx of rightEyeIndices) {
-        if (idx < keypoints.length && keypoints[idx]) {
-            let pt = keypoints[idx];
-            let x = (1 - pt.x) * scaleX + offsetX;
-            let y = pt.y * scaleY + offsetY;
-            // Scale from center
-            x = rightCenterX + (x - rightCenterX) * eyeScale;
-            y = rightCenterY + (y - rightCenterY) * eyeScale;
-            vertex(x, y);
-        }
-    }
-    endShape(CLOSE);
+    drawEye(keypoints, leftEyeOrdered,  scaleX, scaleY, offsetX, offsetY, eyeScaleX, eyeScaleY);
+    drawEye(keypoints, rightEyeOrdered, scaleX, scaleY, offsetX, offsetY, eyeScaleX, eyeScaleY);
 
     let mouthIndices = [61, 146, 91, 181, 84, 17, 314, 405, 321, 375, 291];
     if (whiteMortar) {
