@@ -1,0 +1,9 @@
+{
+  "name": "brique",
+  "private": true,
+  "version": "0.0.0",
+  "description": "Brick Face — p5.js + MediaPipe face/pose mask. Unit tests cover the pure helpers in js/lib.js.",
+  "scripts": {
+    "test": "node --test 'tests/**/*.test.js'"
+  }
+}
