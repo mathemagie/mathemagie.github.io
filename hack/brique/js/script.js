@@ -814,6 +814,9 @@ function drawAnimatedSkeleton(landmarks, scaleX, scaleY, offsetX, offsetY) {
 }
 
 function drawEye(keypoints, orderedIndices, scaleX, scaleY, offsetX, offsetY, sx, sy) {
+    // EAR computed on raw normalized coords — invariant to mirror/scale/tilt.
+    let ear = BriqueLib.earFromEyeIndices(keypoints, orderedIndices);
+
     // Collect points and compute center
     let pts = [];
     let cx = 0, cy = 0;
@@ -846,6 +849,10 @@ function drawEye(keypoints, orderedIndices, scaleX, scaleY, offsetX, offsetY, sx
     let eyeW = maxX - minX;
     let eyeH = maxY - minY;
     let openness = eyeH / max(eyeW, 1); // ~0.15 closed, ~0.5 wide
+    // Prefer EAR (rotation-invariant) when we got one; fall back to bbox ratio.
+    let closed = ear > 0
+        ? BriqueLib.isEyeClosedByEAR(ear, 0.18)
+        : BriqueLib.isEyeClosed(eyeW, eyeH, 0.2);
 
     // Smooth almond outline via curveVertex (closed loop)
     function tracePath() {
@@ -856,6 +863,28 @@ function drawEye(keypoints, orderedIndices, scaleX, scaleY, offsetX, offsetY, sx
         curveVertex(scaled[0].x, scaled[0].y);
         curveVertex(scaled[1].x, scaled[1].y);
         endShape(CLOSE);
+    }
+
+    if (closed) {
+        // Draw a closed eyelid: a single curved seam along the lid line, no sclera/iris.
+        push();
+        // Soft lid shadow underneath
+        noFill();
+        stroke(60, 35, 28, 140);
+        strokeWeight(max(2.5, eyeH * 0.6));
+        strokeCap(ROUND);
+        line(minX + eyeW * 0.05, cy + eyeH * 0.15, maxX - eyeW * 0.05, cy + eyeH * 0.15);
+        // Lid line itself
+        stroke(20, 12, 10, 230);
+        strokeWeight(max(1.5, eyeH * 0.35));
+        line(minX, cy, maxX, cy);
+        // Tiny lash flick at outer corner (left side of mirrored frame = outer for both eyes-ish)
+        strokeWeight(1);
+        stroke(20, 12, 10, 200);
+        line(minX, cy, minX - eyeW * 0.06, cy + eyeH * 0.25);
+        line(maxX, cy, maxX + eyeW * 0.06, cy + eyeH * 0.25);
+        pop();
+        return;
     }
 
     push();

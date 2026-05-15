@@ -140,6 +140,74 @@ test('eyeOpenness ratio is heightHover/width-ish', () => {
     assert.equal(lib.eyeOpenness(0, 10), 10);
 });
 
+test('isEyeClosed flips below the openness threshold', () => {
+    // Wide open ~0.5 → not closed
+    assert.equal(lib.isEyeClosed(100, 50), false);
+    // Squinty/blink ~0.15 → closed
+    assert.equal(lib.isEyeClosed(100, 15), true);
+    // Right at default threshold (0.2) is NOT closed (strict <)
+    assert.equal(lib.isEyeClosed(100, 20), false);
+    // Custom threshold lets callers tune sensitivity.
+    assert.equal(lib.isEyeClosed(100, 30, 0.4), true);
+    assert.equal(lib.isEyeClosed(100, 30, 0.25), false);
+});
+
+test('eyeAspectRatio computes (vertical avg) / (2 * horizontal)', () => {
+    // Symmetric eye: corners at (0,0)-(10,0), lids at y=±2
+    const ear = lib.eyeAspectRatio(
+        { x: 0,  y: 0 },   // p1 outer corner
+        { x: 3,  y: -2 },  // p2 upper lid
+        { x: 7,  y: -2 },  // p3 upper lid
+        { x: 10, y: 0 },   // p4 inner corner
+        { x: 7,  y: 2 },   // p5 lower lid
+        { x: 3,  y: 2 }    // p6 lower lid
+    );
+    // (4 + 4) / (2 * 10) = 0.4 — wide-open
+    assert.ok(Math.abs(ear - 0.4) < 1e-9);
+
+    // Closed lids → ~0
+    const closed = lib.eyeAspectRatio(
+        { x: 0, y: 0 }, { x: 3, y: 0 }, { x: 7, y: 0 },
+        { x: 10, y: 0 }, { x: 7, y: 0 }, { x: 3, y: 0 }
+    );
+    assert.equal(closed, 0);
+
+    // Degenerate horizontal → returns 0 (no NaN).
+    assert.equal(lib.eyeAspectRatio(
+        { x: 5, y: 0 }, { x: 5, y: -1 }, { x: 5, y: -1 },
+        { x: 5, y: 0 }, { x: 5, y: 1 }, { x: 5, y: 1 }
+    ), 0);
+});
+
+test('isEyeClosedByEAR uses 0.18 default threshold', () => {
+    assert.equal(lib.isEyeClosedByEAR(0.30), false);    // wide open
+    assert.equal(lib.isEyeClosedByEAR(0.10), true);     // blink
+    assert.equal(lib.isEyeClosedByEAR(0.18), false);    // strict <
+    assert.equal(lib.isEyeClosedByEAR(0.25, 0.30), true);  // custom threshold
+});
+
+test('earFromEyeIndices pulls 6 EAR points from a MediaPipe-style array', () => {
+    // Build a sparse keypoints array indexed by the LEFT_EYE_ORDERED set.
+    const kp = new Array(468).fill(null);
+    const idx = lib.LEFT_EYE_ORDERED; // [outer, t1, t2, t3, inner, b1, b2, b3]
+    kp[idx[0]] = { x: 0,    y: 0 };     // outer
+    kp[idx[1]] = { x: 0.03, y: -0.02 }; // top1
+    kp[idx[2]] = { x: 0.07, y: -0.02 }; // top2
+    kp[idx[4]] = { x: 0.10, y: 0 };     // inner
+    kp[idx[5]] = { x: 0.07, y: 0.02 };  // bottom2 (per script convention)
+    kp[idx[6]] = { x: 0.03, y: 0.02 };  // bottom1
+    const ear = lib.earFromEyeIndices(kp, idx);
+    // (0.04 + 0.04) / (2 * 0.10) = 0.4
+    assert.ok(Math.abs(ear - 0.4) < 1e-9);
+
+    // Missing landmarks → 0 (defensive, no crash).
+    assert.equal(lib.earFromEyeIndices(null, idx), 0);
+    assert.equal(lib.earFromEyeIndices(kp, null), 0);
+    const missing = kp.slice();
+    missing[idx[1]] = null;
+    assert.equal(lib.earFromEyeIndices(missing, idx), 0);
+});
+
 test('irisGeometry sizes iris to ~55% of eye width and nudges down', () => {
     const g = lib.irisGeometry(50, 100, 40, 20);
     assert.equal(g.irisD, 22);

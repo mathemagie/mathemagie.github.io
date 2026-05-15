@@ -122,6 +122,50 @@
         return eyeH / Math.max(eyeW, 1);
     }
 
+    // Closed when the openness ratio drops below threshold (default ~0.2).
+    // MediaPipe wide-open eyes sit around 0.4–0.6; a relaxed blink falls under 0.2.
+    function isEyeClosed(eyeW, eyeH, threshold) {
+        const t = (typeof threshold === 'number') ? threshold : 0.2;
+        return eyeOpenness(eyeW, eyeH) < t;
+    }
+
+    // Eye Aspect Ratio (EAR) — Soukupová & Čech 2016.
+    // Six points around the eye: outer corner (p1), upper lid (p2, p3),
+    // inner corner (p4), lower lid (p5, p6). Returns (||p2-p6|| + ||p3-p5||) / (2 * ||p1-p4||).
+    // Works on normalized or pixel coords as long as inputs share a unit.
+    function eyeAspectRatio(p1, p2, p3, p4, p5, p6) {
+        function dist(a, b) {
+            const dx = a.x - b.x;
+            const dy = a.y - b.y;
+            return Math.sqrt(dx * dx + dy * dy);
+        }
+        const horizontal = dist(p1, p4);
+        if (horizontal <= 0) return 0;
+        return (dist(p2, p6) + dist(p3, p5)) / (2 * horizontal);
+    }
+
+    // Closed when EAR drops below threshold. Open eyes ~0.30+, blinks ~0.10–0.18.
+    function isEyeClosedByEAR(ear, threshold) {
+        const t = (typeof threshold === 'number') ? threshold : 0.18;
+        return ear < t;
+    }
+
+    // Pull the 6 EAR landmarks for an eye out of a MediaPipe keypoints array.
+    // `eyeIndices` follows the script's ordered convention:
+    // [outer, top1, top2, top3, inner, bottom1, bottom2, bottom3]
+    // We use outer/inner as horizontal corners and the middle pair from each lid.
+    function earFromEyeIndices(keypoints, eyeIndices) {
+        if (!keypoints || !eyeIndices || eyeIndices.length < 8) return 0;
+        const outer  = keypoints[eyeIndices[0]];
+        const top1   = keypoints[eyeIndices[1]];
+        const top2   = keypoints[eyeIndices[2]];
+        const inner  = keypoints[eyeIndices[4]];
+        const bot1   = keypoints[eyeIndices[5]];
+        const bot2   = keypoints[eyeIndices[6]];
+        if (!outer || !top1 || !top2 || !inner || !bot1 || !bot2) return 0;
+        return eyeAspectRatio(outer, top1, top2, inner, bot1, bot2);
+    }
+
     // Iris placement relative to eye bounds (matches drawEye()).
     function irisGeometry(cx, cy, eyeW, eyeH) {
         return {
@@ -152,6 +196,10 @@
         smoothLandmarks,
         brickGridRange,
         eyeOpenness,
+        isEyeClosed,
+        eyeAspectRatio,
+        isEyeClosedByEAR,
+        earFromEyeIndices,
         irisGeometry,
         centroid
     };
