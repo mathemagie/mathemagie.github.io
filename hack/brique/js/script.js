@@ -23,6 +23,10 @@ let mortarButton;
 let showSkeleton = false;
 let skeletonButton;
 
+// Mouth-open → sound
+let mouthSoundEl;
+let mouthState = { open: false, lastFireMs: -Infinity };
+
 function setup() {
     createCanvas(windowWidth, windowHeight);
     brickColorBase = color(180, 60, 50);
@@ -30,6 +34,7 @@ function setup() {
     noStroke();
 
     videoElement = document.getElementById('video');
+    mouthSoundEl = document.getElementById('mouthSound');
 
     // Initialize MediaPipe FaceMesh
     faceMesh = new FaceMesh({
@@ -348,6 +353,19 @@ function draw() {
             pop();
 
             drawEyeHoles(keypoints, scaleX, scaleY, offsetX, offsetY);
+
+            // Trigger a brick clack on mouth-open rising edge (first face only).
+            if (faceIdx === 0) {
+                let mar = BriqueLib.marFromMouthLandmarks(keypoints);
+                mouthState = BriqueLib.mouthOpenTrigger(mouthState, mar, millis(), 0.35, 250);
+                if (mouthState.fired && mouthSoundEl) {
+                    try {
+                        mouthSoundEl.currentTime = 0;
+                        let p = mouthSoundEl.play();
+                        if (p && typeof p.catch === 'function') p.catch(() => {});
+                    } catch (_) { /* autoplay blocked until user gesture */ }
+                }
+            }
         }
 
         // Draw skeleton based on body pose (only once, not per face) - only if enabled

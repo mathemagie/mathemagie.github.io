@@ -208,6 +208,82 @@ test('earFromEyeIndices pulls 6 EAR points from a MediaPipe-style array', () => 
     assert.equal(lib.earFromEyeIndices(missing, idx), 0);
 });
 
+test('mouthAspectRatio computes vertical / horizontal', () => {
+    // 10 wide, 4 tall → MAR = 0.4 (open).
+    const open = lib.mouthAspectRatio(
+        { x: 0, y: -2 }, { x: 0, y: 2 },   // upper, lower lip
+        { x: -5, y: 0 }, { x: 5, y: 0 }    // left, right corner
+    );
+    assert.ok(Math.abs(open - 0.4) < 1e-9);
+
+    // 10 wide, 0.5 tall → MAR = 0.05 (closed).
+    const closed = lib.mouthAspectRatio(
+        { x: 0, y: -0.25 }, { x: 0, y: 0.25 },
+        { x: -5, y: 0 }, { x: 5, y: 0 }
+    );
+    assert.ok(Math.abs(closed - 0.05) < 1e-9);
+
+    // Degenerate horizontal → 0, no NaN.
+    assert.equal(lib.mouthAspectRatio({ x: 0, y: 0 }, { x: 0, y: 1 }, { x: 0, y: 0 }, { x: 0, y: 0 }), 0);
+    // Missing landmark → 0.
+    assert.equal(lib.mouthAspectRatio(null, { x: 0, y: 0 }, { x: 0, y: 0 }, { x: 0, y: 0 }), 0);
+});
+
+test('marFromMouthLandmarks pulls 13/14/78/308 from MediaPipe array', () => {
+    const kp = new Array(468).fill(null);
+    kp[13]  = { x: 0.5, y: 0.6 };   // upper inner lip
+    kp[14]  = { x: 0.5, y: 0.7 };   // lower inner lip
+    kp[78]  = { x: 0.4, y: 0.65 };  // left corner
+    kp[308] = { x: 0.6, y: 0.65 };  // right corner
+    // vertical = 0.1, horizontal = 0.2 → MAR = 0.5
+    const mar = lib.marFromMouthLandmarks(kp);
+    assert.ok(Math.abs(mar - 0.5) < 1e-9);
+
+    assert.equal(lib.marFromMouthLandmarks(null), 0);
+    const partial = kp.slice();
+    partial[13] = null;
+    assert.equal(lib.marFromMouthLandmarks(partial), 0);
+});
+
+test('isMouthOpen flips above default 0.35 threshold', () => {
+    assert.equal(lib.isMouthOpen(0.5), true);
+    assert.equal(lib.isMouthOpen(0.1), false);
+    assert.equal(lib.isMouthOpen(0.35), false); // strict >
+    assert.equal(lib.isMouthOpen(0.2, 0.15), true);
+});
+
+test('mouthOpenTrigger fires once on rising edge with cooldown', () => {
+    // Initial state, mouth closed → no fire.
+    let s = lib.mouthOpenTrigger(null, 0.1, 1000, 0.35, 250);
+    assert.equal(s.open, false);
+    assert.equal(s.fired, false);
+
+    // Crosses threshold → fires.
+    s = lib.mouthOpenTrigger(s, 0.5, 1100, 0.35, 250);
+    assert.equal(s.open, true);
+    assert.equal(s.fired, true);
+    assert.equal(s.lastFireMs, 1100);
+
+    // Stays open → does NOT re-fire.
+    s = lib.mouthOpenTrigger(s, 0.6, 1200, 0.35, 250);
+    assert.equal(s.fired, false);
+
+    // Closes.
+    s = lib.mouthOpenTrigger(s, 0.1, 1300, 0.35, 250);
+    assert.equal(s.open, false);
+    assert.equal(s.fired, false);
+
+    // Reopens within cooldown (1300 → 1400, cool=250 but elapsed since lastFire=1100 is 300) → fires.
+    s = lib.mouthOpenTrigger(s, 0.5, 1400, 0.35, 250);
+    assert.equal(s.fired, true);
+
+    // Close then reopen too quickly → suppressed by cooldown.
+    s = lib.mouthOpenTrigger(s, 0.1, 1410, 0.35, 250);
+    s = lib.mouthOpenTrigger(s, 0.5, 1450, 0.35, 250);
+    assert.equal(s.open, true);
+    assert.equal(s.fired, false);
+});
+
 test('irisGeometry sizes iris to ~55% of eye width and nudges down', () => {
     const g = lib.irisGeometry(50, 100, 40, 20);
     assert.equal(g.irisD, 22);

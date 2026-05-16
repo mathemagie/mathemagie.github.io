@@ -166,6 +166,49 @@
         return eyeAspectRatio(outer, top1, top2, inner, bot1, bot2);
     }
 
+    // Mouth Aspect Ratio (MAR). Inner-lip vertical over corner-to-corner horizontal.
+    // Values: closed ~0.05, slightly open ~0.2, "open" (talking/yelling) ≥ ~0.4.
+    function mouthAspectRatio(upperLip, lowerLip, leftCorner, rightCorner) {
+        if (!upperLip || !lowerLip || !leftCorner || !rightCorner) return 0;
+        const dx = leftCorner.x - rightCorner.x;
+        const dy = leftCorner.y - rightCorner.y;
+        const horizontal = Math.sqrt(dx * dx + dy * dy);
+        if (horizontal <= 0) return 0;
+        const vx = upperLip.x - lowerLip.x;
+        const vy = upperLip.y - lowerLip.y;
+        const vertical = Math.sqrt(vx * vx + vy * vy);
+        return vertical / horizontal;
+    }
+
+    // Inner-mouth MediaPipe FaceMesh indices: 13 (upper inner lip), 14 (lower inner
+    // lip), 78 (left inner corner), 308 (right inner corner).
+    function marFromMouthLandmarks(keypoints) {
+        if (!keypoints) return 0;
+        return mouthAspectRatio(keypoints[13], keypoints[14], keypoints[78], keypoints[308]);
+    }
+
+    function isMouthOpen(mar, threshold) {
+        const t = (typeof threshold === 'number') ? threshold : 0.35;
+        return mar > t;
+    }
+
+    // Rising-edge trigger with debounce. Returns the new state object; `fired` is
+    // true only on the frame where mouth crossed from closed → open AND enough time
+    // has passed since the last fire. State shape: { open: bool, lastFireMs: number }.
+    function mouthOpenTrigger(prevState, mar, nowMs, threshold, cooldownMs) {
+        const t = (typeof threshold === 'number') ? threshold : 0.35;
+        const cool = (typeof cooldownMs === 'number') ? cooldownMs : 250;
+        const prev = prevState || { open: false, lastFireMs: -Infinity };
+        const open = mar > t;
+        let fired = false;
+        let lastFireMs = prev.lastFireMs;
+        if (open && !prev.open && (nowMs - prev.lastFireMs) >= cool) {
+            fired = true;
+            lastFireMs = nowMs;
+        }
+        return { open, lastFireMs, fired };
+    }
+
     // Iris placement relative to eye bounds (matches drawEye()).
     function irisGeometry(cx, cy, eyeW, eyeH) {
         return {
@@ -200,6 +243,10 @@
         eyeAspectRatio,
         isEyeClosedByEAR,
         earFromEyeIndices,
+        mouthAspectRatio,
+        marFromMouthLandmarks,
+        isMouthOpen,
+        mouthOpenTrigger,
         irisGeometry,
         centroid
     };
