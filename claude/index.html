@@ -1,0 +1,974 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>The Other 90% — A Field Guide to Claude</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,300;0,9..144,400;0,9..144,500;0,9..144,600;0,9..144,800;1,9..144,400&family=JetBrains+Mono:wght@400;500&family=Inter+Tight:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --paper: #f4efe6;
+    --paper-dark: #ebe4d6;
+    --ink: #1a1814;
+    --ink-soft: #2d2a23;
+    --rust: #b34a2c;
+    --olive: #6b6840;
+    --rule: #1a181433;
+    --highlight: #f7e9a0;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  html { scroll-behavior: smooth; }
+
+  body {
+    background: var(--paper);
+    color: var(--ink);
+    font-family: 'Fraunces', Georgia, serif;
+    font-weight: 400;
+    line-height: 1.6;
+    font-size: 18px;
+    overflow-x: hidden;
+    background-image:
+      radial-gradient(at 20% 10%, rgba(179,74,44,0.04) 0%, transparent 50%),
+      radial-gradient(at 80% 80%, rgba(107,104,64,0.05) 0%, transparent 50%);
+  }
+
+  /* Noise texture overlay */
+  body::before {
+    content: "";
+    position: fixed;
+    inset: 0;
+    pointer-events: none;
+    z-index: 1;
+    opacity: 0.4;
+    background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='3'/%3E%3CfeColorMatrix values='0 0 0 0 0.1 0 0 0 0 0.09 0 0 0 0 0.08 0 0 0 0.15 0'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+  }
+
+  .container {
+    max-width: 760px;
+    margin: 0 auto;
+    padding: 0 32px;
+    position: relative;
+    z-index: 2;
+  }
+
+  /* ===== MASTHEAD ===== */
+  .masthead {
+    padding: 80px 0 60px;
+    border-bottom: 2px solid var(--ink);
+    position: relative;
+  }
+
+  .masthead-top {
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px;
+    text-transform: uppercase;
+    letter-spacing: 0.18em;
+    color: var(--ink-soft);
+    margin-bottom: 48px;
+    padding-bottom: 16px;
+    border-bottom: 1px solid var(--rule);
+  }
+
+  .masthead-top span { display: inline-block; }
+
+  h1 {
+    font-family: 'Fraunces', serif;
+    font-weight: 300;
+    font-size: clamp(48px, 9vw, 96px);
+    line-height: 0.92;
+    letter-spacing: -0.035em;
+    margin-bottom: 24px;
+    font-variation-settings: "opsz" 144;
+  }
+
+  h1 em {
+    font-style: italic;
+    font-weight: 400;
+    color: var(--rust);
+  }
+
+  .subtitle {
+    font-family: 'Fraunces', serif;
+    font-style: italic;
+    font-size: 22px;
+    color: var(--ink-soft);
+    max-width: 540px;
+    font-weight: 400;
+    line-height: 1.4;
+    margin-top: 12px;
+  }
+
+  .deck {
+    margin-top: 48px;
+    padding-top: 32px;
+    border-top: 1px solid var(--rule);
+    font-size: 19px;
+    line-height: 1.65;
+    color: var(--ink-soft);
+    max-width: 620px;
+  }
+
+  .deck p + p { margin-top: 16px; }
+
+  /* ===== TOC ===== */
+  .toc {
+    padding: 56px 0 48px;
+    border-bottom: 1px solid var(--rule);
+  }
+
+  .toc-label {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px;
+    text-transform: uppercase;
+    letter-spacing: 0.2em;
+    color: var(--ink-soft);
+    margin-bottom: 32px;
+  }
+
+  .toc ol {
+    list-style: none;
+    columns: 2;
+    column-gap: 48px;
+  }
+
+  .toc li {
+    break-inside: avoid;
+    margin-bottom: 12px;
+    font-family: 'Inter Tight', sans-serif;
+    font-size: 15px;
+    line-height: 1.4;
+    display: flex;
+    gap: 12px;
+  }
+
+  .toc li .num {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px;
+    color: var(--rust);
+    min-width: 24px;
+    padding-top: 2px;
+  }
+
+  .toc a {
+    color: var(--ink);
+    text-decoration: none;
+    border-bottom: 1px solid transparent;
+    transition: border-color 0.2s ease, color 0.2s ease;
+  }
+
+  .toc a:hover {
+    color: var(--rust);
+    border-bottom-color: var(--rust);
+  }
+
+  @media (max-width: 600px) {
+    .toc ol { columns: 1; }
+  }
+
+  /* ===== PART HEADERS ===== */
+  .part {
+    margin: 80px 0 40px;
+    text-align: center;
+    position: relative;
+  }
+
+  .part-label {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px;
+    text-transform: uppercase;
+    letter-spacing: 0.25em;
+    color: var(--rust);
+    margin-bottom: 12px;
+  }
+
+  .part-title {
+    font-family: 'Fraunces', serif;
+    font-style: italic;
+    font-weight: 400;
+    font-size: 36px;
+    letter-spacing: -0.01em;
+    color: var(--ink);
+    font-variation-settings: "opsz" 144;
+  }
+
+  .part::before, .part::after {
+    content: "❦";
+    display: block;
+    color: var(--rust);
+    font-size: 18px;
+    margin: 0 auto 20px;
+    opacity: 0.6;
+  }
+  .part::after {
+    margin: 20px auto 0;
+  }
+
+  /* ===== SECTIONS ===== */
+  .section {
+    padding: 48px 0;
+    border-top: 1px solid var(--rule);
+    scroll-margin-top: 24px;
+  }
+
+  .section-header {
+    display: flex;
+    align-items: baseline;
+    gap: 24px;
+    margin-bottom: 24px;
+  }
+
+  .section-number {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 13px;
+    font-weight: 500;
+    color: var(--rust);
+    letter-spacing: 0.05em;
+    flex-shrink: 0;
+    padding-top: 6px;
+  }
+
+  h2 {
+    font-family: 'Fraunces', serif;
+    font-weight: 500;
+    font-size: clamp(28px, 4vw, 38px);
+    line-height: 1.1;
+    letter-spacing: -0.02em;
+    color: var(--ink);
+    font-variation-settings: "opsz" 144;
+  }
+
+  .section p {
+    margin-bottom: 18px;
+    color: var(--ink-soft);
+    font-size: 18px;
+  }
+
+  .section p strong, .section strong {
+    color: var(--ink);
+    font-weight: 600;
+  }
+
+  .section em {
+    font-style: italic;
+    color: var(--ink);
+  }
+
+  /* Drop cap for the first paragraph of important sections */
+  .drop-cap::first-letter {
+    font-family: 'Fraunces', serif;
+    font-weight: 300;
+    font-size: 5em;
+    float: left;
+    line-height: 0.85;
+    margin: 6px 12px -6px 0;
+    color: var(--rust);
+    font-variation-settings: "opsz" 144;
+  }
+
+  /* ===== PROMPT BLOCKS ===== */
+  .prompt {
+    background: var(--ink);
+    color: #e8e4d8;
+    padding: 28px 32px;
+    margin: 28px 0;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 13.5px;
+    line-height: 1.7;
+    border-radius: 2px;
+    position: relative;
+    white-space: pre-wrap;
+    overflow-x: auto;
+    box-shadow: 4px 4px 0 var(--rust);
+  }
+
+  .prompt::before {
+    content: "PROMPT";
+    position: absolute;
+    top: -10px;
+    left: 24px;
+    background: var(--rust);
+    color: var(--paper);
+    padding: 3px 10px;
+    font-size: 10px;
+    letter-spacing: 0.2em;
+    font-weight: 500;
+    border-radius: 1px;
+  }
+
+  .prompt .placeholder {
+    color: #d4a574;
+    font-style: italic;
+  }
+
+  .copy-btn {
+    position: absolute;
+    top: 14px;
+    right: 14px;
+    background: transparent;
+    border: 1px solid #e8e4d855;
+    color: #e8e4d8;
+    padding: 6px 12px;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 10px;
+    letter-spacing: 0.15em;
+    cursor: pointer;
+    border-radius: 1px;
+    transition: all 0.2s ease;
+  }
+  .copy-btn:hover {
+    background: var(--rust);
+    border-color: var(--rust);
+  }
+  .copy-btn.copied { background: var(--olive); border-color: var(--olive); }
+
+  /* ===== PULL QUOTES & ASIDES ===== */
+  .pullquote {
+    margin: 32px -20px;
+    padding: 24px 32px;
+    border-left: 3px solid var(--rust);
+    background: var(--paper-dark);
+    font-family: 'Fraunces', serif;
+    font-style: italic;
+    font-weight: 400;
+    font-size: 22px;
+    line-height: 1.4;
+    color: var(--ink);
+    font-variation-settings: "opsz" 144;
+  }
+
+  .comparison {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 16px;
+    margin: 24px 0;
+  }
+
+  .comparison-item {
+    padding: 18px 22px;
+    border-left: 3px solid;
+    background: var(--paper-dark);
+    font-size: 16px;
+  }
+  .comparison-item.bad { border-left-color: #8b4040; }
+  .comparison-item.good { border-left-color: var(--olive); }
+
+  .comparison-label {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 10px;
+    letter-spacing: 0.2em;
+    text-transform: uppercase;
+    margin-bottom: 6px;
+    color: var(--ink-soft);
+  }
+
+  /* ===== FINAL ===== */
+  .finale {
+    margin-top: 80px;
+    padding: 80px 0 100px;
+    border-top: 2px solid var(--ink);
+    text-align: center;
+  }
+
+  .finale-label {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px;
+    text-transform: uppercase;
+    letter-spacing: 0.25em;
+    color: var(--rust);
+    margin-bottom: 24px;
+  }
+
+  .finale h2 {
+    font-size: clamp(36px, 6vw, 56px);
+    font-weight: 300;
+    letter-spacing: -0.03em;
+    margin-bottom: 32px;
+    font-style: italic;
+    font-variation-settings: "opsz" 144;
+  }
+
+  .finale p {
+    max-width: 540px;
+    margin: 0 auto 18px;
+    font-size: 19px;
+    color: var(--ink-soft);
+    line-height: 1.6;
+  }
+
+  .finale .kicker {
+    margin-top: 40px;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 12px;
+    letter-spacing: 0.2em;
+    text-transform: uppercase;
+    color: var(--ink);
+    font-weight: 500;
+  }
+
+  /* ===== COLOPHON ===== */
+  .colophon {
+    padding: 40px 0;
+    border-top: 1px solid var(--rule);
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 10px;
+    letter-spacing: 0.18em;
+    text-transform: uppercase;
+    color: var(--ink-soft);
+    display: flex;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    gap: 12px;
+  }
+
+  /* Float number ornament */
+  .marginalia {
+    position: absolute;
+    left: -80px;
+    top: 0;
+    font-family: 'Fraunces', serif;
+    font-weight: 300;
+    font-size: 140px;
+    line-height: 1;
+    color: var(--rust);
+    opacity: 0.12;
+    font-style: italic;
+    pointer-events: none;
+    font-variation-settings: "opsz" 144;
+  }
+  @media (max-width: 900px) {
+    .marginalia { display: none; }
+  }
+
+  /* Scroll progress bar */
+  .progress {
+    position: fixed;
+    top: 0; left: 0;
+    height: 3px;
+    width: 0;
+    background: var(--rust);
+    z-index: 100;
+    transition: width 0.1s linear;
+  }
+
+  /* Stagger reveal */
+  .reveal {
+    opacity: 0;
+    transform: translateY(20px);
+    transition: opacity 0.8s ease, transform 0.8s ease;
+  }
+  .reveal.visible {
+    opacity: 1;
+    transform: translateY(0);
+  }
+</style>
+</head>
+<body>
+
+<div class="progress" id="progress"></div>
+
+<div class="container">
+
+  <!-- ============ MASTHEAD ============ -->
+  <header class="masthead">
+    <div class="masthead-top">
+      <span>Vol. I · No. 01</span>
+      <span>A Field Guide</span>
+      <span>Two Years In</span>
+    </div>
+    <h1>The Other<br><em>Ninety Percent</em></h1>
+    <p class="subtitle">Most people who use Claude every day are still using one-tenth of what it can do. Not because it's complicated — because nobody showed them what the rest looks like.</p>
+
+    <div class="deck">
+      <p>By the end of this guide you will have Claude set up in a way that remembers you, understands you, and works the way you actually think.</p>
+      <p>And you will know how to use it for things most people have never tried.</p>
+    </div>
+  </header>
+
+  <!-- ============ TOC ============ -->
+  <nav class="toc">
+    <div class="toc-label">Contents — Eighteen Movements</div>
+    <ol>
+      <li><span class="num">01</span><a href="#s1">Create a Project, not a chat</a></li>
+      <li><span class="num">02</span><a href="#s2">Tell Claude who you are</a></li>
+      <li><span class="num">03</span><a href="#s3">Turn that into Custom Instructions</a></li>
+      <li><span class="num">04</span><a href="#s4">Claude is not a search engine</a></li>
+      <li><span class="num">05</span><a href="#s5">Ask Claude to ask you questions first</a></li>
+      <li><span class="num">06</span><a href="#s6">Style cloning</a></li>
+      <li><span class="num">07</span><a href="#s7">Claude as your sparring partner</a></li>
+      <li><span class="num">08</span><a href="#s8">Extended Thinking</a></li>
+      <li><span class="num">09</span><a href="#s9">Claude writes prompts for Claude</a></li>
+      <li><span class="num">10</span><a href="#s10">Specify the output length</a></li>
+      <li><span class="num">11</span><a href="#s11">Remove the preamble</a></li>
+      <li><span class="num">12</span><a href="#s12">Don't re-explain yourself</a></li>
+      <li><span class="num">13</span><a href="#s13">Start a new chat for a new topic</a></li>
+      <li><span class="num">14</span><a href="#s14">Understand anything (Feynman)</a></li>
+      <li><span class="num">15</span><a href="#s15">Travel plans, your way</a></li>
+      <li><span class="num">16</span><a href="#s16">Monthly expense analysis</a></li>
+      <li><span class="num">17</span><a href="#s17">Personal thinking partner</a></li>
+      <li><span class="num">18</span><a href="#s18">Stress-test any business idea</a></li>
+    </ol>
+  </nav>
+
+  <!-- ============ PART I ============ -->
+  <div class="part">
+    <div class="part-label">Part One</div>
+    <div class="part-title">Start Here</div>
+  </div>
+
+  <!-- ===== 1 ===== -->
+  <section class="section" id="s1">
+    <span class="marginalia">1</span>
+    <div class="section-header">
+      <span class="section-number">§ 01</span>
+      <h2>Create a Project, not a chat</h2>
+    </div>
+    <p class="drop-cap">Every time you open a new Claude chat, it starts with zero memory. It doesn't know your name, your work, your goals, or how you like to communicate. You spend the first few messages re-explaining yourself, or you don't, and Claude gives you something generic that doesn't fit how you actually work.</p>
+    <p>Projects fix this. A Project is a persistent workspace where Claude keeps context across every conversation inside it. You set it up once and every session that follows starts with Claude already knowing who you are.</p>
+    <p>Go to Claude, click <strong>Projects</strong> in the sidebar, and create a new one. Name it something like <em>"Work"</em> or <em>"Personal"</em> depending on how you plan to use it. Everything that follows goes inside this Project.</p>
+  </section>
+
+  <!-- ===== 2 ===== -->
+  <section class="section" id="s2">
+    <span class="marginalia">2</span>
+    <div class="section-header">
+      <span class="section-number">§ 02</span>
+      <h2>Tell Claude who you are</h2>
+    </div>
+    <p>Before Claude can help you well, it needs to understand you. Most people skip this step entirely and wonder why Claude gives them answers that feel slightly off.</p>
+    <p>Paste this into your Project and fill in every field honestly. The more specific you are, the better every single response becomes.</p>
+
+    <div class="prompt"><button class="copy-btn">COPY</button>My name is <span class="placeholder">[your name]</span>.
+
+I work as <span class="placeholder">[your role or profession]</span>. My main responsibilities are <span class="placeholder">[2–3 things you actually do day to day]</span>.
+
+Right now my biggest goals are <span class="placeholder">[1–3 specific goals you're working toward]</span>.
+
+I use Claude mostly for <span class="placeholder">[list your main use cases — writing, research, analysis, learning, coding, etc]</span>.
+
+My background and knowledge level: <span class="placeholder">[what you know well, what you're learning, what you're new to]</span>.
+
+How I like to receive information: <span class="placeholder">[e.g. direct and concise / detailed with examples / step by step / no bullet points / short paragraphs]</span>.
+
+Things I don't want: <span class="placeholder">[e.g. don't add disclaimers, don't use corporate language, don't repeat what I just said back to me, don't start with "Great question"]</span>.
+
+Topics and areas I care about: <span class="placeholder">[your interests, industry, niche]</span>.</div>
+
+    <p>Save this inside your Project's knowledge base. Claude will read it at the start of every conversation in this Project.</p>
+  </section>
+
+  <!-- ===== 3 ===== -->
+  <section class="section" id="s3">
+    <span class="marginalia">3</span>
+    <div class="section-header">
+      <span class="section-number">§ 03</span>
+      <h2>Turn that into Custom Instructions</h2>
+    </div>
+    <p>Pasting your background is a good start. But Custom Instructions go further. They tell Claude not just who you are, but exactly how to behave with you by default.</p>
+    <p>Paste this prompt into Claude after you've filled in the template above:</p>
+
+    <div class="prompt"><button class="copy-btn">COPY</button>Based on everything I've told you about myself, write me a set of custom instructions for this Claude Project.
+
+The instructions should:
+- Describe who I am and what I do
+- Set my default communication style and format
+- Tell Claude what to never do when working with me
+- Define the tone I want in every response
+- Include any default behaviors I would want in every session
+
+Write them in second person, as if Claude is reading rules about how to help me. Be specific. No generic advice. Under 400 words.</div>
+
+    <p>Take the output and paste it into your <strong>Project Instructions</strong>. This becomes Claude's permanent operating mode for every conversation in this Project.</p>
+  </section>
+
+  <!-- ============ PART II ============ -->
+  <div class="part">
+    <div class="part-label">Part Two</div>
+    <div class="part-title">Claude Is Not What You Think</div>
+  </div>
+
+  <!-- ===== 4 ===== -->
+  <section class="section" id="s4">
+    <span class="marginalia">4</span>
+    <div class="section-header">
+      <span class="section-number">§ 04</span>
+      <h2>Claude is not a search engine</h2>
+    </div>
+    <p>Most people use Claude the way they use Google. They type a question and wait for an answer. That is the lowest-value way to use it.</p>
+
+    <div class="pullquote">Claude is not a retrieval tool. It is a thinking partner.</div>
+
+    <p>It doesn't just pull information — it reasons, synthesizes, argues, and builds on context. The moment you treat it like a search engine, you cut its usefulness by eighty percent.</p>
+    <p>Stop asking Claude <em>what</em> something is. Start asking Claude to help you <em>think through</em> something.</p>
+
+    <div class="comparison">
+      <div class="comparison-item bad">
+        <div class="comparison-label">Instead of</div>
+        "What is prompt caching?"
+      </div>
+      <div class="comparison-item good">
+        <div class="comparison-label">Try</div>
+        "I'm building a workflow that calls Claude 20 times per session. Walk me through how prompt caching works and whether it would actually reduce my costs given that context."
+      </div>
+    </div>
+
+    <p>The second prompt gives Claude a problem to solve with you. The first gives it a definition to recite.</p>
+  </section>
+
+  <!-- ===== 5 ===== -->
+  <section class="section" id="s5">
+    <span class="marginalia">5</span>
+    <div class="section-header">
+      <span class="section-number">§ 05</span>
+      <h2>Ask Claude to ask <em>you</em> questions first</h2>
+    </div>
+    <p>This is one of the most powerful techniques almost nobody uses. Before Claude starts any complex task, tell it to gather information from you first.</p>
+    <p>When Claude asks you questions before starting, the output is dramatically better because it's built on the right foundation. Without this, Claude makes assumptions and you spend time correcting things that could have been right the first time.</p>
+
+    <div class="prompt"><button class="copy-btn">COPY</button>Before you start, ask me the 5 most important questions that would help you do this well.
+
+After I answer, then begin.</div>
+
+    <p>Or for a specific task:</p>
+
+    <div class="prompt"><button class="copy-btn">COPY</button>I need you to help me write a cold email to a potential client.
+
+Before you write anything, ask me what you need to know to make this genuinely good, not generic.</div>
+  </section>
+
+  <!-- ============ PART III ============ -->
+  <div class="part">
+    <div class="part-label">Part Three</div>
+    <div class="part-title">What Even Regular Users Don't Know</div>
+  </div>
+
+  <!-- ===== 6 ===== -->
+  <section class="section" id="s6">
+    <span class="marginalia">6</span>
+    <div class="section-header">
+      <span class="section-number">§ 06</span>
+      <h2>Style cloning</h2>
+    </div>
+    <p>When Claude writes in your voice without examples, it writes in its own voice. The output is grammatically correct and completely wrong in tone. It sounds like AI because it is.</p>
+    <p>Give Claude three to five samples of your own writing. Ask it to analyze your <em>patterns</em>, not just describe your style. After that analysis, it writes like you, not like a polished corporate assistant.</p>
+
+    <div class="prompt"><button class="copy-btn">COPY</button>Here are 3 examples of my writing:
+
+<span class="placeholder">[paste sample 1]</span>
+<span class="placeholder">[paste sample 2]</span>
+<span class="placeholder">[paste sample 3]</span>
+
+Analyze my writing style in detail. Look at: sentence length, rhythm, vocabulary choices, how I open and close paragraphs, what I avoid, how formal or informal I am, and any patterns that make my writing distinct.
+
+After this, when I ask you to write anything for me, match this style exactly. Do not default to your own patterns.</div>
+  </section>
+
+  <!-- ===== 7 ===== -->
+  <section class="section" id="s7">
+    <span class="marginalia">7</span>
+    <div class="section-header">
+      <span class="section-number">§ 07</span>
+      <h2>Claude as your sparring partner</h2>
+    </div>
+    <p>Most people ask Claude to help them <em>with</em> ideas. That means Claude builds on what you say, adds to it, expands it. You get agreement and elaboration.</p>
+    <p>That is useful sometimes. But it is not how you stress-test an idea.</p>
+    <p>Before committing to any plan, decision, or piece of writing, ask Claude to <strong>attack</strong> it. Not critique it. Attack it. The distinction matters.</p>
+
+    <div class="prompt"><button class="copy-btn">COPY</button>Here is my plan: <span class="placeholder">[describe your plan]</span>
+
+Your job is to destroy it. Find every assumption I'm making that could be wrong. Find every way this could fail. Argue the opposite position as hard as you can. Do not be polite. Do not add qualifications. Just attack.
+
+After that, steelman my position. Build the strongest possible case for why I'm right.
+
+Then tell me what you actually think.</div>
+  </section>
+
+  <!-- ===== 8 ===== -->
+  <section class="section" id="s8">
+    <span class="marginalia">8</span>
+    <div class="section-header">
+      <span class="section-number">§ 08</span>
+      <h2>Extended Thinking</h2>
+    </div>
+    <p>Most Claude users have never turned this on. Extended Thinking is a mode where Claude reasons through a problem step by step <em>before</em> giving you an answer, instead of going straight to the output.</p>
+    <p>For simple tasks, you don't need it. For complex decisions, analysis, or any question where you want Claude to actually think rather than pattern-match, turn it on.</p>
+    <p>In Claude, click the <strong>brain icon</strong> before sending your message. Or add this to your prompt:</p>
+
+    <div class="prompt"><button class="copy-btn">COPY</button>Think through this carefully before responding.
+
+Work through the problem step by step, show your reasoning, identify where you're uncertain, then give me your conclusion.</div>
+
+    <p>The difference in output quality on hard questions is significant.</p>
+  </section>
+
+  <!-- ===== 9 ===== -->
+  <section class="section" id="s9">
+    <span class="marginalia">9</span>
+    <div class="section-header">
+      <span class="section-number">§ 09</span>
+      <h2>Claude writes prompts for Claude</h2>
+    </div>
+    <p>This is the most underused thing you can do. If you're not sure how to prompt Claude for a specific task, ask Claude to write the prompt for you.</p>
+    <p>Claude knows what kinds of instructions produce better results. Let it use that knowledge on your behalf.</p>
+
+    <div class="prompt"><button class="copy-btn">COPY</button>I need Claude to help me <span class="placeholder">[describe your actual task]</span>.
+
+Write me the best possible prompt for this task.
+
+Include role, context, format instructions, and any constraints that would improve the output.
+
+Then use that prompt immediately.</div>
+  </section>
+
+  <!-- ============ PART IV ============ -->
+  <div class="part">
+    <div class="part-label">Part Four</div>
+    <div class="part-title">How to Spend Fewer Tokens & Get More</div>
+  </div>
+
+  <!-- ===== 10 ===== -->
+  <section class="section" id="s10">
+    <span class="marginalia">10</span>
+    <div class="section-header">
+      <span class="section-number">§ 10</span>
+      <h2>Specify the output length</h2>
+    </div>
+    <p>Claude's default is to write as much as it thinks is appropriate. That is usually more than you need, which means more tokens used, more time spent reading, and more noise in the output.</p>
+    <p>Tell Claude exactly how long you want the answer before it starts.</p>
+
+    <div class="prompt"><button class="copy-btn">COPY</button>Answer in 3 sentences maximum.
+
+Give me 5 bullet points. No explanations. Just the points.
+
+Write this in under 150 words.</div>
+
+    <p>This one instruction cuts token usage on most tasks by <strong>40 to 60 percent</strong> without losing any of the value you actually need.</p>
+  </section>
+
+  <!-- ===== 11 ===== -->
+  <section class="section" id="s11">
+    <span class="marginalia">11</span>
+    <div class="section-header">
+      <span class="section-number">§ 11</span>
+      <h2>Remove the preamble</h2>
+    </div>
+    <p>Every Claude response defaults to starting with something you didn't ask for. <em>"Great question. Let me break this down for you."</em> Or a full restatement of what you just said. Or a disclaimer. Or a closing summary that repeats everything it just told you.</p>
+    <p>You didn't ask for any of that. It costs tokens and it wastes your time.</p>
+    <p>Add this to your Custom Instructions:</p>
+
+    <div class="prompt"><button class="copy-btn">COPY</button>Never start responses with preamble, affirmations, or restatements of my question.
+
+Go directly to the answer.
+
+Do not add a summary at the end unless I specifically ask for one.
+
+No disclaimers unless the topic genuinely requires one.</div>
+  </section>
+
+  <!-- ===== 12 ===== -->
+  <section class="section" id="s12">
+    <span class="marginalia">12</span>
+    <div class="section-header">
+      <span class="section-number">§ 12</span>
+      <h2>Don't re-explain yourself every conversation</h2>
+    </div>
+    <p>If you're pasting the same background information into every new chat, you are wasting tokens every single time and training yourself into a habit that costs you more as Claude usage scales.</p>
+    <p>This is exactly what Projects and Custom Instructions are for. Put your context in once. Let Claude read it automatically at the start of every session. Never paste your background again.</p>
+    <p>If you are not using Projects yet, start there before anything else in this article.</p>
+  </section>
+
+  <!-- ===== 13 ===== -->
+  <section class="section" id="s13">
+    <span class="marginalia">13</span>
+    <div class="section-header">
+      <span class="section-number">§ 13</span>
+      <h2>Start a new chat for a new topic</h2>
+    </div>
+    <p>Claude carries the context of everything said earlier in a conversation. When you switch topics inside a long chat, Claude still has all the previous context loaded. That means more tokens used on every response, slower processing, and context bleed from earlier in the conversation affecting your new topic.</p>
+    <p>When you switch to something unrelated, start a fresh chat inside your Project. You keep the Project memory. You lose the irrelevant baggage.</p>
+  </section>
+
+  <!-- ============ PART V ============ -->
+  <div class="part">
+    <div class="part-label">Part Five</div>
+    <div class="part-title">Ready to Use Right Now</div>
+  </div>
+
+  <!-- ===== 14 ===== -->
+  <section class="section" id="s14">
+    <span class="marginalia">14</span>
+    <div class="section-header">
+      <span class="section-number">§ 14</span>
+      <h2>Understand anything through analogies <em>(Feynman method)</em></h2>
+    </div>
+    <p>Most explanations Claude gives by default are technically correct and practically useless. They use the same vocabulary as the thing you're trying to understand, which means you walk away with a definition but not actual comprehension.</p>
+    <p>The Feynman method forces understanding through simplicity. If Claude can't explain it in plain terms using analogies, it means the explanation isn't clear enough yet. This prompt works for anything — investing, quantum physics, how a specific API works.</p>
+
+    <div class="prompt"><button class="copy-btn">COPY</button>Explain <span class="placeholder">[topic]</span> to me using only analogies and everyday examples. No jargon. Assume I have no background in this field.
+
+After each analogy, check whether I've actually understood it by asking me one question. Based on my answer, go deeper or adjust the explanation.
+
+Keep going until I can explain it back to you in my own words without using any technical terms.</div>
+  </section>
+
+  <!-- ===== 15 ===== -->
+  <section class="section" id="s15">
+    <span class="marginalia">15</span>
+    <div class="section-header">
+      <span class="section-number">§ 15</span>
+      <h2>Travel plan built around how you actually travel</h2>
+    </div>
+    <p>Most travel planning starts with destinations and ends with a generic itinerary you could find on any travel blog. Claude can do something different: build a plan around your specific travel style, pace, budget, and what actually matters to you — not what's on every must-see list.</p>
+    <p>The key is giving it real information about you, not just dates and locations.</p>
+
+    <div class="prompt"><button class="copy-btn">COPY</button>I'm planning a trip to <span class="placeholder">[destination]</span>. I'll be there for <span class="placeholder">[number of days]</span>. My budget is approximately <span class="placeholder">[amount]</span> per day including accommodation.
+
+Here's how I actually travel: <span class="placeholder">[describe your style — slow mornings or packed days, touristy places or local spots, museums or food, active or relaxed, solo or with someone, etc]</span>.
+
+Things I want to avoid: <span class="placeholder">[crowds, tourist traps, expensive restaurants, long transport times, etc]</span>.
+
+Build me a day-by-day itinerary that fits this. For each day, include where to stay, what to do, where to eat, and any logistics I need to know. Flag anything that requires booking in advance.</div>
+  </section>
+
+  <!-- ===== 16 ===== -->
+  <section class="section" id="s16">
+    <span class="marginalia">16</span>
+    <div class="section-header">
+      <span class="section-number">§ 16</span>
+      <h2>Monthly expense analysis with real conclusions</h2>
+    </div>
+    <p>Most people look at their bank statement and feel vaguely bad about their spending without understanding what's actually happening. Claude can turn raw numbers into a clear picture of where your money is going — and what you should actually do about it.</p>
+    <p>This works best when you paste real data, not estimates.</p>
+
+    <div class="prompt"><button class="copy-btn">COPY</button>I'm going to paste my expenses from the last month. Analyze them and tell me:
+
+1. What categories am I spending the most on
+2. Where my spending looks unusual compared to what I described as my goals
+3. What I could cut without meaningfully affecting my life
+4. What I'm probably underspending on that matters
+5. One specific change that would have the biggest financial impact
+
+Here are my expenses: <span class="placeholder">[paste your bank statement or expense list]</span>
+
+My financial goals right now: <span class="placeholder">[describe what you're trying to do — save more, pay off debt, invest, etc]</span></div>
+  </section>
+
+  <!-- ===== 17 ===== -->
+  <section class="section" id="s17">
+    <span class="marginalia">17</span>
+    <div class="section-header">
+      <span class="section-number">§ 17</span>
+      <h2>Claude as your personal thinking partner</h2>
+    </div>
+    <p>Most people don't have someone in their life who will listen without judgment, ask the right questions, and help them work through something they're stuck on without pushing their own agenda. Claude can fill that role — but only if you give it the right instructions.</p>
+    <p>This isn't therapy. It's structured self-reflection with an outside perspective that helps you think more clearly.</p>
+
+    <div class="prompt"><button class="copy-btn">COPY</button>I want to talk through something I'm dealing with. Your job is not to give me advice right away.
+
+First, ask me questions to understand the situation fully. What's actually happening, how I feel about it, what I've already tried, and what outcome I'm hoping for.
+
+After you understand the full picture, reflect back what you're hearing — not just the facts but what seems to be underneath them.
+
+Then, and only then, offer your perspective. Be honest, not reassuring. Tell me what you actually think, including anything I might not want to hear.
+
+Here's what's on my mind: <span class="placeholder">[describe what you want to think through]</span></div>
+  </section>
+
+  <!-- ===== 18 ===== -->
+  <section class="section" id="s18">
+    <span class="marginalia">18</span>
+    <div class="section-header">
+      <span class="section-number">§ 18</span>
+      <h2>Stress-test any business idea before you commit</h2>
+    </div>
+    <p>Most business ideas die because people fall in love with them before testing them. They spend months building something nobody wants because they never honestly asked whether the idea was actually good.</p>
+    <p>Claude can act as a ruthless first filter. Not to kill ideas — but to find the real problems before they cost you time and money.</p>
+
+    <div class="prompt"><button class="copy-btn">COPY</button>I have a business idea I want to stress-test before I invest serious time in it.
+
+Here's the idea: <span class="placeholder">[describe it in detail — what it is, who it's for, how it makes money, why you think it works]</span>
+
+Your job is to find everything wrong with it. Specifically:
+
+1. What assumptions am I making that could be wrong
+2. Who already does this and why I might lose to them
+3. Why the target customer might not actually pay for this
+4. What would have to be true for this to work, and how likely is that
+5. The single biggest problem with this idea
+
+Be specific. Generic risks like "the market might not be ready" are not useful. Give me the real version of each problem.
+
+After that, tell me what the idea would need to look like to actually work.</div>
+  </section>
+
+  <!-- ============ FINALE ============ -->
+  <div class="finale">
+    <div class="finale-label">The Actual Point</div>
+    <h2>It's not the questions.<br>It's the setup.</h2>
+    <p>Claude is not smarter than you. It does not have better ideas than you. What it has is infinite patience, broad knowledge, and the ability to think through problems from angles you haven't considered.</p>
+    <p>The people who get the most from Claude are not the ones with the best questions. They are the ones who have set it up to understand them, who give it real context, and who know how to use it as a partner rather than a dispenser.</p>
+    <p>Most people will read this and keep opening Claude the same way they always have.</p>
+    <div class="kicker">Set it up once. Change how you work permanently.</div>
+  </div>
+
+  <!-- ============ COLOPHON ============ -->
+  <footer class="colophon">
+    <span>End of Volume</span>
+    <span>18 Sections · 14 Prompts</span>
+    <span>Print or Pocket</span>
+  </footer>
+
+</div>
+
+<script>
+  // Scroll progress
+  const progress = document.getElementById('progress');
+  window.addEventListener('scroll', () => {
+    const h = document.documentElement;
+    const scrolled = (h.scrollTop) / (h.scrollHeight - h.clientHeight) * 100;
+    progress.style.width = scrolled + '%';
+  });
+
+  // Copy buttons
+  document.querySelectorAll('.copy-btn').forEach(btn => {
+    btn.addEventListener('click', () => {
+      const prompt = btn.parentElement;
+      // Get text without the button label
+      const clone = prompt.cloneNode(true);
+      clone.querySelector('.copy-btn').remove();
+      const text = clone.innerText.trim();
+      navigator.clipboard.writeText(text).then(() => {
+        btn.textContent = 'COPIED';
+        btn.classList.add('copied');
+        setTimeout(() => {
+          btn.textContent = 'COPY';
+          btn.classList.remove('copied');
+        }, 1800);
+      });
+    });
+  });
+
+  // Reveal on scroll
+  const observer = new IntersectionObserver((entries) => {
+    entries.forEach(entry => {
+      if (entry.isIntersecting) {
+        entry.target.classList.add('visible');
+        observer.unobserve(entry.target);
+      }
+    });
+  }, { threshold: 0.1 });
+
+  document.querySelectorAll('.section, .part, .finale').forEach(el => {
+    el.classList.add('reveal');
+    observer.observe(el);
+  });
+</script>
+
+</body>
+</html>
