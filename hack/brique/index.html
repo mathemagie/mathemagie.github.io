@@ -14,11 +14,28 @@
     <script src="https://cdn.jsdelivr.net/npm/@mediapipe/pose/pose.js" crossorigin="anonymous"></script>
     <script src="https://cdn.jsdelivr.net/npm/@mediapipe/camera_utils/camera_utils.js" crossorigin="anonymous"></script>
     <script src="https://cdn.jsdelivr.net/npm/p5@1.4.0/lib/p5.js"></script>
-    <link rel="stylesheet" href="css/styles.css">
+    <link rel="stylesheet" href="css/styles.css?v=mar2">
 </head>
 <body>
+    <header class="app-header">
+        <h1 class="app-title">Brick Face</h1>
+        <div class="fab-group">
+            <button id="shareFab" class="fab" type="button" aria-label="Share">
+                <svg viewBox="0 0 24 24" width="20" height="20" aria-hidden="true">
+                    <path fill="currentColor" d="M18 16.08c-.76 0-1.44.3-1.96.77L8.91 12.7c.05-.23.09-.46.09-.7s-.04-.47-.09-.7l7.05-4.11c.54.5 1.25.81 2.04.81 1.66 0 3-1.34 3-3s-1.34-3-3-3-3 1.34-3 3c0 .24.04.47.09.7L8.04 9.81C7.5 9.31 6.79 9 6 9c-1.66 0-3 1.34-3 3s1.34 3 3 3c.79 0 1.5-.31 2.04-.81l7.12 4.16c-.05.21-.08.43-.08.65 0 1.61 1.31 2.92 2.92 2.92s2.92-1.31 2.92-2.92-1.31-2.92-2.92-2.92z"/>
+                </svg>
+            </button>
+            <a id="twitterFab" class="fab" href="#" target="_blank" rel="noopener noreferrer" aria-label="Share on X / Twitter">
+                <svg viewBox="0 0 24 24" width="20" height="20" aria-hidden="true">
+                    <path fill="currentColor" d="M18.244 2H21.5l-7.5 8.58L23 22h-6.84l-5.36-7.01L4.6 22H1.34l8.02-9.18L1 2h7.02l4.84 6.4L18.244 2zm-1.2 18h1.86L7.04 4H5.08l11.964 16z"/>
+                </svg>
+            </a>
+        </div>
+    </header>
     <video id="video" style="display:none;"></video>
-    <script src="js/lib.js?v=ear1"></script>
-    <script src="js/script.js?v=ear1"></script>
+    <audio id="mouthSound" preload="auto" src="data:audio/wav;base64,UklGRuQDAABXQVZFZm10IBAAAAABAAEAQB8AAEAfAAABAAgAZGF0YcADAACAp5JrequyiXqkxKmFmcXDmZC50bCQps3DmJS7yqWIocGvhoassopzjqiQaW+TkmpZdoxxTlp8d1BGZndaPlBwZ0RBY3FUPlZ0aEhNcHpdTmmEdlpkh4xvZoSbiXB/n5+DfpyumIOUsauOjaq2nYudtaqOkKuwlYaZrZ2ChqCghHeMm4hvd46KbmZ8h3JdaX53XVpxeWNTYnZtVVdvdV9UZnhtWV93emZfc4N2ZW+GhnNvhZKDdYKXk4CAlZ6OgpCim4iKnqORh5almoiMn5+MhJOekYCGl5SAe4qSg3R8ioVyb3+EdGhyf3hnZ3d6amFuenFiZnZ3aGJwe3Fla3t7bWp5gnhtdoWDdnaFjIB4g5CMf4GQlIiBjJeRhYiWl4qFkJmQhYmWlIeDjpSKf4WQjH99iIuAd36HgnV1gIJ2cGeAa0hPcXJOQF1zXD9MbWtKQ2N1XUVYeXNUVHaEa1lwjoRobY+YfnGKpJZ8haWpjoSfs6GJlbGvk42ntZ+KmLCpjImiq5J/j6OXfHyUmH5uf5GBaGyDg2lecoBvWWF3dFxWa3dlU191cFlYb3hmWGh8dWFke4JvZniKgG51jI99doqYjX2Gm5qHhJeilIWQo56Lipyjk4aSoZmHh5mcin+MmI18fo+PfHSBi39vdIOBb2l4gHJlbHt2ZmRzeWtha3lzZGZ2emxlcX53am5+gHNvfId/c3qJiXx6iJCHfYWTkISDkZeMg4yYk4aHlJeLhI2XkIOGkpKFgImQh3yAi4l8eIKHfXR5g39zcXx/dW10fXhtbnh7cWtze3Zsb3p7cW53fnhwdX9/dnV+hH53fYeFfHyGi4N+hY2KgoOMj4eCiZCMhIaOj4aDio+JgoWMi4KAh4uEfYGHhXx7goR9d3yCfnZ2fn93c3h+enN0e3x1cnh9eHJ1fHx1dHt/enV5gH95eYCDfnp/hYN9foWHgX+EiYaBgomKhIKHi4eChIqKhIKHioWBhImHgYCFh4J+gYWDfX2Cg316foF+eXp/f3l3e357dnh9fXh2e356dnl+fXh4fX97eHyAf3p7gIF+fH+DgX5/hISAf4OGg4CChoaCgYWHhIGDh4aCgYWHg4CDhoSAgISEgX6Bg4F9foGBfXx/gX57fH9/e3p9f3x5e359enp9fnt5fH59ent+f3x7fYB/fH2AgX59gIKAfn+Dg4B/goSCgIGEhIGBhIWCgYKFhIGBhISCgIKEgoCAg4OAf4GCgH5/gYF+fX+Afnx9f398fH5/fXt9f357fH5+fHs="></audio>
+    <script src="js/lib.js?v=mar2"></script>
+    <script src="js/script.js?v=mar2"></script>
+    <script src="js/share.js?v=mar2"></script>
 </body>
 </html>
