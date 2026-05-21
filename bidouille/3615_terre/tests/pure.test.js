@@ -158,3 +158,56 @@ test('parseCoverage: name stops at semicolon', () => {
     const r = parseCoverage('latitude=10;longitude=20;name=Foo;extra=bar');
     assert.strictEqual(r.name, 'Foo');
 });
+
+// === extra boundary tests ===
+test('haversine: equator quarter circumference ≈ 10007 km', () => {
+    const d = haversine(0, 0, 0, 90);
+    assert.ok(Math.abs(d - 10007) < 5, `expected ~10007, got ${d}`);
+});
+
+test('haversine: pole to pole ≈ 20015 km', () => {
+    const d = haversine(-90, 0, 90, 0);
+    assert.ok(Math.abs(d - 20015) < 5, `expected ~20015, got ${d}`);
+});
+
+test('haversine: same longitude, 1 degree lat ≈ 111 km', () => {
+    const d = haversine(0, 0, 1, 0);
+    assert.ok(Math.abs(d - 111) < 2, `expected ~111, got ${d}`);
+});
+
+test('signal quality: continuous at 2000 km boundary', () => {
+    // Left limit of band 2 at 2000 → 0.7 + 0.3*(1 - 1500/1500) = 0.7
+    // Band 3 at 2000 → 0.3 + 0.4*1 = 0.7
+    const justBelow = calculateSignalQuality(1999.999);
+    const at = calculateSignalQuality(2000);
+    assert.ok(Math.abs(justBelow - at) < 1e-3, `discontinuous: ${justBelow} vs ${at}`);
+});
+
+test('signal quality: continuous at 5000 km boundary', () => {
+    const justBelow = calculateSignalQuality(4999.999);
+    const at = calculateSignalQuality(5000);
+    assert.ok(Math.abs(justBelow - at) < 1e-3, `discontinuous: ${justBelow} vs ${at}`);
+});
+
+test('signal quality: at 7500 km → 0.15 (midway in last band)', () => {
+    // 0.3 * (1 - 2500/5000) = 0.15
+    assert.ok(Math.abs(calculateSignalQuality(7500) - 0.15) < 1e-9);
+});
+
+test('signal quality: negative distance treated as <500 → 1.0', () => {
+    assert.strictEqual(calculateSignalQuality(-1), 1.0);
+});
+
+test('parseCoverage: extra whitespace around values', () => {
+    const r = parseCoverage('latitude=10.5;longitude=-20.25;name=Test City');
+    assert.strictEqual(r.lat, 10.5);
+    assert.strictEqual(r.lng, -20.25);
+    assert.strictEqual(r.name, 'Test City');
+});
+
+test('parseCoverage: scientific notation parses only the leading number', () => {
+    // Regex matches decimal form; "1e2" is parsed as just "1"
+    const r = parseCoverage('latitude=1e2;longitude=20;name=X');
+    assert.strictEqual(r.lat, 1);
+    assert.strictEqual(r.lng, 20);
+});
