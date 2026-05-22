@@ -623,7 +623,10 @@
     const SCORE_PER_BRICK = 10;
 
     const GAMEPAD_AXIS_DEADZONE = 0.2;
+    const GAMEPAD_TRIGGER_DEADZONE = 0.08;
     const GAMEPAD_BUTTON_A = 0;
+    const GAMEPAD_BUTTON_LT = 6;
+    const GAMEPAD_BUTTON_RT = 7;
     const GAMEPAD_BUTTON_START = 9;
     const GAMEPAD_BUTTON_DPAD_LEFT = 14;
     const GAMEPAD_BUTTON_DPAD_RIGHT = 15;
@@ -1188,6 +1191,7 @@
           combo = 0;
           comboTimer = 0;
           updateComboDisplay();
+          rumble(0.15, 0.35, 60); // tactile paddle bump
         }
 
         // Bricks
@@ -1223,10 +1227,12 @@
         updateComboDisplay();
         if (lives <= 0) {
           currentGameState = GameState.GAME_OVER;
+          rumble(1.0, 1.0, 700); // heavy "you died" buzz
           let buttonText = "Play Again";
           if (isGamepadActive) buttonText += " (Gamepad Start/A)";
           showMessage("GAME OVER!", score, buttonText, resetGame, 'secondary-button');
         } else {
+          rumble(0.7, 0.4, 280); // lost-a-life thud
           currentGameState = GameState.SERVING;
           resetBallOnPaddle();
         }
@@ -1237,6 +1243,7 @@
       const anyIntact = bricks.some(b => b.status === BrickStatus.INTACT);
       if (!anyIntact && bricks.length > 0) {
         currentGameState = GameState.YOU_WIN;
+        rumble(0.6, 0.9, 900); // victory flourish
         let buttonText = "Play Again";
         if (isGamepadActive) buttonText += " (Gamepad Start/A)";
         showMessage("YOU WIN!", score, buttonText, resetGame, 'secondary-button');
@@ -1256,6 +1263,9 @@
       addShake(4 + mult * 0.6, 12);
       maybeDropPowerUp(brick);
       try { brickHitSound.currentTime = 0; brickHitSound.play(); } catch (e) {}
+      // Combo-scaled rumble: bigger chains kick harder
+      const mag = Math.min(0.9, 0.25 + mult * 0.08);
+      rumble(mag, mag * 0.6, 50 + mult * 8);
     }
     
     // --- Input Handling ---
@@ -1300,35 +1310,58 @@
       }
     }
 
+    // --- Rumble: best-effort, silently ignored on pads without an actuator ---
+    function rumble(strong, weak, duration) {
+      if (activeGamepadIndex === null || !isGamepadActive) return;
+      const gamepad = navigator.getGamepads()[activeGamepadIndex];
+      const actuator = gamepad && gamepad.vibrationActuator;
+      if (!actuator || typeof actuator.playEffect !== 'function') return;
+      try {
+        actuator.playEffect('dual-rumble', {
+          startDelay: 0,
+          duration,
+          strongMagnitude: strong,
+          weakMagnitude: weak,
+        });
+      } catch (e) { /* ignore */ }
+    }
+
     function processGamepadInput() {
       if (activeGamepadIndex === null || !isGamepadActive) return;
 
       const gamepad = navigator.getGamepads()[activeGamepadIndex];
       if (!gamepad) return;
 
-      // --- Smooth analog stick movement ---
-      const xAxis = gamepad.axes[0];
-      const ACCELERATION = 1.2; // How quickly paddle speeds up
-      const FRICTION = 0.85;    // How quickly paddle slows down (0.85 = slows down fast, 0.99 = slow friction)
-      const MAX_PADDLE_SPEED = 18; // Maximum paddle speed
+      // --- Smooth movement: analog stick OR D-pad share the same accel + friction ---
+      const ACCELERATION = 1.2;     // How quickly paddle speeds up
+      const FRICTION = 0.85;        // How quickly paddle slows down when input released
+      const BASE_MAX_SPEED = 18;    // Maximum paddle speed at neutral trigger
 
+      // Triggers modulate top speed: LT = precision (slower), RT = sprint (faster)
+      const ltVal = gamepad.buttons[GAMEPAD_BUTTON_LT]?.value ?? 0;
+      const rtVal = gamepad.buttons[GAMEPAD_BUTTON_RT]?.value ?? 0;
+      const lt = ltVal > GAMEPAD_TRIGGER_DEADZONE ? ltVal : 0;
+      const rt = rtVal > GAMEPAD_TRIGGER_DEADZONE ? rtVal : 0;
+      // 0.4× at full LT, 1.0× neutral, 1.6× at full RT. RT wins ties.
+      const speedScale = 1 + rt * 0.6 - lt * 0.6;
+      const MAX_PADDLE_SPEED = BASE_MAX_SPEED * speedScale;
+
+      const xAxis = gamepad.axes[0];
+      let inputDir = 0;
       if (Math.abs(xAxis) > GAMEPAD_AXIS_DEADZONE) {
-        // Accelerate paddle velocity based on stick tilt
-        paddleVelocity += xAxis * ACCELERATION;
-        // Clamp velocity to max speed
-        paddleVelocity = Math.max(-MAX_PADDLE_SPEED, Math.min(MAX_PADDLE_SPEED, paddleVelocity));
-      } else {
-        // Apply friction to slow down paddle when stick is released
-        paddleVelocity *= FRICTION;
-        // Stop completely if very slow (to prevent drifting)
-        if (Math.abs(paddleVelocity) < 0.1) paddleVelocity = 0;
+        inputDir = xAxis; // analog tilt: pressure-sensitive
+      } else if (gamepad.buttons[GAMEPAD_BUTTON_DPAD_LEFT]?.pressed) {
+        inputDir = -1;    // D-pad: treat as full tilt
+      } else if (gamepad.buttons[GAMEPAD_BUTTON_DPAD_RIGHT]?.pressed) {
+        inputDir = 1;
       }
 
-      // D-Pad fallback for digital movement
-      if (gamepad.buttons[GAMEPAD_BUTTON_DPAD_LEFT]?.pressed) {
-        paddleVelocity = -MAX_PADDLE_SPEED;
-      } else if (gamepad.buttons[GAMEPAD_BUTTON_DPAD_RIGHT]?.pressed) {
-        paddleVelocity = MAX_PADDLE_SPEED;
+      if (inputDir !== 0) {
+        paddleVelocity += inputDir * ACCELERATION;
+        paddleVelocity = Math.max(-MAX_PADDLE_SPEED, Math.min(MAX_PADDLE_SPEED, paddleVelocity));
+      } else {
+        paddleVelocity *= FRICTION;
+        if (Math.abs(paddleVelocity) < 0.1) paddleVelocity = 0;
       }
 
       // --- Serve and menu logic remains unchanged ---
@@ -1493,6 +1526,7 @@
     function applyPowerUp(type) {
       addShake(6, 14);
       showPowerUpBanner(type);
+      rumble(0.5, 0.7, 220); // celebratory pickup buzz
       if (type === 'multi') {
         // Split each existing ball into two new ones at ±20°
         const fresh = [];
