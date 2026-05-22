@@ -202,7 +202,7 @@
       z-index: 8;
     }
     #messageOverlay::before {
-      content: 'LEVEL 01 · ICE GAUNTLET';
+      content: var(--level-label, 'LEVEL 01 · ICE GAUNTLET');
       font-family: 'JetBrains Mono', monospace;
       font-size: 0.62rem;
       letter-spacing: 0.42em;
@@ -705,11 +705,60 @@
       ? '/brick-breaker-deluxe/sfx_A_sat_20250529_175752.mp3'
       : 'sfx_A_sat_20250529_175752.mp3');
 
+    // --- Level layouts ---
+    // Each row is BRICK_COLUMN_COUNT chars; '#' = brick, anything else = empty.
+    // All layouts must be BRICK_ROW_COUNT rows tall.
+    const LEVELS = [
+      {
+        name: 'ICE GAUNTLET',
+        rows: [
+          '##########',
+          '##########',
+          '##########',
+          '##########',
+          '##########',
+          '##########',
+        ],
+      },
+      {
+        name: 'TWIN PILLARS',
+        rows: [
+          '##########',
+          '##......##',
+          '##......##',
+          '##......##',
+          '##......##',
+          '##########',
+        ],
+      },
+      {
+        name: 'CHEVRON ROUGE',
+        rows: [
+          '#........#',
+          '##......##',
+          '.##....##.',
+          '..##..##..',
+          '...####...',
+          '....##....',
+        ],
+      },
+    ];
+    let currentLevelIndex = 0;
+
+    function updateLevelLabel() {
+      const lvl = LEVELS[currentLevelIndex];
+      const tag = `LEVEL ${String(currentLevelIndex + 1).padStart(2, '0')} · ${lvl.name}`;
+      messageOverlayEl.style.setProperty('--level-label', `'${tag}'`);
+    }
+
     // --- Helper Functions ---
     function createInitialBricks() {
+      const layout = LEVELS[currentLevelIndex].rows;
       const newBricks = [];
       for (let r = 0; r < BRICK_ROW_COUNT; r++) {
+        const row = layout[r] || '';
         for (let c = 0; c < BRICK_COLUMN_COUNT; c++) {
+          if (row[c] !== '#') continue;
           newBricks.push({
             x: BRICK_OFFSET_LEFT + c * (BRICK_WIDTH + BRICK_PADDING),
             y: BRICK_OFFSET_TOP + r * (BRICK_HEIGHT + BRICK_PADDING),
@@ -810,6 +859,8 @@
     function startGame() {
       score = 0;
       lives = INITIAL_LIVES;
+      currentLevelIndex = 0;
+      updateLevelLabel();
       bricks = createInitialBricks();
       powerUps = [];
       slowBallTimer = 0;
@@ -1239,14 +1290,28 @@
         return;
       }
 
-      // Win check
+      // Win check — advance to next level, or finish if last
       const anyIntact = bricks.some(b => b.status === BrickStatus.INTACT);
       if (!anyIntact && bricks.length > 0) {
-        currentGameState = GameState.YOU_WIN;
-        rumble(0.6, 0.9, 900); // victory flourish
-        let buttonText = "Play Again";
-        if (isGamepadActive) buttonText += " (Gamepad Start/A)";
-        showMessage("YOU WIN!", score, buttonText, resetGame, 'secondary-button');
+        if (currentLevelIndex < LEVELS.length - 1) {
+          currentLevelIndex += 1;
+          updateLevelLabel();
+          bricks = createInitialBricks();
+          powerUps = [];
+          slowBallTimer = 0;
+          combo = 0;
+          updateComboDisplay();
+          resetPaddle();
+          resetBallOnPaddle();
+          currentGameState = GameState.SERVING;
+          rumble(0.4, 0.6, 300); // level-cleared pulse
+        } else {
+          currentGameState = GameState.YOU_WIN;
+          rumble(0.6, 0.9, 900); // victory flourish
+          let buttonText = "Play Again";
+          if (isGamepadActive) buttonText += " (Gamepad Start/A)";
+          showMessage("YOU WIN!", score, buttonText, resetGame, 'secondary-button');
+        }
       }
     }
 
