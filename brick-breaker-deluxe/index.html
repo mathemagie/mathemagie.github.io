@@ -451,7 +451,7 @@
         const move = isGamepadActive ? '← →  /  D-Pad / Stick' : '← →';
         const serve = isGamepadActive ? 'SPACE  /  A' : 'SPACE';
         const menu = isGamepadActive ? 'ENTER  /  Start' : 'ENTER';
-        helpPopoverEl.innerHTML = `${move} &nbsp;move / serve<br>${serve} &nbsp;serve<br>P / ESC &nbsp;pause<br>${menu} &nbsp;menu`;
+        helpPopoverEl.innerHTML = `${move} &nbsp;move<br>${serve} &nbsp;serve<br>P / ESC &nbsp;pause<br>${menu} &nbsp;start / play again<br>R &nbsp;restart<br>F &nbsp;fullscreen<br>H / ? &nbsp;toggle help`;
     }
 
     function setHelpVisible(visible) {
@@ -905,9 +905,15 @@
         serveBall();
       } else if (e.key === 'Escape' || e.key.toLowerCase() === 'p') {
         togglePause();
-      } else if (e.key.toLowerCase() === 'enter') {
+      } else if (e.key === 'Enter') {
         if (currentGameState === GameState.IDLE) startGame();
         else if (currentGameState === GameState.GAME_OVER || currentGameState === GameState.YOU_WIN) resetGame();
+      } else if (e.key.toLowerCase() === 'f') {
+        toggleFullscreen();
+      } else if (e.key.toLowerCase() === 'h' || e.key === '?') {
+        setHelpVisible(!helpPopoverEl.classList.contains('visible'));
+      } else if (e.key.toLowerCase() === 'r') {
+        if (currentGameState !== GameState.IDLE) resetGame();
       }
     }
 
