@@ -3,61 +3,186 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>fabrizio game - HTML5</title>
+  <title>fabrizio game — HTML5 Arcade</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Bungee&family=JetBrains+Mono:wght@500;700&display=swap" rel="stylesheet">
   <style>
+    :root {
+      --ink:        #08090f;
+      --ink-2:      #0d1220;
+      --ink-soft:   #161c2e;
+      --ember:      #ff6b35;
+      --ember-soft: #ffa07a;
+      --ice:        #7dd3fc;
+      --ice-soft:   #bae6fd;
+      --text:       #e5e7eb;
+      --text-dim:   #6b7280;
+    }
+
+    *, *::before, *::after { box-sizing: border-box; }
+
     body {
       margin: 0;
-      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen',
-        'Ubuntu', 'Cantarell', 'Fira Sans', 'Droid Sans', 'Helvetica Neue',
-        sans-serif;
+      font-family: 'JetBrains Mono', ui-monospace, SFMono-Regular, Menlo, monospace;
       -webkit-font-smoothing: antialiased;
       -moz-osx-font-smoothing: grayscale;
-      background-color: #111827; /* bg-gray-900 */
-      color: #e5e7eb; /* text-gray-200 */
+      color: var(--text);
       display: flex;
       flex-direction: column;
       align-items: center;
       justify-content: center;
       min-height: 100vh;
-      padding: 16px;
-      box-sizing: border-box;
+      padding: 24px;
+      position: relative;
+      overflow: hidden;
+      background:
+        radial-gradient(ellipse 70% 50% at 50% 35%, #1a2040 0%, #0b0e1c 55%, #04050a 100%);
     }
+
+    /* Grid lattice — printed graph-paper undertone */
+    body::before {
+      content: '';
+      position: fixed; inset: 0;
+      background-image:
+        repeating-linear-gradient(0deg,  rgba(125,211,252,0.04) 0 1px, transparent 1px 64px),
+        repeating-linear-gradient(90deg, rgba(125,211,252,0.04) 0 1px, transparent 1px 64px);
+      pointer-events: none;
+      z-index: 1;
+      mask-image: radial-gradient(ellipse 80% 65% at 50% 45%, #000 30%, transparent 95%);
+    }
+
+    /* Grain — SVG turbulence overlay, gives a riso-print texture */
+    body::after {
+      content: '';
+      position: fixed; inset: 0;
+      background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='240' height='240'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='2' stitchTiles='stitch'/><feColorMatrix values='0 0 0 0 1  0 0 0 0 0.55  0 0 0 0 0.25  0 0 0 0.65 0'/></filter><rect width='100%' height='100%' filter='url(%23n)'/></svg>");
+      opacity: 0.18;
+      pointer-events: none;
+      z-index: 2;
+      mix-blend-mode: overlay;
+    }
+
+    /* Registration marks — four corner crosshairs */
+    .reg { position: fixed; width: 18px; height: 18px; z-index: 3; pointer-events: none; opacity: 0.55; }
+    .reg::before, .reg::after { content: ''; position: absolute; background: var(--ember); }
+    .reg::before { width: 100%; height: 1px; top: 50%; transform: translateY(-50%); }
+    .reg::after  { width: 1px; height: 100%; left: 50%; transform: translateX(-50%); }
+    .reg.tl { top: 18px; left: 18px; }
+    .reg.tr { top: 18px; right: 18px; }
+    .reg.bl { bottom: 18px; left: 18px; }
+    .reg.br { bottom: 18px; right: 18px; }
+
+    /* Edge labels — tiny mono captions, like a printed instrument */
+    .edge-label {
+      position: fixed;
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.62rem;
+      letter-spacing: 0.32em;
+      color: var(--text-dim);
+      text-transform: uppercase;
+      pointer-events: none;
+      z-index: 3;
+    }
+    .edge-label.top    { top: 22px; left: 50%; transform: translateX(-50%); }
+    .edge-label.bottom { bottom: 22px; left: 50%; transform: translateX(-50%); color: var(--ember); opacity: 0.6; }
 
     #gameContainer {
       display: flex;
       flex-direction: column;
       align-items: center;
+      position: relative;
+      z-index: 4;
     }
 
-    /* Title watermark sits inside the canvas as a subtle signature */
+    /* Title watermark — Bungee arcade signage with chromatic ghost */
     #titleMark {
       position: absolute;
-      top: 14px;
+      top: 16px;
       left: 50%;
       transform: translateX(-50%);
-      font-size: 0.95rem;
-      font-weight: bold;
-      letter-spacing: 0.04em;
-      background: linear-gradient(to right, #818cf8, #fb7185, #fcd34d);
-      -webkit-background-clip: text;
-      background-clip: text;
-      color: transparent;
-      opacity: 0.55;
+      font-family: 'Bungee', sans-serif;
+      font-size: 0.72rem;
+      letter-spacing: 0.42em;
+      text-transform: uppercase;
+      color: var(--ice-soft);
+      text-shadow:
+        -1px 0  0 rgba(255, 107,  53, 0.85),
+         1px 0  0 rgba(125, 211, 252, 0.85);
+      opacity: 0.85;
       pointer-events: none;
       z-index: 4;
+      mix-blend-mode: screen;
+    }
+    #titleMark::before {
+      content: '◢ ';
+      color: var(--ember);
+      letter-spacing: 0;
+      margin-right: 4px;
+    }
+    #titleMark::after {
+      content: ' ◣';
+      color: var(--ember);
+      letter-spacing: 0;
+      margin-left: 4px;
     }
 
     #canvasContainer {
       position: relative;
-      box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
-      border-radius: 0.5rem; /* rounded-lg */
-      overflow: hidden;
-      border: 4px solid rgba(99, 102, 241, 0.5); /* border-indigo-500/50 */
+      border-radius: 0;
+      overflow: visible;
+      border: none;
+      background: #0c0f1a;
+      box-shadow:
+        0 0 0 1px rgba(125, 211, 252, 0.18),
+        0 0 0 6px rgba(8, 9, 15, 0.6),
+        0 0 0 7px rgba(255, 107, 53, 0.4),
+        0 30px 80px -30px rgba(255, 107, 53, 0.25),
+        0 0 120px -20px rgba(125, 211, 252, 0.18);
     }
 
     canvas {
       display: block;
-      background-color: #1a202c; /* Dark slate gray, similar to original */
+      background-color: #0c0f1a;
+      position: relative;
+      z-index: 1;
+    }
+
+    /* Corner brackets — camera registration on the play field */
+    .corner {
+      position: absolute;
+      width: 14px;
+      height: 14px;
+      z-index: 6;
+      pointer-events: none;
+    }
+    .corner::before, .corner::after {
+      content: '';
+      position: absolute;
+      background: var(--ember);
+    }
+    .corner.tl::before { top: -9px; left: -9px; width: 14px; height: 1px; }
+    .corner.tl::after  { top: -9px; left: -9px; width: 1px; height: 14px; }
+    .corner.tr::before { top: -9px; right: -9px; width: 14px; height: 1px; }
+    .corner.tr::after  { top: -9px; right: -9px; width: 1px; height: 14px; }
+    .corner.bl::before { bottom: -9px; left: -9px; width: 14px; height: 1px; }
+    .corner.bl::after  { bottom: -9px; left: -9px; width: 1px; height: 14px; }
+    .corner.br::before { bottom: -9px; right: -9px; width: 14px; height: 1px; }
+    .corner.br::after  { bottom: -9px; right: -9px; width: 1px; height: 14px; }
+
+    /* Scanline overlay on top of canvas — faint horizontal stripes */
+    #canvasContainer::after {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background-image: repeating-linear-gradient(
+        0deg,
+        transparent 0 2px,
+        rgba(0, 0, 0, 0.18) 2px 3px
+      );
+      pointer-events: none;
+      mix-blend-mode: multiply;
+      z-index: 2;
     }
     
     #messageOverlay {
@@ -67,57 +192,97 @@
       flex-direction: column;
       align-items: center;
       justify-content: center;
-      background-color: rgba(0, 0, 0, 0.7);
-      backdrop-filter: blur(4px);
+      gap: 1.25rem;
+      background:
+        radial-gradient(ellipse at center, rgba(13, 18, 32, 0.78) 0%, rgba(8, 9, 15, 0.96) 80%);
+      backdrop-filter: blur(6px) saturate(130%);
+      -webkit-backdrop-filter: blur(6px) saturate(130%);
       text-align: center;
-      padding: 20px;
-      box-sizing: border-box;
+      padding: 32px;
+      z-index: 8;
+    }
+    #messageOverlay::before {
+      content: 'LEVEL 01 · ICE GAUNTLET';
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.62rem;
+      letter-spacing: 0.42em;
+      color: var(--ember);
+      text-transform: uppercase;
+      margin-bottom: -0.25rem;
     }
 
     #messageOverlay h2 {
-      font-size: 2.25rem; /* text-4xl */
-      font-weight: bold;
-      margin-bottom: 1rem;
-      color: #a5b4fc; /* indigo-300 */
+      font-family: 'Bungee', sans-serif;
+      font-size: 2.85rem;
+      font-weight: 400;
+      margin: 0;
+      color: var(--text);
+      letter-spacing: 0.06em;
+      text-transform: uppercase;
+      line-height: 1;
+      text-shadow:
+        -2px 0 0 rgba(255, 107,  53, 0.85),
+         2px 0 0 rgba(125, 211, 252, 0.85);
     }
-     #messageOverlay p {
-      font-size: 1.5rem; /* text-2xl */
-      margin-bottom: 2rem;
+    #messageOverlay p {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.95rem;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      margin: 0;
+      color: var(--text-dim);
     }
     #messageOverlay .score-text {
-      color: #fcd34d; /* yellow-400 */
+      color: var(--ember);
+      font-weight: 700;
+      font-variant-numeric: tabular-nums;
     }
 
     .game-button {
-      padding: 0.75rem 2rem; /* px-8 py-3 */
-      color: white;
-      font-weight: 600; /* font-semibold */
-      border-radius: 0.5rem; /* rounded-lg */
-      font-size: 1.125rem; /* text-lg */
-      box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1), 0 2px 4px -1px rgba(0,0,0,0.06); /* shadow-lg */
-      transition: all 0.15s ease-in-out;
+      font-family: 'Bungee', sans-serif;
+      font-weight: 400;
+      font-size: 0.95rem;
+      letter-spacing: 0.22em;
+      text-transform: uppercase;
+      padding: 0.85rem 2.4rem;
+      border-radius: 0;
       cursor: pointer;
-      border: none;
       outline: none;
+      background: transparent;
+      color: var(--ember);
+      border: 2px solid var(--ember);
+      position: relative;
+      transition: color 0.15s ease, background-color 0.15s ease, transform 0.08s ease;
+      box-shadow:
+        0 0 0 1px rgba(8, 9, 15, 0.8),
+        0 0 22px -2px rgba(255, 107, 53, 0.35);
+    }
+    .game-button::before {
+      content: '▸';
+      margin-right: 0.6rem;
+      color: var(--ember);
+      transition: color 0.15s ease;
     }
     .game-button:hover {
-      transform: scale(1.05);
+      background: var(--ember);
+      color: var(--ink);
     }
-    .game-button:focus {
-      box-shadow: 0 0 0 4px rgba(99, 102, 241, 0.4); /* focus:ring-4 focus:ring-indigo-400 example */
-    }
-    .primary-button {
-      background-color: #4f46e5; /* bg-indigo-600 */
-    }
-    .primary-button:hover {
-      background-color: #4338ca; /* hover:bg-indigo-700 */
+    .game-button:hover::before { color: var(--ink); }
+    .game-button:active { transform: translateY(1px); }
+    .game-button:focus-visible {
+      outline: 2px dashed var(--ice);
+      outline-offset: 4px;
     }
     .secondary-button {
-       background-color: #16a34a; /* bg-green-600 */
+      color: var(--ice);
+      border-color: var(--ice);
+      box-shadow:
+        0 0 0 1px rgba(8, 9, 15, 0.8),
+        0 0 22px -2px rgba(125, 211, 252, 0.35);
     }
-    .secondary-button:hover {
-       background-color: #15803d; /* hover:bg-green-700 */
-    }
+    .secondary-button::before { color: var(--ice); }
+    .secondary-button:hover { background: var(--ice); color: var(--ink); }
+    .secondary-button:hover::before { color: var(--ink); }
 
 
     /* In-canvas HUD */
@@ -151,16 +316,50 @@
       #hud { font-size: 1rem; top: 8px; left: 8px; right: 8px; }
     }
 
+    .score-display {
+      display: inline-flex;
+      align-items: baseline;
+      gap: 0.55rem;
+      font-family: 'JetBrains Mono', monospace;
+      letter-spacing: 0.08em;
+      color: var(--text-dim);
+      font-size: 0.7rem;
+      text-transform: uppercase;
+    }
+    .score-display::before {
+      content: 'SCR';
+      color: var(--ember);
+      letter-spacing: 0.3em;
+    }
     .score-value {
-      font-weight: bold;
-      color: #fcd34d; /* yellow-400 */
+      font-family: 'JetBrains Mono', monospace;
+      font-weight: 700;
+      color: var(--ember);
       font-variant-numeric: tabular-nums;
+      font-size: 1.25rem;
+      letter-spacing: 0.04em;
+      text-shadow: 0 0 18px rgba(255, 107, 53, 0.35);
+    }
+    .lives-display {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.5rem;
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.7rem;
+      letter-spacing: 0.3em;
+      color: var(--text-dim);
+      text-transform: uppercase;
+    }
+    .lives-display::before {
+      content: 'LIVES';
+      color: var(--ice);
     }
     .lives-value {
-      font-weight: bold;
-      color: #f87171; /* red-400 */
+      display: inline-flex;
+      gap: 4px;
+      align-items: center;
     }
-    .lives-value span { margin: 0 0.125rem; }
+    .lives-value svg { display: block; }
 
     /* Help button + popover */
     .help-wrap {
@@ -169,68 +368,77 @@
       justify-content: center;
     }
     #helpBtn {
-      width: 32px;
-      height: 32px;
-      border-radius: 50%;
-      border: 1px solid rgba(156, 163, 175, 0.4);
-      background-color: transparent;
-      color: #9ca3af;
-      font-size: 0.95rem;
+      width: 26px;
+      height: 26px;
+      border-radius: 0;
+      border: 1px solid rgba(125, 211, 252, 0.4);
+      background-color: rgba(8, 9, 15, 0.6);
+      color: var(--ice);
+      font-family: 'Bungee', sans-serif;
+      font-size: 0.78rem;
       cursor: pointer;
       transition: all 0.15s ease;
       display: flex;
       align-items: center;
       justify-content: center;
       padding: 0;
+      letter-spacing: 0;
     }
     #helpBtn:hover, #helpBtn:focus {
-      color: #e5e7eb;
-      border-color: rgba(99, 102, 241, 0.6);
+      background: var(--ice);
+      color: var(--ink);
+      border-color: var(--ice);
       outline: none;
     }
     #helpPopover {
       position: absolute;
-      top: calc(100% + 8px);
+      top: calc(100% + 10px);
       left: 50%;
       transform: translateX(-50%);
-      background-color: rgba(17, 24, 39, 0.95);
-      border: 1px solid rgba(99, 102, 241, 0.4);
-      border-radius: 6px;
-      padding: 10px 14px;
-      font-size: 0.8rem;
-      color: #cbd5e1;
+      background: rgba(8, 9, 15, 0.96);
+      border: 1px solid var(--ice);
+      border-radius: 0;
+      padding: 12px 16px;
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.7rem;
+      letter-spacing: 0.1em;
+      color: var(--ice-soft);
       white-space: nowrap;
       backdrop-filter: blur(4px);
-      box-shadow: 0 4px 12px rgba(0,0,0,0.4);
-      line-height: 1.6;
+      box-shadow:
+        0 0 0 1px rgba(255, 107, 53, 0.25),
+        0 12px 28px -8px rgba(0, 0, 0, 0.8);
+      line-height: 1.9;
       opacity: 0;
       pointer-events: none;
       transition: opacity 0.2s ease;
+      text-transform: uppercase;
     }
     #helpPopover.visible {
       opacity: 1;
       pointer-events: auto;
     }
 
-    /* Fullscreen toggle, now part of the HUD */
+    /* Fullscreen toggle, square ghost button matching the help */
     #fullscreenBtn {
-      width: 28px;
-      height: 28px;
-      background-color: transparent;
-      border: 1px solid rgba(156, 163, 175, 0.4);
-      border-radius: 6px;
-      color: #9ca3af;
+      width: 26px;
+      height: 26px;
+      background-color: rgba(8, 9, 15, 0.6);
+      border: 1px solid rgba(125, 211, 252, 0.4);
+      border-radius: 0;
+      color: var(--ice);
       cursor: pointer;
       display: flex;
       align-items: center;
       justify-content: center;
-      font-size: 14px;
+      font-size: 12px;
       padding: 0;
-      transition: opacity 0.2s ease, color 0.15s ease, border-color 0.15s ease;
+      transition: opacity 0.2s ease, color 0.15s ease, border-color 0.15s ease, background-color 0.15s ease;
     }
     #fullscreenBtn:hover, #fullscreenBtn:focus {
-      color: #e5e7eb;
-      border-color: rgba(99, 102, 241, 0.6);
+      background: var(--ice);
+      color: var(--ink);
+      border-color: var(--ice);
       outline: none;
     }
 
@@ -258,11 +466,14 @@
       left: 100%;
       top: 0;
       margin-left: 8px;
-      color: #fcd34d;
-      font-weight: bold;
+      color: var(--ember);
+      font-family: 'JetBrains Mono', monospace;
+      font-weight: 700;
       font-size: 0.85em;
+      letter-spacing: 0.05em;
       opacity: 0;
       pointer-events: none;
+      text-shadow: 0 0 12px rgba(255, 107, 53, 0.6);
     }
     .score-floater.pop {
       animation: scoreFloat 600ms ease-out forwards;
@@ -284,8 +495,19 @@
 </script>
 </head>
 <body>
+  <span class="reg tl"></span>
+  <span class="reg tr"></span>
+  <span class="reg bl"></span>
+  <span class="reg br"></span>
+  <div class="edge-label top">EST. 2025 · CABINET No. 07</div>
+  <div class="edge-label bottom">◆ insert coin to continue ◆</div>
+
   <div id="gameContainer">
     <div id="canvasContainer">
+      <span class="corner tl"></span>
+      <span class="corner tr"></span>
+      <span class="corner bl"></span>
+      <span class="corner br"></span>
       <canvas id="gameCanvas"></canvas>
       <div id="titleMark" aria-hidden="true">fabrizio game</div>
       <div id="hud">
@@ -438,13 +660,13 @@
     }
 
     function updateLivesDisplay() {
-        let hearts = '';
-        if (lives > 0) {
-            hearts = Array(lives).fill('❤️').join('');
-        } else {
-            hearts = '💔';
+        const filled = '<svg viewBox="0 0 16 14" width="14" height="13" aria-hidden="true"><path d="M8 13 L1.8 6.7 a3.6 3.6 0 0 1 6.2 -3.2 a3.6 3.6 0 0 1 6.2 3.2 Z" fill="#ff6b35" stroke="#ff6b35" stroke-width="0.6"/></svg>';
+        const empty  = '<svg viewBox="0 0 16 14" width="14" height="13" aria-hidden="true"><path d="M8 13 L1.8 6.7 a3.6 3.6 0 0 1 6.2 -3.2 a3.6 3.6 0 0 1 6.2 3.2 Z" fill="none" stroke="#6b7280" stroke-width="1"/></svg>';
+        let html = '';
+        for (let i = 0; i < INITIAL_LIVES; i++) {
+            html += i < lives ? filled : empty;
         }
-        livesValueEl.innerHTML = hearts;
+        livesValueEl.innerHTML = html;
     }
     
     function updateControlsText() {
@@ -989,7 +1211,13 @@
     // --- Game Loop ---
     function gameLoop() {
       ctx.clearRect(0, 0, CANVAS_WIDTH, CANVAS_HEIGHT);
-      ctx.fillStyle = '#1a202c';
+      // Ink-tinted base + faint radial wash to give the play field depth
+      ctx.fillStyle = '#0c0f1a';
+      ctx.fillRect(0, 0, CANVAS_WIDTH, CANVAS_HEIGHT);
+      const wash = ctx.createRadialGradient(CANVAS_WIDTH / 2, CANVAS_HEIGHT * 0.4, 50, CANVAS_WIDTH / 2, CANVAS_HEIGHT * 0.4, CANVAS_WIDTH * 0.7);
+      wash.addColorStop(0, 'rgba(125, 211, 252, 0.05)');
+      wash.addColorStop(1, 'rgba(8, 9, 15, 0)');
+      ctx.fillStyle = wash;
       ctx.fillRect(0, 0, CANVAS_WIDTH, CANVAS_HEIGHT);
 
       processGamepadInput(); // Always process gamepad input
