@@ -27,6 +27,16 @@ This is a standalone HTML5 Brick Breaker game built as a single-file application
 - `index.html` - Complete game implementation
 - `sfx_A_sat_20250529_175752.mp3` - Sound effect for brick collisions
 
+## Development
+
+Local preview with live reload (replaces `python3 -m http.server 8001`):
+
+```bash
+python3 dev_server.py
+```
+
+Opens on http://127.0.0.1:8001/ — the browser refreshes automatically when you save `index.html` or other watched files.
+
 ## Development Notes
 
 When making changes:
