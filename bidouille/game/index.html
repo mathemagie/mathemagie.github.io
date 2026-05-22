@@ -1,0 +1,518 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<title>GLYPH — a gamepad game about fonts</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Bungee&family=Cormorant+Garamond:ital,wght@0,400;0,700;1,400&family=Fraunces:ital,wght@0,400;0,900;1,400&family=IBM+Plex+Mono:wght@400;700&family=Inter:wght@300;400;700;900&family=Major+Mono+Display&family=Playfair+Display:ital,wght@0,400;0,900;1,400&family=Press+Start+2P&family=Rubik+Mono+One&family=Space+Grotesk:wght@400;700&family=Unifraktur+Maguntia&family=VT323&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg:#0b0a14;
+    --ink:#f4efe6;
+    --accent:#ff3864;
+    --accent2:#2de2e6;
+    --accent3:#f9c80e;
+    --dim:#5b5570;
+    --panel:#15132a;
+    --good:#00f5a0;
+    --bad:#ff3864;
+  }
+  *{box-sizing:border-box}
+  html,body{margin:0;height:100%;background:var(--bg);color:var(--ink);font-family:'Inter',system-ui,sans-serif;overflow:hidden}
+  body{
+    background:
+      radial-gradient(1200px 600px at 80% -10%, rgba(45,226,230,.18), transparent 60%),
+      radial-gradient(900px 600px at -10% 110%, rgba(255,56,100,.18), transparent 60%),
+      linear-gradient(180deg,#0b0a14,#06050d);
+    display:grid;
+    grid-template-rows:auto 1fr auto;
+  }
+  header{
+    padding:14px 22px;display:flex;align-items:center;justify-content:space-between;
+    border-bottom:1px solid #1d1a33;
+  }
+  .logo{font-family:'Bungee',sans-serif;font-size:28px;letter-spacing:.06em}
+  .logo span:nth-child(1){color:var(--accent)}
+  .logo span:nth-child(2){color:var(--accent3)}
+  .logo span:nth-child(3){color:var(--accent2)}
+  .hud{display:flex;gap:24px;font-family:'IBM Plex Mono',monospace;font-size:12px;text-transform:uppercase;letter-spacing:.15em;color:var(--dim)}
+  .hud b{color:var(--ink);font-weight:700}
+  main{
+    display:grid;grid-template-columns: 1.1fr .9fr;gap:0;
+    min-height:0;
+  }
+  .stage{
+    display:flex;flex-direction:column;justify-content:center;align-items:center;
+    padding:24px;gap:18px;position:relative;overflow:hidden;
+  }
+  .label{font-family:'IBM Plex Mono',monospace;font-size:11px;letter-spacing:.25em;color:var(--dim);text-transform:uppercase}
+  .glyph-box{
+    width:min(560px,90%);aspect-ratio: 1/1;
+    display:grid;place-items:center;
+    border:1px dashed #2a2742;background:#0d0c1c;
+    position:relative;border-radius:6px;
+    box-shadow:0 30px 80px rgba(0,0,0,.5),inset 0 0 0 1px #181530;
+  }
+  .glyph-box::before{
+    content:"";position:absolute;inset:0;
+    background-image:
+      linear-gradient(rgba(255,255,255,.025) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(255,255,255,.025) 1px, transparent 1px);
+    background-size: 32px 32px;pointer-events:none;
+  }
+  .target .glyph{color:var(--accent3)}
+  .player .glyph{color:var(--accent2)}
+  .glyph{
+    font-size:200px;line-height:1;user-select:none;
+    transition: transform .12s ease, letter-spacing .12s ease, font-size .12s ease, color .12s ease;
+    text-shadow: 0 0 30px rgba(45,226,230,.25);
+  }
+  .target .glyph{text-shadow:0 0 30px rgba(249,200,14,.25)}
+  .stage-row{display:grid;grid-template-columns:1fr 1fr;gap:18px;width:100%;height:100%;align-items:stretch}
+  .stage-col{display:flex;flex-direction:column;align-items:center;gap:10px;min-width:0}
+  .panel{
+    background:linear-gradient(180deg,#0f0d22,#0a0917);
+    border-left:1px solid #1d1a33;padding:18px 22px;display:flex;flex-direction:column;gap:14px;
+    overflow:auto;
+  }
+  h2{margin:0;font-family:'Bungee',sans-serif;font-size:14px;letter-spacing:.2em;color:var(--accent3)}
+  .gamepad{
+    position:relative;width:100%;aspect-ratio: 16/9;
+    background:radial-gradient(120% 100% at 50% 30%, #1a1735, #0a0917 70%);
+    border:1px solid #221d40;border-radius:14px;padding:12px;
+  }
+  .btn{
+    position:absolute;display:grid;place-items:center;
+    border-radius:50%;background:#15122b;border:1px solid #2a2549;
+    font-family:'IBM Plex Mono',monospace;font-size:9px;color:#7a7398;
+    transition: background .08s, color .08s, transform .08s, box-shadow .08s;
+  }
+  .btn.on{background:var(--accent);color:#fff;box-shadow:0 0 16px var(--accent);transform:scale(1.08)}
+  .btn.shoulder, .btn.trigger{border-radius:8px;font-size:10px}
+  .stick{position:absolute;width:46px;height:46px;border-radius:50%;border:1px solid #2a2549;background:#0e0c1d;display:grid;place-items:center}
+  .stick .nub{width:18px;height:18px;border-radius:50%;background:#3a3360;transition:transform .04s linear, background .08s}
+  .stick.on .nub{background:var(--accent2);box-shadow:0 0 12px var(--accent2)}
+  .legend{display:grid;grid-template-columns:1fr 1fr;gap:6px 14px;font-family:'IBM Plex Mono',monospace;font-size:11px;color:#a39cc0}
+  .legend b{color:var(--ink)}
+  .key{display:inline-block;padding:1px 6px;border:1px solid #2a2549;border-radius:4px;color:var(--accent2);margin-right:6px;font-size:10px}
+  .scorebar{display:flex;gap:8px;flex-wrap:wrap}
+  .pill{
+    border:1px solid #2a2549;border-radius:999px;padding:6px 10px;
+    font-family:'IBM Plex Mono',monospace;font-size:11px;color:#a39cc0;
+  }
+  .pill b{color:var(--ink)}
+  .pill.good{color:var(--good);border-color:var(--good)}
+  .pill.bad{color:var(--bad);border-color:var(--bad)}
+  footer{
+    padding:8px 22px;border-top:1px solid #1d1a33;
+    font-family:'IBM Plex Mono',monospace;font-size:11px;color:var(--dim);
+    display:flex;justify-content:space-between;gap:16px;align-items:center;
+  }
+  .toast{
+    position:absolute;left:50%;top:14px;transform:translateX(-50%);
+    font-family:'Bungee',sans-serif;font-size:22px;letter-spacing:.08em;
+    padding:6px 18px;border-radius:999px;background:#0f0d22;border:1px solid #2a2549;
+    opacity:0;transition:opacity .2s, transform .2s;pointer-events:none;
+  }
+  .toast.show{opacity:1;transform:translateX(-50%) translateY(4px)}
+  .toast.good{color:var(--good);border-color:var(--good);box-shadow:0 0 24px rgba(0,245,160,.35)}
+  .toast.bad{color:var(--bad);border-color:var(--bad);box-shadow:0 0 24px rgba(255,56,100,.35)}
+  .no-pad{
+    position:absolute;inset:auto 0 0 0;padding:14px;background:linear-gradient(180deg,transparent, rgba(0,0,0,.6));
+    text-align:center;font-family:'IBM Plex Mono',monospace;font-size:12px;color:var(--accent3);
+  }
+  .no-pad.hidden{display:none}
+  .swatch{display:inline-block;width:10px;height:10px;border-radius:2px;vertical-align:middle;margin-right:6px}
+  .row{display:flex;gap:14px;align-items:center;justify-content:space-between}
+  .controls-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:8px 14px}
+  .control{font-family:'IBM Plex Mono',monospace;font-size:11px;color:#a39cc0}
+  .control b{color:var(--ink)}
+  .progress{height:6px;background:#15122b;border-radius:3px;overflow:hidden;border:1px solid #221d40}
+  .progress > div{height:100%;background:linear-gradient(90deg,var(--accent),var(--accent3),var(--accent2));width:0%}
+</style>
+</head>
+<body>
+<header>
+  <div class="logo"><span>GLY</span><span>P</span><span>H</span></div>
+  <div class="hud">
+    <div>SCORE <b id="score">0</b></div>
+    <div>ROUND <b id="round">1</b></div>
+    <div>BEST <b id="best">0</b></div>
+    <div>TIME <b id="time">30</b>s</div>
+  </div>
+</header>
+
+<main>
+  <section class="stage">
+    <div class="toast" id="toast"></div>
+    <div class="stage-row">
+      <div class="stage-col target">
+        <div class="label">// TARGET</div>
+        <div class="glyph-box"><div class="glyph" id="targetGlyph">A</div></div>
+      </div>
+      <div class="stage-col player">
+        <div class="label">// YOUR GLYPH</div>
+        <div class="glyph-box"><div class="glyph" id="playerGlyph">A</div></div>
+      </div>
+    </div>
+    <div class="progress" style="width:min(560px,90%)"><div id="progress"></div></div>
+    <div class="scorebar" id="scorebar"></div>
+  </section>
+
+  <aside class="panel">
+    <h2>// GAMEPAD</h2>
+    <div class="gamepad" id="pad">
+      <!-- D-pad (12-15) -->
+      <div class="btn" data-i="12" style="left:9%;top:38%;width:34px;height:34px">▲</div>
+      <div class="btn" data-i="13" style="left:9%;top:62%;width:34px;height:34px">▼</div>
+      <div class="btn" data-i="14" style="left:3%;top:50%;width:34px;height:34px">◀</div>
+      <div class="btn" data-i="15" style="left:15%;top:50%;width:34px;height:34px">▶</div>
+      <!-- Face (0-3) -->
+      <div class="btn" data-i="0" style="right:9%;top:62%;width:36px;height:36px">A</div>
+      <div class="btn" data-i="1" style="right:3%;top:50%;width:36px;height:36px">B</div>
+      <div class="btn" data-i="2" style="right:15%;top:50%;width:36px;height:36px">X</div>
+      <div class="btn" data-i="3" style="right:9%;top:38%;width:36px;height:36px">Y</div>
+      <!-- Shoulders/triggers -->
+      <div class="btn shoulder" data-i="4" style="left:6%;top:10%;width:60px;height:18px">LB</div>
+      <div class="btn shoulder" data-i="5" style="right:6%;top:10%;width:60px;height:18px">RB</div>
+      <div class="btn trigger" data-i="6" style="left:6%;top:30%;width:60px;height:14px">LT</div>
+      <div class="btn trigger" data-i="7" style="right:6%;top:30%;width:60px;height:14px">RT</div>
+      <!-- Select/Start/Home (8,9,16) -->
+      <div class="btn" data-i="8" style="left:38%;top:18%;width:32px;height:18px;border-radius:6px">SEL</div>
+      <div class="btn" data-i="9" style="right:38%;top:18%;width:32px;height:18px;border-radius:6px">STA</div>
+      <div class="btn" data-i="16" style="left:50%;transform:translateX(-50%);top:42%;width:26px;height:26px">⌂</div>
+      <!-- Sticks + clicks (10,11) -->
+      <div class="stick" id="stickL" style="left:30%;top:60%"><div class="nub"></div></div>
+      <div class="stick" id="stickR" style="right:30%;top:60%"><div class="nub"></div></div>
+      <div class="btn" data-i="10" style="left:30%;top:60%;width:18px;height:18px;transform:translate(-50%,-50%);font-size:8px">L3</div>
+      <div class="btn" data-i="11" style="right:30%;top:60%;width:18px;height:18px;transform:translate(50%,-50%);font-size:8px">R3</div>
+
+      <div class="no-pad" id="noPad">⚠ Connect a gamepad and press any button.</div>
+    </div>
+
+    <h2>// CONTROLS</h2>
+    <div class="controls-grid">
+      <div class="control"><span class="key">A</span><b>Cycle letter</b> +1</div>
+      <div class="control"><span class="key">B</span><b>Cycle letter</b> −1</div>
+      <div class="control"><span class="key">X</span><b>Italic</b> toggle</div>
+      <div class="control"><span class="key">Y</span><b>Uppercase</b> toggle</div>
+      <div class="control"><span class="key">LB</span><b>Prev font</b></div>
+      <div class="control"><span class="key">RB</span><b>Next font</b></div>
+      <div class="control"><span class="key">LT</span><b>Lighter</b> weight</div>
+      <div class="control"><span class="key">RT</span><b>Heavier</b> weight</div>
+      <div class="control"><span class="key">▲▼</span><b>Size</b> ±</div>
+      <div class="control"><span class="key">◀▶</span><b>Tracking</b> ±</div>
+      <div class="control"><span class="key">L-stick</b></span><b>Rotate</b> / squeeze</div>
+      <div class="control"><span class="key">R-stick</b></span><b>Color hue/sat</b></div>
+      <div class="control"><span class="key">L3</span><b>Reset rotation</b></div>
+      <div class="control"><span class="key">R3</span><b>Reset color</b></div>
+      <div class="control"><span class="key">SEL</span><b>Skip round</b> (−5)</div>
+      <div class="control"><span class="key">START</span><b>Submit</b></div>
+      <div class="control"><span class="key">⌂</span><b>New game</b></div>
+    </div>
+
+    <h2>// STATUS</h2>
+    <div class="row"><div class="control">Font</div><div class="control"><b id="sFont">—</b></div></div>
+    <div class="row"><div class="control">Letter</div><div class="control"><b id="sLetter">—</b></div></div>
+    <div class="row"><div class="control">Weight / Style</div><div class="control"><b id="sStyle">—</b></div></div>
+    <div class="row"><div class="control">Size · Track</div><div class="control"><b id="sSize">—</b></div></div>
+    <div class="row"><div class="control">Rotate · Squeeze</div><div class="control"><b id="sRot">—</b></div></div>
+    <div class="row"><div class="control">Hue · Sat</div><div class="control"><b id="sCol">—</b></div></div>
+  </aside>
+</main>
+
+<footer>
+  <div>GLYPH v1 · a gamepad game about typography · move every button to match the target</div>
+  <div id="padInfo">no gamepad</div>
+</footer>
+
+<script>
+(() => {
+  // ---------- font roster ----------
+  const FONTS = [
+    {name:"Inter",         css:"'Inter',sans-serif",            weights:[300,400,700,900], italic:true},
+    {name:"Space Grotesk", css:"'Space Grotesk',sans-serif",    weights:[400,700],         italic:false},
+    {name:"Playfair",      css:"'Playfair Display',serif",      weights:[400,900],         italic:true},
+    {name:"Fraunces",      css:"'Fraunces',serif",              weights:[400,900],         italic:true},
+    {name:"Cormorant",     css:"'Cormorant Garamond',serif",    weights:[400,700],         italic:true},
+    {name:"IBM Plex Mono", css:"'IBM Plex Mono',monospace",     weights:[400,700],         italic:false},
+    {name:"VT323",         css:"'VT323',monospace",             weights:[400],             italic:false},
+    {name:"Press Start 2P",css:"'Press Start 2P',monospace",    weights:[400],             italic:false},
+    {name:"Bungee",        css:"'Bungee',display",              weights:[400],             italic:false},
+    {name:"Rubik Mono",    css:"'Rubik Mono One',monospace",    weights:[400],             italic:false},
+    {name:"Major Mono",    css:"'Major Mono Display',monospace",weights:[400],             italic:false},
+    {name:"Fraktur",       css:"'Unifraktur Maguntia',serif",   weights:[400],             italic:false},
+  ];
+  const LETTERS = "ABCDEFGHIJKLMNOPQRSTUVWXYZ&@#?!*".split("");
+
+  // ---------- state ----------
+  const initial = () => ({
+    fontIdx: 0,
+    letterIdx: 0,
+    weightIdx: 0,
+    italic:false,
+    upper:true,
+    sizePx: 200,
+    tracking: 0,    // em
+    rotate: 0,      // deg
+    squeeze: 1,     // scaleX 0.5..1.5
+    hue: 60,        // deg 0..360
+    sat: 100,       // %
+  });
+  let target = initial();
+  let player = initial();
+  let score = 0, round = 1, best = +(localStorage.getItem("glyph.best")||0);
+  let timeLeft = 30, timerId = null;
+  let triggersUsed = {6:false,7:false};
+  document.getElementById("best").textContent = best;
+
+  // ---------- elements ----------
+  const $ = id => document.getElementById(id);
+  const targetEl = $("targetGlyph"), playerEl = $("playerGlyph");
+  const toast = $("toast"), noPad = $("noPad"), padInfo = $("padInfo");
+  const progress = $("progress");
+
+  // ---------- rendering ----------
+  function applyTo(el, s){
+    const font = FONTS[s.fontIdx];
+    const w = font.weights[Math.min(s.weightIdx, font.weights.length-1)];
+    const ch = s.upper ? LETTERS[s.letterIdx] : LETTERS[s.letterIdx].toLowerCase();
+    el.textContent = ch;
+    el.style.fontFamily = font.css;
+    el.style.fontWeight = w;
+    el.style.fontStyle = (s.italic && font.italic) ? "italic" : "normal";
+    el.style.fontSize = s.sizePx + "px";
+    el.style.letterSpacing = s.tracking.toFixed(2) + "em";
+    el.style.transform = `rotate(${s.rotate.toFixed(1)}deg) scaleX(${s.squeeze.toFixed(2)})`;
+    el.style.color = `hsl(${s.hue.toFixed(0)} ${s.sat.toFixed(0)}% 60%)`;
+  }
+  function renderAll(){
+    applyTo(targetEl, target);
+    applyTo(playerEl, player);
+    const f = FONTS[player.fontIdx];
+    $("sFont").textContent = f.name;
+    $("sLetter").textContent = player.upper ? LETTERS[player.letterIdx] : LETTERS[player.letterIdx].toLowerCase();
+    $("sStyle").textContent = `${f.weights[Math.min(player.weightIdx,f.weights.length-1)]}${player.italic?" · italic":""}`;
+    $("sSize").textContent = `${player.sizePx|0}px · ${player.tracking.toFixed(2)}em`;
+    $("sRot").textContent = `${player.rotate.toFixed(0)}° · ${player.squeeze.toFixed(2)}×`;
+    $("sCol").textContent = `${player.hue|0}° · ${player.sat|0}%`;
+    updateProgress();
+  }
+
+  // ---------- scoring ----------
+  function similarity(){
+    // weighted distance over normalized features
+    let s = 0;
+    s += player.fontIdx === target.fontIdx ? 0 : 1;                                       // 1.0
+    s += player.letterIdx === target.letterIdx ? 0 : 0.6;
+    s += player.weightIdx === target.weightIdx ? 0 : 0.4;
+    s += player.italic === target.italic ? 0 : 0.3;
+    s += player.upper === target.upper ? 0 : 0.3;
+    s += Math.abs(player.sizePx - target.sizePx) / 200 * 0.5;
+    s += Math.abs(player.tracking - target.tracking) / 0.5 * 0.4;
+    s += Math.min(180, Math.abs(((player.rotate - target.rotate) + 540) % 360 - 180)) / 180 * 0.5;
+    s += Math.abs(player.squeeze - target.squeeze) / 1.0 * 0.3;
+    s += Math.min(180, Math.abs(((player.hue - target.hue) + 540) % 360 - 180)) / 180 * 0.4;
+    s += Math.abs(player.sat - target.sat) / 100 * 0.2;
+    // total max ~4.9. Convert to 0..100 score.
+    return Math.max(0, Math.min(100, 100 - (s/4.9)*100));
+  }
+  function updateProgress(){
+    const s = similarity();
+    progress.style.width = s.toFixed(0) + "%";
+  }
+
+  // ---------- round flow ----------
+  function newTarget(){
+    const t = initial();
+    t.fontIdx   = Math.floor(Math.random()*FONTS.length);
+    t.letterIdx = Math.floor(Math.random()*LETTERS.length);
+    const w = FONTS[t.fontIdx].weights;
+    t.weightIdx = Math.floor(Math.random()*w.length);
+    t.italic    = FONTS[t.fontIdx].italic && Math.random()<0.4;
+    t.upper     = Math.random()<0.7;
+    t.sizePx    = 120 + Math.floor(Math.random()*180);  // 120..300
+    t.tracking  = (Math.random()*0.5 - 0.1);             // -0.1..0.4
+    t.rotate    = (Math.random()*60 - 30);               // -30..30
+    t.squeeze   = 0.7 + Math.random()*0.6;               // 0.7..1.3
+    t.hue       = Math.floor(Math.random()*360);
+    t.sat       = 40 + Math.floor(Math.random()*60);
+    target = t;
+    player = initial();
+    renderAll();
+  }
+  function showToast(msg, kind){
+    toast.textContent = msg;
+    toast.className = "toast show " + (kind||"");
+    clearTimeout(showToast._t);
+    showToast._t = setTimeout(()=>toast.classList.remove("show"), 1100);
+  }
+  function submit(){
+    const s = similarity();
+    let gain = Math.round(s);
+    if (s >= 95) { gain += 25; showToast("PERFECT +"+gain, "good"); rumble(.8,300); }
+    else if (s >= 80) { gain += 10; showToast("GREAT +"+gain, "good"); rumble(.4,180); }
+    else if (s >= 60) { showToast("OK +"+gain); rumble(.2,120); }
+    else { showToast("MISS +"+gain, "bad"); rumble(.6,80,.9); }
+    score += gain;
+    if (score > best){ best = score; localStorage.setItem("glyph.best", best); $("best").textContent=best; }
+    $("score").textContent = score;
+    round++; $("round").textContent = round;
+    newTarget();
+  }
+  function skip(){
+    score = Math.max(0, score-5);
+    $("score").textContent = score;
+    showToast("SKIP −5", "bad");
+    round++; $("round").textContent = round;
+    newTarget();
+  }
+  function newGame(){
+    score=0; round=1; timeLeft=30;
+    $("score").textContent=0; $("round").textContent=1; $("time").textContent=30;
+    if (timerId) clearInterval(timerId);
+    timerId = setInterval(()=>{
+      timeLeft--; $("time").textContent = timeLeft;
+      if (timeLeft<=0){
+        clearInterval(timerId); timerId=null;
+        showToast("TIME! score "+score, "bad");
+        setTimeout(newGame, 1600);
+      }
+    },1000);
+    newTarget();
+  }
+
+  // ---------- gamepad input ----------
+  const prev = {buttons:{}, axes:[0,0,0,0]};
+  let connectedIdx = null;
+  let lastPad = null;
+
+  window.addEventListener("gamepadconnected", e => {
+    connectedIdx = e.gamepad.index;
+    noPad.classList.add("hidden");
+    padInfo.textContent = "pad: " + e.gamepad.id;
+    if (!timerId) newGame();
+  });
+  window.addEventListener("gamepaddisconnected", e => {
+    if (connectedIdx === e.gamepad.index) connectedIdx = null;
+    noPad.classList.remove("hidden");
+    padInfo.textContent = "no gamepad";
+  });
+
+  function setBtn(i, on){
+    const el = document.querySelector(`.btn[data-i="${i}"]`);
+    if (el) el.classList.toggle("on", on);
+  }
+  function rumble(strong=.5, dur=150, weak=strong){
+    const gp = lastPad;
+    if (gp && gp.vibrationActuator){
+      try { gp.vibrationActuator.playEffect("dual-rumble", {duration:dur,strongMagnitude:strong,weakMagnitude:weak}); } catch(e){}
+    }
+  }
+
+  function clampHue(h){ return ((h%360)+360)%360; }
+  function step(){
+    const pads = navigator.getGamepads ? navigator.getGamepads() : [];
+    const gp = connectedIdx!=null ? pads[connectedIdx] : (pads && pads[0]);
+    if (gp){
+      lastPad = gp;
+      if (connectedIdx==null){ connectedIdx = gp.index; noPad.classList.add("hidden"); padInfo.textContent="pad: "+gp.id; if(!timerId) newGame(); }
+
+      // visual button states
+      gp.buttons.forEach((b, i)=> setBtn(i, b.pressed || b.value>0.1));
+
+      // analog triggers (LT=6, RT=7): weight control
+      const lt = gp.buttons[6] ? gp.buttons[6].value : 0;
+      const rt = gp.buttons[7] ? gp.buttons[7].value : 0;
+      const fontWeights = FONTS[player.fontIdx].weights;
+      if (fontWeights.length > 1){
+        // hold trigger to slide weightIdx; rising-edge alone also acts.
+        if (rt > .2) { player.weightIdx = Math.min(fontWeights.length-1, Math.round(rt*(fontWeights.length-1))); }
+        if (lt > .2) { player.weightIdx = Math.max(0, fontWeights.length-1 - Math.round(lt*(fontWeights.length-1))); }
+      }
+
+      // edge-triggered buttons
+      const pressed = i => gp.buttons[i] && gp.buttons[i].pressed && !prev.buttons[i];
+      if (pressed(0)) player.letterIdx = (player.letterIdx+1) % LETTERS.length;        // A
+      if (pressed(1)) player.letterIdx = (player.letterIdx-1+LETTERS.length) % LETTERS.length; // B
+      if (pressed(2)) player.italic = !player.italic;                                   // X
+      if (pressed(3)) player.upper = !player.upper;                                     // Y
+      if (pressed(4)) player.fontIdx = (player.fontIdx-1+FONTS.length) % FONTS.length;  // LB
+      if (pressed(5)) player.fontIdx = (player.fontIdx+1) % FONTS.length;               // RB
+      if (pressed(8)) { skip(); }                                                       // SELECT
+      if (pressed(9)) { submit(); }                                                     // START
+      if (pressed(10)) { player.rotate = 0; player.squeeze = 1; showToast("L3 reset"); }// L3
+      if (pressed(11)) { player.hue = 60; player.sat = 100; showToast("R3 reset"); }    // R3
+      if (pressed(16)) { newGame(); showToast("NEW GAME"); }                            // HOME
+
+      // d-pad: while held
+      const held = i => gp.buttons[i] && gp.buttons[i].pressed;
+      if (held(12)) player.sizePx = Math.min(320, player.sizePx + 2);    // up
+      if (held(13)) player.sizePx = Math.max(60,  player.sizePx - 2);    // down
+      if (held(14)) player.tracking = Math.max(-0.2, player.tracking - .01);
+      if (held(15)) player.tracking = Math.min(0.6,  player.tracking + .01);
+
+      // sticks: axes 0,1 = L; 2,3 = R
+      const dz = v => Math.abs(v)<0.15 ? 0 : v;
+      const lx = dz(gp.axes[0]||0), ly = dz(gp.axes[1]||0);
+      const rx = dz(gp.axes[2]||0), ry = dz(gp.axes[3]||0);
+      // L-stick: x=rotate, y=squeeze
+      if (lx || ly){
+        player.rotate += lx * 3;
+        player.rotate = Math.max(-180, Math.min(180, player.rotate));
+        player.squeeze += -ly * 0.03;
+        player.squeeze = Math.max(0.5, Math.min(1.5, player.squeeze));
+        document.getElementById("stickL").classList.add("on");
+        document.getElementById("stickL").querySelector(".nub").style.transform = `translate(${lx*10}px, ${ly*10}px)`;
+      } else {
+        document.getElementById("stickL").classList.remove("on");
+        document.getElementById("stickL").querySelector(".nub").style.transform = "translate(0,0)";
+      }
+      // R-stick: x=hue, y=sat
+      if (rx || ry){
+        player.hue = clampHue(player.hue + rx * 4);
+        player.sat = Math.max(0, Math.min(100, player.sat + -ry * 2));
+        document.getElementById("stickR").classList.add("on");
+        document.getElementById("stickR").querySelector(".nub").style.transform = `translate(${rx*10}px, ${ry*10}px)`;
+      } else {
+        document.getElementById("stickR").classList.remove("on");
+        document.getElementById("stickR").querySelector(".nub").style.transform = "translate(0,0)";
+      }
+
+      // remember edges
+      gp.buttons.forEach((b,i)=> prev.buttons[i] = b.pressed);
+    }
+    renderAll();
+    requestAnimationFrame(step);
+  }
+
+  // keyboard fallback so the page is testable without a pad
+  document.addEventListener("keydown", e => {
+    const k = e.key.toLowerCase();
+    const map = {
+      "a":()=>player.letterIdx=(player.letterIdx+1)%LETTERS.length,
+      "b":()=>player.letterIdx=(player.letterIdx-1+LETTERS.length)%LETTERS.length,
+      "x":()=>player.italic=!player.italic,
+      "y":()=>player.upper=!player.upper,
+      "q":()=>player.fontIdx=(player.fontIdx-1+FONTS.length)%FONTS.length,
+      "e":()=>player.fontIdx=(player.fontIdx+1)%FONTS.length,
+      "arrowup":()=>player.sizePx=Math.min(320,player.sizePx+6),
+      "arrowdown":()=>player.sizePx=Math.max(60,player.sizePx-6),
+      "arrowleft":()=>player.tracking=Math.max(-0.2,player.tracking-.02),
+      "arrowright":()=>player.tracking=Math.min(0.6,player.tracking+.02),
+      "enter":()=>submit(),
+      " ":()=>skip(),
+      "n":()=>newGame(),
+    };
+    if (map[k]){ e.preventDefault(); map[k](); renderAll(); }
+  });
+
+  // start without pad too (keyboard demo)
+  newGame();
+  requestAnimationFrame(step);
+})();
+</script>
+</body>
+</html>
