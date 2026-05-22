@@ -1,6 +1,16 @@
 /* eslint-env browser */
 /* global localStorage, performance, requestAnimationFrame, setInterval, clearInterval, setTimeout, fetch */
 
+// Survives private-browsing throws and broken Node --localstorage-file envs.
+const safeStorage = {
+  get(key) {
+    try { return localStorage.getItem(key); } catch { return null; }
+  },
+  set(key, value) {
+    try { localStorage.setItem(key, value); } catch { /* ignore */ }
+  },
+};
+
 // Radio functionality for 25544.fm (ISS Orbital Radio)
 class RadioManager {
   constructor() {
@@ -200,8 +210,7 @@ class RadioManager {
     this.setupEventListeners();
     this.setStationForRegion('Ocean'); // Initial default
 
-    const issContextPref = localStorage.getItem('issContextVisible');
-    if (issContextPref === 'true') {
+    if (safeStorage.get('issContextVisible') === 'true') {
       this.showIssContext();
     }
   }
@@ -598,7 +607,7 @@ class RadioManager {
     if (this.issContextOverlay) {
       this.issContextOverlay.style.display = 'block';
       this.isIssContextVisible = true;
-      localStorage.setItem('issContextVisible', 'true');
+      safeStorage.set('issContextVisible', 'true');
       this.updateIssContextData();
     }
   }
@@ -607,7 +616,7 @@ class RadioManager {
     if (this.issContextOverlay) {
       this.issContextOverlay.style.display = 'none';
       this.isIssContextVisible = false;
-      localStorage.setItem('issContextVisible', 'false');
+      safeStorage.set('issContextVisible', 'false');
     }
   }
 
