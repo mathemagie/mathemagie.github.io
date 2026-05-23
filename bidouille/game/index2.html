@@ -1,0 +1,312 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate" />
+<meta http-equiv="Pragma" content="no-cache" />
+<meta http-equiv="Expires" content="0" />
+<title>Name That Type — a font identification game</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Bodoni+Moda:wght@400;700&family=Cormorant+Garamond:wght@400;700&family=DM+Serif+Display&family=EB+Garamond:wght@400;700&family=Fraunces:wght@400;700&family=IBM+Plex+Mono&family=IBM+Plex+Sans:wght@400;700&family=Inter:wght@400;700&family=JetBrains+Mono&family=Libre+Caslon+Text:wght@400;700&family=Lora:wght@400;700&family=Merriweather:wght@400;700&family=Montserrat:wght@400;700&family=Playfair+Display:wght@400;700&family=Poppins:wght@400;700&family=Source+Sans+3:wght@400;700&family=Source+Serif+4:wght@400;700&family=Space+Grotesk:wght@400;700&family=Space+Mono&family=Work+Sans:wght@400;700&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg:#f6f3ec;
+    --ink:#15140f;
+    --rule:#1a1812;
+    --dim:#74705f;
+    --paper:#fbfaf5;
+    --good:#1a6a3d;
+    --bad:#8c1d1d;
+    --hi:#c9b87a;
+  }
+  *{box-sizing:border-box}
+  html,body{margin:0;background:var(--bg);color:var(--ink);font-family:'IBM Plex Sans',system-ui,sans-serif;-webkit-font-smoothing:antialiased}
+  body{min-height:100vh;display:flex;flex-direction:column}
+  header,footer{padding:18px 28px;display:flex;justify-content:space-between;align-items:baseline;border-bottom:1px solid var(--rule)}
+  footer{border-top:1px solid var(--rule);border-bottom:none;color:var(--dim);font-size:12px}
+  .brand{font-family:'Playfair Display',serif;font-weight:700;font-size:22px;letter-spacing:.01em}
+  .brand em{font-style:italic;color:var(--dim);font-weight:400}
+  .meta{display:flex;gap:28px;font-family:'IBM Plex Mono',monospace;font-size:12px;text-transform:uppercase;letter-spacing:.16em;color:var(--dim)}
+  .meta b{color:var(--ink);font-weight:700;font-family:'IBM Plex Mono',monospace}
+
+  main{flex:1;display:grid;grid-template-rows:1fr auto;max-width:980px;width:100%;margin:0 auto;padding:24px 28px 32px;gap:22px}
+
+  .stage{
+    background:var(--paper);border:1px solid var(--rule);
+    display:flex;flex-direction:column;justify-content:center;align-items:center;
+    padding:48px 32px;text-align:center;position:relative;min-height:340px;
+  }
+  .qtag{font-family:'IBM Plex Mono',monospace;font-size:11px;letter-spacing:.25em;text-transform:uppercase;color:var(--dim);margin-bottom:18px}
+  .sample{font-size:88px;line-height:1.05;letter-spacing:-.01em;max-width:90%;word-break:break-word}
+  .sample.small{font-size:54px}
+  .hint{margin-top:18px;font-family:'IBM Plex Mono',monospace;font-size:11px;letter-spacing:.12em;color:var(--dim);text-transform:uppercase}
+
+  .choices{display:grid;grid-template-columns:repeat(2,1fr);gap:10px}
+  @media (min-width:720px){ .choices{grid-template-columns:repeat(4,1fr)} }
+  .choice{
+    appearance:none;background:var(--paper);color:var(--ink);
+    border:1px solid var(--rule);padding:14px 14px;text-align:left;
+    font-family:'IBM Plex Sans',sans-serif;font-size:15px;cursor:pointer;
+    display:flex;align-items:baseline;gap:10px;transition:background .12s, color .12s;
+  }
+  .choice:hover{background:#efeadb}
+  .choice:focus{outline:2px solid var(--hi);outline-offset:-2px}
+  .choice .num{font-family:'IBM Plex Mono',monospace;font-size:11px;color:var(--dim);min-width:14px}
+  .choice .nm{font-weight:700}
+  .choice .cat{font-size:11px;color:var(--dim);text-transform:uppercase;letter-spacing:.12em;margin-left:auto}
+  .choice.correct{background:#e8f1ea;border-color:var(--good);color:var(--good)}
+  .choice.wrong{background:#f4e6e6;border-color:var(--bad);color:var(--bad)}
+  .choice[disabled]{cursor:default}
+
+  .reveal{
+    margin-top:18px;border-top:1px solid var(--rule);padding-top:18px;
+    display:none;grid-template-columns:1fr auto;gap:18px;align-items:start;
+  }
+  .reveal.show{display:grid}
+  .reveal h3{margin:0 0 6px;font-family:'Playfair Display',serif;font-size:22px;font-weight:700}
+  .reveal h3 .cat{font-family:'IBM Plex Mono',monospace;font-size:11px;color:var(--dim);letter-spacing:.18em;text-transform:uppercase;margin-left:8px;font-weight:400}
+  .reveal p{margin:0;color:#2a261c;line-height:1.5;max-width:60ch;font-size:14px}
+  .reveal .next{
+    background:var(--ink);color:var(--paper);border:1px solid var(--ink);
+    padding:10px 18px;font-family:'IBM Plex Mono',monospace;font-size:12px;letter-spacing:.15em;
+    text-transform:uppercase;cursor:pointer;align-self:start;
+  }
+  .reveal .next:hover{background:#000}
+
+  .verdict{
+    position:absolute;top:14px;right:14px;
+    font-family:'IBM Plex Mono',monospace;font-size:11px;letter-spacing:.2em;text-transform:uppercase;
+    padding:4px 10px;border:1px solid currentColor;
+  }
+  .verdict.good{color:var(--good)}
+  .verdict.bad{color:var(--bad)}
+
+  .legend{display:flex;justify-content:space-between;align-items:center;font-family:'IBM Plex Mono',monospace;font-size:11px;letter-spacing:.14em;text-transform:uppercase;color:var(--dim)}
+  .legend kbd{
+    font-family:'IBM Plex Mono',monospace;font-size:11px;padding:2px 6px;border:1px solid var(--rule);
+    background:var(--paper);color:var(--ink);margin:0 2px;letter-spacing:0;
+  }
+</style>
+</head>
+<body>
+<header>
+  <div class="brand">Name That <em>Type</em></div>
+  <div class="meta">
+    <div>Round <b id="round">1</b>/<b id="total">10</b></div>
+    <div>Score <b id="score">0</b></div>
+    <div>Streak <b id="streak">0</b></div>
+  </div>
+</header>
+
+<main>
+  <section class="stage">
+    <div class="verdict" id="verdict" style="display:none"></div>
+    <div class="qtag">Which typeface is this?</div>
+    <div class="sample" id="sample">Typography</div>
+    <div class="hint" id="hint">Tip: look at the serifs, the stroke contrast, the terminals.</div>
+  </section>
+
+  <section>
+    <div class="choices" id="choices"></div>
+    <div class="reveal" id="reveal">
+      <div>
+        <h3 id="revealName">—<span class="cat" id="revealCat"></span></h3>
+        <p id="revealDesc">—</p>
+      </div>
+      <button class="next" id="nextBtn">Next →</button>
+    </div>
+  </section>
+</main>
+
+<footer>
+  <div class="legend">
+    <div><kbd>1</kbd><kbd>2</kbd><kbd>3</kbd><kbd>4</kbd> answer · <kbd>Enter</kbd> next · <kbd>R</kbd> restart</div>
+    <div>10 questions · no time pressure</div>
+  </div>
+</footer>
+
+<script>
+(() => {
+  const FONTS = [
+    // Serif
+    {n:"Playfair Display", css:"'Playfair Display',serif", cat:"Serif · Display", note:"A high-contrast Didone-inspired serif designed by Claus Eggers Sørensen. Hairline serifs and dramatic thick/thin contrast make it editorial — at home in fashion magazines, less so in long body text."},
+    {n:"Bodoni Moda",      css:"'Bodoni Moda',serif",      cat:"Serif · Didone", note:"A modern revival of Giambattista Bodoni's 18th-century types. The Didone style is defined by vertical stress, unbracketed serifs, and extreme stroke contrast."},
+    {n:"EB Garamond",      css:"'EB Garamond',serif",      cat:"Serif · Old-style", note:"An open-source revival of Claude Garamont's 16th-century Parisian types. Diagonal stress and bracketed serifs make it warm and readable — a workhorse for books."},
+    {n:"Cormorant Garamond", css:"'Cormorant Garamond',serif", cat:"Serif · Display", note:"Christian Thalmann's display reinterpretation of Garamond. Drawn for headlines: tighter spacing, taller capitals, more drama than a body-text Garamond."},
+    {n:"Fraunces",         css:"'Fraunces',serif",         cat:"Serif · Variable", note:"A 'soft-but-bold' variable serif by Phaedra Charles. Inspired by 1900s warm-toned advertising types — playful curves, a wide design space across weight and 'softness'."},
+    {n:"Lora",             css:"'Lora',serif",             cat:"Serif · Body", note:"A well-balanced contemporary serif with calligraphic roots. Optimized for screen body text — moderate contrast, generous x-height."},
+    {n:"Merriweather",     css:"'Merriweather',serif",     cat:"Serif · Body", note:"Designed by Sorkin Type for on-screen reading. Slightly condensed, large x-height, sturdy serifs. A common default for long-form articles."},
+    {n:"DM Serif Display", css:"'DM Serif Display',serif", cat:"Serif · Display", note:"A high-contrast transitional serif drawn for headlines. Open-source by Colophon Foundry / Google Fonts."},
+    {n:"Source Serif 4",   css:"'Source Serif 4',serif",   cat:"Serif · Transitional", note:"Adobe's open-source serif by Frank Grießhammer, inspired by Pierre-Simon Fournier. A transitional design — vertical stress, moderate contrast — built for long reading."},
+    {n:"Libre Caslon Text",css:"'Libre Caslon Text',serif",cat:"Serif · Old-style", note:"A free Caslon revival optimized for text. Carries the relaxed, slightly irregular feel of William Caslon's 18th-century English types."},
+
+    // Sans
+    {n:"Inter",            css:"'Inter',sans-serif",       cat:"Sans · Neo-grotesque", note:"Rasmus Andersson's interface-first sans. Designed for high legibility at small UI sizes — large x-height, generous spacing, careful hinting."},
+    {n:"IBM Plex Sans",    css:"'IBM Plex Sans',sans-serif", cat:"Sans · Humanist", note:"IBM's corporate typeface by Mike Abbink and Bold Monkey. Combines engineered geometry with humanist warmth — a clear hand visible in the 'a' and 'g'."},
+    {n:"Space Grotesk",    css:"'Space Grotesk',sans-serif", cat:"Sans · Grotesque", note:"Florian Karsten's proportional variant of Space Mono. Quirky details (the 'a', the 'g') give it personality without sacrificing legibility."},
+    {n:"Work Sans",        css:"'Work Sans',sans-serif",   cat:"Sans · Grotesque", note:"Wei Huang's open-source grotesque, optimized for on-screen 'work' — middle weights tuned for screens, display weights drawn separately."},
+    {n:"Montserrat",       css:"'Montserrat',sans-serif",  cat:"Sans · Geometric", note:"Inspired by signage in the Montserrat neighborhood of Buenos Aires. Julieta Ulanovsky's geometric sans — circular forms, even strokes."},
+    {n:"Poppins",          css:"'Poppins',sans-serif",     cat:"Sans · Geometric", note:"An Indic Type Foundry geometric sans with Devanagari and Latin in the same family. Perfectly circular 'o', monolinear strokes."},
+    {n:"Source Sans 3",    css:"'Source Sans 3',sans-serif", cat:"Sans · Humanist", note:"Adobe's first open-source font (originally Source Sans Pro) by Paul Hunt. A humanist sans inspired by 20th-century American gothics — readable, restrained."},
+
+    // Mono
+    {n:"IBM Plex Mono",    css:"'IBM Plex Mono',monospace", cat:"Mono", note:"The monospace cut of IBM Plex. Slab-ish serifs on i/l/j, distinct zero, designed for code editors and technical documentation."},
+    {n:"JetBrains Mono",   css:"'JetBrains Mono',monospace", cat:"Mono · Ligatures", note:"Designed for developers by JetBrains. Increased letter height and programming ligatures (==, =>, !==) that fuse multi-character operators into single glyphs."},
+    {n:"Space Mono",       css:"'Space Mono',monospace",   cat:"Mono · Display", note:"Colophon Foundry's monospace, commissioned by Google. A retro-futurist feel — wider proportions, unusual terminals — that pushed against the sober mono norm."},
+  ];
+
+  const SAMPLES = [
+    "Typography",
+    "Hamburgefonstiv",
+    "The quick brown fox",
+    "Aa Bb Gg Qq Rr",
+    "Æsthetic",
+    "1234567890",
+    "Quartz & Vellum",
+    "Modernity",
+  ];
+
+  // ---------- state ----------
+  const TOTAL = 10;
+  let round = 1, score = 0, streak = 0, best = 0, answered = false, currentAnswerIdx = -1;
+  try { best = +(localStorage.getItem("nametype.best")||0); } catch(e){}
+
+  const $ = id => document.getElementById(id);
+  const sampleEl = $("sample"), choicesEl = $("choices"), revealEl = $("reveal");
+  const verdictEl = $("verdict"), hintEl = $("hint");
+
+  function shuffle(a){
+    const arr = a.slice();
+    for (let i=arr.length-1;i>0;i--){ const j=Math.floor(Math.random()*(i+1)); [arr[i],arr[j]]=[arr[j],arr[i]]; }
+    return arr;
+  }
+
+  function pickChoices(){
+    // Pick the right answer's category first, then bias 1-2 distractors to the same category for difficulty.
+    const correct = FONTS[Math.floor(Math.random()*FONTS.length)];
+    const sameCat = FONTS.filter(f => f !== correct && f.cat.split(" ")[0] === correct.cat.split(" ")[0]);
+    const otherCat = FONTS.filter(f => f !== correct && f.cat.split(" ")[0] !== correct.cat.split(" ")[0]);
+    const distractors = shuffle(sameCat).slice(0, Math.min(2, sameCat.length))
+      .concat(shuffle(otherCat));
+    const pool = distractors.slice(0, 3);
+    const all = shuffle(pool.concat([correct]));
+    return { correct, all };
+  }
+
+  function pickSample(font){
+    let s = SAMPLES[Math.floor(Math.random()*SAMPLES.length)];
+    // monospace samples look better with a shorter line
+    if (font.cat.startsWith("Mono") && s.length > 14) s = "function()";
+    return s;
+  }
+
+  function loadRound(){
+    answered = false;
+    verdictEl.style.display = "none";
+    revealEl.classList.remove("show");
+    const { correct, all } = pickChoices();
+    const sample = pickSample(correct);
+    sampleEl.textContent = sample;
+    sampleEl.style.fontFamily = correct.css;
+    sampleEl.classList.toggle("small", sample.length > 14);
+    currentAnswerIdx = all.indexOf(correct);
+
+    choicesEl.innerHTML = "";
+    all.forEach((f, i) => {
+      const b = document.createElement("button");
+      b.className = "choice";
+      b.dataset.idx = i;
+      b.innerHTML = `<span class="num">${i+1}</span><span class="nm">${f.n}</span><span class="cat">${f.cat}</span>`;
+      b.addEventListener("click", () => answer(i, f, correct));
+      choicesEl.appendChild(b);
+    });
+
+    $("round").textContent = round;
+    $("total").textContent = TOTAL;
+    hintEl.textContent = correct.cat.startsWith("Mono")
+      ? "Tip: every glyph occupies the same horizontal space."
+      : correct.cat.startsWith("Sans")
+      ? "Tip: no serifs. Compare stroke width, the 'a', the 'g'."
+      : "Tip: study the serifs, the stress, the contrast.";
+  }
+
+  function answer(i, picked, correct){
+    if (answered) return;
+    answered = true;
+    const isRight = picked === correct;
+    const buttons = choicesEl.querySelectorAll(".choice");
+    buttons.forEach((b, idx) => {
+      b.disabled = true;
+      if (idx === currentAnswerIdx) b.classList.add("correct");
+      else if (idx === i) b.classList.add("wrong");
+    });
+    if (isRight){
+      score += 10 + Math.min(streak, 5) * 2;
+      streak++;
+      verdictEl.textContent = "Correct";
+      verdictEl.className = "verdict good";
+    } else {
+      streak = 0;
+      verdictEl.textContent = "Not quite";
+      verdictEl.className = "verdict bad";
+    }
+    verdictEl.style.display = "block";
+    $("score").textContent = score;
+    $("streak").textContent = streak;
+
+    $("revealName").firstChild.textContent = correct.n + " ";
+    $("revealCat").textContent = correct.cat;
+    $("revealDesc").textContent = correct.note;
+    revealEl.classList.add("show");
+    $("nextBtn").focus();
+  }
+
+  function next(){
+    if (!answered) return;
+    if (round >= TOTAL) return finish();
+    round++;
+    loadRound();
+  }
+
+  function finish(){
+    if (score > best){ best = score; try{ localStorage.setItem("nametype.best", best); }catch(e){} }
+    sampleEl.style.fontFamily = "'Playfair Display',serif";
+    sampleEl.textContent = score + " / " + (TOTAL*20);
+    sampleEl.classList.remove("small");
+    hintEl.textContent = `Best score: ${best}. Press R to play again.`;
+    choicesEl.innerHTML = "";
+    revealEl.classList.remove("show");
+    verdictEl.style.display = "none";
+    document.querySelector(".qtag").textContent = "Final score";
+  }
+
+  function restart(){
+    round = 1; score = 0; streak = 0;
+    $("score").textContent = 0;
+    $("streak").textContent = 0;
+    document.querySelector(".qtag").textContent = "Which typeface is this?";
+    loadRound();
+  }
+
+  $("nextBtn").addEventListener("click", next);
+
+  document.addEventListener("keydown", e => {
+    if (e.metaKey || e.ctrlKey || e.altKey) return;
+    const k = e.key.toLowerCase();
+    if (k === "r"){ e.preventDefault(); restart(); return; }
+    if (k === "enter"){ e.preventDefault(); if (answered) next(); return; }
+    const n = parseInt(k, 10);
+    if (n >= 1 && n <= 4 && !answered){
+      e.preventDefault();
+      const buttons = choicesEl.querySelectorAll(".choice");
+      if (buttons[n-1]) buttons[n-1].click();
+    }
+  });
+
+  loadRound();
+})();
+</script>
+</body>
+</html>
