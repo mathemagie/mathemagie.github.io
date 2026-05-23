@@ -3,6 +3,9 @@
 <head>
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width,initial-scale=1" />
+<meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate" />
+<meta http-equiv="Pragma" content="no-cache" />
+<meta http-equiv="Expires" content="0" />
 <title>GLYPH — a gamepad game about fonts</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -192,8 +195,28 @@
       <div class="no-pad" id="noPad">⚠ Connect a gamepad and press any button.</div>
     </div>
 
-    <h2>// CONTROLS</h2>
-    <div class="controls-grid">
+    <h2 id="ctrlTitle">// KEYBOARD</h2>
+    <div class="controls-grid" id="kbGrid">
+      <div class="control"><span class="key">[</span><span class="key">]</span><b>Letter</b> −/+</div>
+      <div class="control"><span class="key">,</span><span class="key">.</span><b>Font</b> prev/next</div>
+      <div class="control"><span class="key">-</span><span class="key">=</span><b>Weight</b> lighter/heavier</div>
+      <div class="control"><span class="key">i</span><b>Italic</b> toggle</div>
+      <div class="control"><span class="key">u</span><b>Uppercase</b> toggle</div>
+      <div class="control"><span class="key">↑</span><span class="key">↓</span><b>Size</b> ±</div>
+      <div class="control"><span class="key">←</span><span class="key">→</span><b>Tracking</b> ±</div>
+      <div class="control"><span class="key">z</span><span class="key">x</span><b>Rotate</b> ±</div>
+      <div class="control"><span class="key">c</span><span class="key">v</span><b>Squeeze</b> ±</div>
+      <div class="control"><span class="key">h</span><span class="key">j</span><b>Hue</b> ±</div>
+      <div class="control"><span class="key">k</span><span class="key">l</span><b>Saturation</b> ±</div>
+      <div class="control"><span class="key">0</span><b>Reset</b> rotation</div>
+      <div class="control"><span class="key">9</span><b>Reset</b> color</div>
+      <div class="control"><span class="key">Enter</span><b>Submit</b></div>
+      <div class="control"><span class="key">Space</span><b>Skip</b> (−5)</div>
+      <div class="control"><span class="key">n</span><b>New game</b></div>
+    </div>
+
+    <h2 id="padCtrlTitle" style="display:none">// GAMEPAD CONTROLS</h2>
+    <div class="controls-grid" id="padGrid" style="display:none">
       <div class="control"><span class="key">A</span><b>Cycle letter</b> +1</div>
       <div class="control"><span class="key">B</span><b>Cycle letter</b> −1</div>
       <div class="control"><span class="key">X</span><b>Italic</b> toggle</div>
@@ -204,8 +227,8 @@
       <div class="control"><span class="key">RT</span><b>Heavier</b> weight</div>
       <div class="control"><span class="key">▲▼</span><b>Size</b> ±</div>
       <div class="control"><span class="key">◀▶</span><b>Tracking</b> ±</div>
-      <div class="control"><span class="key">L-stick</b></span><b>Rotate</b> / squeeze</div>
-      <div class="control"><span class="key">R-stick</b></span><b>Color hue/sat</b></div>
+      <div class="control"><span class="key">L-stick</span><b>Rotate</b> / squeeze</div>
+      <div class="control"><span class="key">R-stick</span><b>Color hue/sat</b></div>
       <div class="control"><span class="key">L3</span><b>Reset rotation</b></div>
       <div class="control"><span class="key">R3</span><b>Reset color</b></div>
       <div class="control"><span class="key">SEL</span><b>Skip round</b> (−5)</div>
@@ -263,16 +286,19 @@
   });
   let target = initial();
   let player = initial();
-  let score = 0, round = 1, best = +(localStorage.getItem("glyph.best")||0);
+  let score = 0, round = 1, best = 0;
+  try { best = +(localStorage.getItem("glyph.best")||0); } catch(e){}
   let timeLeft = 30, timerId = null;
-  let triggersUsed = {6:false,7:false};
-  document.getElementById("best").textContent = best;
 
   // ---------- elements ----------
   const $ = id => document.getElementById(id);
   const targetEl = $("targetGlyph"), playerEl = $("playerGlyph");
   const toast = $("toast"), noPad = $("noPad"), padInfo = $("padInfo");
   const progress = $("progress");
+  const stickL = $("stickL"), stickR = $("stickR");
+  const stickLnub = stickL.querySelector(".nub");
+  const stickRnub = stickR.querySelector(".nub");
+  $("best").textContent = best;
 
   // ---------- rendering ----------
   function applyTo(el, s){
@@ -357,7 +383,7 @@
     else if (s >= 60) { showToast("OK +"+gain); rumble(.2,120); }
     else { showToast("MISS +"+gain, "bad"); rumble(.6,80,.9); }
     score += gain;
-    if (score > best){ best = score; localStorage.setItem("glyph.best", best); $("best").textContent=best; }
+    if (score > best){ best = score; try{ localStorage.setItem("glyph.best", best); }catch(e){} $("best").textContent=best; }
     $("score").textContent = score;
     round++; $("round").textContent = round;
     newTarget();
@@ -385,20 +411,28 @@
   }
 
   // ---------- gamepad input ----------
-  const prev = {buttons:{}, axes:[0,0,0,0]};
+  const prev = {buttons:{}};
   let connectedIdx = null;
   let lastPad = null;
 
+  function showPadControls(on){
+    $("ctrlTitle").style.display = on ? "none" : "";
+    $("kbGrid").style.display = on ? "none" : "";
+    $("padCtrlTitle").style.display = on ? "" : "none";
+    $("padGrid").style.display = on ? "" : "none";
+  }
   window.addEventListener("gamepadconnected", e => {
     connectedIdx = e.gamepad.index;
     noPad.classList.add("hidden");
     padInfo.textContent = "pad: " + e.gamepad.id;
+    showPadControls(true);
     if (!timerId) newGame();
   });
   window.addEventListener("gamepaddisconnected", e => {
     if (connectedIdx === e.gamepad.index) connectedIdx = null;
     noPad.classList.remove("hidden");
     padInfo.textContent = "no gamepad";
+    showPadControls(false);
   });
 
   function setBtn(i, on){
@@ -418,7 +452,7 @@
     const gp = connectedIdx!=null ? pads[connectedIdx] : (pads && pads[0]);
     if (gp){
       lastPad = gp;
-      if (connectedIdx==null){ connectedIdx = gp.index; noPad.classList.add("hidden"); padInfo.textContent="pad: "+gp.id; if(!timerId) newGame(); }
+      if (connectedIdx==null){ connectedIdx = gp.index; noPad.classList.add("hidden"); padInfo.textContent="pad: "+gp.id; showPadControls(true); if(!timerId) newGame(); }
 
       // visual button states
       gp.buttons.forEach((b, i)=> setBtn(i, b.pressed || b.value>0.1));
@@ -428,9 +462,10 @@
       const rt = gp.buttons[7] ? gp.buttons[7].value : 0;
       const fontWeights = FONTS[player.fontIdx].weights;
       if (fontWeights.length > 1){
-        // hold trigger to slide weightIdx; rising-edge alone also acts.
-        if (rt > .2) { player.weightIdx = Math.min(fontWeights.length-1, Math.round(rt*(fontWeights.length-1))); }
-        if (lt > .2) { player.weightIdx = Math.max(0, fontWeights.length-1 - Math.round(lt*(fontWeights.length-1))); }
+        // Whichever trigger is pulled harder wins, so they don't fight.
+        const maxIdx = fontWeights.length - 1;
+        if (rt > lt && rt > .2) player.weightIdx = Math.min(maxIdx, Math.round(rt * maxIdx));
+        else if (lt > rt && lt > .2) player.weightIdx = Math.max(0, maxIdx - Math.round(lt * maxIdx));
       }
 
       // edge-triggered buttons
@@ -464,21 +499,21 @@
         player.rotate = Math.max(-180, Math.min(180, player.rotate));
         player.squeeze += -ly * 0.03;
         player.squeeze = Math.max(0.5, Math.min(1.5, player.squeeze));
-        document.getElementById("stickL").classList.add("on");
-        document.getElementById("stickL").querySelector(".nub").style.transform = `translate(${lx*10}px, ${ly*10}px)`;
+        stickL.classList.add("on");
+        stickLnub.style.transform = `translate(${lx*10}px, ${ly*10}px)`;
       } else {
-        document.getElementById("stickL").classList.remove("on");
-        document.getElementById("stickL").querySelector(".nub").style.transform = "translate(0,0)";
+        stickL.classList.remove("on");
+        stickLnub.style.transform = "translate(0,0)";
       }
       // R-stick: x=hue, y=sat
       if (rx || ry){
         player.hue = clampHue(player.hue + rx * 4);
         player.sat = Math.max(0, Math.min(100, player.sat + -ry * 2));
-        document.getElementById("stickR").classList.add("on");
-        document.getElementById("stickR").querySelector(".nub").style.transform = `translate(${rx*10}px, ${ry*10}px)`;
+        stickR.classList.add("on");
+        stickRnub.style.transform = `translate(${rx*10}px, ${ry*10}px)`;
       } else {
-        document.getElementById("stickR").classList.remove("on");
-        document.getElementById("stickR").querySelector(".nub").style.transform = "translate(0,0)";
+        stickR.classList.remove("on");
+        stickRnub.style.transform = "translate(0,0)";
       }
 
       // remember edges
@@ -488,20 +523,39 @@
     requestAnimationFrame(step);
   }
 
-  // keyboard fallback so the page is testable without a pad
+  // Full keyboard scheme — one key per action, no modifiers.
+  const clamp = (v,a,b) => Math.max(a, Math.min(b, v));
+  const cycleWeight = (dir) => {
+    const len = FONTS[player.fontIdx].weights.length;
+    player.weightIdx = clamp(player.weightIdx + dir, 0, len - 1);
+  };
   document.addEventListener("keydown", e => {
+    if (e.metaKey || e.ctrlKey || e.altKey) return;
     const k = e.key.toLowerCase();
     const map = {
-      "a":()=>player.letterIdx=(player.letterIdx+1)%LETTERS.length,
-      "b":()=>player.letterIdx=(player.letterIdx-1+LETTERS.length)%LETTERS.length,
-      "x":()=>player.italic=!player.italic,
-      "y":()=>player.upper=!player.upper,
-      "q":()=>player.fontIdx=(player.fontIdx-1+FONTS.length)%FONTS.length,
-      "e":()=>player.fontIdx=(player.fontIdx+1)%FONTS.length,
-      "arrowup":()=>player.sizePx=Math.min(320,player.sizePx+6),
-      "arrowdown":()=>player.sizePx=Math.max(60,player.sizePx-6),
-      "arrowleft":()=>player.tracking=Math.max(-0.2,player.tracking-.02),
-      "arrowright":()=>player.tracking=Math.min(0.6,player.tracking+.02),
+      "]":()=>player.letterIdx=(player.letterIdx+1)%LETTERS.length,
+      "[":()=>player.letterIdx=(player.letterIdx-1+LETTERS.length)%LETTERS.length,
+      ".":()=>player.fontIdx=(player.fontIdx+1)%FONTS.length,
+      ",":()=>player.fontIdx=(player.fontIdx-1+FONTS.length)%FONTS.length,
+      "=":()=>cycleWeight(1),
+      "+":()=>cycleWeight(1),
+      "-":()=>cycleWeight(-1),
+      "i":()=>player.italic=!player.italic,
+      "u":()=>player.upper=!player.upper,
+      "arrowup":()=>player.sizePx=clamp(player.sizePx+6,60,320),
+      "arrowdown":()=>player.sizePx=clamp(player.sizePx-6,60,320),
+      "arrowleft":()=>player.tracking=clamp(player.tracking-.02,-0.2,0.6),
+      "arrowright":()=>player.tracking=clamp(player.tracking+.02,-0.2,0.6),
+      "z":()=>player.rotate=clamp(player.rotate-5,-180,180),
+      "x":()=>player.rotate=clamp(player.rotate+5,-180,180),
+      "c":()=>player.squeeze=clamp(player.squeeze-0.05,0.5,1.5),
+      "v":()=>player.squeeze=clamp(player.squeeze+0.05,0.5,1.5),
+      "h":()=>player.hue=clampHue(player.hue-10),
+      "j":()=>player.hue=clampHue(player.hue+10),
+      "k":()=>player.sat=clamp(player.sat-5,0,100),
+      "l":()=>player.sat=clamp(player.sat+5,0,100),
+      "0":()=>{ player.rotate=0; player.squeeze=1; showToast("RESET ROT"); },
+      "9":()=>{ player.hue=60; player.sat=100; showToast("RESET COLOR"); },
       "enter":()=>submit(),
       " ":()=>skip(),
       "n":()=>newGame(),
