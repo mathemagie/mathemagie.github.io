@@ -742,6 +742,50 @@
           '....##....',
         ],
       },
+      {
+        name: 'PAPILLON',
+        rows: [
+          '###....###',
+          '##########',
+          '####..####',
+          '####..####',
+          '##########',
+          '###....###',
+        ],
+      },
+      {
+        name: 'VISAGE',
+        rows: [
+          '..######..',
+          '.########.',
+          '##.####.##',
+          '##########',
+          '####..####',
+          '.########.',
+        ],
+      },
+      {
+        name: 'VISAGE FEMME',
+        rows: [
+          '.########.',
+          '##########',
+          '##.####.##',
+          '##########',
+          '####..####',
+          '##......##',
+        ],
+      },
+      {
+        name: 'PAPA',
+        rows: [
+          '.####..##.',
+          '.#..#.#..#',
+          '.####.####',
+          '.####..##.',
+          '.#..#.#..#',
+          '.####.####',
+        ],
+      },
     ];
     let currentLevelIndex = 0;
 
@@ -859,7 +903,11 @@
     function startGame() {
       score = 0;
       lives = INITIAL_LIVES;
-      currentLevelIndex = 0;
+      const levelParam = parseInt(new URLSearchParams(location.search).get('level'), 10);
+      currentLevelIndex = Number.isFinite(levelParam)
+        ? Math.max(0, Math.min(LEVELS.length - 1, levelParam - 1))
+        : 0;
+      console.log('[startGame] levelParam =', levelParam, '→ currentLevelIndex =', currentLevelIndex, '(', LEVELS[currentLevelIndex].name, ')');
       updateLevelLabel();
       bricks = createInitialBricks();
       powerUps = [];
@@ -1763,6 +1811,14 @@
       }
     }
     
+    // Apply ?level=N from URL so the idle backdrop reflects the chosen level.
+    const initialLevelParam = parseInt(new URLSearchParams(location.search).get('level'), 10);
+    if (Number.isFinite(initialLevelParam)) {
+      currentLevelIndex = Math.max(0, Math.min(LEVELS.length - 1, initialLevelParam - 1));
+      updateLevelLabel();
+    }
+    console.log('[init] currentLevelIndex =', currentLevelIndex, '(', LEVELS[currentLevelIndex].name, ')');
+
     // Always populate bricks so the idle screen shows the game art (Law #6 + #10).
     bricks = createInitialBricks();
     resetPaddle();
