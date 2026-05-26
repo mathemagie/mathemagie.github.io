@@ -1,0 +1,453 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Schéma — Rafraîchir une pièce avec un ventilateur et de la glace</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,600&family=Spline+Sans+Mono:wght@400;500&display=swap');
+
+  :root {
+    --ice:    #cfe9f2;
+    --ice-d:  #8fc5d8;
+    --warm:   #e8893f;
+    --warm-d: #c25e1c;
+    --ink:    #1c2733;
+    --paper:  #f4f1e8;
+    --line:   #2b3a47;
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    font-family: 'Fraunces', Georgia, serif;
+    background:
+      radial-gradient(circle at 20% 0%, #fdfbf3 0%, transparent 55%),
+      radial-gradient(circle at 90% 100%, #e3eef0 0%, transparent 50%),
+      var(--paper);
+    color: var(--ink);
+    min-height: 100vh;
+    padding: 48px 24px 72px;
+    line-height: 1.55;
+  }
+
+  .wrap { max-width: 940px; margin: 0 auto; }
+
+  header { margin-bottom: 40px; border-bottom: 2.5px solid var(--line); padding-bottom: 22px; }
+
+  .kicker {
+    font-family: 'Spline Sans Mono', monospace;
+    font-size: 0.72rem;
+    letter-spacing: 0.22em;
+    text-transform: uppercase;
+    color: var(--warm-d);
+    margin-bottom: 10px;
+  }
+
+  h1 {
+    font-size: clamp(1.8rem, 4.4vw, 2.9rem);
+    font-weight: 600;
+    letter-spacing: -0.02em;
+    line-height: 1.08;
+  }
+
+  .lede {
+    margin-top: 12px;
+    font-size: 1.02rem;
+    max-width: 60ch;
+    color: #3c4a57;
+  }
+
+  /* --- Scène SVG --- */
+  .scene {
+    background: #fffdf6;
+    border: 2.5px solid var(--line);
+    border-radius: 10px;
+    padding: 18px;
+    box-shadow: 10px 10px 0 rgba(43,58,71,0.12);
+    margin-bottom: 38px;
+  }
+  svg { width: 100%; height: auto; display: block; }
+
+  .svg-label {
+    font-family: 'Spline Sans Mono', monospace;
+    font-size: 13px;
+    fill: var(--ink);
+  }
+  .svg-num {
+    font-family: 'Spline Sans Mono', monospace;
+    font-size: 15px;
+    font-weight: 500;
+    fill: #fffdf6;
+  }
+
+  /* flux d'air animés */
+  .flow { stroke-linecap: round; fill: none; }
+  .flow-cold { stroke: var(--ice-d); }
+  .flow-warm { stroke: var(--warm); }
+  .dash-anim { stroke-dasharray: 5 11; animation: drift 1.1s linear infinite; }
+  @keyframes drift { to { stroke-dashoffset: -32; } }
+
+  /* bouteilles qui fondent : se raccourcissent puis se régénèrent */
+  .bottle { transform-box: fill-box; transform-origin: bottom center;
+            animation: melt 9s ease-in-out infinite; }
+  .bottle.b2 { animation-delay: -3s; }
+  .bottle.b3 { animation-delay: -6s; }
+  @keyframes melt {
+    0%   { transform: scaleY(1);    opacity: 1; }
+    70%  { transform: scaleY(0.45); opacity: 0.82; }
+    72%  { transform: scaleY(1);    opacity: 1; }
+    100% { transform: scaleY(1);    opacity: 1; }
+  }
+
+  /* gouttes de condensation qui glissent et disparaissent */
+  .drop { transform-box: fill-box; transform-origin: center top;
+          animation: dribble 2.6s ease-in infinite; }
+  .drop.d2 { animation-delay: -0.9s; }
+  .drop.d3 { animation-delay: -1.7s; }
+  .drop.d4 { animation-delay: -2.2s; }
+  @keyframes dribble {
+    0%   { transform: translateY(0) scale(0.4); opacity: 0; }
+    20%  { opacity: 0.9; }
+    80%  { opacity: 0.9; }
+    100% { transform: translateY(34px) scale(1); opacity: 0; }
+  }
+
+  /* la colonne du ventilateur "respire" en soufflant */
+  .fan-body { transform-box: fill-box; transform-origin: center;
+              animation: breathe 1.4s ease-in-out infinite; }
+  @keyframes breathe {
+    0%,100% { transform: scaleX(1); }
+    50%     { transform: scaleX(1.035); }
+  }
+
+  /* rotor dans la tête qui tourne */
+  .rotor { transform-box: fill-box; transform-origin: center;
+           animation: spin 0.9s linear infinite; }
+  @keyframes spin { to { transform: rotate(360deg); } }
+
+  /* halo de fraîcheur qui pulse autour de la bassine */
+  .haze { transform-box: fill-box; transform-origin: center;
+          animation: haze 3.2s ease-in-out infinite; }
+  @keyframes haze {
+    0%,100% { transform: scale(1);    opacity: 0.18; }
+    50%     { transform: scale(1.12); opacity: 0.42; }
+  }
+
+  /* niveau d'eau de fonte qui monte doucement */
+  .meltwater { transform-box: fill-box; transform-origin: bottom center;
+               animation: rise 9s ease-in-out infinite; }
+  @keyframes rise {
+    0%   { transform: scaleY(0.55); }
+    70%  { transform: scaleY(1.25); }
+    72%  { transform: scaleY(0.55); }
+    100% { transform: scaleY(0.55); }
+  }
+
+  /* étiquettes numérotées qui pulsent légèrement à tour de rôle */
+  .tag { transform-box: fill-box; transform-origin: center;
+         animation: tagpop 4s ease-in-out infinite; }
+  .tag.t2 { animation-delay: 1s; }
+  .tag.t3 { animation-delay: 2s; }
+  .tag.t4 { animation-delay: 3s; }
+  @keyframes tagpop {
+    0%,82%,100% { transform: scale(1); }
+    88%         { transform: scale(1.22); }
+  }
+
+  /* particules de froid qui montent du ventilateur vers la pièce */
+  .cool-mote { animation: floatup 3.4s ease-out infinite; }
+  .cool-mote.m2 { animation-delay: -1.1s; }
+  .cool-mote.m3 { animation-delay: -2.2s; }
+  .cool-mote.m4 { animation-delay: -0.5s; }
+  @keyframes floatup {
+    0%   { transform: translate(0,0);        opacity: 0; }
+    15%  { opacity: 0.8; }
+    100% { transform: translate(38px,-30px); opacity: 0; }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .dash-anim,.bottle,.drop,.fan-body,.rotor,.haze,
+    .meltwater,.tag,.cool-mote { animation: none; }
+  }
+
+  /* --- Étapes --- */
+  .steps {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+    gap: 16px;
+    margin-bottom: 40px;
+  }
+  .step {
+    background: #fffdf6;
+    border: 2px solid var(--line);
+    border-radius: 8px;
+    padding: 20px 20px 22px;
+    position: relative;
+  }
+  .step .badge {
+    position: absolute;
+    top: -15px; left: 18px;
+    width: 30px; height: 30px;
+    background: var(--warm-d);
+    color: #fffdf6;
+    border-radius: 50%;
+    display: grid; place-items: center;
+    font-family: 'Spline Sans Mono', monospace;
+    font-weight: 500;
+    border: 2px solid var(--line);
+  }
+  .step h3 {
+    font-size: 1.12rem;
+    font-weight: 600;
+    margin: 8px 0 6px;
+  }
+  .step p { font-size: 0.93rem; color: #3c4a57; }
+
+  /* --- Encadré --- */
+  .note {
+    background: var(--ice);
+    border: 2px solid var(--line);
+    border-left: 9px solid var(--ice-d);
+    border-radius: 8px;
+    padding: 20px 24px;
+  }
+  .note h3 {
+    font-family: 'Spline Sans Mono', monospace;
+    font-size: 0.78rem;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    margin-bottom: 10px;
+  }
+  .note ul { list-style: none; }
+  .note li {
+    padding-left: 20px;
+    position: relative;
+    margin-bottom: 7px;
+    font-size: 0.96rem;
+  }
+  .note li::before {
+    content: "›";
+    position: absolute; left: 2px;
+    color: var(--warm-d);
+    font-weight: 600;
+  }
+
+  footer {
+    margin-top: 38px;
+    font-family: 'Spline Sans Mono', monospace;
+    font-size: 0.72rem;
+    color: #6b7884;
+    text-align: center;
+    letter-spacing: 0.05em;
+  }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <header>
+    <div class="kicker">Confort thermique · Montage maison</div>
+    <h1>Rafraîchir l'air avec un ventilateur&nbsp;&amp; de la glace</h1>
+    <p class="lede">Le ventilateur n'abaisse pas la température : il déplace l'air.
+    L'astuce consiste à le forcer à aspirer l'air <em>à travers</em> une réserve de
+    froid avant qu'il ne le souffle dans la pièce.</p>
+  </header>
+
+  <!-- ===== SCHÉMA ===== -->
+  <div class="scene">
+    <svg viewBox="0 0 880 420" xmlns="http://www.w3.org/2000/svg" role="img"
+         aria-label="Schéma du montage ventilateur et glace">
+
+      <!-- sol -->
+      <line x1="0" y1="372" x2="880" y2="372" stroke="#2b3a47" stroke-width="2.5"/>
+      <g stroke="#c9c2ab" stroke-width="1.5">
+        <line x1="40" y1="372" x2="20" y2="392"/>
+        <line x1="140" y1="372" x2="120" y2="392"/>
+        <line x1="240" y1="372" x2="220" y2="392"/>
+        <line x1="340" y1="372" x2="320" y2="392"/>
+        <line x1="440" y1="372" x2="420" y2="392"/>
+        <line x1="540" y1="372" x2="520" y2="392"/>
+        <line x1="640" y1="372" x2="620" y2="392"/>
+        <line x1="740" y1="372" x2="720" y2="392"/>
+        <line x1="840" y1="372" x2="820" y2="392"/>
+      </g>
+
+      <!-- ====== BASSINE DE GLACE (gauche, devant l'aspiration) ====== -->
+      <!-- halo de fraîcheur pulsant -->
+      <ellipse class="haze" cx="175" cy="290" rx="135" ry="95" fill="#8fc5d8"/>
+      <!-- bassine -->
+      <path d="M 70 300 L 100 372 L 250 372 L 280 300 Z"
+            fill="#e9e4d4" stroke="#2b3a47" stroke-width="2.5"/>
+      <ellipse cx="175" cy="300" rx="105" ry="22"
+               fill="#dfe9ec" stroke="#2b3a47" stroke-width="2.5"/>
+      <!-- eau de fonte (niveau qui monte) -->
+      <clipPath id="basinClip">
+        <path d="M 70 302 L 100 372 L 250 372 L 280 302 Z"/>
+      </clipPath>
+      <g clip-path="url(#basinClip)">
+        <rect class="meltwater" x="78" y="305" width="194" height="70" fill="#bcdde8"/>
+      </g>
+      <ellipse cx="175" cy="305" rx="92" ry="13" fill="#cbe4ec" opacity="0.7"/>
+      <!-- bouteilles congelées qui fondent -->
+      <g stroke="#2b3a47" stroke-width="2">
+        <rect class="bottle b1" x="118" y="250" width="32" height="58" rx="7" fill="#cfe9f2"/>
+        <rect x="122" y="240" width="24" height="14" rx="4" fill="#a9d3e1"/>
+        <rect class="bottle b2" x="160" y="258" width="32" height="50" rx="7" fill="#cfe9f2"/>
+        <rect x="164" y="248" width="24" height="14" rx="4" fill="#a9d3e1"/>
+        <rect class="bottle b3" x="202" y="252" width="32" height="56" rx="7" fill="#cfe9f2"/>
+        <rect x="206" y="242" width="24" height="14" rx="4" fill="#a9d3e1"/>
+      </g>
+      <!-- petits glaçons -->
+      <g fill="#eaf6fa" stroke="#2b3a47" stroke-width="1.5">
+        <rect x="95"  y="296" width="15" height="13" rx="2"/>
+        <rect x="240" y="294" width="15" height="13" rx="2"/>
+      </g>
+      <!-- gouttes de condensation qui glissent sur la bassine -->
+      <g fill="#9ecfdd">
+        <ellipse class="drop d1" cx="92"  cy="318" rx="3.5" ry="5"/>
+        <ellipse class="drop d2" cx="110" cy="330" rx="3"   ry="4.5"/>
+        <ellipse class="drop d3" cx="245" cy="322" rx="3.5" ry="5"/>
+        <ellipse class="drop d4" cx="262" cy="333" rx="3"   ry="4.5"/>
+      </g>
+
+      <!-- ====== VENTILATEUR TOUR (droite) ====== -->
+      <!-- socle -->
+      <ellipse cx="600" cy="368" rx="86" ry="16" fill="#b9b3a4" stroke="#2b3a47" stroke-width="2.5"/>
+      <path d="M 565 360 L 552 320 L 648 320 L 635 360 Z" fill="#cdc8ba" stroke="#2b3a47" stroke-width="2.5"/>
+      <!-- corps tour (respire en soufflant) -->
+      <rect class="fan-body" x="540" y="70" width="120" height="255" rx="34"
+            fill="#d6d2c6" stroke="#2b3a47" stroke-width="2.5"/>
+      <!-- grille d'aspiration (côté glace) -->
+      <g stroke="#7d8893" stroke-width="3">
+        <line x1="552" y1="120" x2="552" y2="300"/>
+        <line x1="564" y1="120" x2="564" y2="300"/>
+        <line x1="576" y1="120" x2="576" y2="300"/>
+      </g>
+      <!-- grille de soufflage (côté pièce) -->
+      <g stroke="#9aa4ae" stroke-width="3">
+        <line x1="624" y1="120" x2="624" y2="300"/>
+        <line x1="636" y1="120" x2="636" y2="300"/>
+        <line x1="648" y1="120" x2="648" y2="300"/>
+      </g>
+      <!-- tête -->
+      <rect x="534" y="44" width="132" height="44" rx="22"
+            fill="#c2bdae" stroke="#2b3a47" stroke-width="2.5"/>
+      <rect x="556" y="58" width="88" height="11" rx="5.5" fill="#3b4956"/>
+      <!-- rotor qui tourne dans la tête -->
+      <g class="rotor">
+        <circle cx="600" cy="63.5" r="0" fill="none"/>
+        <g transform="translate(600,63.5)">
+          <ellipse cx="0" cy="-3.4" rx="2" ry="3.4" fill="#7d8893"/>
+          <ellipse cx="2.9" cy="1.7" rx="2" ry="3.4" fill="#7d8893" transform="rotate(120)"/>
+          <ellipse cx="-2.9" cy="1.7" rx="2" ry="3.4" fill="#7d8893" transform="rotate(240)"/>
+          <circle r="1.8" fill="#cdc8ba"/>
+        </g>
+      </g>
+
+      <!-- ====== FLUX D'AIR ====== -->
+      <!-- air chaud aspiré : pièce -> traverse la glace -->
+      <g class="flow flow-warm dash-anim" stroke-width="4">
+        <path d="M 410 150 Q 300 150 250 215"/>
+        <path d="M 410 200 Q 320 200 270 250"/>
+      </g>
+      <!-- air froid : glace -> aspiration ventilateur -->
+      <g class="flow flow-cold dash-anim" stroke-width="4">
+        <path d="M 285 265 Q 420 270 540 235"/>
+      </g>
+      <!-- air froid soufflé dans la pièce -->
+      <g class="flow flow-cold dash-anim" stroke-width="4">
+        <path d="M 660 150 Q 760 150 825 130"/>
+        <path d="M 660 200 Q 760 205 825 215"/>
+        <path d="M 660 255 Q 750 260 815 290"/>
+      </g>
+      <!-- flèches -->
+      <path d="M 815 122 l 14 8 l -14 8 z" fill="#8fc5d8"/>
+      <path d="M 815 207 l 14 8 l -14 8 z" fill="#8fc5d8"/>
+      <path d="M 805 282 l 14 8 l -14 8 z" fill="#8fc5d8"/>
+      <path d="M 240 207 l -2 16 l 14 -8 z" fill="#e8893f"/>
+
+      <!-- particules de froid flottant depuis la sortie -->
+      <g fill="#aed8e4">
+        <circle class="cool-mote m1" cx="675" cy="170" r="4"/>
+        <circle class="cool-mote m2" cx="685" cy="225" r="3"/>
+        <circle class="cool-mote m3" cx="670" cy="195" r="3.5"/>
+        <circle class="cool-mote m4" cx="690" cy="260" r="3"/>
+      </g>
+
+      <!-- ====== ÉTIQUETTES ====== -->
+      <g>
+        <circle class="tag t1" cx="175" cy="200" r="14" fill="#c25e1c" stroke="#2b3a47" stroke-width="2"/>
+        <text x="175" y="205" text-anchor="middle" class="svg-num">1</text>
+        <text x="175" y="170" text-anchor="middle" class="svg-label">Réserve de froid</text>
+
+        <circle class="tag t2" cx="430" cy="115" r="14" fill="#c25e1c" stroke="#2b3a47" stroke-width="2"/>
+        <text x="430" y="120" text-anchor="middle" class="svg-num">2</text>
+        <text x="430" y="92" text-anchor="middle" class="svg-label">Air chaud aspiré</text>
+
+        <circle class="tag t3" cx="600" cy="115" r="14" fill="#c25e1c" stroke="#2b3a47" stroke-width="2"/>
+        <text x="600" y="120" text-anchor="middle" class="svg-num">3</text>
+
+        <circle class="tag t4" cx="775" cy="95" r="14" fill="#c25e1c" stroke="#2b3a47" stroke-width="2"/>
+        <text x="775" y="100" text-anchor="middle" class="svg-num">4</text>
+        <text x="775" y="70" text-anchor="middle" class="svg-label">Air rafraîchi</text>
+      </g>
+
+      <!-- légende -->
+      <g transform="translate(70,338)">
+        <line x1="0" y1="0" x2="34" y2="0" class="flow flow-warm" stroke-width="4"/>
+        <text x="42" y="4" class="svg-label">air chaud</text>
+        <line x1="150" y1="0" x2="184" y2="0" class="flow flow-cold" stroke-width="4"/>
+        <text x="192" y="4" class="svg-label">air refroidi</text>
+      </g>
+    </svg>
+  </div>
+
+  <!-- ===== ÉTAPES ===== -->
+  <div class="steps">
+    <div class="step">
+      <span class="badge">1</span>
+      <h3>La réserve de froid</h3>
+      <p>Une grande bassine large posée au sol. Dedans : 2–3 bouteilles
+      d'eau congelées (1,5 L) plutôt que des glaçons — elles durent
+      bien plus longtemps et ne mouillent rien.</p>
+    </div>
+    <div class="step">
+      <span class="badge">2</span>
+      <h3>Côté aspiration</h3>
+      <p>Placez la bassine devant la grille d'<em>aspiration</em> du Calor
+      Eole (les fentes latérales/basses), pas devant le soufflage.
+      L'air doit traverser le froid <em>avant</em> d'entrer.</p>
+    </div>
+    <div class="step">
+      <span class="badge">3</span>
+      <h3>Le ventilateur</h3>
+      <p>Il aspire l'air refroidi par la glace, le fait circuler dans
+      la colonne et le propulse. Surface d'échange max : plusieurs
+      petits récipients valent mieux qu'un gros bloc.</p>
+    </div>
+    <div class="step">
+      <span class="badge">4</span>
+      <h3>Diffusion</h3>
+      <p>L'air ressort quelques degrés plus frais. Effet local et
+      d'appoint : dirigez le flux vers la zone où vous êtes assis,
+      activez l'oscillation si la pièce est grande.</p>
+    </div>
+  </div>
+
+  <!-- ===== NOTE ===== -->
+  <div class="note">
+    <h3>Pour aller plus loin que la glace</h3>
+    <ul>
+      <li>Une pincée de gros sel sur les glaçons abaisse leur température de fonte (jusqu'à ≈ −10 °C) et accélère l'échange thermique.</li>
+      <li>La nuit et tôt le matin : ventilation croisée entre deux fenêtres opposées pour évacuer la chaleur accumulée.</li>
+      <li>En journée : volets et rideaux fermés côté soleil — bloquer la chaleur est plus efficace que la combattre.</li>
+      <li>Le soir, orientez le ventilateur vers une fenêtre ouverte pour expulser l'air chaud au lieu de simplement le brasser.</li>
+    </ul>
+  </div>
+
+  <footer>Montage d'appoint — n'égale pas une climatisation, mais soulage utilement.</footer>
+
+</div>
+</body>
+</html>
