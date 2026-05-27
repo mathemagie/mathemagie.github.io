@@ -24,3 +24,7 @@
 - [Ticket triage board](https://thariqs.github.io/html-effectiveness/18-editor-triage-board.html)
 - [Feature flag editor](https://thariqs.github.io/html-effectiveness/19-editor-feature-flags.html)
 - [Prompt tuner](https://thariqs.github.io/html-effectiveness/20-editor-prompt-tuner.html)
+
+### Andrej Karpathy Skills
+
+- [CLAUDE.md](https://github.com/multica-ai/andrej-karpathy-skills/blob/main/CLAUDE.md)
