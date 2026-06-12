@@ -17,6 +17,9 @@
   "author": "",
   "license": "ISC",
   "type": "commonjs",
+  "overrides": {
+    "esbuild": "^0.28.1"
+  },
   "devDependencies": {
     "eslint": "^9.33.0",
     "htmlhint": "^1.6.3",
