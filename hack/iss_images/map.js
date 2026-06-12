@@ -125,12 +125,14 @@ async function updateIssPosition() {
 
         const currentCountry = await getCountryFromCoordinates(latitude, longitude);
 
-        // Update the main info display
-        const coordinates = `Latitude: ${latitude.toFixed(4)} &nbsp;|&nbsp; Longitude: ${longitude.toFixed(4)}`;
-        const locationInfo = currentCountry 
-            ? `<br><span style="color: #4CAF50; font-size: 16px;">🌍 Flying over: ${currentCountry}</span>`
-            : `<br><span style="color: #2196F3; font-size: 16px;">🌊 Over international waters</span>`;
-        issInfo.innerHTML = coordinates + locationInfo;
+        // Update the main info display (textContent: country name comes from an external API)
+        issInfo.textContent = `Latitude: ${latitude.toFixed(4)}  |  Longitude: ${longitude.toFixed(4)}`;
+        const locationSpan = document.createElement('span');
+        locationSpan.style.cssText = `color: ${currentCountry ? '#4CAF50' : '#2196F3'}; font-size: 16px;`;
+        locationSpan.textContent = currentCountry
+            ? `🌍 Flying over: ${currentCountry}`
+            : '🌊 Over international waters';
+        issInfo.append(document.createElement('br'), locationSpan);
 
         // --- Radio Player Logic ---
         // Check if the ISS has moved to a new country since the last update.

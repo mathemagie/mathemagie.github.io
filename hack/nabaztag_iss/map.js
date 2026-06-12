@@ -236,7 +236,9 @@ function updateFootprintCircle(latitude, longitude, footprintKm) {
  * @param {number} data.footprint - Footprint diameter in km
  */
 function updateMetadataDisplay(data) {
-    const { latitude, longitude, altitude, velocity, visibility, footprint } = data;
+    const { latitude, longitude, altitude, velocity, footprint } = data;
+    // Normalize the API-provided string before it reaches innerHTML
+    const visibility = data.visibility === 'daylight' ? 'daylight' : 'eclipsed';
 
     issInfo.innerHTML = `
         <div class="iss-info__primary">

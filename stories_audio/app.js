@@ -85,7 +85,13 @@ function generateThematiqueButtons() {
         const button = document.createElement('button');
         button.className = 'filter-btn';
         button.setAttribute('data-filter', thematique);
-        button.innerHTML = `<span class="filter-emoji">${config.emoji}</span><span class="filter-label">${config.name}</span>`;
+        const emojiSpan = document.createElement('span');
+        emojiSpan.className = 'filter-emoji';
+        emojiSpan.textContent = config.emoji;
+        const labelSpan = document.createElement('span');
+        labelSpan.className = 'filter-label';
+        labelSpan.textContent = config.name;
+        button.append(emojiSpan, labelSpan);
 
         // Insert before the closing div tag
         filterButtonsContainer.appendChild(button);

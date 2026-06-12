@@ -183,7 +183,7 @@ def run_server(port: int) -> None:
         allow_reuse_address = True
         daemon_threads = True
 
-    with ThreadingHTTPServer(("", port), handler) as httpd:
+    with ThreadingHTTPServer(("127.0.0.1", port), handler) as httpd:
         watcher = threading.Thread(
             target=watch_files, args=(ROOT, reload_queue), daemon=True
         )
