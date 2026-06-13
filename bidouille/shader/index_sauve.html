@@ -1,0 +1,201 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>Shader Wallpapers</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body { background: #06080b; display: flex; align-items: center; justify-content: center; min-height: 100vh; font-family: -apple-system, BlinkMacSystemFont, sans-serif; }
+    #__bundler_loading { position: fixed; bottom: 20px; right: 20px; font: 13px/1.4 -apple-system, BlinkMacSystemFont, sans-serif; color: #666; background: #fff; padding: 8px 14px; border-radius: 8px; box-shadow: 0 1px 4px rgba(0,0,0,0.12); z-index: 10000; }
+    #__bundler_thumbnail { position: fixed; inset: 0; width: 100%; height: 100%; display: flex; align-items: center; justify-content: center; background: #06080b; z-index: 9999; }
+    #__bundler_thumbnail svg { width: 100%; height: 100%; object-fit: contain; }
+    #__bundler_placeholder { color: #999; font-size: 14px; }
+  </style>
+  <script>
+    // Dev livereload: talk to `livereload` npm server on :35729 directly.
+    // We can't use livereload.js here — the bundler replaces documentElement
+    // mid-init, which detaches the script and leaves LiveReload.reloader undefined.
+    (function(){
+      try {
+        var ws = new WebSocket('ws://' + location.hostname + ':35729/livereload');
+        ws.onopen = function(){ ws.send(JSON.stringify({command:'hello', protocols:['http://livereload.com/protocols/official-7'], ver:'2.2.1'})); };
+        ws.onmessage = function(e){ var m = JSON.parse(e.data); if (m.command === 'reload') location.reload(); };
+      } catch (e) {}
+    })();
+  </script>
+  <noscript>
+    <style>#__bundler_loading { display: none; }</style>
+    <div style="position:fixed;bottom:12px;left:12px;font:13px/1.4 -apple-system,BlinkMacSystemFont,sans-serif;color:#999;background:rgba(255,255,255,0.9);padding:6px 12px;border-radius:6px;box-shadow:0 1px 4px rgba(0,0,0,0.08);z-index:10000;">
+      This page requires JavaScript to display.
+    </div>
+  </noscript>
+</head>
+<body>
+  <div id="__bundler_thumbnail">
+    <svg viewBox="0 0 1200 800" xmlns="http://www.w3.org/2000/svg">
+      <defs>
+        <radialGradient id="g" cx="50%" cy="50%" r="55%">
+          <stop offset="0%" stop-color="#c9d4e8"></stop>
+          <stop offset="45%" stop-color="#4b6a8f"></stop>
+          <stop offset="100%" stop-color="#0a0f18"></stop>
+        </radialGradient>
+      </defs>
+      <rect width="1200" height="800" fill="#06080b"></rect>
+      <circle cx="600" cy="400" r="260" fill="url(#g)"></circle>
+      <circle cx="600" cy="400" r="260" fill="none" stroke="#8aa4c8" stroke-width="2" opacity="0.6"></circle>
+      <circle cx="600" cy="400" r="320" fill="none" stroke="#8aa4c8" stroke-width="1" opacity="0.35"></circle>
+      <circle cx="600" cy="400" r="380" fill="none" stroke="#8aa4c8" stroke-width="1" opacity="0.2"></circle>
+    </svg>
+  </div>
+  <div id="__bundler_loading">Unpacking...</div>
+
+  <script>
+    
+document.addEventListener('DOMContentLoaded', async function() {
+  const loading = document.getElementById('__bundler_loading');
+  function setStatus(msg) { if (loading) loading.textContent = msg; }
+
+  // Error sink persists across replaceWith since it's on window, not the DOM.
+  window.addEventListener('error', function(e) {
+    var p = document.body || document.documentElement;
+    var d = document.getElementById('__bundler_err') || p.appendChild(document.createElement('div'));
+    d.id = '__bundler_err';
+    d.style.cssText = 'position:fixed;bottom:12px;left:12px;right:12px;font:12px/1.4 ui-monospace,monospace;background:#2a1215;color:#ff8a80;padding:10px 14px;border-radius:8px;border:1px solid #5c2b2e;z-index:99999;white-space:pre-wrap;max-height:40vh;overflow:auto';
+    d.textContent = (d.textContent ? d.textContent + String.fromCharCode(10) : '') +
+      '[bundle] ' + (e.message || e.type) +
+      (e.filename ? ' (' + e.filename.slice(0, 60) + ':' + e.lineno + ')' : '');
+  }, true);
+
+  try {
+    const manifestEl = document.querySelector('script[type="__bundler/manifest"]');
+    const templateEl = document.querySelector('script[type="__bundler/template"]');
+    if (!manifestEl || !templateEl) {
+      setStatus('Error: missing bundle data');
+      console.error('[bundler] Missing script tags — manifestEl:', !!manifestEl, 'templateEl:', !!templateEl);
+      return;
+    }
+
+    const manifest = JSON.parse(manifestEl.textContent);
+    let template = JSON.parse(templateEl.textContent);
+
+    const uuids = Object.keys(manifest);
+    setStatus('Unpacking ' + uuids.length + ' assets...');
+
+    const blobUrls = {};
+    await Promise.all(uuids.map(async (uuid) => {
+      const entry = manifest[uuid];
+      try {
+        const binaryStr = atob(entry.data);
+        const bytes = new Uint8Array(binaryStr.length);
+        for (let i = 0; i < binaryStr.length; i++) bytes[i] = binaryStr.charCodeAt(i);
+
+        let finalBytes = bytes;
+        if (entry.compressed) {
+          if (typeof DecompressionStream !== 'undefined') {
+            const ds = new DecompressionStream('gzip');
+            const writer = ds.writable.getWriter();
+            const reader = ds.readable.getReader();
+            writer.write(bytes);
+            writer.close();
+            const chunks = [];
+            let totalLen = 0;
+            while (true) {
+              const { done, value } = await reader.read();
+              if (done) break;
+              chunks.push(value);
+              totalLen += value.length;
+            }
+            finalBytes = new Uint8Array(totalLen);
+            let offset = 0;
+            for (const chunk of chunks) { finalBytes.set(chunk, offset); offset += chunk.length; }
+          } else {
+            console.warn('DecompressionStream not available, asset ' + uuid + ' may not render');
+          }
+        }
+
+        blobUrls[uuid] = URL.createObjectURL(new Blob([finalBytes], { type: entry.mime }));
+      } catch (err) {
+        console.error('Failed to decode asset ' + uuid + ':', err);
+        blobUrls[uuid] = URL.createObjectURL(new Blob([], { type: entry.mime }));
+      }
+    }));
+
+    const extResEl = document.querySelector('script[type="__bundler/ext_resources"]');
+    const extResources = extResEl ? JSON.parse(extResEl.textContent) : [];
+    const resourceMap = {};
+    for (const entry of extResources) {
+      if (blobUrls[entry.uuid]) resourceMap[entry.id] = blobUrls[entry.uuid];
+    }
+
+    setStatus('Rendering...');
+    for (const uuid of uuids) template = template.split(uuid).join(blobUrls[uuid]);
+
+    // Strip integrity + crossorigin — blob URLs from a file:// document inherit
+    // a null origin, so crossorigin forces a CORS fetch that SRI then rejects.
+    // The manifest bytes are ours; SRI protects against CDN compromise, not this.
+    template = template.replace(/\s+integrity="[^"]*"/gi, '').replace(/\s+crossorigin="[^"]*"/gi, '');
+
+    const resourceScript = '<script>window.__resources = ' +
+      JSON.stringify(resourceMap).split('</' + 'script>').join('<\\/' + 'script>') +
+      ';</' + 'script>';
+    // Inject after <head> so the DOCTYPE stays first; prepending the script
+    // would push the parser into quirks mode. DOMParser always emits a <head>
+    // (synthesizing one if the source HTML omitted it) but may carry
+    // attributes through, so match the full opening tag. slice() rather than
+    // replace() keeps us clear of $-pattern substitution in resourceScript.
+    const headOpen = template.match(/<head[^>]*>/i);
+    if (headOpen) {
+      const i = headOpen.index + headOpen[0].length;
+      template = template.slice(0, i) + resourceScript + template.slice(i);
+    }
+
+    // Parse the template and swap the root element. Scripts inserted via
+    // DOMParser/replaceWith are inert per spec — re-create each with
+    // createElement so they execute, awaiting onload for src scripts to
+    // preserve ordering (React before ReactDOM before Babel before text/babel).
+    const doc = new DOMParser().parseFromString(template, 'text/html');
+    document.documentElement.replaceWith(doc.documentElement);
+    const dead = Array.from(document.scripts);
+    for (const old of dead) {
+      const s = document.createElement('script');
+      for (const a of old.attributes) s.setAttribute(a.name, a.value);
+      s.textContent = old.textContent;
+      // text/babel scripts with a src: fetch and inline. transformScriptTags
+      // does XHR against the src, but blob:null/ from a file:// origin is
+      // silently dropped. Inlining makes it a plain inline babel script,
+      // which transformScriptTags handles unconditionally.
+      if ((s.type === 'text/babel' || s.type === 'text/jsx') && s.src) {
+        const r = await fetch(s.src);
+        s.textContent = await r.text();
+        s.removeAttribute('src');
+      }
+      const p = s.src ? new Promise(function(r) { s.onload = s.onerror = r; }) : null;
+      old.replaceWith(s);
+      if (p) await p;
+    }
+    // Babel standalone auto-transforms type=text/babel on DOMContentLoaded,
+    // which fired before we swapped the document. Trigger manually if present.
+    if (window.Babel && typeof window.Babel.transformScriptTags === 'function') {
+      window.Babel.transformScriptTags();
+    }
+  } catch (err) {
+    setStatus('Error unpacking: ' + err.message);
+    console.error('Bundle unpack error:', err);
+  }
+});
+
+  </script>
+
+  <script type="__bundler/manifest">
+{}
+  </script>
+
+  <script type="__bundler/ext_resources">
+[]
+  </script>
+
+  <script type="__bundler/template">
+"<!DOCTYPE html>\n<html lang=\"en\"><head>\n<meta charset=\"utf-8\">\n<title>Shader Wallpapers<\u002Ftitle>\n<meta name=\"viewport\" content=\"width=device-width, initial-scale=1\">\n<style>\n  :root {\n    --ui-bg: rgba(12, 14, 18, 0.55);\n    --ui-border: rgba(255, 255, 255, 0.09);\n    --ui-fg: rgba(235, 238, 245, 0.92);\n    --ui-dim: rgba(235, 238, 245, 0.5);\n    --ui-accent: oklch(0.78 0.14 220);\n  }\n  * { box-sizing: border-box; }\n  html, body {\n    margin: 0;\n    height: 100%;\n    overflow: hidden;\n    background: #06080b;\n    color: var(--ui-fg);\n    font-family: \"Inter Tight\", ui-sans-serif, system-ui, -apple-system, \"Helvetica Neue\", Helvetica, Arial, sans-serif;\n    -webkit-font-smoothing: antialiased;\n  }\n  canvas#gl {\n    position: fixed;\n    inset: 0;\n    width: 100vw;\n    height: 100vh;\n    display: block;\n    cursor: crosshair;\n  }\n\n  /* --- Dock / switcher --- */\n  .dock {\n    display: none;\n    position: fixed;\n    left: 50%;\n    bottom: 28px;\n    transform: translateX(-50%);\n    align-items: stretch;\n    gap: 6px;\n    padding: 8px;\n    background: var(--ui-bg);\n    backdrop-filter: blur(24px) saturate(140%);\n    -webkit-backdrop-filter: blur(24px) saturate(140%);\n    border: 1px solid var(--ui-border);\n    border-radius: 18px;\n    box-shadow: 0 10px 40px rgba(0,0,0,0.35), inset 0 1px 0 rgba(255,255,255,0.06);\n    z-index: 10;\n    user-select: none;\n  }\n  .dock button {\n    appearance: none;\n    border: 1px solid transparent;\n    background: transparent;\n    color: var(--ui-fg);\n    font: inherit;\n    font-size: 12.5px;\n    letter-spacing: 0.02em;\n    padding: 10px 14px;\n    border-radius: 12px;\n    cursor: pointer;\n    display: flex;\n    flex-direction: column;\n    align-items: flex-start;\n    gap: 2px;\n    min-width: 108px;\n    transition: background 160ms ease, border-color 160ms ease, transform 160ms ease;\n  }\n  .dock button:hover {\n    background: rgba(255,255,255,0.05);\n  }\n  .dock button.active {\n    background: rgba(255,255,255,0.08);\n    border-color: rgba(255,255,255,0.12);\n  }\n  .dock .idx {\n    font-family: \"JetBrains Mono\", ui-monospace, \"SF Mono\", Menlo, Consolas, monospace;\n    font-size: 10px;\n    color: var(--ui-dim);\n    letter-spacing: 0.1em;\n  }\n  .dock .name {\n    font-weight: 500;\n    white-space: nowrap;\n  }\n\n  /* --- Top-left label --- */\n  .hud {\n    position: fixed;\n    top: 24px;\n    left: 24px;\n    z-index: 10;\n    display: flex;\n    flex-direction: column;\n    gap: 10px;\n    pointer-events: none;\n  }\n  .hud .pill {\n    display: inline-flex;\n    align-items: center;\n    gap: 10px;\n    padding: 8px 14px;\n    background: var(--ui-bg);\n    backdrop-filter: blur(24px) saturate(140%);\n    -webkit-backdrop-filter: blur(24px) saturate(140%);\n    border: 1px solid var(--ui-border);\n    border-radius: 999px;\n    font-size: 12px;\n    letter-spacing: 0.02em;\n    color: var(--ui-fg);\n    pointer-events: auto;\n  }\n  .hud .pill .dot {\n    width: 7px; height: 7px;\n    border-radius: 50%;\n    background: var(--ui-accent);\n    box-shadow: 0 0 10px var(--ui-accent);\n  }\n  .hud .pill .meta {\n    color: var(--ui-dim);\n    font-family: \"JetBrains Mono\", ui-monospace, \"SF Mono\", Menlo, Consolas, monospace;\n    font-size: 11px;\n  }\n  .hud .hint {\n    font-family: \"JetBrains Mono\", ui-monospace, \"SF Mono\", Menlo, Consolas, monospace;\n    font-size: 10.5px;\n    color: var(--ui-dim);\n    padding-left: 14px;\n    letter-spacing: 0.04em;\n  }\n\n  /* Top-right clock */\n  .clock {\n    position: fixed;\n    top: 24px;\n    right: 24px;\n    z-index: 10;\n    text-align: right;\n    font-family: \"JetBrains Mono\", ui-monospace, \"SF Mono\", Menlo, Consolas, monospace;\n    color: var(--ui-fg);\n    pointer-events: none;\n  }\n  .clock .t {\n    font-size: 34px;\n    font-weight: 300;\n    letter-spacing: 0.02em;\n    line-height: 1;\n  }\n  .clock .d {\n    font-size: 11px;\n    color: var(--ui-dim);\n    margin-top: 6px;\n    letter-spacing: 0.14em;\n    text-transform: uppercase;\n  }\n\n  @media (max-width: 760px) {\n    .dock button { min-width: 74px; padding: 8px 10px; }\n    .dock .name { font-size: 11.5px; }\n    .clock .t { font-size: 26px; }\n  }\n<\u002Fstyle>\n<\u002Fhead>\n<body>\n  \n\n  <canvas id=\"gl\"><\u002Fcanvas>\n\n<nav class=\"dock\" id=\"dock\" aria-label=\"Wallpaper switcher\"><\u002Fnav>\n\n<script>\n/* =========================================================================\n   Shader Wallpapers\n   Five interactive full-screen GLSL shaders. Mouse position, drag and click\n   are all fed into each shader as uniforms. Shader code is authored per\n   preset below.\n   ========================================================================= */\n\nconst WALLPAPERS = [\n  { id: 'voronoi', name: 'Crystal Lattice',hint: 'cells align to you · click to shatter' },\n  { id: 'aurora',  name: 'Aurora Drift',   hint: 'ribbons tilt with the cursor · click to gust' },\n  { id: 'nebula',  name: 'Deep Nebula',    hint: 'gravity warps toward you · click to collapse' },\n];\n\n/* ------------------------------ Shared GLSL ----------------------------- */\nconst VERT = `\nattribute vec2 a_pos;\nvoid main(){\n  gl_Position = vec4(a_pos, 0.0, 1.0);\n}`;\n\nconst HEADER = `\nprecision highp float;\nuniform vec2  u_res;\nuniform float u_time;\nuniform vec2  u_mouse;     // 0..1, y up\nuniform vec2  u_mouseVel;  // px/s-ish, smoothed\nuniform float u_mouseDown; // 0 or 1\nuniform vec4  u_click;     // xy = pos 0..1, z = strength 0..1, w = time since click\n`;\n\n/* Useful noise / utility glsl, included in every fragment shader. */\nconst UTILS = `\nfloat hash11(float p){ p = fract(p*.1031); p *= p + 33.33; p *= p + p; return fract(p); }\nfloat hash12(vec2 p){ vec3 p3 = fract(vec3(p.xyx) * .1031); p3 += dot(p3, p3.yzx + 33.33); return fract((p3.x + p3.y)*p3.z); }\nvec2  hash22(vec2 p){\n  vec3 p3 = fract(vec3(p.xyx) * vec3(.1031,.1030,.0973));\n  p3 += dot(p3, p3.yzx+33.33);\n  return fract((p3.xx+p3.yz)*p3.zy);\n}\nfloat noise(vec2 p){\n  vec2 i = floor(p); vec2 f = fract(p);\n  float a = hash12(i);\n  float b = hash12(i + vec2(1.,0.));\n  float c = hash12(i + vec2(0.,1.));\n  float d = hash12(i + vec2(1.,1.));\n  vec2 u = f*f*(3.-2.*f);\n  return mix(a,b,u.x) + (c-a)*u.y*(1.-u.x) + (d-b)*u.x*u.y;\n}\nfloat fbm(vec2 p){\n  float v = 0.0, a = 0.5;\n  mat2 R = mat2(0.8,-0.6,0.6,0.8);\n  for(int i=0;i<6;i++){ v += a*noise(p); p = R*p*2.0 + 17.0; a *= 0.5; }\n  return v;\n}\n// 2D rotation\nmat2 rot(float a){ float c=cos(a), s=sin(a); return mat2(c,-s,s,c); }\n// Smooth min\nfloat smin(float a, float b, float k){ float h = clamp(.5 + .5*(b-a)/k, 0., 1.); return mix(b,a,h) - k*h*(1.-h); }\n`;\n\n/* ------------------------------------------------------------------ */\n/* 1. Liquid Mercury                                                    */\n/*    Raised-surface ripples bending toward cursor, chrome-like normal  */\n/*    lighting, click = radial shockwave.                               */\nconst SHADER_MERCURY = HEADER + UTILS + `\n// Analytic ripple from a point source with decaying amplitude.\nfloat ripple(vec2 p, vec2 c, float t, float speed, float freq, float decay){\n  float d = length(p - c);\n  float phase = d*freq - t*speed;\n  return cos(phase) * exp(-d*decay);\n}\n\nvoid main(){\n  vec2 uv = (gl_FragCoord.xy - 0.5*u_res) / u_res.y;\n  vec2 m  = (u_mouse * u_res - 0.5*u_res) / u_res.y;\n\n  // Height field h(p)\n  float t = u_time;\n  vec2 p = uv;\n\n  // Flowing base\n  float h = 0.0;\n  h += 0.35 * fbm(p*1.6 + vec2(0.0, t*0.06));\n  h += 0.22 * fbm(p*3.1 - vec2(t*0.04, 0.0));\n\n  // Cursor-driven raised dome + traveling ripples.\n  float dm = length(p - m);\n  h += 0.55 * exp(-dm*3.2) * (0.9 + 0.1*sin(t*1.7));\n  h += 0.12 * ripple(p, m, t, 2.4, 14.0, 1.4);\n  h += 0.08 * ripple(p, m, t, 1.3, 26.0, 2.1);\n\n  // Click shockwave\n  vec2 cp = (u_click.xy * u_res - 0.5*u_res) / u_res.y;\n  float ct = u_click.w;\n  float ring = 0.0;\n  if(u_click.z > 0.001){\n    float r = length(p - cp);\n    float radius = ct * 1.6;\n    float thickness = 0.18 + 0.06*ct;\n    ring = exp(-pow((r-radius)/thickness, 2.0)) * exp(-ct*1.2) * u_click.z;\n    h += ring * 0.55;\n  }\n\n  // Compute normal by sampling neighbors (re-use same formula).\n  float e = 0.0025;\n  #define H(q) ( 0.35*fbm((q)*1.6 + vec2(0.,t*0.06)) + 0.22*fbm((q)*3.1 - vec2(t*0.04,0.)) + 0.55*exp(-length((q)-m)*3.2)*(0.9+0.1*sin(t*1.7)) + 0.12*ripple((q),m,t,2.4,14.,1.4) + 0.08*ripple((q),m,t,1.3,26.,2.1) )\n  float hL = H(p - vec2(e,0.));\n  float hR = H(p + vec2(e,0.));\n  float hD = H(p - vec2(0.,e));\n  float hU = H(p + vec2(0.,e));\n  vec3 n = normalize(vec3(hL - hR, hD - hU, e*2.8));\n\n  // Chrome shading\n  vec3 L = normalize(vec3(0.6, 0.9, 0.7));\n  vec3 V = vec3(0.0, 0.0, 1.0);\n  vec3 H3 = normalize(L + V);\n\n  float diff = clamp(dot(n, L), 0.0, 1.0);\n  float spec = pow(clamp(dot(n, H3), 0.0, 1.0), 48.0);\n  float fres = pow(1.0 - clamp(n.z, 0.0, 1.0), 3.0);\n\n  // Iridescent base — very desaturated, cool → warm based on normal.y\n  vec3 coolA = vec3(0.06, 0.09, 0.14);\n  vec3 coolB = vec3(0.18, 0.24, 0.32);\n  vec3 warm  = vec3(0.55, 0.46, 0.38);\n  vec3 base = mix(coolA, coolB, smoothstep(-0.6, 0.8, n.y + h*0.4));\n  base = mix(base, warm, fres*0.35);\n\n  vec3 col = base * (0.4 + 0.8*diff);\n  col += vec3(0.95, 0.93, 0.88) * spec * 0.9;\n  col += vec3(0.9, 0.95, 1.0) * fres * 0.25;\n  col += vec3(0.75, 0.85, 1.0) * ring * 0.4;\n\n  // Subtle vignette\n  float vg = smoothstep(1.3, 0.2, length(uv));\n  col *= mix(0.7, 1.0, vg);\n\n  // Film grain\n  col += (hash12(gl_FragCoord.xy + t) - 0.5) * 0.015;\n\n  gl_FragColor = vec4(col, 1.0);\n}\n`;\n\n/* ------------------------------------------------------------------ */\n/* 2. Warm Plasma                                                       */\nconst SHADER_PLASMA = HEADER + UTILS + `\nvoid main(){\n  vec2 uv = (gl_FragCoord.xy - 0.5*u_res) / u_res.y;\n  vec2 m  = (u_mouse * u_res - 0.5*u_res) / u_res.y;\n  float t = u_time * 0.25;\n\n  // Warp field toward mouse using an exp-shaped attractor.\n  vec2 toM = m - uv;\n  float dm = length(toM);\n  float pull = exp(-dm*1.5) * 0.6;\n  vec2 p = uv + normalize(toM + 1e-4) * pull;\n\n  // Add dragging velocity so the field slides with the mouse.\n  p += u_mouseVel * 0.12;\n\n  // Plasma composed of warped trig + fbm.\n  float v = 0.0;\n  v += sin(p.x*2.4 + t*1.3);\n  v += sin(p.y*3.1 - t*0.9);\n  v += sin((p.x + p.y)*1.7 + t*0.6);\n  v += sin(length(p - m)*5.0 - t*2.0) * (0.4 + 0.6*pull);\n  v /= 4.0;\n  v += 0.35*fbm(p*1.8 + t*0.3);\n\n  // Click heat-bloom\n  float ct = u_click.w;\n  vec2 cp = (u_click.xy * u_res - 0.5*u_res) / u_res.y;\n  float bloom = 0.0;\n  if(u_click.z > 0.001){\n    float r = length(uv - cp);\n    bloom = exp(-r*3.0) * exp(-ct*0.9) * u_click.z;\n    v += bloom * 1.3;\n  }\n\n  // Warm palette — deep plum → ember → pale gold\n  float s = 0.5 + 0.5*sin(v*3.14159);\n  vec3 c1 = vec3(0.05, 0.02, 0.08);        // deep plum\n  vec3 c2 = vec3(0.55, 0.12, 0.18);        // ember\n  vec3 c3 = vec3(0.96, 0.62, 0.28);        // amber\n  vec3 c4 = vec3(1.00, 0.94, 0.78);        // pale gold\n  vec3 col = mix(c1, c2, smoothstep(0.0, 0.45, s));\n  col = mix(col, c3, smoothstep(0.4, 0.75, s));\n  col = mix(col, c4, smoothstep(0.75, 1.0, s));\n\n  // Brighten near cursor\n  col += vec3(1.0, 0.82, 0.55) * exp(-dm*2.5) * 0.25;\n  col += vec3(1.0, 0.9, 0.7) * bloom * 1.1;\n\n  // Vignette + grain\n  col *= smoothstep(1.4, 0.2, length(uv)*0.9);\n  col += (hash12(gl_FragCoord.xy + u_time) - 0.5) * 0.02;\n\n  gl_FragColor = vec4(col, 1.0);\n}\n`;\n\n/* ------------------------------------------------------------------ */\n/* 3. Crystal Lattice (Voronoi)                                         */\nconst SHADER_VORONOI = HEADER + UTILS + `\n// Voronoi with cell id and F1/F2 distances, with cells drifting toward mouse.\nvec4 voronoi(vec2 p, vec2 m, float t, float attract){\n  vec2 i = floor(p);\n  vec2 f = fract(p);\n  float F1 = 8.0, F2 = 8.0;\n  vec2 id = vec2(0.0);\n  for(int y=-1;y<=1;y++)\n  for(int x=-1;x<=1;x++){\n    vec2 g = vec2(float(x), float(y));\n    vec2 seed = i + g;\n    vec2 r = hash22(seed);\n    // Animate + pull toward mouse\n    vec2 jitter = 0.5 + 0.5*sin(t*0.8 + 6.2831*r);\n    vec2 cell = g + jitter;\n    vec2 world = (seed + jitter);\n    vec2 pullDir = m - world;\n    cell += pullDir * attract;\n    vec2 d = cell - f;\n    float dd = dot(d,d);\n    if(dd < F1){ F2 = F1; F1 = dd; id = seed; }\n    else if(dd < F2){ F2 = dd; }\n  }\n  return vec4(sqrt(F1), sqrt(F2), id);\n}\n\nvoid main(){\n  vec2 uv = (gl_FragCoord.xy - 0.5*u_res) / u_res.y;\n  vec2 m  = (u_mouse * u_res - 0.5*u_res) / u_res.y;\n  float t = u_time;\n\n  float scale = 4.0;\n  vec2 p = uv * scale;\n  vec2 mp = m * scale;\n\n  float dm = length(uv - m);\n  float attract = 0.18 * exp(-dm*1.2);\n\n  // Click shatter — briefly scramble cells outward from click point.\n  vec2 cp = (u_click.xy * u_res - 0.5*u_res) / u_res.y;\n  float ct = u_click.w;\n  if(u_click.z > 0.001){\n    vec2 away = normalize(uv - cp + 1e-4);\n    float shock = exp(-ct*2.0) * u_click.z;\n    p += away * shock * 0.8 * exp(-length(uv-cp)*1.4);\n  }\n\n  vec4 v = voronoi(p, mp, t, attract);\n  float F1 = v.x, F2 = v.y;\n  vec2 id = v.zw;\n\n  // Edge between cells\n  float edge = smoothstep(0.02, 0.0, F2 - F1);\n  // Cell \"glow\" based on id\n  float cellHue = hash12(id);\n  float cellBri = 0.4 + 0.6*hash12(id + 17.0);\n\n  // Shift hue range to cool teal/indigo with occasional magenta sparks.\n  vec3 a = vec3(0.05, 0.09, 0.14);\n  vec3 b = vec3(0.15, 0.35, 0.55);\n  vec3 c = vec3(0.55, 0.25, 0.75);\n  vec3 base = mix(a, b, cellHue);\n  base = mix(base, c, smoothstep(0.85, 1.0, cellHue));\n  base *= cellBri;\n\n  // Brighter core\n  float core = smoothstep(0.6, 0.0, F1);\n  vec3 col = base * (0.55 + 0.9*core);\n\n  // White-hot edges\n  col += vec3(0.85, 0.92, 1.0) * edge * 0.9;\n\n  // Cursor illuminates nearest cells\n  col += vec3(0.5, 0.8, 1.0) * exp(-dm*1.6) * 0.25 * (0.4 + 0.6*core);\n\n  // Click flash\n  if(u_click.z > 0.001){\n    float flash = exp(-length(uv-cp)*2.5) * exp(-ct*1.5) * u_click.z;\n    col += vec3(1.0, 0.9, 0.95) * flash * 0.8;\n  }\n\n  // Vignette + grain\n  col *= smoothstep(1.4, 0.25, length(uv));\n  col += (hash12(gl_FragCoord.xy + t) - 0.5) * 0.02;\n\n  gl_FragColor = vec4(col, 1.0);\n}\n`;\n\n/* ------------------------------------------------------------------ */\n/* 4. Aurora Drift                                                      */\n/*    Soft ribbons of light tilted by cursor; click sends a gust.       */\nconst SHADER_AURORA = HEADER + UTILS + `\nfloat ribbon(vec2 uv, float yCenter, float thick, float wob, float t){\n  float n = fbm(vec2(uv.x*1.3 + t*0.25, yCenter*2.3 + t*0.1));\n  float y = yCenter + wob * (n - 0.5);\n  float d = abs(uv.y - y);\n  return exp(-pow(d/thick, 2.0));\n}\n\nvoid main(){\n  vec2 uv = (gl_FragCoord.xy / u_res) * 2.0 - 1.0;\n  uv.x *= u_res.x / u_res.y;\n  vec2 m = u_mouse * 2.0 - 1.0;\n  m.x *= u_res.x / u_res.y;\n\n  float t = u_time;\n\n  // Cursor tilts the ribbons: shift y by slope toward mouse.\n  float slope = (m.y) * 0.22 + (uv.x - m.x) * 0.0;\n  float tilt = (uv.x - m.x) * (m.y) * 0.3;\n\n  // Click gust — adds horizontal drift that fades with time.\n  float ct = u_click.w;\n  float gust = 0.0;\n  if(u_click.z > 0.001){\n    vec2 cp = u_click.xy * 2.0 - 1.0;\n    cp.x *= u_res.x / u_res.y;\n    gust = sin((uv.x - cp.x)*3.0 - ct*4.0) * exp(-ct*1.0) * u_click.z * 0.18;\n  }\n\n  vec2 p = vec2(uv.x, uv.y - tilt - gust);\n\n  float r1 = ribbon(p, -0.35 + 0.15*sin(t*0.3), 0.22, 0.25, t);\n  float r2 = ribbon(p,  0.05 + 0.10*sin(t*0.23+1.0), 0.18, 0.35, t*1.1);\n  float r3 = ribbon(p,  0.40 + 0.12*sin(t*0.17+2.0), 0.15, 0.30, t*0.9);\n  float r4 = ribbon(p,  0.70 + 0.08*sin(t*0.27+3.0), 0.10, 0.22, t*1.3);\n\n  // Deep night sky — rich blue → near-black top & bottom\n  vec3 sky = mix(vec3(0.015, 0.025, 0.05), vec3(0.04, 0.07, 0.13), smoothstep(-1.0, 1.0, uv.y));\n\n  // Stars: sparse hash\n  vec2 sp = gl_FragCoord.xy;\n  float star = pow(hash12(floor(sp)), 80.0);\n  sky += vec3(0.9, 0.95, 1.0) * star * 0.6;\n\n  // Aurora palette — mint → teal → violet\n  vec3 c1 = vec3(0.55, 0.95, 0.70);\n  vec3 c2 = vec3(0.35, 0.70, 0.95);\n  vec3 c3 = vec3(0.75, 0.45, 0.95);\n\n  vec3 col = sky;\n  col += c1 * r1 * 0.75;\n  col += c2 * r2 * 0.85;\n  col += c3 * r3 * 0.70;\n  col += mix(c2, c3, 0.5) * r4 * 0.5;\n\n  // Brighten ribbons that are near the cursor horizontally.\n  float cursorGlow = exp(-pow((uv.x - m.x)/0.6, 2.0)) * 0.3;\n  col += (c1 + c2 + c3)/3.0 * (r1 + r2 + r3) * cursorGlow * 0.4;\n\n  // Gentle vignette\n  float vg = smoothstep(1.6, 0.3, length(uv));\n  col *= mix(0.6, 1.0, vg);\n\n  // Grain\n  col += (hash12(gl_FragCoord.xy + t) - 0.5) * 0.018;\n\n  gl_FragColor = vec4(col, 1.0);\n}\n`;\n\n/* ------------------------------------------------------------------ */\n/* 5. Deep Nebula — volumetric-ish cloud with gravitational lens       */\nconst SHADER_NEBULA = HEADER + UTILS + `\n// Photographic emission nebula — H-alpha + OIII, dust lanes, varied stars.\nvec2 lens(vec2 uv, vec2 m, float strength){\n  vec2 d = uv - m;\n  float r = length(d) + 1e-4;\n  float bend = strength / (r + 0.4);\n  return uv - normalize(d) * bend * 0.35;\n}\nfloat starCell(vec2 uv, float scale, float threshold, float sharp){\n  vec2 g = uv * scale;\n  vec2 id = floor(g);\n  vec2 f = fract(g) - 0.5;\n  float h = hash12(id);\n  if(h < threshold) return 0.0;\n  vec2 off = vec2(hash12(id + 17.3), hash12(id + 91.7)) - 0.5;\n  float d = length(f - off*0.7);\n  float bright = (h - threshold) / (1.0 - threshold);\n  return pow(bright, 2.5) * exp(-d*sharp);\n}\nvoid main(){\n  vec2 uv = (gl_FragCoord.xy - 0.5*u_res) / u_res.y;\n  vec2 m  = (u_mouse * u_res - 0.5*u_res) / u_res.y;\n  float t = u_time * 0.035;\n\n  float pullStrength = 0.45 + u_mouseDown * 0.5;\n  float ct = u_click.w;\n  if(u_click.z > 0.001){ pullStrength += u_click.z * exp(-ct*1.1) * 1.0; }\n  vec2 p = lens(uv, m, pullStrength);\n\n  // Domain-warped fbm → filament structure instead of round blobs.\n  vec2 q  = vec2(fbm(p + vec2(0.0, t)), fbm(p + vec2(5.2, 1.3) - t));\n  vec2 rr = vec2(fbm(p + 3.0*q + vec2(1.7, 9.2) + t*0.4),\n                 fbm(p + 3.0*q + vec2(8.3, 2.8) - t*0.3));\n  float gas  = fbm(p + 2.2*rr);\n  float wisp = fbm(p*4.2 + rr*1.8 - vec2(t*0.7, -t*0.5));\n  float density = smoothstep(0.22, 0.95, gas*0.70 + wisp*0.38);\n\n  // Dust: dark silhouettes + chromatic reddening.\n  float dust = fbm(p*1.5 + rr*0.7 + vec2(-t*0.3, t*0.2));\n  float extinction = smoothstep(0.55, 0.80, dust);\n\n  // H-alpha / OIII palette (red + teal), gold stellar cores.\n  vec3 space   = vec3(0.006, 0.009, 0.020);\n  vec3 oiii    = vec3(0.05, 0.32, 0.42);\n  vec3 hAlpha  = vec3(0.72, 0.18, 0.22);\n  vec3 hotPink = vec3(0.95, 0.45, 0.55);\n  vec3 gold    = vec3(1.00, 0.82, 0.55);\n\n  vec3 col = space;\n  col = mix(col, oiii,    smoothstep(0.05, 0.45, density) * 0.85);\n  col = mix(col, hAlpha,  smoothstep(0.35, 0.75, density));\n  col = mix(col, hotPink, smoothstep(0.70, 0.92, density));\n  col = mix(col, gold,    smoothstep(0.88, 1.00, density) * 0.75);\n\n  // Dust absorption + reddening.\n  vec3 reddened = col * vec3(0.80, 0.38, 0.22);\n  col = mix(col, reddened, extinction * 0.80);\n  col *= (1.0 - extinction * 0.55);\n\n  // Accretion glow near cursor.\n  float dm = length(uv - m);\n  float coreGlow = exp(-dm*2.6);\n  col += vec3(1.0, 0.78, 0.55) * coreGlow * (0.12 + 0.55*u_mouseDown);\n  col += vec3(0.45, 0.75, 1.0) * exp(-dm*7.0) * 0.30;\n\n  // Click collapse.\n  if(u_click.z > 0.001){\n    vec2 cp = (u_click.xy * u_res - 0.5*u_res) / u_res.y;\n    float rc = length(uv - cp);\n    float flash = exp(-rc*3.0) * exp(-ct*0.8) * u_click.z;\n    col += vec3(1.0, 0.9, 0.8) * flash * 1.1;\n    float ring = exp(-pow((rc - ct*0.8)/0.09, 2.0)) * exp(-ct*1.5) * u_click.z;\n    col += vec3(1.0, 0.85, 0.95) * ring * 0.9;\n  }\n\n  // Multi-scale star field, varied stellar temperature.\n  float sA = starCell(uv, 240.0, 0.985, 200.0);\n  float sB = starCell(uv, 95.0,  0.993, 100.0);\n  float sC = starCell(uv, 38.0,  0.9975, 45.0);\n  vec3 tintA = mix(vec3(0.75,0.85,1.0), vec3(1.0,0.90,0.78), hash12(floor(uv*240.0)));\n  vec3 tintB = mix(vec3(0.65,0.80,1.0), vec3(1.0,0.75,0.55), hash12(floor(uv*95.0)  + 3.1));\n  vec3 tintC = mix(vec3(0.90,0.95,1.0), vec3(1.0,0.65,0.40), hash12(floor(uv*38.0)  + 7.7));\n  float starVis = 1.0 - extinction * 0.75;\n  col += tintA * sA * 1.1 * starVis;\n  col += tintB * sB * 1.5 * starVis;\n  col += tintC * sC * 2.2 * starVis;\n\n  // Filmic-ish tone curve + subtle vignette.\n  col = col / (col + vec3(0.85));\n  col = pow(col, vec3(0.88));\n  col *= smoothstep(2.2, 0.25, length(uv)*0.85);\n\n  // Fine grain.\n  col += (hash12(gl_FragCoord.xy + u_time) - 0.5) * 0.012;\n\n  gl_FragColor = vec4(col, 1.0);\n}\n`;\n\nconst SHADERS = {\n  mercury: SHADER_MERCURY,\n  plasma:  SHADER_PLASMA,\n  voronoi: SHADER_VORONOI,\n  aurora:  SHADER_AURORA,\n  nebula:  SHADER_NEBULA,\n};\n\n/* ------------------------------------------------------------------ */\n/* WebGL plumbing                                                     */\nconst canvas = document.getElementById('gl');\nconst gl = canvas.getContext('webgl', { antialias: false, premultipliedAlpha: false, preserveDrawingBuffer: false });\nif(!gl){ document.body.innerHTML = '<div style=\"padding:40px;font-family:monospace\">WebGL not available.<\u002Fdiv>'; throw new Error('no-webgl'); }\n\nfunction compile(type, src){\n  const sh = gl.createShader(type);\n  gl.shaderSource(sh, src);\n  gl.compileShader(sh);\n  if(!gl.getShaderParameter(sh, gl.COMPILE_STATUS)){\n    const log = gl.getShaderInfoLog(sh);\n    console.error(log, '\\n---SRC---\\n', src);\n    throw new Error('Shader compile failed: ' + log);\n  }\n  return sh;\n}\n\nfunction program(fragSrc){\n  const vs = compile(gl.VERTEX_SHADER, VERT);\n  const fs = compile(gl.FRAGMENT_SHADER, fragSrc);\n  const p = gl.createProgram();\n  gl.attachShader(p, vs); gl.attachShader(p, fs);\n  gl.linkProgram(p);\n  if(!gl.getProgramParameter(p, gl.LINK_STATUS)){\n    throw new Error('Link: ' + gl.getProgramInfoLog(p));\n  }\n  gl.detachShader(p, vs); gl.detachShader(p, fs);\n  gl.deleteShader(vs); gl.deleteShader(fs);\n  return p;\n}\n\n// Fullscreen quad\nconst quad = gl.createBuffer();\ngl.bindBuffer(gl.ARRAY_BUFFER, quad);\ngl.bufferData(gl.ARRAY_BUFFER, new Float32Array([-1,-1, 1,-1, -1,1,  -1,1, 1,-1, 1,1]), gl.STATIC_DRAW);\n\nconst programs = {};\nfor(const key of Object.keys(SHADERS)){\n  const p = program(SHADERS[key]);\n  programs[key] = {\n    p,\n    a_pos:        gl.getAttribLocation(p, 'a_pos'),\n    u_res:        gl.getUniformLocation(p, 'u_res'),\n    u_time:       gl.getUniformLocation(p, 'u_time'),\n    u_mouse:      gl.getUniformLocation(p, 'u_mouse'),\n    u_mouseVel:   gl.getUniformLocation(p, 'u_mouseVel'),\n    u_mouseDown:  gl.getUniformLocation(p, 'u_mouseDown'),\n    u_click:      gl.getUniformLocation(p, 'u_click'),\n  };\n}\n\n/* --- Interaction state --- */\nconst state = {\n  current: 'voronoi',\n  mouse:  { x: 0.5, y: 0.5 },       // 0..1, y up\n  mouseT: { x: 0.5, y: 0.5 },       // smoothed\n  mouseVel: { x: 0, y: 0 },\n  mouseDown: 0,\n  lastMouseMove: 0,\n  click: { x: 0.5, y: 0.5, strength: 0, time: 0, at: -1e6 },\n};\n\n// Resize\nfunction resize(){\n  const dpr = Math.min(window.devicePixelRatio || 1, 2);\n  const w = Math.round(window.innerWidth  * dpr);\n  const h = Math.round(window.innerHeight * dpr);\n  if(canvas.width !== w || canvas.height !== h){\n    canvas.width = w; canvas.height = h;\n    gl.viewport(0, 0, w, h);\n  }\n}\nwindow.addEventListener('resize', resize);\nresize();\n\n// Mouse / touch\nfunction setMouseFromEvent(e){\n  const rect = canvas.getBoundingClientRect();\n  const cx = (e.touches ? e.touches[0].clientX : e.clientX) - rect.left;\n  const cy = (e.touches ? e.touches[0].clientY : e.clientY) - rect.top;\n  state.mouse.x = cx / rect.width;\n  state.mouse.y = 1.0 - cy / rect.height;  // flip Y (GL origin bottom)\n  state.lastMouseMove = performance.now();\n}\nwindow.addEventListener('mousemove', setMouseFromEvent, { passive: true });\nwindow.addEventListener('touchmove', setMouseFromEvent, { passive: true });\nwindow.addEventListener('touchstart', e => { setMouseFromEvent(e); state.mouseDown = 1; triggerClick(); }, { passive: true });\nwindow.addEventListener('touchend', () => { state.mouseDown = 0; });\nwindow.addEventListener('mousedown', e => { state.mouseDown = 1; setMouseFromEvent(e); triggerClick(); });\nwindow.addEventListener('mouseup',   () => { state.mouseDown = 0; });\nwindow.addEventListener('mouseleave',() => { state.mouseDown = 0; });\n\nfunction triggerClick(){\n  state.click.x = state.mouse.x;\n  state.click.y = state.mouse.y;\n  state.click.strength = 1.0;\n  state.click.at = performance.now();\n}\n\n/* --- Dock UI --- */\nconst dock = document.getElementById('dock');\nconst hudName = document.getElementById('hud-name');\nconst hudMeta = document.getElementById('hud-meta');\nWALLPAPERS.forEach((w, i) => {\n  const b = document.createElement('button');\n  b.dataset.id = w.id;\n  b.innerHTML = `<span class=\"idx\">0${i+1}<\u002Fspan><span class=\"name\">${w.name}<\u002Fspan>`;\n  b.addEventListener('click', () => setWallpaper(w.id));\n  dock.appendChild(b);\n});\nfunction setWallpaper(id){\n  state.current = id;\n  const idx = WALLPAPERS.findIndex(w => w.id === id);\n  const w = WALLPAPERS[idx];\n  if (hudName) hudName.textContent = w.name;\n  if (hudMeta) hudMeta.textContent = `0${idx+1} / 0${WALLPAPERS.length}`;\n  [...dock.children].forEach((c,i) => c.classList.toggle('active', WALLPAPERS[i].id === id));\n  try { localStorage.setItem('shader-wallpaper', id); } catch {}\n}\nwindow.addEventListener('keydown', e => {\n  if(e.key >= '1' && e.key <= '5'){\n    const w = WALLPAPERS[Number(e.key)-1]; if(w) setWallpaper(w.id);\n  } else if(e.key === 'ArrowRight' || e.key === 'ArrowLeft'){\n    const i = WALLPAPERS.findIndex(w => w.id === state.current);\n    const n = (i + (e.key === 'ArrowRight' ? 1 : WALLPAPERS.length - 1)) % WALLPAPERS.length;\n    setWallpaper(WALLPAPERS[n].id);\n  }\n});\n\nconst saved = (() => { try { return localStorage.getItem('shader-wallpaper'); } catch { return null; } })();\nsetWallpaper(WALLPAPERS.some(w => w.id === saved) ? saved : 'voronoi');\n\n\n/* --- Render loop --- */\nlet t0 = performance.now();\nlet prev = t0;\nfunction frame(now){\n  const dt = Math.min((now - prev) / 1000, 0.05);\n  prev = now;\n  const t = (now - t0) / 1000;\n\n  // Smooth mouse + velocity\n  const k = 1 - Math.pow(0.001, dt); // ~fast smoothing\n  const dx = (state.mouse.x - state.mouseT.x);\n  const dy = (state.mouse.y - state.mouseT.y);\n  state.mouseT.x += dx * k;\n  state.mouseT.y += dy * k;\n  // velocity from raw delta this frame\n  state.mouseVel.x = dx / Math.max(dt, 1/120);\n  state.mouseVel.y = dy / Math.max(dt, 1/120);\n\n  // Click decay\n  const clickAge = (now - state.click.at) / 1000;\n  if(state.click.at > 0){\n    state.click.time = clickAge;\n    state.click.strength = Math.max(0, 1.0 - clickAge / 1.8);\n  }\n\n  const r = programs[state.current];\n  gl.useProgram(r.p);\n  gl.bindBuffer(gl.ARRAY_BUFFER, quad);\n  gl.enableVertexAttribArray(r.a_pos);\n  gl.vertexAttribPointer(r.a_pos, 2, gl.FLOAT, false, 0, 0);\n\n  gl.uniform2f(r.u_res, canvas.width, canvas.height);\n  gl.uniform1f(r.u_time, t);\n  gl.uniform2f(r.u_mouse, state.mouseT.x, state.mouseT.y);\n  gl.uniform2f(r.u_mouseVel, state.mouseVel.x, state.mouseVel.y);\n  gl.uniform1f(r.u_mouseDown, state.mouseDown);\n  gl.uniform4f(r.u_click, state.click.x, state.click.y, state.click.strength, state.click.time);\n\n  gl.drawArrays(gl.TRIANGLES, 0, 6);\n\n  requestAnimationFrame(frame);\n}\nrequestAnimationFrame(frame);\n<\u002Fscript>\n\n\n<\u002Fbody><\u002Fhtml>"
+  </script>
+</body>
+</html>
