@@ -100,11 +100,12 @@ Procedural audio — no external sound files. Only active when `state.current ==
 | Stick | Audio response |
 |-------|----------------|
 | **Magnitude** (any direction) | Master volume swells (`baseVol × ~0.35…1.9` when piloting) |
-| **Left / right** (`dirX`) | Azimuth — source orbits head via HRTF `PannerNode` (binaural, headphones/AirPods) |
-| **Up / down** (`dirY`) | Front/back spatial placement (up = front, down = behind) + filter/oscillator pitch (up = brighter climb, down = deep dive) |
+| **Up / down** (`dirY`) | Filter + oscillator pitch (up = brighter climb, down = deep dive) |
 | **Horizontal + vertical** | Pilot layer gain and filter Q boost |
 
-**Spatialization:** `sfx.panner` is an HRTF `PannerNode`; `ctx.listener` sits at origin facing `-Z`. Each frame the source is placed on a sphere of radius `sfx.spatialR` (≈4) around the head from the stick vector (`refDistance == radius` so distance gain stays ~flat and the explicit `master.gain` mapping stays authoritative). Centered stick → source parks in front. Built in `unlockAudio`, driven in `updateNebulaAudio`. Replaced the old `StereoPannerNode`.
+Spatial position is driven by the **cursor / gravity-well location** (`state.mouseT`), not the raw stick vector — see Spatialization below. The stick moves the cursor, so it still steers the sound; the mouse does too.
+
+**Spatialization:** `sfx.panner` is an HRTF `PannerNode`; `ctx.listener` is the **head at the center of the page**, fixed at origin facing `-Z`. Each frame the source is placed from the cursor / gravity-well position (`state.mouseT`, normalized 0–1, recentered to ±1): X = left/right across the screen, Y = up/down (elevation), Z fixed at `-R·0.6` so the screen acts as a window in front of you. The sound comes from wherever the glowing well sits on screen — driven by mouse **or** gamepad (both move `state.mouseT`). `refDistance == sfx.spatialR` keeps distance gain ~flat so the explicit `master.gain` swell stays authoritative. Built in `unlockAudio`, driven in `updateNebulaAudio`. Replaced the old `StereoPannerNode`.
 
 **User gesture:** Browsers block autoplay. User must click/key/touch once; `onUserInteract()` calls `unlockAudio()`. If nebula is already selected, `unlockAudio()` re-calls `setNebulaAudio(true)` after the graph is built.
 
