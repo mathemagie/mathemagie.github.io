@@ -1,0 +1,523 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+<title>Spatial Audio — around your head</title>
+<style>
+  :root { color-scheme: dark; }
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  html, body {
+    height: 100%;
+    background: #050608;
+    color: #cdd6e0;
+    font: 13px/1.5 ui-monospace, "SF Mono", Menlo, monospace;
+    overflow: hidden;
+    overscroll-behavior: none;
+  }
+  #scene { position: fixed; inset: 0; touch-action: none; cursor: grab; }
+  #scene.dragging { cursor: grabbing; }
+
+  .hud {
+    position: fixed; left: 18px; top: 16px; z-index: 10;
+    pointer-events: none; user-select: none;
+    letter-spacing: .04em;
+  }
+  .hud h1 { font-size: 13px; font-weight: 600; color: #e8eef5; letter-spacing: .12em; text-transform: uppercase; }
+  .hud .sub { color: #5a6675; margin-top: 4px; font-size: 11px; }
+  .hud .pos { color: #6f8296; margin-top: 10px; font-size: 11px; }
+  .hud .pos b { color: #9fd0ff; font-weight: 600; }
+
+  /* start overlay */
+  #start {
+    position: fixed; inset: 0; z-index: 30;
+    display: flex; flex-direction: column; align-items: center; justify-content: center;
+    gap: 22px; background: radial-gradient(circle at 50% 45%, #0a0e14 0%, #050608 70%);
+    text-align: center;
+  }
+  #start h2 { font-size: 15px; font-weight: 600; letter-spacing: .18em; color: #e8eef5; text-transform: uppercase; }
+  #start p { color: #6b7787; max-width: 320px; font-size: 12px; line-height: 1.7; }
+  #start p b { color: #9fd0ff; font-weight: 600; }
+  #go {
+    pointer-events: auto; cursor: pointer;
+    background: none; color: #cfe6ff;
+    border: 1px solid #2a4a66; border-radius: 40px;
+    padding: 13px 34px; font: inherit; letter-spacing: .14em; text-transform: uppercase;
+    transition: .25s; backdrop-filter: blur(4px);
+  }
+  #go:hover { border-color: #5aa0e0; color: #fff; box-shadow: 0 0 30px -8px #3a7fc080; }
+
+  /* controls dock */
+  .dock {
+    position: fixed; left: 50%; bottom: 20px; transform: translateX(-50%); z-index: 10;
+    display: flex; gap: 10px; align-items: center;
+    background: #0b0f15cc; border: 1px solid #1a2330; border-radius: 30px;
+    padding: 8px 8px 8px 16px; backdrop-filter: blur(8px);
+  }
+  .dock label { color: #5a6675; font-size: 11px; letter-spacing: .06em; }
+  .dock button {
+    cursor: pointer; background: none; color: #9fb3c8;
+    border: 1px solid #243042; border-radius: 20px;
+    padding: 7px 15px; font: inherit; font-size: 11px; letter-spacing: .08em;
+    transition: .2s; text-transform: uppercase;
+  }
+  .dock button:hover { color: #fff; border-color: #3a5570; }
+  .dock button.on { color: #061018; background: #7fc6ff; border-color: #7fc6ff; }
+  .hidden { display: none !important; }
+
+  /* live head-tracking log panel */
+  #hlog {
+    position: fixed; right: 16px; top: 14px; z-index: 10;
+    width: 234px; pointer-events: none; user-select: none;
+    background: #0a0e14b8; border: 1px solid #182230; border-radius: 10px;
+    padding: 11px 13px; backdrop-filter: blur(8px);
+    font-size: 11px; line-height: 1.65; letter-spacing: .02em;
+  }
+  #hlog .t { color: #5a6675; text-transform: uppercase; letter-spacing: .12em; font-size: 10px; }
+  #hlog .t b { color: #7fc6ff; font-weight: 600; }
+  #hlog .row { display: flex; justify-content: space-between; color: #8aa0b6; margin-top: 3px; }
+  #hlog .row span:first-child { color: #5f6f80; }
+  #hlog .row b { color: #cfe6ff; font-weight: 600; font-variant-numeric: tabular-nums; }
+  #hlog .bar { height: 3px; background: #16202c; border-radius: 2px; margin-top: 2px; overflow: hidden; }
+  #hlog .bar i { display: block; height: 100%; background: #7fc6ff; width: 50%; }
+  #hlog .hz { color: #5f6f80; margin-top: 8px; font-size: 10px; }
+  #hlog .hz b { color: #9fd0ff; }
+</style>
+</head>
+<body>
+  <div class="hud">
+    <h1>Spatial Audio</h1>
+    <div class="sub">drag the orb · listen with AirPods</div>
+    <div class="pos" id="pos">—</div>
+  </div>
+
+  <canvas id="scene"></canvas>
+
+  <div id="hlog">
+    <div class="t">head tracking · <b id="hl-state">waiting…</b></div>
+    <div class="row"><span>yaw</span><b id="hl-yaw">—</b></div>
+    <div class="bar"><i id="hl-yawbar"></i></div>
+    <div class="row"><span>pitch</span><b id="hl-pitch">—</b></div>
+    <div class="bar"><i id="hl-pitchbar"></i></div>
+    <div class="row"><span>roll</span><b id="hl-roll">—</b></div>
+    <div class="bar"><i id="hl-rollbar"></i></div>
+    <div class="row"><span>quat</span><b id="hl-quat">—</b></div>
+    <div class="row"><span>forward</span><b id="hl-fwd">—</b></div>
+    <div class="hz">rate <b id="hl-hz">0</b> Hz · <span id="hl-n">0</span> samples</div>
+  </div>
+
+  <div class="dock hidden" id="dock">
+    <button id="orbit">Auto-orbit</button>
+    <button id="mute" class="on">Sound on</button>
+    <button id="recenter" class="hidden">Recenter</button>
+    <label id="head">no bridge</label>
+    <label id="dist">·</label>
+  </div>
+
+  <div id="start">
+    <h2>Sound around your head</h2>
+    <p>You are at the <b>center</b>. Drag the glowing orb to move an ambient loop
+       around you in 3D. Best with <b>AirPods</b> (or any headphones) for true
+       HRTF spatialization.</p>
+    <button id="go">Begin</button>
+  </div>
+
+<script>
+(() => {
+  "use strict";
+
+  const cv = document.getElementById("scene");
+  const ctx2d = cv.getContext("2d");
+  const posEl = document.getElementById("pos");
+  const distEl = document.getElementById("dist");
+  const startEl = document.getElementById("start");
+  const dock = document.getElementById("dock");
+  const goBtn = document.getElementById("go");
+  const orbitBtn = document.getElementById("orbit");
+  const muteBtn = document.getElementById("mute");
+
+  let W, H, cx, cy, dpr;
+  function resize() {
+    dpr = Math.min(window.devicePixelRatio || 1, 2);
+    W = window.innerWidth; H = window.innerHeight;
+    cv.width = W * dpr; cv.height = H * dpr;
+    cv.style.width = W + "px"; cv.style.height = H + "px";
+    ctx2d.setTransform(dpr, 0, 0, dpr, 0, 0);
+    cx = W / 2; cy = H / 2;
+  }
+  window.addEventListener("resize", resize);
+  resize();
+
+  // ---- spatial model -------------------------------------------------------
+  // World units: pixels mapped to metres. radiusPx -> metres via SCALE.
+  const SCALE = 0.025;          // px -> metres (so ~200px ≈ 5 m)
+  const MAX_R = () => Math.min(W, H) * 0.42;
+
+  // Source position in screen space; elevation driven by distance for a 3D feel.
+  let sx = cx + 160, sy = cy - 40;
+  let elev = 0;                 // metres up/down (subtle bob)
+  let autoOrbit = false;
+  let muted = false;
+  let t = 0;
+
+  // ---- audio ---------------------------------------------------------------
+  let audio = null;            // populated on Begin
+
+  function buildAudio() {
+    const AC = window.AudioContext || window.webkitAudioContext;
+    const ac = new AC();
+
+    // Listener at origin, facing -Z (screen "up"), head upright.
+    const L = ac.listener;
+    const setL = (px, py, pz, fx, fy, fz, ux, uy, uz) => {
+      if (L.positionX) {
+        L.positionX.value = px; L.positionY.value = py; L.positionZ.value = pz;
+        L.forwardX.value = fx; L.forwardY.value = fy; L.forwardZ.value = fz;
+        L.upX.value = ux; L.upY.value = uy; L.upZ.value = uz;
+      } else {
+        L.setPosition(px, py, pz);
+        L.setOrientation(fx, fy, fz, ux, uy, uz);
+      }
+    };
+    setL(0, 0, 0, 0, 0, -1, 0, 1, 0);
+
+    // Rotate the listener (used by AirPods head tracking). Smoothed.
+    const setOrient = (f, u) => {
+      if (L.forwardX) {
+        const now = ac.currentTime, k = 0.02;
+        L.forwardX.setTargetAtTime(f[0], now, k);
+        L.forwardY.setTargetAtTime(f[1], now, k);
+        L.forwardZ.setTargetAtTime(f[2], now, k);
+        L.upX.setTargetAtTime(u[0], now, k);
+        L.upY.setTargetAtTime(u[1], now, k);
+        L.upZ.setTargetAtTime(u[2], now, k);
+      } else {
+        L.setOrientation(f[0], f[1], f[2], u[0], u[1], u[2]);
+      }
+    };
+
+    // HRTF panner — this is what makes it wrap around the head on AirPods.
+    const panner = new PannerNode(ac, {
+      panningModel: "HRTF",
+      distanceModel: "inverse",
+      refDistance: 1,
+      maxDistance: 60,
+      rolloffFactor: 1.1,
+      coneInnerAngle: 360,
+      coneOuterAngle: 0,
+      coneOuterGain: 0,
+    });
+
+    // ---- ambient loop: two detuned saw pads + a slow shimmer bell ----------
+    const master = ac.createGain();
+    master.gain.value = 0.0;
+
+    // Pad: two oscillators through a slow lowpass, gentle vibrato.
+    const padGain = ac.createGain(); padGain.gain.value = 0.16;
+    const lp = ac.createBiquadFilter();
+    lp.type = "lowpass"; lp.frequency.value = 900; lp.Q.value = 0.7;
+
+    const baseFreqs = [110, 110 * 1.5, 110 * 2.0]; // A2, E3, A3 — open fifth/octave
+    const oscs = [];
+    baseFreqs.forEach((f, i) => {
+      const o = ac.createOscillator();
+      o.type = i === 0 ? "sawtooth" : "triangle";
+      o.frequency.value = f;
+      o.detune.value = (i - 1) * 6;     // slight spread
+      const g = ac.createGain();
+      g.gain.value = i === 0 ? 0.5 : 0.3;
+      o.connect(g).connect(lp);
+      o.start();
+      oscs.push(o);
+    });
+    lp.connect(padGain).connect(panner);
+
+    // Shimmer: a slow LFO opens the filter to "breathe".
+    const lfo = ac.createOscillator();
+    lfo.frequency.value = 0.06;
+    const lfoGain = ac.createGain(); lfoGain.gain.value = 450;
+    lfo.connect(lfoGain).connect(lp.frequency);
+    lfo.start();
+
+    // Bell shimmer: periodic soft pings drift on top, panned with the source.
+    const bellGain = ac.createGain(); bellGain.gain.value = 0.0;
+    bellGain.connect(panner);
+    function ping() {
+      const now = ac.currentTime;
+      const o = ac.createOscillator();
+      const g = ac.createGain();
+      const notes = [880, 1108, 1320, 1760];
+      o.type = "sine";
+      o.frequency.value = notes[(Math.random() * notes.length) | 0];
+      g.gain.setValueAtTime(0, now);
+      g.gain.linearRampToValueAtTime(0.12, now + 0.02);
+      g.gain.exponentialRampToValueAtTime(0.0008, now + 2.6);
+      o.connect(g).connect(panner);
+      o.start(now); o.stop(now + 2.7);
+    }
+    const bellTimer = setInterval(() => { if (!muted) ping(); }, 3400);
+
+    panner.connect(master).connect(ac.destination);
+
+    // fade in
+    master.gain.setValueAtTime(0, ac.currentTime);
+    master.gain.linearRampToValueAtTime(0.9, ac.currentTime + 1.2);
+
+    return { ac, panner, master, lp, bellTimer, setOrient };
+  }
+
+  function setMuted(m) {
+    muted = m;
+    if (!audio) return;
+    const now = audio.ac.currentTime;
+    audio.master.gain.cancelScheduledValues(now);
+    audio.master.gain.linearRampToValueAtTime(m ? 0.0001 : 0.9, now + 0.4);
+    muteBtn.classList.toggle("on", !m);
+    muteBtn.textContent = m ? "Sound off" : "Sound on";
+  }
+
+  // map screen pos -> world metres and push to panner
+  function updateSpatial() {
+    if (!audio) return;
+    let dx = (sx - cx) * SCALE;
+    let dz = (sy - cy) * SCALE;   // screen-down => +Z
+    const dy = elev;
+
+    // Head tracking: rotate the world-fixed source by -headYaw around the
+    // vertical axis so that turning your head moves the sound the opposite way
+    // (i.e. the sound stays anchored in the room).
+    if (headOn) {
+      const a = -headYaw, ca = Math.cos(a), sa = Math.sin(a);
+      const rx = dx * ca - dz * sa;
+      const rz = dx * sa + dz * ca;
+      dx = rx; dz = rz;
+    }
+
+    const p = audio.panner;
+    if (p.positionX) {
+      const now = audio.ac.currentTime, k = 0.05;
+      p.positionX.setTargetAtTime(dx, now, k);
+      p.positionY.setTargetAtTime(dy, now, k);
+      p.positionZ.setTargetAtTime(dz, now, k);
+    } else {
+      p.setPosition(dx, dy, dz);
+    }
+  }
+
+  // ---- interaction ---------------------------------------------------------
+  let dragging = false;
+  function nearOrb(x, y) {
+    return Math.hypot(x - sx, y - sy) < 50;
+  }
+  function pointerDown(x, y) {
+    if (autoOrbit || nearOrb(x, y)) {
+      // grabbing while orbiting cancels orbit and snaps to finger
+      autoOrbit = false; orbitBtn.classList.remove("on");
+    }
+    dragging = true;
+    cv.classList.add("dragging");
+    moveTo(x, y);
+  }
+  function moveTo(x, y) {
+    const r = Math.hypot(x - cx, y - cy);
+    const max = MAX_R() * 1.25;
+    if (r > max) { // clamp to a sane outer range
+      const a = Math.atan2(y - cy, x - cx);
+      sx = cx + Math.cos(a) * max; sy = cy + Math.sin(a) * max;
+    } else { sx = x; sy = y; }
+  }
+  cv.addEventListener("pointerdown", e => { pointerDown(e.clientX, e.clientY); cv.setPointerCapture(e.pointerId); });
+  cv.addEventListener("pointermove", e => { if (dragging) moveTo(e.clientX, e.clientY); });
+  cv.addEventListener("pointerup",   () => { dragging = false; cv.classList.remove("dragging"); });
+  cv.addEventListener("pointercancel", () => { dragging = false; cv.classList.remove("dragging"); });
+
+  orbitBtn.addEventListener("click", () => {
+    autoOrbit = !autoOrbit;
+    orbitBtn.classList.toggle("on", autoOrbit);
+  });
+  muteBtn.addEventListener("click", () => setMuted(!muted));
+
+  // ---- AirPods head tracking via local bridge (HeadBridge.app) -------------
+  // Connects to ws://localhost:8765, reads the head-orientation quaternion,
+  // and rotates the audio LISTENER so sources stay fixed in world space.
+  let headForward = [0, 0, -1], headUp = [0, 1, 0];
+  let qRef = null, headOn = false;
+  // Yaw-based head tracking (robust to axis conventions): we rotate the SOUND
+  // around the fixed listener by the head's yaw. Flip YAW_SIGN if mirrored.
+  const YAW_SIGN = 1;
+  let headYaw = 0, yawRef = null;
+  const wrapAngle = a => Math.atan2(Math.sin(a), Math.cos(a));
+  const headEl = document.getElementById("head");
+  const recenterBtn = document.getElementById("recenter");
+
+  // live log panel refs + rate counter
+  const hl = id => document.getElementById("hl-" + id);
+  const hlState = hl("state"), hlYaw = hl("yaw"), hlPitch = hl("pitch"), hlRoll = hl("roll"),
+        hlQuat = hl("quat"), hlFwd = hl("fwd"), hlHz = hl("hz"), hlN = hl("n"),
+        hlYawBar = hl("yawbar"), hlPitchBar = hl("pitchbar"), hlRollBar = hl("rollbar");
+  let hlCount = 0, hlWinStart = performance.now(), hlWinN = 0, hlHzVal = 0;
+  const DEG = 180 / Math.PI;
+  const bar = (rad, range) => Math.max(0, Math.min(100, 50 + (rad / range) * 50)); // % for ±range
+  function logHead(d, fwd) {
+    hlCount++; hlWinN++;
+    const now = performance.now();
+    if (now - hlWinStart >= 500) { hlHzVal = Math.round(hlWinN * 1000 / (now - hlWinStart)); hlWinStart = now; hlWinN = 0; }
+    hlState.textContent = "live";  hlState.style.color = "#7fc6ff";
+    hlYaw.textContent   = (d.yaw   * DEG).toFixed(1) + "°";
+    hlPitch.textContent = (d.pitch * DEG).toFixed(1) + "°";
+    hlRoll.textContent  = (d.roll  * DEG).toFixed(1) + "°";
+    hlYawBar.style.width   = bar(d.yaw,   Math.PI)   + "%";
+    hlPitchBar.style.width = bar(d.pitch, Math.PI/2) + "%";
+    hlRollBar.style.width  = bar(d.roll,  Math.PI/2) + "%";
+    hlQuat.textContent = `${d.qw.toFixed(2)} ${d.qx.toFixed(2)} ${d.qy.toFixed(2)} ${d.qz.toFixed(2)}`;
+    hlFwd.textContent  = `${fwd[0].toFixed(2)} ${fwd[1].toFixed(2)} ${fwd[2].toFixed(2)}`;
+    hlHz.textContent = hlHzVal; hlN.textContent = hlCount;
+  }
+
+  const qMul = (a, b) => ({
+    w: a.w*b.w - a.x*b.x - a.y*b.y - a.z*b.z,
+    x: a.w*b.x + a.x*b.w + a.y*b.z - a.z*b.y,
+    y: a.w*b.y - a.x*b.z + a.y*b.w + a.z*b.x,
+    z: a.w*b.z + a.x*b.y - a.y*b.x + a.z*b.w,
+  });
+  const qConj = q => ({ w: q.w, x: -q.x, y: -q.y, z: -q.z });
+  const qRot = (q, v) => {                       // rotate vector v by quaternion q
+    const p = { w: 0, x: v[0], y: v[1], z: v[2] };
+    const r = qMul(qMul(q, p), qConj(q));
+    return [r.x, r.y, r.z];
+  };
+
+  let ws = null, wsRetry = null;
+  function setHeadStatus(on) {
+    headEl.textContent = on ? "head ✓" : "no bridge";
+    headEl.style.color = on ? "#7fc6ff" : "#5a6675";
+    recenterBtn.classList.toggle("hidden", !on);
+  }
+  function scheduleRetry() { clearTimeout(wsRetry); wsRetry = setTimeout(connectBridge, 2500); }
+  function connectBridge() {
+    try { ws = new WebSocket("ws://localhost:8766"); }
+    catch (e) { scheduleRetry(); return; }
+    ws.onclose = () => {
+      headOn = false; setHeadStatus(false); scheduleRetry();
+      hlState.textContent = "no bridge"; hlState.style.color = "#5a6675";
+    };
+    ws.onerror = () => { try { ws.close(); } catch (e) {} };
+    ws.onmessage = ev => {
+      let d; try { d = JSON.parse(ev.data); } catch (e) { return; }
+      if (yawRef === null) { yawRef = d.yaw; setHeadStatus(true); }  // first sample = "forward"
+      headYaw = wrapAngle((d.yaw - yawRef) * YAW_SIGN);              // head turn since recenter
+      headForward = [Math.sin(headYaw), 0, -Math.cos(headYaw)];      // for the facing line
+      headOn = true;
+      logHead(d, headForward);
+      // Source is repositioned each frame in updateSpatial() using headYaw.
+    };
+  }
+  recenterBtn.addEventListener("click", () => { yawRef = null; });  // re-zero to current pose
+  connectBridge();
+
+  goBtn.addEventListener("click", async () => {
+    audio = buildAudio();
+    if (audio.ac.state === "suspended") await audio.ac.resume();
+    startEl.classList.add("hidden");
+    dock.classList.remove("hidden");
+  });
+
+  // ---- render loop ---------------------------------------------------------
+  function draw() {
+    t += 1 / 60;
+
+    if (autoOrbit) {
+      const r = MAX_R() * 0.78;
+      const a = t * 0.5;
+      sx = cx + Math.cos(a) * r;
+      sy = cy + Math.sin(a) * r * 0.62;   // ellipse = perspective
+    }
+
+    // elevation: subtle bob + rises when source is "in front" (top of screen)
+    elev = -(sy - cy) * SCALE * 0.5 + Math.sin(t * 0.7) * 0.3;
+    updateSpatial();
+
+    // ---- paint ----
+    ctx2d.clearRect(0, 0, W, H);
+
+    const maxR = MAX_R();
+    // faint range rings
+    ctx2d.lineWidth = 1;
+    for (let i = 1; i <= 3; i++) {
+      const rr = maxR * (i / 3);
+      ctx2d.beginPath();
+      ctx2d.ellipse(cx, cy, rr, rr * 0.62, 0, 0, Math.PI * 2);
+      ctx2d.strokeStyle = `rgba(90,130,170,${0.06 + (3 - i) * 0.015})`;
+      ctx2d.stroke();
+    }
+    // cross axes
+    ctx2d.strokeStyle = "rgba(80,110,150,0.06)";
+    ctx2d.beginPath();
+    ctx2d.moveTo(cx - maxR, cy); ctx2d.lineTo(cx + maxR, cy);
+    ctx2d.moveTo(cx, cy - maxR * 0.62); ctx2d.lineTo(cx, cy + maxR * 0.62);
+    ctx2d.stroke();
+
+    // connecting line center -> source
+    ctx2d.strokeStyle = "rgba(127,198,255,0.22)";
+    ctx2d.lineWidth = 1;
+    ctx2d.beginPath(); ctx2d.moveTo(cx, cy); ctx2d.lineTo(sx, sy); ctx2d.stroke();
+
+    // head silhouette at center
+    const pulse = 1 + Math.sin(t * 1.4) * 0.04;
+    const headGrad = ctx2d.createRadialGradient(cx, cy, 2, cx, cy, 26 * pulse);
+    headGrad.addColorStop(0, "rgba(180,210,235,0.9)");
+    headGrad.addColorStop(0.5, "rgba(120,160,200,0.35)");
+    headGrad.addColorStop(1, "rgba(120,160,200,0)");
+    ctx2d.fillStyle = headGrad;
+    ctx2d.beginPath(); ctx2d.arc(cx, cy, 26 * pulse, 0, Math.PI * 2); ctx2d.fill();
+    // "ears" hint to show orientation
+    ctx2d.fillStyle = "rgba(150,185,215,0.5)";
+    ctx2d.beginPath(); ctx2d.arc(cx - 13, cy, 3.5, 0, Math.PI * 2); ctx2d.fill();
+    ctx2d.beginPath(); ctx2d.arc(cx + 13, cy, 3.5, 0, Math.PI * 2); ctx2d.fill();
+
+    // facing indicator — where your head points (live AirPods tracking)
+    if (headOn) {
+      const nx = headForward[0], nz = headForward[2];   // world x→screen x, z→screen y
+      const len = Math.hypot(nx, nz) || 1;
+      const ex = cx + (nx / len) * 34, ey = cy + (nz / len) * 34;
+      ctx2d.strokeStyle = "rgba(127,198,255,0.85)";
+      ctx2d.lineWidth = 2;
+      ctx2d.beginPath(); ctx2d.moveTo(cx, cy); ctx2d.lineTo(ex, ey); ctx2d.stroke();
+      ctx2d.fillStyle = "rgba(190,225,255,0.95)";
+      ctx2d.beginPath(); ctx2d.arc(ex, ey, 3.5, 0, Math.PI * 2); ctx2d.fill();
+    }
+
+    // the orbiting orb
+    const front = sy < cy;                 // in front of listener
+    const size = 13 + (front ? 3 : -2);    // larger when in front
+    const glow = ctx2d.createRadialGradient(sx, sy, 1, sx, sy, size * 3.2);
+    glow.addColorStop(0, "rgba(160,220,255,0.95)");
+    glow.addColorStop(0.25, "rgba(110,180,255,0.55)");
+    glow.addColorStop(1, "rgba(80,150,255,0)");
+    ctx2d.fillStyle = glow;
+    ctx2d.beginPath(); ctx2d.arc(sx, sy, size * 3.2, 0, Math.PI * 2); ctx2d.fill();
+    ctx2d.fillStyle = front ? "#eaf6ff" : "#9fc4e6";
+    ctx2d.beginPath(); ctx2d.arc(sx, sy, size * 0.42, 0, Math.PI * 2); ctx2d.fill();
+
+    // trailing ripple
+    const rp = (t * 0.9) % 1;
+    ctx2d.strokeStyle = `rgba(127,198,255,${0.3 * (1 - rp)})`;
+    ctx2d.lineWidth = 1.5;
+    ctx2d.beginPath(); ctx2d.arc(sx, sy, size + rp * 30, 0, Math.PI * 2); ctx2d.stroke();
+
+    // ---- readouts ----
+    const dist = Math.hypot(sx - cx, sy - cy) * SCALE;
+    const ang = (Math.atan2(sx - cx, -(sy - cy)) * 180 / Math.PI + 360) % 360;
+    posEl.innerHTML = `azimuth <b>${ang.toFixed(0)}°</b> · ` +
+                      `${front ? "front" : "behind"} · ` +
+                      `dist <b>${dist.toFixed(1)} m</b>`;
+    distEl.textContent = `${dist.toFixed(1)} m`;
+
+    requestAnimationFrame(draw);
+  }
+  draw();
+})();
+</script>
+</body>
+</html>
