@@ -1,0 +1,318 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+<meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate" />
+<title>Solar Wind — close your eyes</title>
+<style>
+  :root { --fg: rgba(228, 232, 240, 0.92); --dim: rgba(228, 232, 240, 0.4); }
+  * { box-sizing: border-box; }
+  html, body {
+    margin: 0; height: 100%; overflow: hidden;
+    background: #000; color: var(--fg);
+    font-family: "Inter Tight", ui-sans-serif, system-ui, -apple-system, "Helvetica Neue", Arial, sans-serif;
+    -webkit-font-smoothing: antialiased;
+    cursor: none;
+  }
+  #stage {
+    position: fixed; inset: 0;
+    display: flex; flex-direction: column;
+    align-items: center; justify-content: center;
+    text-align: center; padding: 24px;
+    gap: 18px;
+    transition: opacity 2.8s ease;
+  }
+  #stage.gone { opacity: 0; pointer-events: none; }
+  h1 {
+    font-weight: 300;
+    font-size: clamp(22px, 5vw, 40px);
+    line-height: 1.45;
+    letter-spacing: 0.01em;
+    margin: 0;
+  }
+  #sub {
+    font-family: "JetBrains Mono", ui-monospace, "SF Mono", Menlo, Consolas, monospace;
+    font-size: 12px;
+    letter-spacing: 0.18em;
+    text-transform: uppercase;
+    color: var(--dim);
+    transition: opacity 0.8s ease;
+  }
+  /* almost-invisible breath, only for anyone who peeks */
+  #orb {
+    position: fixed; left: 50%; top: 50%;
+    width: 2px; height: 2px; border-radius: 50%;
+    transform: translate(-50%, -50%);
+    background: rgba(120, 180, 255, 0.0);
+    box-shadow: 0 0 60px 20px rgba(80, 140, 230, 0.0);
+    pointer-events: none;
+  }
+</style>
+</head>
+<body>
+  <div id="orb"></div>
+  <div id="stage">
+    <h1>Close your eyes.<br/>Put on your headphones.</h1>
+    <div id="sub">tap to begin</div>
+  </div>
+
+<script>
+"use strict";
+/* =====================================================================
+   SOLAR WIND — a no-controls spatial-audio piece driven by live data
+   from NOAA SWPC (DSCOVR satellite, Lagrange point L1, ~1 reading/min).
+
+   No shader, no UI. One screen: close your eyes + headphones. Then black.
+   Sound: a deep drone bed + noise "wind", placed in 3D (HRTF) at the
+   interplanetary magnetic field's direction, with sparse bell events when
+   the data jumps. Everything fetched client-side, plays forever.
+   ===================================================================== */
+
+const FEED_PLASMA = "https://services.swpc.noaa.gov/products/solar-wind/plasma-2-hour.json";
+const FEED_MAG    = "https://services.swpc.noaa.gov/products/solar-wind/mag-2-hour.json";
+const POLL_MS = 60000;
+
+const stage = document.getElementById('stage');
+const sub   = document.getElementById('sub');
+const orb   = document.getElementById('orb');
+
+const clamp = (x, a, b) => Math.min(b, Math.max(a, x));
+const norm  = (x, a, b) => clamp((x - a) / (b - a), 0, 1);
+const lerp  = (a, b, t) => a + (b - a) * t;
+
+/* ---- current data (defaults = calm mid values until first fetch) ---- */
+const data = {
+  speed: 400, density: 5, temp: 100000,
+  bx: 0, by: 0, bz: 0, bt: 4, lon: 180, lat: 0,
+  ok: false
+};
+let prev = null; // previous reading, for event detection
+
+/* ===================== AUDIO ENGINE ===================== */
+let actx = null;
+const audio = {};
+
+function makeNoise(ctx, seconds, brown) {
+  const len = Math.floor(ctx.sampleRate * seconds);
+  const buf = ctx.createBuffer(1, len, ctx.sampleRate);
+  const d = buf.getChannelData(0);
+  let last = 0;
+  for (let i = 0; i < len; i++) {
+    // deterministic-ish pseudo white (no Math.random dependency on seed)
+    const w = (Math.sin(i * 12.9898) * 43758.5453) % 1;
+    const white = (w < 0 ? w + 1 : w) * 2 - 1;
+    if (brown) { last = (last + 0.02 * white) / 1.02; d[i] = last * 3.2; }
+    else d[i] = white;
+  }
+  return buf;
+}
+
+function position(panner, lonDeg, latDeg, R) {
+  // Map field direction (GSM lon/lat) to a point on a sphere around the head.
+  // Poetic, not physically exact: lon = azimuth, lat = elevation.
+  const a = lonDeg * Math.PI / 180;
+  const e = latDeg * Math.PI / 180;
+  const x = R * Math.cos(e) * Math.sin(a);
+  const y = R * Math.sin(e);
+  const z = -R * Math.cos(e) * Math.cos(a); // a=0 -> straight ahead (-Z)
+  const t = actx.currentTime;
+  panner.positionX.setTargetAtTime(x, t, 6);
+  panner.positionY.setTargetAtTime(y, t, 6);
+  panner.positionZ.setTargetAtTime(z, t, 6);
+}
+
+function newPanner(R) {
+  return new PannerNode(actx, {
+    panningModel: 'HRTF', distanceModel: 'inverse',
+    refDistance: R, maxDistance: 60, rolloffFactor: 0.4,
+    positionX: 0, positionY: 0, positionZ: -R
+  });
+}
+
+function buildAudio() {
+  const Ctx = window.AudioContext || window.webkitAudioContext;
+  actx = new Ctx();
+  const ctx = actx;
+
+  // Master chain: master gain -> gentle compressor -> destination
+  const master = ctx.createGain(); master.gain.value = 0;
+  const comp = ctx.createDynamicsCompressor();
+  comp.threshold.value = -18; comp.knee.value = 24; comp.ratio.value = 3;
+  comp.attack.value = 0.05; comp.release.value = 0.4;
+  master.connect(comp); comp.connect(ctx.destination);
+  audio.master = master;
+
+  // slow breath on master so it's never static
+  const breath = ctx.createOscillator(); breath.type = 'sine'; breath.frequency.value = 0.045;
+  const breathG = ctx.createGain(); breathG.gain.value = 0.06;
+  breath.connect(breathG); breathG.connect(master.gain); breath.start();
+
+  /* ----- BED: drones + wind noise, placed at the field direction ----- */
+  const bedPan = newPanner(5);
+  const bedGain = ctx.createGain(); bedGain.gain.value = 1;
+  bedGain.connect(bedPan); bedPan.connect(master);
+  audio.bedPan = bedPan;
+
+  // three low drones (root, fifth, octave-ish) — pitch scales with wind speed
+  audio.drones = [
+    { osc: ctx.createOscillator(), g: ctx.createGain(), base: 55,  type: 'sine',     gain: 0.10 },
+    { osc: ctx.createOscillator(), g: ctx.createGain(), base: 82.4,type: 'sine',     gain: 0.07 },
+    { osc: ctx.createOscillator(), g: ctx.createGain(), base: 110, type: 'triangle', gain: 0.04 },
+  ];
+  audio.drones.forEach(d => {
+    d.osc.type = d.type; d.osc.frequency.value = d.base;
+    d.g.gain.value = d.gain;
+    d.osc.connect(d.g); d.g.connect(bedGain);
+    d.osc.start();
+  });
+
+  // wind: brown noise -> lowpass (cutoff tracks speed) -> bed
+  const wind = ctx.createBufferSource(); wind.buffer = makeNoise(ctx, 4, true); wind.loop = true;
+  const windF = ctx.createBiquadFilter(); windF.type = 'lowpass'; windF.frequency.value = 600; windF.Q.value = 0.7;
+  const windG = ctx.createGain(); windG.gain.value = 0.12;
+  wind.connect(windF); windF.connect(windG); windG.connect(bedGain);
+  wind.start();
+  audio.windF = windF; audio.windG = windG;
+
+  /* ----- SHIMMER: airy high band, rises with plasma temperature ----- */
+  const shPan = newPanner(6);
+  const sh = ctx.createBufferSource(); sh.buffer = makeNoise(ctx, 4, false); sh.loop = true;
+  const shF = ctx.createBiquadFilter(); shF.type = 'bandpass'; shF.frequency.value = 2200; shF.Q.value = 3;
+  const shG = ctx.createGain(); shG.gain.value = 0;
+  sh.connect(shF); shF.connect(shG); shG.connect(shPan); shPan.connect(master);
+  sh.start();
+  audio.shF = shF; audio.shG = shG; audio.shPan = shPan;
+
+  applyData(0); // set initial targets fast
+}
+
+/* Push current `data` into the audio params (eased over the audio thread) */
+function applyData(timeConst) {
+  if (!actx) return;
+  const t = actx.currentTime;
+  const tc = timeConst === undefined ? 8 : timeConst;
+
+  const nSpeed = norm(data.speed, 250, 750);   // 0 slow .. 1 fast
+  const nDens  = norm(data.density, 0, 25);
+  const nTemp  = norm(data.temp, 10000, 500000);
+  const nBt    = norm(data.bt, 0, 20);
+  const tension = norm(-data.bz, 0, 12);        // southward Bz -> unease
+
+  // pitch: faster wind lifts the whole bed; tension flattens the 5th toward minor
+  const lift = 0.85 + nSpeed * 0.55;
+  audio.drones[0].osc.frequency.setTargetAtTime(55 * lift, t, tc);
+  audio.drones[1].osc.frequency.setTargetAtTime((82.4 - tension * 4.0) * lift, t, tc);
+  audio.drones[2].osc.frequency.setTargetAtTime(110 * lift, t, tc);
+  // density thickens the octave drone
+  audio.drones[2].g.gain.setTargetAtTime(0.02 + nDens * 0.06, t, tc);
+
+  // wind brightness from speed, level from density
+  audio.windF.frequency.setTargetAtTime(220 + nSpeed * 1900, t, tc);
+  audio.windG.gain.setTargetAtTime(0.06 + nDens * 0.22, t, tc);
+
+  // shimmer from temperature
+  audio.shG.gain.setTargetAtTime(nTemp * 0.07, t, tc);
+  audio.shF.frequency.setTargetAtTime(1600 + nTemp * 3200, t, tc);
+
+  // total field strength gently swells the master
+  audio.master.gain.setTargetAtTime(0.34 + nBt * 0.22, t, tc);
+
+  // place the soundstage at the field direction
+  position(audio.bedPan, data.lon, data.lat, 5);
+  position(audio.shPan, data.lon + 90, -data.lat, 6); // shimmer offset, for width
+}
+
+/* ----- sparse bell events when the data jumps ----- */
+function ping(freq, gain, lonOffset) {
+  if (!actx) return;
+  const t = actx.currentTime;
+  const pan = newPanner(4);
+  position(pan, data.lon + lonOffset, data.lat, 4);
+  const o = actx.createOscillator(); o.type = 'sine'; o.frequency.value = freq;
+  const o2 = actx.createOscillator(); o2.type = 'sine'; o2.frequency.value = freq * 2.01;
+  const g = actx.createGain(); g.gain.value = 0;
+  o.connect(g); o2.connect(g); g.connect(pan); pan.connect(audio.master);
+  g.gain.setValueAtTime(0, t);
+  g.gain.linearRampToValueAtTime(gain, t + 0.04);     // soft attack
+  g.gain.exponentialRampToValueAtTime(0.0001, t + 6); // long tail
+  o.start(t); o2.start(t);
+  o.stop(t + 6.2); o2.stop(t + 6.2);
+  setTimeout(() => { try { pan.disconnect(); } catch (e) {} }, 7000);
+}
+
+function detectEvents() {
+  if (!prev) return;
+  const dSpeed = data.speed - prev.speed;
+  const dDens  = data.density - prev.density;
+  const flip   = (prev.bz >= 0 && data.bz < 0) || (prev.bz < 0 && data.bz >= 0);
+  const dBz    = Math.abs(data.bz - prev.bz);
+
+  if (dSpeed > 25)            ping(660, 0.10, (Math.sin(data.speed) * 30)); // a gust — bright
+  else if (flip || dBz > 5)   ping(294, 0.12, 40);                         // field turned — deep
+  else if (dDens > 6)         ping(440, 0.08, -30);                        // density jump — soft
+}
+
+/* ===================== DATA FETCH ===================== */
+async function fetchFeed(url) {
+  const r = await fetch(url, { cache: 'no-store' });
+  if (!r.ok) throw new Error('HTTP ' + r.status);
+  return r.json();
+}
+
+// rows are [header, ...values]; find the last row with all numeric fields
+function lastValid(rows, idxs) {
+  for (let i = rows.length - 1; i >= 1; i--) {
+    const row = rows[i];
+    const vals = idxs.map(j => parseFloat(row[j]));
+    if (vals.every(v => Number.isFinite(v))) return vals;
+  }
+  return null;
+}
+
+async function poll() {
+  try {
+    const [plasma, mag] = await Promise.all([fetchFeed(FEED_PLASMA), fetchFeed(FEED_MAG)]);
+    // plasma header: time_tag, density, speed, temperature
+    const p = lastValid(plasma, [1, 2, 3]);
+    // mag header: time_tag, bx_gsm, by_gsm, bz_gsm, lon_gsm, lat_gsm, bt
+    const m = lastValid(mag, [1, 2, 3, 4, 5, 6]);
+    if (!p || !m) throw new Error('no valid rows');
+
+    prev = data.ok ? { ...data } : null;
+    data.density = p[0]; data.speed = p[1]; data.temp = p[2];
+    data.bx = m[0]; data.by = m[1]; data.bz = m[2];
+    data.lon = m[3]; data.lat = m[4]; data.bt = m[5];
+    data.ok = true;
+
+    applyData(8);
+    detectEvents();
+  } catch (e) {
+    // keep last values, just try again next cycle — drones never stop
+    console.warn('solar-wind poll failed:', e.message);
+  }
+}
+
+/* ===================== START (one gesture) ===================== */
+let started = false;
+async function begin() {
+  if (started) return; started = true;
+  buildAudio();
+  if (actx.state === 'suspended') { try { await actx.resume(); } catch (e) {} }
+
+  sub.textContent = 'tuning into the solar wind…';
+  await poll();                       // first reading
+  sub.textContent = data.ok ? 'listening' : 'listening (offline — using a calm default)';
+
+  // fade the screen to black; sound continues forever
+  setTimeout(() => stage.classList.add('gone'), 2600);
+
+  setInterval(poll, POLL_MS);
+}
+
+['pointerdown', 'keydown', 'touchstart'].forEach(ev =>
+  window.addEventListener(ev, begin, { once: false, passive: true })
+);
+</script>
+</body>
+</html>
