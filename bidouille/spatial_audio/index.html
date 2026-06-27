@@ -48,6 +48,19 @@
   }
   #go:hover { border-color: #5aa0e0; color: #fff; box-shadow: 0 0 30px -8px #3a7fc080; }
 
+  /* calibrate overlay */
+  #calib {
+    position: fixed; inset: 0; z-index: 40;
+    display: flex; flex-direction: column; align-items: center; justify-content: center;
+    gap: 18px; background: radial-gradient(circle at 50% 45%, #060a10ee 0%, #050608f2 70%);
+    text-align: center; pointer-events: none; user-select: none;
+  }
+  #calib .lead { color: #8aa0b6; font-size: 13px; letter-spacing: .16em; text-transform: uppercase; }
+  #calib .num {
+    font-size: 76px; font-weight: 600; color: #9fd0ff; line-height: 1;
+    font-variant-numeric: tabular-nums; text-shadow: 0 0 40px #3a7fc080;
+  }
+
   /* controls dock */
   .dock {
     position: fixed; left: 50%; bottom: 20px; transform: translateX(-50%); z-index: 10;
@@ -83,6 +96,25 @@
   #hlog .bar i { display: block; height: 100%; background: #7fc6ff; width: 50%; }
   #hlog .hz { color: #5f6f80; margin-top: 8px; font-size: 10px; }
   #hlog .hz b { color: #9fd0ff; }
+
+  /* live 3D head-pose inset */
+  #head3d {
+    position: fixed; left: 16px; bottom: 18px; z-index: 10;
+    background: #0a0e14b8; border: 1px solid #182230; border-radius: 12px;
+    padding: 8px 8px 6px; backdrop-filter: blur(8px);
+    pointer-events: none; user-select: none;
+  }
+  #head3d canvas { display: block; }
+  #head3d .cap {
+    text-align: center; color: #5f6f80; font-size: 10px;
+    letter-spacing: .12em; text-transform: uppercase; margin-top: 4px;
+  }
+  #head3d .cap b { color: #7fc6ff; font-weight: 600; font-variant-numeric: tabular-nums; }
+  #head3d .dir {
+    text-align: center; margin-top: 5px; font-size: 11px; font-weight: 600;
+    letter-spacing: .1em; text-transform: uppercase; color: #cfe6ff;
+  }
+  #head3d .dir b { color: #7fc6ff; }
 </style>
 </head>
 <body>
@@ -121,6 +153,17 @@
        around you in 3D. Best with <b>AirPods</b> (or any headphones) for true
        HRTF spatialization.</p>
     <button id="go">Begin</button>
+  </div>
+
+  <div id="head3d" class="hidden">
+    <canvas id="head3d-cv" width="150" height="132"></canvas>
+    <div class="dir" id="h3-dir">center · level</div>
+    <div class="cap">head pose · <b id="h3-rpy">0 0 0</b></div>
+  </div>
+
+  <div id="calib" class="hidden">
+    <div class="lead" id="calib-lead">Face forward · hold still</div>
+    <div class="num" id="calib-num">3</div>
   </div>
 
 <script>
@@ -345,11 +388,57 @@
   let qRef = null, headOn = false;
   // Yaw-based head tracking (robust to axis conventions): we rotate the SOUND
   // around the fixed listener by the head's yaw. Flip YAW_SIGN if mirrored.
-  const YAW_SIGN = 1;
-  let headYaw = 0, yawRef = null;
+  const YAW_SIGN = -1;   // CoreMotion yaw is CCW-positive (turning right = negative);
+                         // -1 un-mirrors it so "turn right" points/anchors right.
+  const PITCH_SIGN = -1; // CoreMotion pitch sign is inverted vs. our render;
+                         // -1 makes "nod down" tip the 3D head down.
+  let headYaw = 0, headPitch = 0, headRoll = 0;
+  let yawRef = null, pitchRef = null, rollRef = null;
+  let lastRawYaw = 0, lastRawPitch = 0, lastRawRoll = 0;
+  let calibrating = false, wantCalib = false;
   const wrapAngle = a => Math.atan2(Math.sin(a), Math.cos(a));
+  const circMean = arr => {           // mean of wrapping angles (sin/cos avg)
+    let s = 0, c = 0;
+    for (const a of arr) { s += Math.sin(a); c += Math.cos(a); }
+    return Math.atan2(s, c);
+  };
   const headEl = document.getElementById("head");
   const recenterBtn = document.getElementById("recenter");
+  const calibEl = document.getElementById("calib");
+  const calibLead = document.getElementById("calib-lead");
+  const calibNum = document.getElementById("calib-num");
+  const head3dEl = document.getElementById("head3d");
+
+  // Guided calibration: count 3·2·1, then average a short window of raw yaw
+  // to lock a clean "forward" reference. If the bridge isn't streaming yet,
+  // arm it to run on the first frame.
+  function calibrate() {
+    if (calibrating) return;
+    if (!headOn) { wantCalib = true; return; }
+    calibrating = true;
+    calibEl.classList.remove("hidden");
+    calibLead.textContent = "Face forward · hold still";
+    let n = 3;
+    const step = () => {
+      if (n > 0) { calibNum.textContent = n; n--; setTimeout(step, 700); return; }
+      calibLead.textContent = "Hold…";
+      calibNum.textContent = "·";
+      const yawS = [], pitchS = [], rollS = [];
+      const grab = setInterval(() => {
+        yawS.push(lastRawYaw); pitchS.push(lastRawPitch); rollS.push(lastRawRoll);
+      }, 50);
+      setTimeout(() => {
+        clearInterval(grab);
+        if (yawS.length) {
+          yawRef = circMean(yawS); pitchRef = circMean(pitchS); rollRef = circMean(rollS);
+        }
+        calibLead.textContent = "Centered";
+        calibNum.textContent = "✓";
+        setTimeout(() => { calibEl.classList.add("hidden"); calibrating = false; }, 650);
+      }, 450);
+    };
+    step();
+  }
 
   // live log panel refs + rate counter
   const hl = id => document.getElementById("hl-" + id);
@@ -393,6 +482,7 @@
     headEl.textContent = on ? "head ✓" : "no bridge";
     headEl.style.color = on ? "#7fc6ff" : "#5a6675";
     recenterBtn.classList.toggle("hidden", !on);
+    head3dEl.classList.toggle("hidden", !on);
   }
   function scheduleRetry() { clearTimeout(wsRetry); wsRetry = setTimeout(connectBridge, 2500); }
   function connectBridge() {
@@ -405,15 +495,21 @@
     ws.onerror = () => { try { ws.close(); } catch (e) {} };
     ws.onmessage = ev => {
       let d; try { d = JSON.parse(ev.data); } catch (e) { return; }
-      if (yawRef === null) { yawRef = d.yaw; setHeadStatus(true); }  // first sample = "forward"
-      headYaw = wrapAngle((d.yaw - yawRef) * YAW_SIGN);              // head turn since recenter
+      lastRawYaw = d.yaw; lastRawPitch = d.pitch; lastRawRoll = d.roll;
+      if (!headOn) {                       // bridge just (re)connected
+        headOn = true; setHeadStatus(true);
+        if (wantCalib) { wantCalib = false; calibrate(); }
+      }
+      // Until a calibration locks "forward", don't rotate the source.
+      headYaw   = (yawRef   === null) ? 0 : wrapAngle((d.yaw   - yawRef)   * YAW_SIGN);
+      headPitch = (pitchRef === null) ? 0 : wrapAngle((d.pitch - pitchRef) * PITCH_SIGN);
+      headRoll  = (rollRef  === null) ? 0 : wrapAngle(d.roll  - rollRef);
       headForward = [Math.sin(headYaw), 0, -Math.cos(headYaw)];      // for the facing line
-      headOn = true;
       logHead(d, headForward);
       // Source is repositioned each frame in updateSpatial() using headYaw.
     };
   }
-  recenterBtn.addEventListener("click", () => { yawRef = null; });  // re-zero to current pose
+  recenterBtn.addEventListener("click", calibrate);  // re-run the calibrate ritual
   connectBridge();
 
   goBtn.addEventListener("click", async () => {
@@ -421,7 +517,135 @@
     if (audio.ac.state === "suspended") await audio.ac.resume();
     startEl.classList.add("hidden");
     dock.classList.remove("hidden");
+    calibrate();   // capture "forward" now (or once the bridge first streams)
   });
+
+  // ---- live 3D head-pose inset --------------------------------------------
+  // A small front-facing 3D head driven by the calibrated yaw/pitch/roll, so
+  // you can see the AirPods orientation directly. Orthographic projection;
+  // +x right, +y up, +z toward the camera (front of the face).
+  const h3 = document.getElementById("head3d-cv");
+  const h3ctx = h3.getContext("2d");
+  const h3rpy = document.getElementById("h3-rpy");
+  const h3dir = document.getElementById("h3-dir");
+  const H3W = 150, H3H = 132;
+  (function initHead3D() {
+    const r = Math.min(window.devicePixelRatio || 1, 2);
+    h3.width = H3W * r; h3.height = H3H * r;
+    h3.style.width = H3W + "px"; h3.style.height = H3H + "px";
+    h3ctx.setTransform(r, 0, 0, r, 0, 0);
+  })();
+  function rotPt(p, yaw, pitch, roll) {
+    let x = p[0], y = p[1], z = p[2];
+    const cr = Math.cos(roll), sr = Math.sin(roll);   // roll about z (camera axis)
+    [x, y] = [x * cr - y * sr, x * sr + y * cr];
+    const cp = Math.cos(pitch), sp = Math.sin(pitch); // pitch about x (nod)
+    [y, z] = [y * cp - z * sp, y * sp + z * cp];
+    const cw = Math.cos(yaw), sw = Math.sin(yaw);     // yaw about y (turn)
+    [x, z] = [x * cw + z * sw, -x * sw + z * cw];
+    return [x, y, z];
+  }
+  function drawHead3D() {
+    h3ctx.clearRect(0, 0, H3W, H3H);
+    if (!headOn) return;
+    const ox = H3W / 2, oy = H3H / 2 - 1, R = 40;
+    const y = headYaw, p = headPitch, r = headRoll;
+    const P = pt => { const v = rotPt(pt, y, p, r); return { x: ox + v[0] * R, y: oy - v[1] * R, z: v[2] }; };
+    // outward-facing factor (1 = toward camera, <0 = around the back) -> visibility
+    const vis = pt => { const v = rotPt(pt, y, p, r), m = Math.hypot(v[0], v[1], v[2]) || 1;
+      return Math.max(0, Math.min(1, (v[2] / m + 0.12) / 0.5)); };
+
+    // ---- egg-shaped head silhouette: orthographic projection of a rotating
+    // ellipsoid is exactly an ellipse; derive it from the rotated semi-axes. ----
+    const ax = 0.82, ay = 1.13, az = 0.92;                    // tall egg
+    const ex = rotPt([1, 0, 0], y, p, r), ey = rotPt([0, 1, 0], y, p, r), ez = rotPt([0, 0, 1], y, p, r);
+    const A = ax*ax*ex[0]*ex[0] + ay*ay*ey[0]*ey[0] + az*az*ez[0]*ez[0];   // S2 = top-left of A·Aᵀ
+    const C = ax*ax*ex[1]*ex[1] + ay*ay*ey[1]*ey[1] + az*az*ez[1]*ez[1];
+    const B = ax*ax*ex[0]*ex[1] + ay*ay*ey[0]*ey[1] + az*az*ez[0]*ez[1];
+    const th = 0.5 * Math.atan2(2 * B, A - C);
+    const disc = Math.sqrt(((A - C) / 2) ** 2 + B * B), mid = (A + C) / 2;
+    const r1 = Math.sqrt(Math.max(0, mid + disc)) * R, r2 = Math.sqrt(Math.max(0, mid - disc)) * R;
+
+    // wireframe skull (no skin): outline + two orientation rings for 3D legibility
+    h3ctx.lineWidth = 1.2; h3ctx.strokeStyle = "rgba(150,185,215,0.5)";
+    h3ctx.beginPath(); h3ctx.ellipse(ox, oy, r1, r2, th, 0, Math.PI * 2); h3ctx.stroke();
+    const ring = (fn, a) => {
+      h3ctx.strokeStyle = `rgba(127,198,255,${a})`; h3ctx.lineWidth = 1; h3ctx.beginPath();
+      for (let i = 0; i <= 48; i++) { const q = P(fn(i / 48 * Math.PI * 2)); i ? h3ctx.lineTo(q.x, q.y) : h3ctx.moveTo(q.x, q.y); }
+      h3ctx.stroke();
+    };
+    ring(a => [ax * Math.cos(a), 0, az * Math.sin(a)], 0.28);   // equator — width/depth
+    ring(a => [0, ay * Math.cos(a), az * Math.sin(a)], 0.16);   // sagittal — height/depth
+
+    // ---- ears + AirPods (sides stay partly visible even side-on) ----
+    const ear = sx => {
+      const v = 0.45 + 0.55 * vis([sx, 0, 0.2]);
+      const e = P([sx * 0.9, -0.02, 0.04]);
+      h3ctx.fillStyle = `rgba(120,156,190,${0.85 * v})`;
+      h3ctx.beginPath(); h3ctx.ellipse(e.x, e.y, 4.2, 6.8, th, 0, Math.PI * 2); h3ctx.fill();
+      const bud = P([sx * 0.94, -0.07, 0.1]), stem = P([sx * 0.94, -0.52, 0.18]);
+      h3ctx.lineCap = "round"; h3ctx.strokeStyle = `rgba(228,240,251,${0.9 * v})`; h3ctx.lineWidth = 2.6;
+      h3ctx.beginPath(); h3ctx.moveTo(bud.x, bud.y); h3ctx.lineTo(stem.x, stem.y); h3ctx.stroke();
+      h3ctx.fillStyle = `rgba(246,251,255,${v})`;
+      h3ctx.beginPath(); h3ctx.arc(bud.x, bud.y, 3.1, 0, Math.PI * 2); h3ctx.fill();
+    };
+    ear(1); ear(-1);
+
+    // ---- face features on the front hemisphere ----
+    const brow = sx => { const v = vis([sx * 0.32, 0.3, 0.78]); if (v <= 0) return;
+      const a = P([sx * 0.46, 0.30, 0.76]), b = P([sx * 0.12, 0.34, 0.9]);
+      h3ctx.lineCap = "round"; h3ctx.strokeStyle = `rgba(38,56,78,${0.75 * v})`; h3ctx.lineWidth = 2.2;
+      h3ctx.beginPath(); h3ctx.moveTo(a.x, a.y); h3ctx.lineTo(b.x, b.y); h3ctx.stroke(); };
+    brow(1); brow(-1);
+
+    const eye = sx => { const v = vis([sx * 0.3, 0.12, 0.85]); if (v <= 0) return;
+      const c = P([sx * 0.3, 0.13, 0.86]);
+      h3ctx.fillStyle = `rgba(240,247,255,${0.95 * v})`;
+      h3ctx.beginPath(); h3ctx.ellipse(c.x, c.y, 4.4, 2.6, th, 0, Math.PI * 2); h3ctx.fill();
+      h3ctx.fillStyle = `rgba(22,34,50,${v})`;
+      h3ctx.beginPath(); h3ctx.arc(c.x, c.y, 1.8, 0, Math.PI * 2); h3ctx.fill(); };
+    eye(1); eye(-1);
+
+    // nose ridge: bridge -> tip -> base (the strongest 3D cue)
+    const nv = vis([0, 0, 1]);
+    if (nv > 0) {
+      const nb = P([0, 0.15, 0.86]), nt = P([0, -0.05, 1.16]), na = P([0, -0.17, 0.97]);
+      h3ctx.lineCap = "round"; h3ctx.lineJoin = "round";
+      h3ctx.strokeStyle = `rgba(58,82,108,${0.8 * nv})`; h3ctx.lineWidth = 2.2;
+      h3ctx.beginPath(); h3ctx.moveTo(nb.x, nb.y); h3ctx.lineTo(nt.x, nt.y); h3ctx.lineTo(na.x, na.y); h3ctx.stroke();
+      h3ctx.fillStyle = `rgba(28,42,60,${0.7 * nv})`;
+      for (const sx of [-1, 1]) { const q = P([sx * 0.1, -0.17, 0.93]); h3ctx.beginPath(); h3ctx.arc(q.x, q.y, 1.1, 0, Math.PI * 2); h3ctx.fill(); }
+    }
+
+    // mouth
+    const mv = vis([0, -0.46, 0.8]);
+    if (mv > 0) {
+      const ml = P([-0.22, -0.47, 0.83]), mm = P([0, -0.51, 0.9]), mr = P([0.22, -0.47, 0.83]);
+      h3ctx.lineCap = "round"; h3ctx.strokeStyle = `rgba(48,68,92,${0.8 * mv})`; h3ctx.lineWidth = 2;
+      h3ctx.beginPath(); h3ctx.moveTo(ml.x, ml.y); h3ctx.quadraticCurveTo(mm.x, mm.y, mr.x, mr.y); h3ctx.stroke();
+    }
+
+    // ---- R / L side indicators (your own right & left, move with the head) ----
+    h3ctx.font = "600 11px ui-monospace, monospace";
+    h3ctx.textAlign = "center"; h3ctx.textBaseline = "middle";
+    const lab = (sx, txt) => {
+      const v = vis([sx, 0.1, 0.05]); if (v <= 0.05) return;
+      const q = P([sx * 1.3, 0.12, 0]);
+      h3ctx.fillStyle = `rgba(127,198,255,${0.95 * v})`;
+      h3ctx.fillText(txt, q.x, q.y);
+    };
+    lab(1, "R"); lab(-1, "L");
+
+    // ---- live direction readout (yaw -> left/right, pitch -> up/down) ----
+    const D = 180 / Math.PI;
+    const yd = headYaw * D, pd = headPitch * D, TH = 8;
+    const turn = yd >  TH ? "turn <b>RIGHT ▶</b>" :
+                 yd < -TH ? "<b>◀ LEFT</b> turn"  : "center";
+    const nod  = pd >  TH ? "look <b>DOWN ▼</b>"  :
+                 pd < -TH ? "look <b>UP ▲</b>"    : "level";
+    h3dir.innerHTML = `${turn} · ${nod}`;
+    h3rpy.textContent = `${yd.toFixed(0)} ${pd.toFixed(0)} ${(headRoll * D).toFixed(0)}`;
+  }
 
   // ---- render loop ---------------------------------------------------------
   function draw() {
@@ -514,6 +738,7 @@
                       `dist <b>${dist.toFixed(1)} m</b>`;
     distEl.textContent = `${dist.toFixed(1)} m`;
 
+    drawHead3D();
     requestAnimationFrame(draw);
   }
   draw();
