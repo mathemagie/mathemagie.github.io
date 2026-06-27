@@ -79,6 +79,15 @@
   .dock button.on { color: #061018; background: #7fc6ff; border-color: #7fc6ff; }
   .hidden { display: none !important; }
 
+  /* corner link to the architecture schema */
+  #archlink {
+    position: fixed; right: 16px; bottom: 18px; z-index: 10;
+    color: #5a6675; text-decoration: none; font-size: 11px; letter-spacing: .08em;
+    text-transform: uppercase; border: 1px solid #1a2330; border-radius: 20px;
+    padding: 6px 13px; background: #0b0f15aa; backdrop-filter: blur(8px); transition: .2s;
+  }
+  #archlink:hover { color: #9fb3c8; border-color: #3a5570; }
+
   /* live head-tracking log panel */
   #hlog {
     position: fixed; right: 16px; top: 14px; z-index: 10;
@@ -125,6 +134,8 @@
   </div>
 
   <canvas id="scene"></canvas>
+
+  <a id="archlink" href="architecture-6dof.html">6DOF architecture →</a>
 
   <div id="hlog">
     <div class="t">head tracking · <b id="hl-state">waiting…</b></div>
