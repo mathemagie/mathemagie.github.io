@@ -88,24 +88,6 @@
   }
   #archlink:hover { color: #9fb3c8; border-color: #3a5570; }
 
-  /* live head-tracking log panel */
-  #hlog {
-    position: fixed; right: 16px; top: 14px; z-index: 10;
-    width: 234px; pointer-events: none; user-select: none;
-    background: #0a0e14b8; border: 1px solid #182230; border-radius: 10px;
-    padding: 11px 13px; backdrop-filter: blur(8px);
-    font-size: 11px; line-height: 1.65; letter-spacing: .02em;
-  }
-  #hlog .t { color: #5a6675; text-transform: uppercase; letter-spacing: .12em; font-size: 10px; }
-  #hlog .t b { color: #7fc6ff; font-weight: 600; }
-  #hlog .row { display: flex; justify-content: space-between; color: #8aa0b6; margin-top: 3px; }
-  #hlog .row span:first-child { color: #5f6f80; }
-  #hlog .row b { color: #cfe6ff; font-weight: 600; font-variant-numeric: tabular-nums; }
-  #hlog .bar { height: 3px; background: #16202c; border-radius: 2px; margin-top: 2px; overflow: hidden; }
-  #hlog .bar i { display: block; height: 100%; background: #7fc6ff; width: 50%; }
-  #hlog .hz { color: #5f6f80; margin-top: 8px; font-size: 10px; }
-  #hlog .hz b { color: #9fd0ff; }
-
   /* live 3D head-pose inset */
   #head3d {
     position: fixed; left: 16px; bottom: 18px; z-index: 10;
@@ -137,25 +119,11 @@
 
   <a id="archlink" href="architecture-6dof.html">6DOF architecture →</a>
 
-  <div id="hlog">
-    <div class="t">head tracking · <b id="hl-state">waiting…</b></div>
-    <div class="row"><span>yaw</span><b id="hl-yaw">—</b></div>
-    <div class="bar"><i id="hl-yawbar"></i></div>
-    <div class="row"><span>pitch</span><b id="hl-pitch">—</b></div>
-    <div class="bar"><i id="hl-pitchbar"></i></div>
-    <div class="row"><span>roll</span><b id="hl-roll">—</b></div>
-    <div class="bar"><i id="hl-rollbar"></i></div>
-    <div class="row"><span>quat</span><b id="hl-quat">—</b></div>
-    <div class="row"><span>forward</span><b id="hl-fwd">—</b></div>
-    <div class="hz">rate <b id="hl-hz">0</b> Hz · <span id="hl-n">0</span> samples</div>
-  </div>
-
   <div class="dock hidden" id="dock">
     <button id="orbit">Auto-orbit</button>
     <button id="mute" class="on">Sound on</button>
     <button id="recenter" class="hidden">Recenter</button>
     <label id="head">no bridge</label>
-    <label id="dist">·</label>
   </div>
 
   <div id="start">
@@ -184,7 +152,6 @@
   const cv = document.getElementById("scene");
   const ctx2d = cv.getContext("2d");
   const posEl = document.getElementById("pos");
-  const distEl = document.getElementById("dist");
   const startEl = document.getElementById("start");
   const dock = document.getElementById("dock");
   const goBtn = document.getElementById("go");
@@ -236,21 +203,6 @@
     };
     setL(0, 0, 0, 0, 0, -1, 0, 1, 0);
 
-    // Rotate the listener (used by AirPods head tracking). Smoothed.
-    const setOrient = (f, u) => {
-      if (L.forwardX) {
-        const now = ac.currentTime, k = 0.02;
-        L.forwardX.setTargetAtTime(f[0], now, k);
-        L.forwardY.setTargetAtTime(f[1], now, k);
-        L.forwardZ.setTargetAtTime(f[2], now, k);
-        L.upX.setTargetAtTime(u[0], now, k);
-        L.upY.setTargetAtTime(u[1], now, k);
-        L.upZ.setTargetAtTime(u[2], now, k);
-      } else {
-        L.setOrientation(f[0], f[1], f[2], u[0], u[1], u[2]);
-      }
-    };
-
     // HRTF panner — this is what makes it wrap around the head on AirPods.
     const panner = new PannerNode(ac, {
       panningModel: "HRTF",
@@ -295,8 +247,6 @@
     lfo.start();
 
     // Bell shimmer: periodic soft pings drift on top, panned with the source.
-    const bellGain = ac.createGain(); bellGain.gain.value = 0.0;
-    bellGain.connect(panner);
     function ping() {
       const now = ac.currentTime;
       const o = ac.createOscillator();
@@ -318,7 +268,7 @@
     master.gain.setValueAtTime(0, ac.currentTime);
     master.gain.linearRampToValueAtTime(0.9, ac.currentTime + 1.2);
 
-    return { ac, panner, master, lp, bellTimer, setOrient };
+    return { ac, panner, master };
   }
 
   function setMuted(m) {
@@ -393,10 +343,10 @@
   muteBtn.addEventListener("click", () => setMuted(!muted));
 
   // ---- AirPods head tracking via local bridge (HeadBridge.app) -------------
-  // Connects to ws://localhost:8765, reads the head-orientation quaternion,
-  // and rotates the audio LISTENER so sources stay fixed in world space.
-  let headForward = [0, 0, -1], headUp = [0, 1, 0];
-  let qRef = null, headOn = false;
+  // Connects to ws://localhost:8766, reads the head-orientation yaw and rotates
+  // the world-fixed source so it stays anchored as you turn your head.
+  let headForward = [0, 0, -1];
+  let headOn = false;
   // Yaw-based head tracking (robust to axis conventions): we rotate the SOUND
   // around the fixed listener by the head's yaw. Flip YAW_SIGN if mirrored.
   const YAW_SIGN = -1;   // CoreMotion yaw is CCW-positive (turning right = negative);
@@ -451,43 +401,6 @@
     step();
   }
 
-  // live log panel refs + rate counter
-  const hl = id => document.getElementById("hl-" + id);
-  const hlState = hl("state"), hlYaw = hl("yaw"), hlPitch = hl("pitch"), hlRoll = hl("roll"),
-        hlQuat = hl("quat"), hlFwd = hl("fwd"), hlHz = hl("hz"), hlN = hl("n"),
-        hlYawBar = hl("yawbar"), hlPitchBar = hl("pitchbar"), hlRollBar = hl("rollbar");
-  let hlCount = 0, hlWinStart = performance.now(), hlWinN = 0, hlHzVal = 0;
-  const DEG = 180 / Math.PI;
-  const bar = (rad, range) => Math.max(0, Math.min(100, 50 + (rad / range) * 50)); // % for ±range
-  function logHead(d, fwd) {
-    hlCount++; hlWinN++;
-    const now = performance.now();
-    if (now - hlWinStart >= 500) { hlHzVal = Math.round(hlWinN * 1000 / (now - hlWinStart)); hlWinStart = now; hlWinN = 0; }
-    hlState.textContent = "live";  hlState.style.color = "#7fc6ff";
-    hlYaw.textContent   = (d.yaw   * DEG).toFixed(1) + "°";
-    hlPitch.textContent = (d.pitch * DEG).toFixed(1) + "°";
-    hlRoll.textContent  = (d.roll  * DEG).toFixed(1) + "°";
-    hlYawBar.style.width   = bar(d.yaw,   Math.PI)   + "%";
-    hlPitchBar.style.width = bar(d.pitch, Math.PI/2) + "%";
-    hlRollBar.style.width  = bar(d.roll,  Math.PI/2) + "%";
-    hlQuat.textContent = `${d.qw.toFixed(2)} ${d.qx.toFixed(2)} ${d.qy.toFixed(2)} ${d.qz.toFixed(2)}`;
-    hlFwd.textContent  = `${fwd[0].toFixed(2)} ${fwd[1].toFixed(2)} ${fwd[2].toFixed(2)}`;
-    hlHz.textContent = hlHzVal; hlN.textContent = hlCount;
-  }
-
-  const qMul = (a, b) => ({
-    w: a.w*b.w - a.x*b.x - a.y*b.y - a.z*b.z,
-    x: a.w*b.x + a.x*b.w + a.y*b.z - a.z*b.y,
-    y: a.w*b.y - a.x*b.z + a.y*b.w + a.z*b.x,
-    z: a.w*b.z + a.x*b.y - a.y*b.x + a.z*b.w,
-  });
-  const qConj = q => ({ w: q.w, x: -q.x, y: -q.y, z: -q.z });
-  const qRot = (q, v) => {                       // rotate vector v by quaternion q
-    const p = { w: 0, x: v[0], y: v[1], z: v[2] };
-    const r = qMul(qMul(q, p), qConj(q));
-    return [r.x, r.y, r.z];
-  };
-
   let ws = null, wsRetry = null;
   function setHeadStatus(on) {
     headEl.textContent = on ? "head ✓" : "no bridge";
@@ -501,7 +414,6 @@
     catch (e) { scheduleRetry(); return; }
     ws.onclose = () => {
       headOn = false; setHeadStatus(false); scheduleRetry();
-      hlState.textContent = "no bridge"; hlState.style.color = "#5a6675";
     };
     ws.onerror = () => { try { ws.close(); } catch (e) {} };
     ws.onmessage = ev => {
@@ -516,7 +428,6 @@
       headPitch = (pitchRef === null) ? 0 : wrapAngle((d.pitch - pitchRef) * PITCH_SIGN);
       headRoll  = (rollRef  === null) ? 0 : wrapAngle(d.roll  - rollRef);
       headForward = [Math.sin(headYaw), 0, -Math.cos(headYaw)];      // for the facing line
-      logHead(d, headForward);
       // Source is repositioned each frame in updateSpatial() using headYaw.
     };
   }
@@ -747,7 +658,6 @@
     posEl.innerHTML = `azimuth <b>${ang.toFixed(0)}°</b> · ` +
                       `${front ? "front" : "behind"} · ` +
                       `dist <b>${dist.toFixed(1)} m</b>`;
-    distEl.textContent = `${dist.toFixed(1)} m`;
 
     drawHead3D();
     requestAnimationFrame(draw);
