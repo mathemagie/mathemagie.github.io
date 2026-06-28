@@ -1,6 +1,6 @@
 #!/bin/bash
 # Build HeadBridge.app — a menu-bar agent that streams AirPods head motion
-# over ws://localhost:8765. Requires Xcode command-line tools.
+# over ws://localhost:8766. Requires Xcode command-line tools.
 set -e
 cd "$(dirname "$0")"
 

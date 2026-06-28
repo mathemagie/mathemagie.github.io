@@ -1,5 +1,5 @@
 // HeadBridge — reads AirPods head orientation (CMHeadphoneMotionManager)
-// and broadcasts it as JSON over a local WebSocket (ws://localhost:8765).
+// and broadcasts it as JSON over a local WebSocket (ws://localhost:8766).
 // Menu-bar agent (no dock icon). Build with ./build.sh
 
 import Foundation
