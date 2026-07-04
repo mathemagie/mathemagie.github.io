@@ -4,7 +4,7 @@
   "description": "",
   "main": "index.js",
   "devDependencies": {
-    "htmlhint": "^1.6.3",
+    "htmlhint": "^1.9.2",
     "husky": "^9.1.7"
   },
   "scripts": {
