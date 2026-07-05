@@ -48,12 +48,18 @@
             box-shadow: 0 4px 6px var(--shadow-color);
         }
         
+        /* One card design for every link — filled, left-aligned, icon left */
         .social-link {
-            transition: transform 0.2s ease, box-shadow 0.2s ease, border-color 0.2s ease;
+            transition: transform 0.2s ease, box-shadow 0.2s ease;
             border-radius: 0.5rem;
             padding: 0.75rem 1rem;
-            border: 1px solid var(--btn-outline-color);
+            background: var(--profile-bg);
+            border: 1px solid transparent;
             color: var(--btn-outline-color);
+            text-align: left;
+            display: flex;
+            align-items: center;
+            gap: 0.25rem;
         }
 
         .social-link:hover {
@@ -65,20 +71,7 @@
             width: 1.5rem;
             text-align: center;
             margin-right: 0.5rem;
-        }
-
-        /* Featured cards — richer, left-aligned, filled (Law 5: differences) */
-        .social-link.featured {
-            text-align: left;
-            background: var(--profile-bg);
-            border-color: transparent;
-            display: flex;
-            align-items: center;
-            gap: 0.25rem;
-        }
-
-        .social-link.featured i {
-            font-size: 1.25rem;
+            flex-shrink: 0;
         }
 
         /* Section labels — quiet wayfinding (Law 2: organize / Law 10: add the meaningful) */
@@ -164,7 +157,7 @@
             <div class="section-label">Immersive experiences</div>
 
             <a href="https://agentbynight.vercel.app/"
-               class="btn social-link featured"
+               class="btn social-link"
                target="_blank"
                rel="noopener">
                 <i class="fas fa-user-secret"></i>
@@ -175,7 +168,7 @@
             </a>
 
             <a href="https://nebulaheart.vercel.app/"
-               class="btn social-link featured"
+               class="btn social-link"
                target="_blank"
                rel="noopener">
                 <i class="fas fa-heart"></i>
