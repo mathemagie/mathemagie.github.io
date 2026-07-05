@@ -42,6 +42,15 @@
             min-height: 100vh;
             display: flex;
             flex-direction: column;
+            line-height: 1.5;
+            -webkit-font-smoothing: antialiased;
+            -moz-osx-font-smoothing: grayscale;
+            text-rendering: optimizeLegibility;
+        }
+
+        /* Comfortable reading measure (Law 6: context) */
+        .container {
+            max-width: 640px;
         }
         
         .profile-image {
@@ -64,6 +73,13 @@
             display: flex;
             align-items: center;
             gap: 0.25rem;
+            font-weight: 500;
+            line-height: 1.3;
+        }
+
+        .social-link small {
+            font-weight: 400;
+            line-height: 1.45;
         }
 
         .social-link:hover {
