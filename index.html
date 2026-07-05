@@ -49,21 +49,51 @@
         }
         
         .social-link {
-            margin-bottom: 0.75rem;
-            transition: all 0.3s ease;
+            transition: transform 0.2s ease, box-shadow 0.2s ease, border-color 0.2s ease;
             border-radius: 0.5rem;
             padding: 0.75rem 1rem;
+            border: 1px solid var(--btn-outline-color);
+            color: var(--btn-outline-color);
         }
-        
+
         .social-link:hover {
             transform: translateY(-2px);
             box-shadow: 0 4px 8px var(--shadow-color);
         }
-        
+
         .social-link i {
             width: 1.5rem;
             text-align: center;
             margin-right: 0.5rem;
+        }
+
+        /* Featured cards — richer, left-aligned, filled (Law 5: differences) */
+        .social-link.featured {
+            text-align: left;
+            background: var(--profile-bg);
+            border-color: transparent;
+            display: flex;
+            align-items: center;
+            gap: 0.25rem;
+        }
+
+        .social-link.featured i {
+            font-size: 1.25rem;
+        }
+
+        /* Section labels — quiet wayfinding (Law 2: organize / Law 10: add the meaningful) */
+        .section-label {
+            font-size: 0.7rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.14em;
+            opacity: 0.45;
+            margin: 1.75rem 0 0.25rem;
+            padding-left: 0.35rem;
+        }
+
+        .section-label:first-child {
+            margin-top: 0;
         }
         
         .profile-section {
@@ -131,9 +161,10 @@
 
         <nav class="d-grid gap-2">
 
+            <div class="section-label">Immersive experiences</div>
+
             <a href="https://agentbynight.vercel.app/"
-               class="btn social-link"
-               style="border: 1px solid var(--btn-outline-color); color: var(--btn-outline-color);"
+               class="btn social-link featured"
                target="_blank"
                rel="noopener">
                 <i class="fas fa-user-secret"></i>
@@ -144,8 +175,7 @@
             </a>
 
             <a href="https://nebulaheart.vercel.app/"
-               class="btn social-link"
-               style="border: 1px solid var(--btn-outline-color); color: var(--btn-outline-color);"
+               class="btn social-link featured"
                target="_blank"
                rel="noopener">
                 <i class="fas fa-heart"></i>
@@ -157,215 +187,138 @@
 
             <a href="https://mathemagie.github.io/radio_spotify_lego/"
                class="btn social-link"
-               style="border: 1px solid var(--btn-outline-color); color: var(--btn-outline-color);"
                target="_blank"
                rel="noopener">
                 <i class="fas fa-compact-disc"></i>
                 Radio Spotify Lego
             </a>
 
+            <a href="/bidouille/rotary_phone/"
+               class="btn social-link"
+               target="_blank"
+               rel="noopener">
+                <i class="fas fa-phone"></i>
+                Rotary Phone — Deep Space Line
+            </a>
+
+            <div class="section-label">Minitel &amp; ISS signals</div>
 
             <a href="/bidouille/25544_fm/"
-                class="btn social-link"
-                style="border: 1px solid var(--btn-outline-color); color: var(--btn-outline-color);"
-                target="_blank"
-                rel="noopener">
+               class="btn social-link"
+               target="_blank"
+               rel="noopener">
                 <i class="fas fa-radio"></i>
                 25544.fm
             </a>
 
             <a href="/bidouille/3615_iss/"
-                class="btn social-link"
-                style="border: 1px solid var(--btn-outline-color); color: var(--btn-outline-color);"
-                target="_blank"
-                rel="noopener">
+               class="btn social-link"
+               target="_blank"
+               rel="noopener">
                 <i class="fas fa-terminal"></i>
                 3615 ISS
             </a>
 
-            <!-- New project link: 3615 Terre -->
             <a href="https://mathemagie.github.io/bidouille/3615_terre/"
-                class="btn social-link"
-                style="border: 1px solid var(--btn-outline-color); color: var(--btn-outline-color);"
-                target="_blank"
-                rel="noopener">
+               class="btn social-link"
+               target="_blank"
+               rel="noopener">
                 <i class="fas fa-terminal"></i>
                 3615 Terre
             </a>
 
-            <a href="/bidouille/minou_connected/" 
-            class="btn social-link"
-            style="border: 1px solid var(--btn-outline-color); color: var(--btn-outline-color);"
-            target="_blank" 
-            rel="noopener">
-            <i class="fas fa-cat"></i>
-            Minou Connecté
-        </a>
-
-            <a href="/bidouille/lapin_cosmique/"
-                class="btn social-link"
-                style="border: 1px solid var(--btn-outline-color); color: var(--btn-outline-color);"
-                target="_blank"
-                rel="noopener">
-                <i class="fas fa-radio"></i>
-                Le Lapin Cosmique
-            </a>
-
-            <a href="/bidouille/rotary_phone/"
-                class="btn social-link"
-                style="border: 1px solid var(--btn-outline-color); color: var(--btn-outline-color);"
-                target="_blank"
-                rel="noopener">
-                <i class="fas fa-phone"></i>
-                Rotary Phone — Deep Space Line
-            </a>
-
-            <a href="/iss/" 
-                class="btn social-link"
-                style="border: 1px solid var(--btn-outline-color); color: var(--btn-outline-color);"
-                target="_blank" 
-                rel="noopener">
+            <a href="/iss/"
+               class="btn social-link"
+               target="_blank"
+               rel="noopener">
                 <i class="fas fa-satellite"></i>
                 ISS tracker
             </a>
 
-
-            <a href="https://honeysuckle-cornet-28c.notion.site/Overview-of-other-forms-of-augmented-reality-280e00773ca946e1a66872ee516350c7" 
+            <a href="/bidouille/lapin_cosmique/"
                class="btn social-link"
-               style="border: 1px solid var(--btn-outline-color); color: var(--btn-outline-color);" 
-               target="_blank" 
+               target="_blank"
+               rel="noopener">
+                <i class="fas fa-radio"></i>
+                Le Lapin Cosmique
+            </a>
+
+            <a href="/bidouille/minou_connected/"
+               class="btn social-link"
+               target="_blank"
+               rel="noopener">
+                <i class="fas fa-cat"></i>
+                Minou Connecté
+            </a>
+
+            <div class="section-label">Games</div>
+
+            <a href="https://mathemagie.github.io/brick-breaker-deluxe/"
+               class="btn social-link"
+               target="_blank"
+               rel="noopener">
+                <i class="fas fa-gamepad"></i>
+                Brick Breaker Deluxe
+            </a>
+
+            <a href="https://mathemagie.github.io/r_type/"
+               class="btn social-link"
+               target="_blank"
+               rel="noopener">
+                <i class="fas fa-rocket"></i>
+                R-TYPELIKE — Neon Drift
+            </a>
+
+            <div class="section-label">Augmented reality</div>
+
+            <a href="https://honeysuckle-cornet-28c.notion.site/Overview-of-other-forms-of-augmented-reality-280e00773ca946e1a66872ee516350c7"
+               class="btn social-link"
+               target="_blank"
                rel="noopener">
                 <i class="fas fa-vr-cardboard"></i>
                 Overview of other forms of augmented reality
             </a>
-            
-            <a href="http://www.lucifer.com/~sasha/EnhancedReality.html" 
+
+            <a href="http://www.lucifer.com/~sasha/EnhancedReality.html"
                class="btn social-link"
-               style="border: 1px solid var(--btn-outline-color); color: var(--btn-outline-color);" 
-               target="_blank" 
+               target="_blank"
                rel="noopener">
                 <i class="fas fa-glasses"></i>
                 Intelligent Information Filters and Enhanced Reality
             </a>
-            
-            <a href="https://www.youtube.com/watch?v=lPRYp4HrdGI&t=0s" 
+
+            <a href="https://www.youtube.com/watch?v=lPRYp4HrdGI&t=0s"
                class="btn social-link"
-               style="border: 1px solid var(--btn-outline-color); color: var(--btn-outline-color);" 
-               target="_blank" 
+               target="_blank"
                rel="noopener"
                onclick="window.dataLayer.push({'eventLabel': 'LSD','event': 'show_keynote'});">
                 <i class="fab fa-youtube"></i>
                 My keynote on the future of augmented reality
             </a>
-            
-            <a href="portfolio.html" 
-               class="btn social-link"
-               style="border: 1px solid var(--btn-outline-color); color: var(--btn-outline-color);">
-                <i class="fas fa-briefcase"></i>
-                My portfolio
-            </a>
-            
-            <!-- <a href="https://www.instagram.com/mathemagie/?hl=fr" 
-               class="btn social-link"
-               style="border: 1px solid var(--btn-outline-color); color: var(--btn-outline-color);" 
-               target="_blank" 
-               rel="noopener">
-                <i class="fab fa-instagram"></i>
-                Instagram
-            </a>
-            
-            <a href="https://twitter.com/mathemagie" 
-               class="btn social-link"
-               style="border: 1px solid var(--btn-outline-color); color: var(--btn-outline-color);" 
-               target="_blank" 
-               rel="noopener">
-                <i class="fab fa-twitter"></i>
-                Twitter
-            </a> -->
-            
-            <a href="https://github.com/mathemagie/in_bed_with" 
-               class="btn social-link"
-               style="border: 1px solid var(--btn-outline-color); color: var(--btn-outline-color);" 
-               target="_blank" 
-               rel="noopener">
-                <i class="fab fa-github"></i>
-                The performance series "InbedWith*"
-            </a>
-            
-            <!-- <a href="https://www.linkedin.com/in/aurelienfache/" 
-               class="btn social-link"
-               style="border: 1px solid var(--btn-outline-color); color: var(--btn-outline-color);" 
-               target="_blank" 
-               rel="noopener">
-                <i class="fab fa-linkedin"></i>
-                LinkedIn
-            </a> -->
-            
+
+            <div class="section-label">More</div>
+
             <a href="/stories_audio/"
                class="btn social-link"
-               style="border: 1px solid var(--btn-outline-color); color: var(--btn-outline-color);"
                target="_blank"
                rel="noopener">
                 <i class="fas fa-music"></i>
                 Audio fabrizio
             </a>
 
-            <a href="https://mathemagie.github.io/brick-breaker-deluxe/"
-                class="btn social-link"
-                style="border: 1px solid var(--btn-outline-color); color: var(--btn-outline-color);"
-                target="_blank"
-                rel="noopener">
-                <i class="fas fa-gamepad"></i>
-                Brick Breaker Deluxe
-            </a>
-
-            <a href="https://mathemagie.github.io/r_type/"
-                class="btn social-link"
-                style="border: 1px solid var(--btn-outline-color); color: var(--btn-outline-color);"
-                target="_blank"
-                rel="noopener">
-                <i class="fas fa-rocket"></i>
-                R-TYPELIKE — Neon Drift
-            </a>
-
-            <!-- <a href="/audio_ai/"
+            <a href="https://github.com/mathemagie/in_bed_with"
                class="btn social-link"
-               style="border: 1px solid var(--btn-outline-color); color: var(--btn-outline-color);"
-               target="_blank" 
+               target="_blank"
                rel="noopener">
-                <i class="fas fa-robot"></i>
-                Audio AI
-            </a> -->
-            
-         
-            
-       
-            <!-- <a href="/lines/" 
-            class="btn social-link"
-               style="border: 1px solid var(--btn-outline-color); color: var(--btn-outline-color);"
-            target="_blank" 
-            rel="noopener">
-             <i class="fas fa-satellite"></i>
-             Lines in P5.js
-         </a>
+                <i class="fab fa-github"></i>
+                The performance series "InbedWith*"
+            </a>
 
-         <a href="/dino/" 
-         class="btn social-link"
-               style="border: 1px solid var(--btn-outline-color); color: var(--btn-outline-color);"
-         target="_blank" 
-         rel="noopener">
-          <i class="fas fa-satellite"></i>
-          Dino Fabrizio in P5.js
-      </a>
-
-      <a href="/brick-breaker-deluxe/" 
-      class="btn social-link"
-               style="border: 1px solid var(--btn-outline-color); color: var(--btn-outline-color);"
-      target="_blank" 
-      rel="noopener">
-       <i class="fas fa-satellite"></i>
-       Brick Breaker Deluxe
-   </a> -->
+            <a href="portfolio.html"
+               class="btn social-link">
+                <i class="fas fa-briefcase"></i>
+                My portfolio
+            </a>
         </nav>
         
         <div class="text-center text-muted small mt-4" aria-label="Last commit hash">
