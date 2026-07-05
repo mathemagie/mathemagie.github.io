@@ -1,3 +1,6 @@
 node_modules/
 .cursor/
 .DS_Store
+
+# Temp artifacts (screenshots, videos, generated images)
+tmp/
